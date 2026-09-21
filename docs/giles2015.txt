@@ -1,0 +1,3163 @@
+
+===== PAGE 1 =====
+Acta Numerica (2018), pp. 001– c⃝Cambridge University Press, 2018
+doi:10.1017/S09624929 Printed in the United Kingdom
+Multilevel Monte Carlo methods
+Michael B. Giles
+Mathematical Institute, University of Oxford
+mike.giles@maths.ox.ac.uk
+Monte Carlo methods are a very general and useful approach for the estima-
+tion of expectations arising from stochastic simulation. However, t hey can
+be computationally expensive, particularly when the cost of genera ting in-
+dividual stochastic samples is very high, as in the case of stochastic PDEs.
+MultilevelMonteCarloisarecentlydevelopedapproachwhichgreatly reduces
+the computational cost by performing most simulations with low accu racy at
+a correspondingly low cost, with relatively few simulations being perfo rmed
+at high accuracy and a high cost.
+In this article, wereviewthe ideas behind the multilevelMonte Carlome thod,
+and various recent generalisations and extensions, and discuss a n umber of
+applications which illustrate the ﬂexibility and generality of the approa chand
+the challenges in developing more eﬃcient implementations with a faste r rate
+of convergence of the multilevel correction variance.
+CONTENTS
+1 Introduction 2
+2 MLMC theory and extensions 6
+3 MLMC implementation 21
+4 Introduction to applications 28
+5 SDEs 29
+6 Jump diﬀusion and L´ evy processes 47
+7 PDEs and SPDEs 49
+8 Continuous-time Markov chains 55
+9 Nested simulation 57
+10 Other applications 60
+11 Conclusions 63
+References 64
+
+===== PAGE 2 =====
+2 M.B. Giles
+1. Introduction
+1.1. Stochastic modelling and Monte Carlo simulation
+Stochastic modelling and simulation is a growing area in app lied mathe-
+matics and scientiﬁc computing. One large application area is in computa-
+tional ﬁnance, in the pricing of ﬁnancial derivatives and qu antitative risk
+management (Glasserman 2004, Asmussen and Glynn 2007). Ano ther is
+Uncertainty Quantiﬁcation in engineering and science, whi ch has led to a
+new SIAM journal and associated annual conferences. Stocha stic modelling
+is also important in diverse areas such as biochemical react ions (Anderson
+and Higham 2012) and plasma physics (Rosin, Ricketson, Dimi ts, Caﬂisch
+and Cohen 2014).
+When the dimensionality of the uncertainty (or the number of uncertain
+input parameters) is low, it can be appropriate to model the u ncertainty
+using the Fokker-Planck PDE and use stochastic Galerkin, st ochastic collo-
+cation or polynomial chaos methods (Xiu and Karniadakis 200 2, Babuˇ ska,
+Tempone and Zouraris 2004, Babuˇ ska, Nobile and Tempone 201 0, Gun-
+zburger, Webster and Zhang 2014). When the level of uncertai nty is low,
+and its eﬀect is largely linear, then moment methods can be an e ﬃcient
+and accurate way in which to quantify the eﬀects on uncertaint y (Putko,
+Taylor, Newman and Green 2002). However, when the uncertain ty is high-
+dimensional and strongly nonlinear, Monte Carlo simulatio n remains the
+preferred approach.
+At its simplest, Monte Carlo simulation is extremely simple . To estimate
+E[P], a simple Monte Carlo estimate is just an average of values P(ω) for
+Nindependent samples ωcoming from a given probability space (Ω ,F,P),
+N−1N∑
+n=1P(ω(n)).
+The variance of this estimate is N−1V[P], so the r.m.s. error is O(N−1/2)
+and an accuracy of εrequires N=O(ε−2) samples. This is the weakness of
+Monte Carlo simulation; its computational cost can be very h igh, particu-
+larly when each sample P(ω) might require the approximate solution of a
+PDE, or a computation with many timesteps.
+Oneapproach to addressingthis high cost is theuseof Quasi- Monte Carlo
+(QMC) methods, in which the samples are not chosen randomly a nd inde-
+pendently, but are instead selected very carefully to reduc e the error. In the
+best cases, the error may be O(N−1), up to logarithmic terms, giving a very
+substantial reduction in the number of samples required for a given accu-
+racy. The QMC approach was surveyed in Acta Numerica 2013 (Di ck, Kuo
+and Sloan 2013). In this article, we cover a diﬀerent approach to improving
+the computational eﬃciency, the multilevel Monte Carlo (ML MC) method,
+and we include a brief discussion of the combination of the tw o approaches.
+
+===== PAGE 3 =====
+Multilevel Monte Carlo methods 3
+1.2. Control variates and two-level MLMC
+One of the classic approaches to Monte Carlo variance reduct ion is through
+the useof a control variate (Glasserman 2004). Supposewe wi sh to estimate
+E[f], and there is a control variate gwhich is well correlated to fand has
+a known expectation E[g]. In that case, we can use the following unbiased
+estimator for E[f] based on Nindependent samples ω(n):
+N−1N∑
+n=1{
+f(ω(n))−λ(
+g(ω(n))−E[g])}
+.
+The optimal value for λisρ√
+V[f]/V[g], whereρis the correlation between
+fandg, and the variance of the control variate estimator is reduce d by
+factor 1−ρ2compared to the standard estimator.
+A two-level version of MLMC is very similar. If we want to esti mateE[P1]
+but it is much cheaper to simulate P0which approximates P1, then since
+E[P1] =E[P0]+E[P1−P0]
+we can use the unbiased two-level estimator
+N−1
+0N0∑
+n=1P(n)
+0+N−1
+1N1∑
+n=1(
+P(n)
+1−P(n)
+0)
+.
+HereP(n)
+1−P(n)
+0represents the diﬀerence between P1andP0for the same
+underlying stochastic sample ω(n), so that P(n)
+1−P(n)
+0is small and has a
+small variance; the precise construction depends on the app lication and
+various examples will be shown later. The two key diﬀerences f rom the
+control variate approach are that the value of E[P0] is not known, so has to
+be estimated, and we use λ= 1.
+If we deﬁne C0andC1to be the cost of computing a single sample of
+P0andP1−P0, respectively, then the total cost is N0C0+N1C1,and if
+V0andV1are the variance of P0andP1−P0, then the overall variance
+isN−1
+0V0+N−1
+1V1,assuming that∑N0
+n=1P(n)
+0and∑N1
+n=1(
+P(n)
+1−P(n)
+0)
+use
+independent samples.
+Hence, treating the integers N0,N1as real variables and performing a
+constrained minimisation using a Lagrange multiplier, the variance is min-
+imised for a ﬁxed cost by choosing N1/N0=√
+V1/C1/√
+V0/C0.
+1.3. Multilevel Monte Carlo
+Themultilevel generalisation isquitenatural: given aseq uenceP0,...,P L−1
+which approximates PLwith increasing accuracy, but also increasing cost,
+
+===== PAGE 4 =====
+4 M.B. Giles
+we have the simple identity
+E[PL] =E[P0]+L∑
+ℓ=1E[Pℓ−Pℓ−1],
+and therefore we can use the following unbiased estimator fo rE[PL],
+N−1
+0N0∑
+n=1P(0,n)
+0+L∑
+ℓ=1{
+N−1
+ℓNℓ∑
+n=1(
+P(ℓ,n)
+ℓ−P(ℓ,n)
+ℓ−1)}
+with the inclusion of the level ℓin the superscript ( ℓ,n) indicating that
+independent samples are used at each level of correction.
+If we deﬁne C0,V0to be the cost and variance of one sample of P0,
+andCℓ,Vℓto be the cost and variance of one sample of Pℓ−Pℓ−1, then
+the overall cost and variance of the multilevel estimator is∑L
+ℓ=0NℓCℓand∑L
+ℓ=0N−1
+ℓVℓ, respectively.
+For a ﬁxed variance, the cost is minimised by choosing Nℓto minimise
+L∑
+ℓ=0(
+NℓCℓ+µ2N−1
+ℓVℓ)
+for some value of the Lagrange multiplier µ2. This gives Nℓ=µ√
+Vℓ/Cℓ.To
+achieve an overall variance of ε2then requires that µ=ε−2∑L
+ℓ=0√VℓCℓ,
+and the total computational cost is therefore
+C=ε−2(L∑
+ℓ=0√
+VℓCℓ)2
+. (1.1)
+It is important to note whether the product VℓCℓincreases or decreases
+withℓ, i.e. whether or not the cost increases with level faster tha n the
+variance decreases. If the product increases with level, so that the dominant
+contribution to the cost comes from VLCLthen we have C≈ε−2VLCL,
+whereasifitdecreasesandthedominantcontributioncomes fromV0C0then
+C≈ε−2V0C0. This contrasts with the standard MC cost of approximately
+ε−2V0CL, assuming that the cost of computing PLis similar to the cost of
+computing PL−PL−1, and that V[PL]≈V[P0].
+This shows that in the ﬁrst case the MLMC cost is reduced by fac tor
+VL/V0, corresponding to the ratio of the variances V[PL−PL−1] andV[PL],
+whereas in the second case it is reduced by factor C0/CL, the ratio of the
+costs of computing P0andPL−PL−1. If the product VℓCℓdoes not vary
+with level, then the total cost is ε−2L2V0C0=ε−2L2VLCL.
+
+===== PAGE 5 =====
+Multilevel Monte Carlo methods 5
+1.4. Origins of MLMC method
+The ﬁrst work on multilevel Monte Carlo methods was by Heinri ch for
+parametric integration, the evaluation of functionals ari sing from the solu-
+tion of integral equations, and weakly singular integral op erators (Heinrich
+1998, HeinrichandSindambiwe1999, Heinrich2000, Heinric h2001, Heinrich
+2006). Parametric integration concerns the estimation of E[f(x,λ)] where x
+is aﬁnite-dimensional randomvariableand λis aparameter. Inthesimplest
+case in which λis a scalar real variable in the range [0 ,1], having estimated
+the value of E[f(x,0)] andE[f(x,1)], one can use1
+2(f(x,0) +f(x,1)) as a
+control variatewhenestimatingthevalueof E[f(x,1
+2)]. Heinrichappliedthis
+idea recursively on a geometric sequence of levels, leading to a complexity
+analysis which is very similar to that which will be outlined later.
+Although not so clearly related, there are also papers by Bra ndtet al
+(Brandt, GalunandRon1994, BrandtandIlyin2003) whichcom bineMonte
+Carlo techniques with multigrid ideas in determining therm odynamic limits
+in statistical physics applications.
+In 2005, Kebaier (2005) developed a two-level approach for p ath simula-
+tionwhichisverysimilartotheauthor’sapproach(Giles 20 08b, Giles2008 a)
+which was inspired by the multigrid ideas of Brandt and other s for the itera-
+tive solution of PDE approximations. The diﬀerences are that Kebaier used
+only two levels, and used a general multiplicative factor as in the standard
+control variate approach. There was also similar independe nt work at the
+same time by Li (2007) and Speight (2009).
+1.5. Outline of article
+Section 2presentsthemaintheoretical resultswhichunder pinMLMCmeth-
+ods, andanumberofdiﬀerentgeneralisations andextensions , manyofwhich
+have been developed very recently.
+Section 3 presents in some detail a MATLAB implementation of MLMC.
+This is used to generate the numerical results which are pres ented later, and
+the full MATLAB code is available online (Giles 2014).
+Sections 4-10 cover a wide range of applications, demonstra ting the ﬂex-
+ibility and generality of the MLMC approach, documenting pr ogress in the
+numerical analysis of the methods, and illustrating techni ques which can be
+used to improve the variance of the MLMC estimators. Particu lar attention
+is paid to the diﬃculties caused by discontinuities in outpu t functionals,
+and a variety of remedies which can be employed.
+Finally, Section 11 concludes with some thoughts about dire ctions for
+future research.
+Readers who are new to the subject may wish to start with Secti on 2.1
+and then proceed to the application sections most relevant t o their interests.
+
+===== PAGE 6 =====
+6 M.B. Giles
+2. MLMC theory and extensions
+2.1. Geometric MLMC
+In the Introduction, we considered the case of a general mult ilevel method
+in which the output PLon the ﬁnest level corresponds to the quantity of
+interest. However, in many inﬁnite-dimensional applicati ons, such as those
+which involve the simulation of SDEs and SPDEs, the output Pℓon level
+ℓis an approximation to a random variable Pwhich cannot be simulated
+exactly. If Yis an approximation to E[P], then a standard piece of theory
+gives the mean square error (MSE) as
+MSE≡E[(Y−E[P])2] =V[Y]+(E[Y]−E[P])2.(2.1)
+IfYis now the multilevel estimator
+Y=L∑
+ℓ=0Yℓ, Yℓ=N−1
+ℓNℓ∑
+n=1(P(ℓ,n)
+ℓ−P(ℓ,n)
+ℓ−1), (2.2)
+withP−1≡0, then
+E[Y] =E[PL],V[Y] =L∑
+ℓ=0N−1
+ℓVℓ, Vℓ≡V[Pℓ−Pℓ−1].(2.3)
+ToensurethattheMSEislessthan ε2, itissuﬃcienttoensurethat V[Y]and
+(E[PL−P])2are both less than1
+2ε2. Combining this idea with a geometric
+sequence of levels in which the cost increases exponentiall y with level, while
+both the weak error E[PL−P] and the multilevel correction variance Vℓ
+decrease exponentially, leads to the following theorem:
+Theorem 1. LetPdenote a random variable, and let Pℓdenote the cor-
+responding level ℓnumerical approximation.
+If there exist independent estimators Yℓbased on NℓMonte Carlo sam-
+ples, each with expected cost Cℓand variance Vℓ, and positive constants
+α,β,γ,c 1,c2,c3such that α≥1
+2min(β,γ) and
+i)⏐⏐E[Pℓ−P]⏐⏐≤c12−αℓ
+ii)E[Yℓ] ={
+E[P0], ℓ = 0
+E[Pℓ−Pℓ−1], ℓ >0
+iii)Vℓ≤c22−βℓ
+iv)Cℓ≤c32γ ℓ,
+then there exists a positive constant c4such that for any ε<e−1there are
+valuesLandNℓfor which the multilevel estimator
+Y=L∑
+ℓ=0Yℓ,
+
+===== PAGE 7 =====
+Multilevel Monte Carlo methods 7
+has a mean-square-error with bound
+MSE≡E[
+(Y−E[P])2]
+< ε2
+with a computational complexity Cwith bound
+E[C]≤
+
+c4ε−2, β > γ,
+c4ε−2(logε)2, β=γ,
+c4ε−2−(γ−β)/α, β < γ.
+The statement of the theorem is a slight generalisation of th e original the-
+orem in (Giles 2008 b). It corresponds to the theorem and proof in (Cliﬀe,
+Giles, Scheichl and Teckentrup 2011), except for the minor c hange to ex-
+pected costs to allow for applications in which the simulati on cost of in-
+dividual samples is itself random. Note that if condition ii i) is tightened
+slightly to be a bound on E[(Pℓ−Pℓ−1)2], which is usually the quantity
+which is bounded in numerical analysis, then it would follow immediately
+thatα≥1
+2β.
+The essence of the proof is very straightforward. If we have Vℓ=O(2−βℓ)
+andCℓ=O(2γℓ), then the analysis in Section 1.3 shows that the optimal
+number of samples Nℓon levelℓis proportional to 2−(β+γ)ℓ/2, and therefore
+the cost on level ℓis proportional to 2(γ−β)ℓ/2. The result then follows from
+the requirement that Lis chosen so that ( E[Y]−E[P])2<1
+2ε2, and the
+constant of proportionality for Nℓis chosen so that V[Y]<1
+2ε2. The proof
+also has to handle the fact that Nℓmust be an integer, so the optimal value
+is rounded up to the nearest integer.
+The result of the theorem merits some discussion. In the case β > γ, the
+dominant computational cost is on the coarsest levels where Cℓ=O(1) and
+O(ε−2) samples are required to achieve the desired accuracy. This is the
+standard resultfor a Monte Carlo approach usingi.i.d. samp les; to dobetter
+would require an alternative approach such as the use of Lati n hypercube
+sampling or quasi-Monte Carlo methods.
+In the case β < γ, the dominant computational cost is on the ﬁnest levels.
+Because of condition i), we have 2−αL=O(ε), and hence CL=O(ε−γ/α).
+Ifβ= 2α, which is usually the best that can be achieved since typical ly
+V[Pℓ−Pℓ−1] is similar in magnitude to E[(Pℓ−Pℓ−1)2] which is greater than
+(E[Pℓ−Pℓ−1])2, then the total cost is O(CL), corresponding to O(1) samples
+on the ﬁnest level which is the best that can be achieved.
+The dividing case β=γis the one for which both the computational ef-
+fort, and the contributions to the overall variance, are spr ead approximately
+evenly across all of the levels; the (log ε)2term corresponds to the L2factor
+in the corresponding discussion at the end of Section 1.3.
+
+===== PAGE 8 =====
+8 M.B. Giles
+One comment on the Theorem is that it assumes lots of properti es, and
+then from these determines relatively easily some conclusi ons for the eﬃ-
+ciency of the MLMC approach. In real applications, the tough challenge
+is in proving that the assumptions are valid, and in particul ar determining
+the values of the parameters α,β,γ. Furthermore, the Theorem assumes
+knowledge of the constants c1,c2,c3. In practice, c1andc2are almost never
+known, and instead have to be estimated based on empirical es timates of
+the weak error and the multilevel correction variance.
+Collier, Haji-Ali, Nobile, von Schwerin and Tempone (2014) have devel-
+oped a modiﬁed version of the Theorem. Instead of bounding th e Mean
+Square Error, they prefer to use the Central Limit Theorem to construct
+a conﬁdence interval which bounds E[P] with a user-prescribed conﬁdence.
+Thisexploitsthefactthatthemultilevel correction Yℓoneachlevelisasymp-
+totically Normally-distributed, and therefore so is Y.
+Haji-Ali, Nobile, von Schwerin and Tempone (2014 b) address two other
+important points. The ﬁrst is whether a geometric sequence o f levels is the
+best choice. Their analysis proves that under certain condi tions there is
+negligible beneﬁt in using a non-geometric sequence, but la ter in Section
+2.6 we will discuss other applications in which a non-geomet ric sequence
+is appropriate. The second point is that the equal split betw een the error
+due toE[Pℓ−Pℓ−1] and the error due to the variance V[Y] is deﬁnitely not
+optimal. When β>γ, the dominant computational eﬀort is on the coarsest
+levels; therefore Lcan be increased signiﬁcantly with negligible cost, and
+so it makes sense to allocate most of the error to the variance term which
+means that fewer samples will be required. This can give up to a factor
+2×improvement in computational cost compared to the equal spl it used in
+(Giles 2008 b, Giles 2008 a).
+Equation (2.2) gives the natural choice for the multilevel c orrection es-
+timatorYℓ. However, the multilevel theorem allows for the use of other
+estimators, provided they satisfy the restriction of condi tion ii) which en-
+sures that E[Y] =E[PL]. Several examples of this will be given later in this
+article. Some use slightly diﬀerent numerical approximatio ns for the coarse
+and ﬁne paths in SDE simulations, resulting in the estimator
+Yℓ=N−1
+ℓNℓ∑
+n=1(
+Pf
+ℓ(ω(n))−Pc
+ℓ−1(ω(n)))
+.
+Provided we maintain the identity
+E[Pf
+ℓ] =E[Pc
+ℓ] (2.4)
+so that the expectation on level ℓis the same for the two approximations,
+then condition ii) is satisﬁed and no additional bias (other than the bias due
+
+===== PAGE 9 =====
+Multilevel Monte Carlo methods 9
+to the approximation on the ﬁnest level) is introduced into t he multilevel
+estimator.
+Some others deﬁne an antithetic ω(n)
+awith the same distribution as ω(n),
+and then use the multilevel estimator
+Yℓ=N−1
+ℓNℓ∑
+n=11
+2(
+Pℓ(ω(n))+Pℓ(ω(n)
+a))
+−Pℓ−1(ω(n)).
+SinceE[Pℓ(ω(n)
+a)] =E[Pℓ(ω(n))], then again condition ii) is satisﬁed.
+In each case, the objective in constructing a more complex es timator is to
+achieve a greatly reduced variance V[Yℓ] so that fewer samples are required.
+2.2. Randomised MLMC for unbiased estimation
+A very interesting extension has been introduced in (Rhee an d Glynn 2012,
+Rhee and Glynn 2013). Rather than choosing the ﬁnest level of simulation
+L, based on the desired accuracy, and then using the optimal nu mber of
+samples on each level based on an estimate of the variance, th eir “single
+term” estimator instead uses Nsamples in total, and for each sample they
+perform a simulation on level ℓwith probability pℓ.
+The estimator is
+Y=1
+NN∑
+n=11
+pℓ(n)(P(n)
+ℓ(n)−P(n)
+ℓ(n)−1)
+with the level ℓ(n)for each sample beingselected randomly with the relevant
+probability. Alternatively, their estimator can be expres sed as
+Y=∞∑
+ℓ=0(
+1
+pℓNNℓ∑
+n=1(P(n)
+ℓ−P(n)
+ℓ−1))
+.
+whereNℓ, the number of samples from level ℓ, is a random variable with
+∞∑
+ℓ=0Nℓ=N,E[Nℓ] =pℓN.
+and both outer summations can be trivially truncated at the ( random)
+levelLbeyond which Nℓ=0. Note that in this form it is very similar in
+appearance to the standard MLMC estimator which is
+Y=L∑
+ℓ=0(
+1
+NℓNℓ∑
+n=1(P(n)
+ℓ−P(n)
+ℓ−1))
+.
+
+===== PAGE 10 =====
+10 M.B. Giles
+The beauty of their estimator is that it is naturally unbiase d, since
+E[Y] =E[1
+pℓ′(Pℓ′−Pℓ′−1)]
+=∞∑
+ℓ=0pℓE[1
+pℓ′(Pℓ′−Pℓ′−1)|ℓ′=ℓ]
+=∞∑
+ℓ=0E[Pℓ−Pℓ−1]
+=E[P].
+If we deﬁne Eℓ=E[Pℓ−Pℓ−1] then the variance of the estimator is
+V[Y] =∞∑
+ℓ=01
+pℓ(Vℓ+E2
+ℓ)−(∞∑
+ℓ=0Eℓ)2
+≥∞∑
+ℓ=01
+pℓVℓ,
+due to Jensen’s inequality.
+The choice of probabilities pℓis crucial. For both the variance and the
+expected cost to be ﬁnite, it is necessary that
+∞∑
+ℓ=01
+pℓVℓ<∞,∞∑
+ℓ=0pℓCℓ<∞.
+Under the conditions of the MLMC Theorem, this is possible wh enβ >γ
+by choosing pℓ∝2−(γ+β)ℓ/2,so that
+1
+pℓVℓ∝2−(β−γ)ℓ/2, pℓCℓ∝2−(β−γ)ℓ/2.
+It is not possible when β≤γ, and for these cases the estimators constructed
+by Rhee and Glynn (2013) have inﬁnite expected cost.
+Provided β>γ, the optimal choice for pℓis
+pℓ=√
+Vℓ/Cℓ(∞∑
+ℓ′=0√
+Vℓ′/Cℓ′)−1
+.
+IfE2
+ℓ≪Vℓ, then the condition that the variance of the estimator is app rox-
+imately equal to ε2gives
+N≈ε−2∞∑
+ℓ=0Vℓ/pℓ≈ε−2(∞∑
+ℓ=0√
+VℓCℓ)(∞∑
+ℓ′=0√
+Vℓ′/Cℓ′)
+and therefore the total cost is
+C=N∞∑
+ℓ=0pℓCℓ≈ε−2(∞∑
+ℓ=0√
+VℓCℓ)2
+,
+
+===== PAGE 11 =====
+Multilevel Monte Carlo methods 11
+which is the same as the total cost in Eq. (1.1), and half the co st of the
+standard MLMC algorithm in which only half of the MSE “budget ” ofε2
+is allocated to the variance.
+Although it is very elegant to have an unbiased estimator whe nβ>γ, the
+practical beneﬁts may be limited. In this situation, the dom inant cost of
+the standard MLMC algorithm is on the coarsest levels of simu lation, and
+therefore one can increase the value of Lsubstantially at negligible cost,
+and at the same time allocate almost all of the Mean Square Err or budget
+ofε2to the variance term in (2.1), leading to approximately the s ame total
+cost.
+2.3. Multilevel Richardson-Romberg extrapolation
+Richardson extrapolation is a very old technique in numeric al analysis.
+Given a numerical approximation Phbased on a discretisation parameter h
+which leads to an error
+Ph−P=ahα+O(h2α),
+it follows that
+P2h−P=a(2h)α+O(h2α),
+and hence the extrapolated value
+˜P=2α
+2α−1Ph−1
+2α−1P2h
+satisﬁes
+˜P−P=O(h2α).
+At the suggestion of a reviewer, the author’s original MLMC p aper (Giles
+2008b) included results using one level of Richardson extrapolat ion, both
+for the multilevel results as well as the standard Monte Carl o method. Mul-
+tilevel on its own was signiﬁcantly better than Richardson e xtrapolation,
+but the two together were even better.
+Lemaire and Pag` es have taken this approach much further, an d have
+also performed a comprehensive error analysis (Lemaire and Pag` es 2013).
+Assuming that the weak error has a regular expansion
+E[Pℓ]−E[P] =L∑
+n=1an2−nαℓ+O(2−αℓL),
+they ﬁrst determine the unique set of weights wℓ, ℓ= 0,1,...,Lsuch that
+L∑
+ℓ=0wℓ= 1,L∑
+ℓ=0wℓ2−nαℓ= 1, n= 1,...,L,
+
+===== PAGE 12 =====
+12 M.B. Giles
+so that
+(L∑
+ℓ=0wℓE[Pℓ])
+−E[P] =L∑
+ℓ=0wℓ(E[Pℓ]−E[P]) =O(2−αL2).
+Next, they re-arrange terms to give
+L∑
+ℓ=0wℓE[Pℓ] =L∑
+ℓ=0vℓE[Pℓ−Pℓ−1]
+where as usual P−1≡0, and the coeﬃcients vℓare deﬁned by wℓ=vℓ−vℓ+1,
+withvL+1≡0, and hence
+vℓ=L∑
+ℓ′=ℓwℓ′.
+This leads to their Multilevel Richardson-Romberg extrapo lation estimator,
+Y=L∑
+ℓ=0Yℓ, Yℓ=N−1
+ℓvℓ∑
+n(P(ℓ,n)
+ℓ−P(ℓ,n)
+ℓ−1).
+Because the remaining error is O(2−αL2), rather than the usual O(2−αL),
+it is possible to obtain the usual O(ε) weak error with a value of Lwhich
+is the square root of the usual value. Hence, in the case β=γthey prove
+that the overall cost is reduced to O(ε−2|logε|), while for β<γthe cost is
+reduced much more to O(ε−22(γ−β)√
+|log2ε|/α). This analysis is supported
+by numerical results which demonstrate considerable savin gs (Lemaire and
+Pag` es 2013), and therefore this appears to be a very useful e xtension to the
+standard MLMC approach when β≤γ.
+2.4. Multi-Index Monte Carlo
+Multi-Index Monte Carlo (MIMC) is probably the most signiﬁc ant exten-
+sion of the MLMC methodology (Haji-Ali, Nobile and Tempone 2 014a). In
+standard MLMC, there is a one-dimensional set of levels, wit h a scalar level
+indexℓ, although in some applications changing ℓcan change more than one
+aspect of the computation (such as both timestep and spatial discretisation
+in a parabolic SPDE application, or timestep and number of su b-samples
+in a nested simulation). MIMC generalises this to “levels” b eing deﬁned in
+multiple directions, so that the level “index” ℓis now a vector of integer
+indices. This is illustrated in Figure 2.1 for a 2D MIMC appli cation.
+In MLMC, if we deﬁne the backward diﬀerence
+∆Pℓ≡Pℓ−Pℓ−1
+withP−1≡0, as usual, then the telescoping sum which lies at the heart o f
+
+===== PAGE 13 =====
+Multilevel Monte Carlo methods 13
+✲✻
+ℓ1ℓ2
+❞ ❞
+❞ ❞four evaluations for
+cross-diﬀerence ∆P(5,4)
+Figure 2.1. “Levels” in 2D multi-index Monte Carlo application
+MLMC is
+E[P] =∑
+ℓ≥0E[∆Pℓ].
+Generalising this to Ddimensions, Haji-Ali et al. (2014 a) ﬁrst deﬁne a
+backward diﬀerence operator in one particular dimension,
+∆dPℓ≡Pℓ−Pℓ−ed
+whereedis the unit vector in direction d. They then deﬁne the cross-
+diﬀerence
+∆Pℓ≡(D∏
+d=1∆d)
+Pℓ
+and the telescoping sum becomes
+E[P] =∑
+ℓ≥0E[∆Pℓ].
+As an example, Figure 2.1 marks the four locations at which Pℓmust be
+computed to determine the value of ∆P(5,4)in the 2D application.
+The MIMC Theorem formulated by Haji-Ali et al. (2014 a) can be ex-
+pressed in the following form to match, as closely as possibl e, the formula-
+tion of the MLMC Theorem.
+Theorem 2. If there exist independent estimators Yℓbased on NℓMonte
+Carlo samples, each with expected cost Cℓand variance Vℓ, and positive
+D-dimensional vectors α,β,γ, withαd≥1
+2βd, and also positive constants
+c1,c2,c3such that
+i)⏐⏐E[Pℓ−P]⏐⏐−→0 as min
+dℓd−→ ∞
+
+===== PAGE 14 =====
+14 M.B. Giles
+iii)E[Yℓ] =E[∆Pℓ]
+ii)⏐⏐E[Yℓ]⏐⏐≤c12−α·ℓ
+iv)Vℓ≤c22−β·ℓ
+v)Cℓ≤c32γ·ℓ,
+then there exists a positive constant c4such that for any ε<e−1there is a
+set of levels L, and integers Nℓfor which the multilevel estimator
+Y=∑
+ℓ∈LYℓ,
+has a mean-square-error with bound
+MSE≡E[
+(Y−E[P])2]
+< ε2
+with a computational complexity Cwith bound
+E[C]≤
+
+c4ε−2, η < 0,
+c4ε−2|logε|e1, η= 0,
+c4ε−2−η|logε|e2, η >0,
+where
+η= max
+dγd−βd
+αd.
+Whenαd>1
+2βdfor alld, the exponents for the logarithmic terms are
+e1= 2D2, e2= (D2−1)(2+η),
+whereD2is the number of dimensions dfor which
+γd−βd
+αd=η.
+The form of the exponents is more complicated when αd=1
+2βdfor some d
+(Haji-Ali et al. 2014 a).
+Notes:
+•Condition i) ensures weak convergence to the correct value.
+•Condition ii) ensure each Yℓhas the correct expected value; this allows
+forthepossibility ofusinganestimator whichismorecompl icated than
+the natural choice Yℓ=∆Pℓ, if it will lead to a reduced variance.
+•Conditions iii) and iv) give the order of convergence of the w eak error
+and the multilevel correction variance, and condition v) gi ves the rate
+at which the cost increases with level.
+•The proof of the theorem is signiﬁcantly harder than for the M LMC
+theorem.
+
+===== PAGE 15 =====
+Multilevel Monte Carlo methods 15
+✲✻
+ℓ1ℓ2tL
+✲✻
+ℓ1ℓ2❅
+❅
+❅
+❅
+❅
+❅
+❅
+❅
+❅❅
+Figure 2.2. Two choices of 2D MIMC summation region L.
+•There is again the diﬃculty for each new application of deter mining
+α,β,γfor conditions iii)-v). A relatively simple example will be given
+later in Section 9.
+Itmight seemnatural thatthesummationregion Lshouldberectangular,
+as illustrated on the left in Figure 2.2, so that
+∑
+ℓ∈LYℓ=PL
+whereLis the outermost point on the rectangle. However, Haji-Ali e t al.
+(2014a) prove that this gives the optimal order of complexity only w hen
+η<0, and under the additional condition that
+∑
+dγd
+αd≤2.
+Theoptimal choice for L, which yields the complexity boundsgiven in the
+theorem, is of the form ℓ·n≤Lfor a particular choice of direction vector n
+with strictly positive components. In 2D, this corresponds to a triangular
+region, asillustratedontherightinFigure2.2. Thisisver ysimilartotheuse
+of sparse grid methods in high-dimensional PDE approximati ons (Bungartz
+and Griebel 2004), and indeed MIMC can be viewed as a combinat ion of
+sparse grid methods and Monte Carlo sampling.
+The beneﬁts of MIMC over the standard MLMC can be very substan tial.
+They are perhaps best illustrated by an elliptic PDE or SPDE e xample,
+in which Dcorresponds to the number of spatial dimensions. Using the
+standard MLMC approach, β, the rate of convergence of the multilevel
+variance, will usually be independent of D, butγ, the rate of increase in
+the computational cost, will increase at least linearly wit hD. Therefore,
+in a high enough dimension we will have β≤γand therefore the overall
+computational complexity will be less (often much less) tha n the optimal
+
+===== PAGE 16 =====
+16 M.B. Giles
+O(ε−2). However, using MIMC we can have βd>γdin each direction, and
+therefore obtain the optimal complexity.
+Hence, inthesameway thatsparsegridsoﬀerthepossibilityo fdimension-
+independent complexity for deterministic PDE application s, MIMC oﬀers
+the possibility of dimension-independent complexity for S PDEs and other
+high-dimensional stochastic applications.
+2.5. Multi-dimensional output functionals
+In Monte Carlo simulation, we start with a sample ωfrom the random input
+space, often compute an intermediate solution Ufrom an approximation to
+an SDE or SPDE, and then determine the ﬁnal output quantity P.
+ω−→U−→P
+So far, the discussion in this article has focussed on the ide a ofPbeing a
+scalar output, but this is not necessarily always the case. I n some applica-
+tions there may be more than one scalar output of interest, an d in other
+applications Pmay be inﬁnite-dimensional.
+Some of the possibilities are listed in Table 2.1. In Heinric h’s original
+multilevel research on parametric integration (Heinrich 1 998, Heinrich and
+Sindambiwe 1999, Heinrich 2000, Heinrich 2001), the sample ωwas from a
+ﬁnite-dimensional unit hypercube, there was no intermedia te solution, and
+the output was an inﬁnite-dimensional function of a paramet erλ. In the
+author’s initial research (Giles 2008 b, Giles 2008 a)ωrepresented an inﬁnite-
+dimensional inputBrownian path, Uwas the solution of an SDE, and Pwas
+a scalar functional of that solution U. In the simplest PDE applications,
+one might have a ﬁnite set of parameters which specify uncert ain initial or
+boundary data, and a single scalar output, so only the interm ediate PDE
+solution is inﬁnite-dimensional. Finally, new research (G iles, Nagapetyan
+and Ritter 2014) addresses the problem of approximating the cumulative
+distribution function (CDF) of exit times associated with t he solution of an
+SDE; in this case, all three spaces are inﬁnite-dimensional .
+The extension of the MLMC theory to a ﬁnite set of outputs is ve ry
+natural. ThestandardMLMCtheoremwillapplytoeachoneoft heoutputs.
+If there is a desired accuracy εmfor themthoutput, then a simple approach
+proposed by Tigran Nagapetyan1is to deﬁne
+Vℓ≡max
+mVℓ,m
+ε2m,
+whereVℓ,mis the variance of the multilevel estimator on level ℓfor themth
+1Personal communication
+
+===== PAGE 17 =====
+Multilevel Monte Carlo methods 17
+Table 2.1. Dimensionality of Ω, the input space, U, the intermediate solution
+space, and P, the output space, for some diﬀerent MLMC applications
+Application dim(Ω) dim(U)dim(P)
+parametric integration ﬁnite — ∞
+SDE with scalar output ∞ ∞ 1
+PDE with scalar output ﬁnite/∞∞ 1
+SDE with CDF output ∞ ∞ ∞
+output. Enforcing the constraint
+L∑
+ℓ=0N−1
+ℓVℓ≤1
+2
+is then suﬃcient to ensure that all of the individual varianc e constraints are
+satisﬁed, and thestandard Lagrange multiplier approach ou tlined in Section
+1.3 can be used to determine the optimal number of samples to u se on each
+level.
+The extension of the theory to inﬁnite-dimensional outputs requires the
+deﬁnition of an appropriate norm ∥·∥, and then to a large extent the theory
+carries over by making the substitutions:
+⏐⏐E[Pℓ]−E[P]⏐⏐−→E[Pℓ]−E[P]
+V[Pℓ−Pℓ−1]−→E[Pℓ−Pℓ−1−E[Pℓ−Pℓ−1]2]
+One slight complication is that if aandbare two independent scalar
+random variables with zero mean then
+E[(a+b)2] =E[a2]+E[b2].
+When using the 2-norm, this extends to independent random ve ctorsaand
+b, each with zero mean, since
+E[∥a+b∥2] =E[∥a∥2]+E[∥b∥2],
+and similarly to random functions with a 2-norm based on an in nerproduct.
+However this does not necessarily apply for other norms, and sothe variance
+for the combined multilevel estimator can not necessarily b e expressed in
+the usual form as∑
+ℓN−1
+ℓVℓ, Vℓ≡E[Pℓ−Pℓ−1−E[Pℓ−Pℓ−1]2]
+.
+Nevertheless, the theory can be extended to the use of other n orms by using
+
+===== PAGE 18 =====
+18 M.B. Giles
+results from Banach space theory for the sums of independent random vari-
+ables (Ledoux and Talagrand 1991, Heinrich 1998), and in rec ent research
+Daun and Heinrich have addressed the challenges of parametr ic integration
+in inﬁnite-dimensional Banach spaces (Daun and Heinrich 20 13, Daun and
+Heinrich 2014 a, Daun and Heinrich 2014 b).
+2.6. Non-geometric MLMC
+It is very important to repeat, and emphasise, the fact that M LMC does
+not require the use of a geometric sequence of grids. In many a pplications,
+and most of the existing literature, a geometric sequence wi ll be the appro-
+priate choice, but there are other applications for which it is not. The only
+assumptions in the analysis of the two-level method in Secti on 1.2 and the
+multi-level method in Section 1.3 are that the accuracy and c ost increase
+with level, and the variance of the correction term decrease s with level.
+When there is no underlying structure to suggest that a geome tric se-
+quence is appropriate, a question which arises is how to sele ct the levels.
+Suppose that one starts with a large collection of potential levels; how does
+one decide which subset to use?
+One approach developed by Vidal-Codina, Nguyen, Giles and P eraire
+(2014) is to ﬁrst use a number of trial samples to obtain an est imate of
+Vℓ=V[Pℓ] andVℓ1,ℓ2≡V[Pℓ2−Pℓ1] for all pairs ( ℓ1,ℓ2), withℓ1< ℓ2, with
+associated costs CℓandCℓ1,ℓ2. For a particular ordered subset of levels,
+{ℓ1,ℓ2,...,ℓM}, with ﬁxed ℓM=Lto achieve a user-speciﬁed accuracy,
+following the analysis in Section 1.3 which led to (1.1), we o btain the cost
+C(ℓ1,ℓ2,...,ℓM) =ε−2(
+√
+Vℓ0Cℓ0+M∑
+m=1√
+Vℓm,ℓm−1Cℓm,ℓm−1)2
+.
+If the maximum number of levels is not too large, it is possibl e to per-
+form an exhaustive search to ﬁnd the optimal subset {ℓ1,ℓ2,...,ℓM}which
+minimises this cost.
+Alternatively, suppose that we have a multilevel Monte Carl o implemen-
+tation with a number of levels ℓ= 0,1,...,L. Looking in particular at one
+levelℓ, is it computationally more eﬃcient to keep that level, or wo uld it
+be better to drop it and jump straight from level ℓ−1 toℓ+1?
+If we keep level ℓthen the contribution to the overall multilevel estimator
+due to samples involving level ℓis
+1
+NℓNℓ∑
+n=1(P(n)
+ℓ−P(n)
+ℓ−1) +1
+Nℓ+1Nℓ+1∑
+n=1(P(n)
+ℓ+1−P(n)
+ℓ)
+The usual multilevel analysis shows that for optimality Nℓ∝√
+Vℓ/Cℓ
+whereVℓ≡V[Pℓ−Pℓ−1] andCℓis the cost of computing a single sample of
+
+===== PAGE 19 =====
+Multilevel Monte Carlo methods 19
+Pℓ−Pℓ−1. Hence we have
+Nℓ=Nℓ+1√
+Vℓ
+Vℓ+1Cℓ+1
+Cℓ.
+The combined variance from the two terms is
+1
+NℓVℓ+1
+Nℓ+1Vℓ+1=Vℓ+1
+Nℓ+1(
+1+√
+VℓCℓ
+Vℓ+1Cℓ+1)
+,
+and the combined cost is
+NℓCℓ+Nℓ+1Cℓ+1=Nℓ+1Cℓ+1(
+1+√
+VℓCℓ
+Vℓ+1Cℓ+1)
+,
+and so the product of the combined variance and combined cost is
+Vℓ+1Cℓ+1(
+1+√
+VℓCℓ
+Vℓ+1Cℓ+1)2
+.
+On the other hand, if we drop level ℓand jump straight from level ℓ−1
+toℓ+1, then the replacement estimator is
+1
+˜Nℓ+1˜Nℓ∑
+n=1(P(n)
+ℓ+1−P(n)
+ℓ−1).
+Its variance is ˜Vℓ+1/˜Nℓ+1, where˜Vℓ+1≡V[Pℓ+1−Pℓ−1], and its cost is
+˜Nℓ+1˜Cℓ+1, where˜Cℓ+1is the cost of a single sample of Pℓ+1−Pℓ−1. Hence,
+the product of the variance and the cost is
+˜Vℓ+1˜Cℓ+1.
+The question now is whether
+˜Vℓ+1˜Cℓ+1< Vℓ+1Cℓ+1(
+1+√
+VℓCℓ
+Vℓ+1Cℓ+1)2
+. (2.5)
+If this test is true, then it is best to drop level ℓ, because for a ﬁxed com-
+putational cost this will deliver the lower variance, or for a ﬁxed variance it
+can be achieved at a lower computational cost.
+The main contribution to both Cℓ+1and˜Cℓ+1comes from the level ℓ+1
+simulation which produces the output Pℓ+1, so we will assume from here on
+that˜Cℓ+1≈Cℓ+1. The cost ratio Cℓ/Cℓ+1is usually known a priori, and
+the variance ratio Vℓ/Vℓ+1is often known asymptotically as ℓ→ ∞, or can
+be estimated empirically. The key question is how ˜Vℓ+1compares to Vℓ+1.
+This could also be quantiﬁed empirically, by generating a fe w Monte Carlo
+
+===== PAGE 20 =====
+20 M.B. Giles
+samples for Pℓ+1−Pℓ−1. Alternatively, we can perform some analysis to gain
+some insight into the question.
+Using the standard result for the variance of a sum of two rand om vari-
+ables, we have
+˜Vℓ+1=Vℓ+1+ 2ρ√
+VℓVℓ+1+Vℓ,
+whereρis the correlation between Pℓ+1−PℓandPℓ−Pℓ−1. We can now
+consider two extremes, ρ=1 andρ=0.
+Ifρ= 1, and so we have perfect correlation between the increment s at
+diﬀerent levels, then
+˜Vℓ+1=Vℓ+1(
+1+√
+Vℓ
+Vℓ+1)2
+.
+SinceCℓ< Cℓ+1, it follows that the test (2.5) is never satisﬁed, and so it
+is best to retain level ℓ. Near-perfect correlation is likely to arise in PDE
+applicationswithﬁnitedimensionaluncertaintyintheini tialdata, boundary
+data, or PDE coeﬃcients. In this case, the increments Pℓ−Pℓ−1obtained
+in going from one level to the next come from the progressive e limination
+of truncation error due to the discretisation of the PDE.
+On the other hand, if ρ=0, and so the increments at diﬀerent levels are
+independent, then ˜Vℓ+1=Vℓ+1+Vℓand so we drop level ℓif
+1+Vℓ
+Vℓ+1<(
+1+√
+VℓCℓ
+Vℓ+1Cℓ+1)2
+.
+2.7. MLQMC
+Giles and Waterhouse (2009) developed a variant of MLMC whic h uses
+quasi-Monte Carlo samples instead of independent Monte Car lo samples.
+This was based on extensible rank-1 lattices developed at UN SW (Dick,
+Pillichshammer and Waterhouse 2007). QMC is known to be most eﬀective
+for low-dimensional applications, and the numerical resul ts were very en-
+couraging for SDE applications in which the dominant comput ational cost
+was on the coarsest levels of resolution. However, there was no supporting
+theory for this research.
+More recently, there has been considerable research on the t heoretical
+foundationsformultilevelQMC(MLQMC)methods(Niu, Hicke rnell, M¨ uller-
+Gronbach and Ritter 2010, Kuo, Schwab and Sloan 2012, Dick et al. 2013,
+Baldeaux and Gnewuch 2014, Dick and Gnewuch 2014 a, Dick and Gnewuch
+2014b). These theoretical developments are very encouraging, sh owing that
+under certain conditions they lead to multilevel methods wi th a complexity
+which is O(ε−p) withp<2.
+
+===== PAGE 21 =====
+Multilevel Monte Carlo methods 21
+3. MLMC implementation
+3.1. MLMC algorithm
+Based on the theory in Section 2.1, the geometric MLMC algori thm used
+for the numerical tests in this paper is:
+Algorithm 1 MLMC algorithm
+start with L=2, and initial target of N0samples on levels ℓ= 0,1,2
+whileextra samples need to be evaluated do
+evaluate extra samples on each level
+compute/update estimates for Vℓ, ℓ= 0,...,L
+deﬁne optimal Nℓ, ℓ= 0,...,L
+test for weak convergence
+if not converged, set L:=L+1, and initialise target NL
+end while
+In the above algorithm, the equation for the optimal Nℓis
+Nℓ=⌈
+2ε−2√
+Vℓ/Cℓ(L∑
+ℓ=0√
+VℓCℓ)⌉
+, (3.1)
+whereVℓis the estimated variance, and Cℓis the cost of an individual
+sample on level ℓ. This ensures that the estimated variance of the combined
+multilevel estimator is less than1
+2ε2.
+The test for weak convergence tries to ensure that |E[P−PL]|<ε/√
+2,
+to achieve an MSE which is less than ε2, withεbeing a user-speciﬁed
+r.m.s. accuracy. If E[Pℓ−Pℓ−1]∝2−αℓthen the remaining error is
+E[P−PL] =∞∑
+ℓ=L+1E[Pℓ−Pℓ−1] =E[PL−PL−1]/(2α−1)
+This leads to the convergence test |E[PL−PL−1]|/(2α−1)< ε/√
+2,but for
+robustness, we extend this check to extrapolate from the pre vious two data
+pointsE[PL−1−PL−2],E[PL−2−PL−3], and take the maximum over all three
+as the estimated remaining error.
+Itis importanttonotethat thisalgorithm is heuristic; it i snotguaranteed
+to achieve a MSE error which is less than ε2. The main MLMC theorem
+in Section 2.1 does provide a guarantee, but the conditions o f the theorem
+assumea priori knowledge of the constants c1andc2governing the weak
+convergence and the variance convergence as ℓ→∞. These two constants
+are in eﬀect being estimated in the numerical algorithm descr ibed above.
+In addition, the accuracy of the variance estimate at each le vel depends
+on the size of the sample set. If it is small, then this varianc e estimate may
+
+===== PAGE 22 =====
+22 M.B. Giles
+be poor; we will see later that the implementation sets a mini mum estimate
+by extrapolation from coarser levels with more samples.
+3.2. Overview of MATLAB implementation
+The results to be presented later all use the same two routine s written in
+MATLAB:
+•mlmc.m: driver code which performs the MLMC calculation using an
+application-speciﬁc routine to compute∑
+n(P(n)
+ℓ−P(n)
+ℓ−1)pforp= 1,2
+and a speciﬁed number of independent samples;
+•mlmctest.m: a program which perform various tests and then calls
+mlmc.mto perform a number of MLMC calculations.
+These two routines, and all of the application-speciﬁc rout ines, can be
+downloaded from (Giles 2014).
+3.3. MLMC test routine
+mlmctest.mﬁrst performs a set of calculations using a ﬁxed number of
+samples on each level of resolution, and produces four plots :
+•log2(Vℓ) versus level ℓ
+•log2(|E[Pℓ−Pℓ−1]|) versus level ℓ
+•consistency check versus level
+•kurtosis versus level
+This last two of these need some explanation. If a,b,care estimates for
+E[Pf
+ℓ−1],E[Pf
+ℓ],E[Yℓ], respectively, then it should be true that a−b+c≈
+0. The consistency check veriﬁes that this is true, to within the accuracy
+one would expect due to Monte Carlo sampling error. This is pa rticularly
+important when Pf
+ℓ̸=Pc
+ℓbecause one is using diﬀerent approximations on
+the coarse and ﬁne levels.
+Since√
+V[a−b+c]≤√
+V[a]+√
+V[b]+√
+V[c]
+it computes and plots the ratio
+|a−b+c|
+3(√Va+√Vb+√Vc)
+whereVa,Vb,Vcare empirical estimates for the variances of a,b,c. The
+probability of this ratio being greater than unity is less th an 0.3%. Hence,
+if it is, it indicates a likely programming error, or a mathem atical error in
+the formulation which violates the crucial identity (2.4).
+The MLMC approach needs a good estimate for Vℓ=V[Yℓ], but how
+many samples are needed for this? As few as 10 may be suﬃcient i n many
+
+===== PAGE 23 =====
+Multilevel Monte Carlo methods 23
+cases for a rough estimate, but many more are needed when ther e are rare
+outliers. When the number of samples Nis large, the standard devia-
+tion of the sample variance for a random variable Xwith zero mean is
+approximately√
+(κ−1)/NE[X2] where the kurtosis κis deﬁned as κ=
+E[X4]/E[X2])2. Hence O(κ) samples are required to obtain a reasonable
+estimate for the variance. As well as plotting the kurtosis κℓ,mlmctest.m
+will give a warning if κℓis very large, as this is an indication that the
+empirical variance estimate may be poor.
+An extreme, but important, example is when Palways takes the value 0
+or 1. In this case we have
+X≡Pℓ−Pℓ−1=
+
+1,probability p
+−1,probability q
+0,probability 1 −p−q
+Ifp,q≪1, thenE[X]≈0, andκ≈(p+q)−1≫1. Therefore, many samples
+are required for a good estimate of Vℓ; otherwise, we may get all X(n)= 0,
+which will give an estimated variance of zero. What is more, t he kurtosis
+will become worse as ℓ→∞sincep,q→0 due to weak convergence.
+After performing these initial tests, mlmctest.mthen uses the driver
+routinemlmc.mto perform the MLMC computation for a number of values
+ofε, and plots the results. These plots will be explained later w hen the ﬁrst
+results are presented.
+3.4. MLMC driver routine
+The ﬁrst part of the documentation section at the top of mlmc.mis fairly
+self-explanatory:
+% function [P, Nl] = mlmc(N0,eps,mlmc_l, alpha,beta,gamma )
+%
+% P = value
+% Nl = number of samples at each level
+% N0 = initial number of samples on levels 0,1,2
+% eps = desired accuracy (rms error)
+% alpha -> weak error is O(2^{-alpha*l})
+% beta -> variance is O(2^{-beta*l})
+% gamma -> sample cost is O(2^{gamma*l})
+%
+% if alpha, beta are not positive then they will be estimated
+The user must supply an application-speciﬁc function to per form the cal-
+culations to compute Yℓon level ℓ. This function has to conform to the
+following template:
+
+===== PAGE 24 =====
+24 M.B. Giles
+% mlmc_l = application-specific function for level l estima tor
+% which must conform to the following template:
+%
+% function sums = mlmc_l(l,N)
+% inputs: l = level
+% N = number of paths
+% output: sums(1) = sum(Y)
+% sums(2) = sum(Y.^2)
+% where Y are iid samples with expected value:
+% E[P_0] on level 0
+% E[P_l - P_{l-1}] on level l>0
+The ﬁrst part of the code initialises various parameters, an d then uses
+the application-speciﬁc routine mlmclto generate the initial N0samples on
+each of the ﬁrst three levels.
+function [P, Nl] = mlmc(N0,eps,mlmc_l, alpha_0,beta_0,ga mma)
+alpha = max(0, alpha_0);
+beta = max(0, beta_0);
+L = 2;
+Nl(1:3) = 0;
+suml(1:2,1:3) = 0;
+dNl(1:3) = N0;
+% keep looping while additional samples need to be computed
+while sum(dNl) > 0
+% update sample sums on each level
+for l=0:L
+if dNl(l+1) > 0
+sums = feval(mlmc_l,l,dNl(l+1));
+Nl(l+1) = Nl(l+1) + dNl(l+1);
+suml(1,l+1) = suml(1,l+1) + sums(1);
+suml(2,l+1) = suml(2,l+1) + sums(2);
+end
+end
+The next part computes (or in later passes updates) the estim ates for
+mℓ≡ |E[Yℓ]|, andVℓ≡V[Yℓ]. If the mean and variance are decaying
+as expected, one would expect mℓ= 2−αmℓ−1, Vℓ= 2−βVℓ−1. To avoid
+possible problems from high kurtosis generating poor empir ical estimates,
+
+===== PAGE 25 =====
+Multilevel Monte Carlo methods 25
+the estimates for mℓandVℓare not allowed to decrease by more than factor
+1
+2relative to this anticipated value.2
+% compute absolute average and variance
+ml = abs( suml(1,:)./Nl);
+Vl = max(0, suml(2,:)./Nl - ml.^2);
+for l = 3:L+1
+ml(l) = max(ml(l), 0.5*ml(l-1)/2^alpha);
+Vl(l) = max(Vl(l), 0.5*Vl(l-1)/2^beta);
+end
+If the user has not supplied the values for αand/orβ, they are now
+estimated by linear regression.
+% use linear regression to estimate alpha, beta if not given
+if alpha_0 <= 0
+x = [(1:L)’ ones(L,1)] \ log2(ml(2:end))’;
+alpha = max(0.5,-x(1));
+end
+if beta_0 <= 0
+x = [(1:L)’ ones(L,1)] \ log2(Vl(2:end))’;
+beta = max(0.5,-x(1));
+end
+Next, the optimal number of samples on each level is computed , which in
+turn gives the number of additional samples which will need t o begenerated
+in the next pass.
+% set optimal number of additional samples
+Cl = 2.^(gamma*(0:L));
+Ns = ceil(2 * sqrt(Vl./Cl) * sum(sqrt(Vl.*Cl)) / eps^2);
+dNl = max(0, Ns-Nl);
+In the ﬁnal part of the loop, we test for weak convergence, usi ng the
+algorithm described in Section 3.1. If a new level is added, i ts variance is
+estimated by extrapolation, and the optimal number of sampl es is updated.
+% if (almost) converged, estimate remaining error and decid e
+2Haji-Ali et al. (2014 a) use an alternative Bayesian approach to address this same p rob-
+lem of estimating the variance.
+
+===== PAGE 26 =====
+26 M.B. Giles
+% whether a new level is required
+if sum( dNl > 0.01*Nl ) == 0
+range = -2:0;
+rem = max(ml(L+1+range).*2.^(alpha*range)) / (2^alpha - 1 );
+if rem > eps/sqrt(2)
+L = L+1;
+Vl(L+1) = Vl(L) / 2^beta;
+Nl(L+1) = 0;
+suml(1:4,L+1) = 0;
+Cl = 2.^(gamma*(0:L));
+Ns = ceil(2 * sqrt(Vl./Cl) * sum(sqrt(Vl.*Cl)) / eps^2);
+dNl = max(0, Ns-Nl);
+end
+end
+end
+The ﬁnal step after the completion of the main loop is to compu te the
+combined multilevel estimator:
+% finally, evaluate multilevel estimator
+P = sum(suml(1,:)./Nl);
+3.5. MLQMC algorithm
+WeconcludethischapterwiththedescriptionofaMLQMCalgo rithmwhich
+is based on that developed by Giles and Waterhouse (2009), bu t updated
+to bring it more in line with the MLMC algorithm in Section 3.1 .
+The key change in MLQMC is that Nℓis now the size of a set of QMC
+points used on level ℓ. This set of points are not constructed randomly
+and independently, but are instead constructed very carefu lly, using well-
+established QMC techniques such as rank-1 lattices (Dick et al. 2007) or
+Sobolsequences(JoeandKuo2008) toprovidearelatively un iformcoverage
+of a unit hypercube integration region. In the best cases, th is results in
+the approximate numerical integration error being O(N−1
+ℓ) rather than the
+usualO(N−1/2
+ℓ) error which comes from Monte Carlo sampling.
+Using just one set of Nℓpoints gives good accuracy, but no conﬁdence
+interval. To regain a conﬁdence interval one uses randomise d QMC in which
+the set of points is gives a random shift (for rank-1 lattice r ules) or a digital
+scrambling (for Sobol sequences). Using 32 sets of points, e ach collectively
+randomised, yields 32 set averages for the quantity of inter est,Yℓ, and from
+
+===== PAGE 27 =====
+Multilevel Monte Carlo methods 27
+these 32 random independent values the variance of their ave rage,Vℓ, can
+be estimated in the usual way.
+SinceVℓis now deﬁned to be the variance of the average, for a given
+number of levels L, the aim is to choose the Nℓin a way which ensures that
+L∑
+ℓ=0Vℓ≤1
+2ε2. (3.2)
+How can this be achieved most eﬃciently? Many QMC methods wor k nat-
+urally with Nℓas a power of 2. Doubling Nℓwill usually eliminate a large
+fraction of the variance, so the greatest reduction in total variance relative
+to the additional computational eﬀort is achieved by doublin gNℓon the
+levelℓ∗given by
+ℓ∗= argmax
+ℓVℓ
+NℓCℓ. (3.3)
+Basedonthis, andusingthesametestforweakconvergenceas intheMLMC
+algorithm, the MLQMC algorithm is:
+Algorithm 2 MLQMC algorithm.
+start with L=2, and an initial set size Nℓ=1 on levels ℓ= 0,1,2
+whilenot converged do
+evaluate 32 set averages on any level with new/changed value s ofNℓ
+compute corresponding new/changed estimates for Vℓ
+test whether total variance condition (3.2) is satisﬁed
+iftotal variance still too big then
+determine ℓ∗deﬁned by (3.3) and double Nℓ∗
+else
+test for weak convergence
+ifnot converged then
+setL:=L+1, and initialise NL=1
+end if
+end if
+end while
+
+===== PAGE 28 =====
+28 M.B. Giles
+4. Introduction to applications
+The remainder of the article presents and discusses a large n umber of dif-
+ferent applications using MLMC methods. In part, the large n umber is
+to illustrate the ﬂexibility and generality of the approach , and stimulate
+ideas on how it could be used for other applications which the reader may
+be interested in, but the variety of applications is also cho sen to illustrate
+diﬀerent responses to the following questions:
+1 How are the levels deﬁned?
+This is often quite simple, but in some cases, for example whe n using
+adaptive time-stepping, it is not so obvious.
+2 How are the coarse and ﬁne samples coupled when computing th e dif-
+ferencePℓ(ω)−Pℓ−1(ω)?
+What does it even mean for Pℓ(ω) andPℓ−1(ω) to correspond to the
+same sample ω? In some cases, it is very simple, but in other cases,
+such as for the continuous-time Markov chains, it requires a key insight
+to construct a suitable coupling.
+3 Are there problems with discontinuous outputs?
+When the output function is a discontinuous function of the i ntermedi-
+ate solution U, there is the possibility that a small diﬀerence between
+the intermediate solutions for the coarse and ﬁne samples le ads to an
+O(1) value for Pℓ−Pℓ−1. This usually leads to a larger variance, and
+hence a lower value for β. Addressing this problem is a critical issue,
+and we will consider a variety of diﬀerent techniques. Many of these
+exploit the ﬂexibility of slightly diﬀerent approximations for the coarse
+and ﬁne samples, provided always that the identity (2.4) is r espected,
+so that the telescoping sum is still valid.
+4 Is there scope for constructing even more eﬃcient multilev el estima-
+tors?
+As with the techniques for handling discontinuous output fu nctions,
+there can be ways of exploiting the ﬂexibility of diﬀerent coa rse and
+ﬁne approximations to achieve a higher rate of variance conv ergence
+than one would otherwise expect due to the rate of strong conv ergence
+of the intermediate solution.
+5 What is the current status on supporting numerical analysi s to explain
+the observed behaviour of numerical algorithms?
+For many applications this is the greatest challenge, but gr eat progress
+has been made in the past 5 years.
+
+===== PAGE 29 =====
+Multilevel Monte Carlo methods 29
+5. SDEs
+5.1. Euler-Maruyama discretisation
+The original multilevel path simulation paper (Giles 2008 b) treated stochas-
+tic diﬀerential equations
+dSt=a(St,t) dt+b(St,t) dW,
+using the simple Euler-Maruyama discretisation with a unif orm timestep h
+and Brownian increments ∆ Wn,
+ˆSn+1=ˆSn+a(ˆSn,tn)h+b(ˆSn,tn)∆Wn.
+The multilevel Monte Carlo implementation is very simple. O n levelℓ,
+the uniform timestep is taken to be hℓ=h0Mℓ, for some integer M. The
+timestep h0on the coarsest level is often taken to be the interval length
+T, so that there is just one timestep for the entire interval, b ut this is not
+required, and in some applications using such a large timest ep may lead to
+numerical results which are so inaccurate that they are not h elpful, i.e. they
+are such a poor control variate for the ﬁner approximations t hat they do
+not lead to a reduction in the variance. In such cases, it woul d be better to
+start with a smaller value for h0.
+The multilevel coupling is achieved by using the same underl ying driv-
+ing Brownian path for the coarse and ﬁne paths; this is accomp lished by
+summing the Brownian increments for the ﬁne path timesteps t o obtain the
+Brownian increments for the coarse timesteps. The multilev el estimator is
+then the natural one deﬁned in (2.2), with the speciﬁc payoﬀ a pproximation
+Pℓdepending on the particular application.
+Provided the SDE satisﬁes the usual conditions (see Theorem 10.2.2 in
+(Kloeden and Platen 1992)), the strong error for the Euler di scretisation
+with timestep hisO(h1/2), so that
+E[
+∥S−ˆS∥2]
+=O(h).
+For Lipschitz payoﬀ functions P(such as European, Asian and lookback
+options in ﬁnance) for which
+⏐⏐⏐P(S1)−P(S2)⏐⏐⏐≤K∥S1−S2∥,
+we have
+V[P−Pℓ]≤E[(P−Pℓ)2]≤K2E[
+∥S−ˆSℓ∥2]
+,
+and
+Vℓ≡V[Pℓ−Pℓ−1]≤2(
+V[P−Pℓ]+V[P−Pℓ−1])
+,
+and hence Vℓ=O(hℓ).
+
+===== PAGE 30 =====
+30 M.B. Giles
+Ifhℓ= 4−ℓh0, as in the numerical examples in (Giles 2008 b), then this
+givesα=2,β=2 andγ=2. Alternatively, if hℓ= 2−ℓh0with twice as many
+timesteps on each successive level, as used in the numerical examples in this
+article, then α=1,β=1 and γ=1. In either case, Theorem 1 gives the
+complexity to achieve a root-mean-square error of εto beO(ε−2(logε)2),
+which is near-optimal as Creutzig, Dereich, M¨ uller-Gronb ach and Ritter
+(2009) prove an O(ε−2) lower bound for the complexity. The same pa-
+per also proves that MLMC achieves an O(ε−2(logε)2) worst case optimal
+complexity for a class of Lipschitz path-dependent functio ns.
+Figure5.3 shows results for a ﬁnancial call option with a sin gle underlying
+asset satisfying Geometric Brownian Motion SDE,
+dSt=rStdt+σStdW,
+and payoﬀ P(S)≡exp(−rT) max(ST−K,0) withr= 0.05,σ= 0.2,T=
+1,S0=100,K=100. The full code is provided in (Giles 2014).
+The top two plots show the variance and absolute mean value fo r bothPℓ
+andPℓ−Pℓ−1. These are based on an initial sample of 105paths. The line
+for log2V[Pℓ−Pℓ−1] in the top left plot has a slope of approximately −1,
+corresponding to a variance proportional to hℓ, as expected. The line for
+log2|E[Pℓ−Pℓ−1]|also has a slope of approximately −1, implying an O(hℓ)
+weak convergence.
+The middle two plots show the consistency check and kurtosis , as dis-
+cussed in Section 3.3. These indicate there is no problem wit h the consis-
+tency, and the kurtosis is actually improving slightly with level.
+The bottom two plots have the results from 5 separate MLMC cal cula-
+tions, each with a diﬀerent speciﬁed accuracy εto be achieved. The bottom
+left plot shows the number of samples which is used for each le vel of the
+MLMC computation. The number of levels increases as εdecreases, as de-
+scribed in Section 3.1 to achieve the required weak error. Th e number of
+samplesalsovarieswithlevel, withmanymoreonthecoarses tlevel withjust
+one timestep. On the ﬁner levels, the optimal allocation of c omputational
+eﬀort leads to Nℓ∝√
+Vℓ/Cℓ≈2−ℓ.
+Thebottom right plot displays the total computational cost C, multiplied
+byε2. IfCwere approximately proportional to ε−2thenε2Cwould be
+approximately constant. Indeed this is what is seen, with th e slight increase
+asεdecreases being due to the |logε|2term in Theorem 1. For comparison,
+the bottom right plot also displays the cost using the standa rd Monte Carlo
+algorithm on the ﬁnest level used by the MLMC algorithm. The c ost ratio
+5−12, illustrating the beneﬁts provided by the MLMC algorithm .
+Figure 5.4 illustrates the problem with discontinuous payo ﬀ functions.
+The underlying SDE is exactly the same, but the payoﬀ is a digi tal option
+with payoﬀ P(S)≡10 exp(−rT)H(ST−K), where H(x) is the Heaviside
+step function. On the ﬁner levels, most samples have ﬁne and c oarse paths
+
+===== PAGE 31 =====
+Multilevel Monte Carlo methods 31
+0 2 4 6 8−6−4−202468
+level llog2 variance
+  
+Pl
+Pl− Pl−1
+0 2 4 6 8−15−10−505
+level llog2 |mean|
+  
+Pl
+Pl− Pl−1
+0 2 4 6 800.10.20.30.4
+level lconsistency check
+0 2 4 6 851015
+level lkurtosis
+0 2 4 6 8103104105106107108
+level lNl
+  
+10−210−1103104
+accuracy εε2 Cost
+  
+Std MC
+MLMC0.005
+0.01
+0.02
+0.05
+0.1
+Figure 5.3. Numerical results for a European call option using the
+Euler-Maruyama discretisation of the GBM SDE.
+
+===== PAGE 32 =====
+32 M.B. Giles
+0 2 4 6 8−2−1012345
+level llog2 variance
+  
+Pl
+Pl− Pl−1
+0 2 4 6 8−10−8−6−4−2024
+level llog2 |mean|
+  
+Pl
+Pl− Pl−1
+0 2 4 6 800.050.10.150.20.250.30.35
+level lconsistency check
+0 2 4 6 850100150200250300350
+level lkurtosis
+0 2 4 6 8103104105106107108
+level lNl
+  
+10−210−1103104
+accuracy εε2 Cost
+  
+Std MC
+MLMC0.005
+0.01
+0.02
+0.05
+0.1
+Figure 5.4. Numerical results for a digital call option using the Euler- Maruyama
+discretisation of the GBM SDE.
+
+===== PAGE 33 =====
+Multilevel Monte Carlo methods 33
+Euler-Maruyama Milstein
+option numerics analysis numerics analysis
+Lipschitz O(h)O(h) O(h2)O(h2)
+Asian O(h)O(h) O(h2)O(h2)
+lookback O(h)O(h) O(h2)o(h2−δ)
+barrier O(h1/2)o(h1/2−δ)O(h3/2)o(h3/2−δ)
+digital O(h1/2)O(h1/2logh)O(h3/2)o(h3/2−δ)
+Table 5.2. Observed and theoretical convergence rates for the m ultilevel
+correction variance for scalar SDEs, using the Euler-Maruyama an d Milstein
+discretisations. δis any strictly positive constant.
+which end on the same side of the strike K, and hence give Pℓ−Pℓ−1= 0.
+However, noting that the strong error is O(h1/2
+ℓ), and there is a bounded
+density of paths terminating in the neighbourhood of K, there is therefore
+anO(h1/2
+ℓ) fraction of the samples with the coarse and ﬁne paths on eith er
+side of the strike, with Pℓ−Pℓ−1=±1. This gives Vℓ=O(h1/2), and this
+lower rate of convergence is clearly visible in the top left p lot. Furthermore,
+E[(Pℓ−Pℓ−1)4] =O(h1/2
+ℓ) and so the kurtosis is O(h−1/2
+ℓ); this increase in
+kurtosis is obvious in the middle-right plot, which illustr ates why this is a
+helpful quantity to plot. Consequently, this application h asα=1,β=1
+2,
+γ=1, leading to the MLMC complexity being O(ε−2.5). This slightly worse
+complexity isvisibleinthebottom-right plot, andthecomp utational savings
+compared to the standard Monte Carlo method are lower.
+Table 5.2 summarisestheobserved variance convergence rat ein numerical
+experiments for a number of diﬀerent ﬁnancial options; the As ian option is
+based on the average value of the underlying asset, the lookb ack is based on
+its maximum or minimum value, and the barrier is a discontinu ous function
+of the maximum or minimum. The table also display the theoret ical results
+which have been obtained; the digital option analysis is due to Avikainen
+(Avikainen 2009) while the others are due to Giles, Higham & M ao (Giles,
+Higham and Mao 2009).
+5.2. Milstein discretisation
+For Lipschitz payoﬀs, the variance Vℓfor the natural multilevel estimator
+converges at twice the order of the strong convergence of the numerical ap-
+proximation of the SDE. This immediately suggests that it wo uld be better
+to replace the Euler-Maruyama discretisation by the Milste in discretisation,
+
+===== PAGE 34 =====
+34 M.B. Giles
+0 2 4 6 8−20−15−10−50510
+level llog2 variance
+  
+Pl
+Pl− Pl−1
+0 2 4 6 8−10−8−6−4−2024
+level llog2 |mean|
+  
+Pl
+Pl− Pl−1
+0 2 4 6 800.10.20.30.4
+level lconsistency check
+0 2 4 6 8010203040506070
+level lkurtosis
+0 2 4 6 8102104106108
+level lNl
+  
+10−210−1103104105
+accuracy εε2 Cost
+  
+Std MC
+MLMC0.005
+0.01
+0.02
+0.05
+0.1
+Figure 5.5. Numerical results for a European call option using the Mils tein
+discretisation of the GBM SDE.
+
+===== PAGE 35 =====
+Multilevel Monte Carlo methods 35
+(Giles 2008 a) since it gives ﬁrst order strong convergence under certain con-
+ditions (see Theorem 10.3.5 in (Kloeden and Platen 1992)).
+For a scalar SDE the Milstein discretisation is
+ˆSn+1=ˆSn+a(ˆSn,tn)h+b(ˆSn,tn)∆Wn+1
+2b(ˆSn,tn)∂b
+∂S(ˆSn,tn)(
+∆W2
+n−h)
+and Figure 5.5 demonstrates the improved results obtained f or the call op-
+tion based on a single underlying GBM asset. Vℓis nowO(h2
+ℓ), leading to
+α=1,β=2,γ=1, and there is a signiﬁcant reduction in the total computa-
+tional cost compared to MLMC using the Euler-Maruyama discr etisation.
+Because β > γ, the dominant computational cost is on the coarsest lev-
+els. Since these are low-dimensional, they are well suited t o the use of
+quasi-Monte Carlo methods which are particularly eﬀective i n lower di-
+mensions. This has been investigated by Giles & Waterhouse ( Giles and
+Waterhouse 2009) using a rank-1 lattice rule to generate the quasi-random
+numbers, randomisation with 32 independent oﬀsets to obtain conﬁdence
+intervals, and a standard Brownian Bridge construction of t he increments
+of the driving Brownian process. The numerical results show ed that MLMC
+on its own was better than QMC on its own, but the combination o f the
+two was even better. The QMC treatment greatly reduced the va riance per
+sample for the coarsest levels, resulting in signiﬁcantly r educed costs over-
+all. In the simplest case of a Lipschitz European payoﬀ, the co mputational
+complexity was reduced from O(ε−2) to approximately O(ε−1.5).
+Digital options
+As with the Euler-Maruyama discretisation, discontinuous payoﬀs pose a
+challenge to the multilevel Monte Carlo approach because sm all diﬀerences
+in the coarse and ﬁne path simulations can lead to an O(1) diﬀerence in
+the payoﬀ function. In the case of a digital option, if we use t he natural
+multilevel estimator then Pℓ−Pℓ−1=O(1) for an O(hℓ) fraction of thepaths,
+givingVℓ=O(hℓ), and a kurtosis which is O(h−1
+ℓ). To obtain a multilevel
+estimator with an improved variance convergence, we exploi t the ideas of
+Section 2.1 and develop diﬀerent estimators PcandPffor the coarse and
+ﬁne paths, based on one of the following ideas:
+•conditional expectation
+•splitting
+•change of measure
+The conditional expectation approach builds on a well-esta blished tech-
+nique for payoﬀ smoothing which is used for pathwise sensiti vity analysis
+(see, for example, pp. 399-400 in (Glasserman 2004)). We sta rt by con-
+sidering the ﬁne path simulation, and make a slight change by using the
+Euler-Maruyama discretisation for the ﬁnal timestep, inst ead of the Mil-
+stein discretisation. Conditional on the value ˆSN−1which is the numerical
+
+===== PAGE 36 =====
+36 M.B. Giles
+approximation of ST−hone timestep before the maturity T, the numerical
+approximation for the ﬁnal value ˆSNhas a Gaussian distribution, and for
+a simple digital option the conditional expectation is know n analytically.
+Thus the ﬁne path payoﬀ can be taken to be
+Pf
+ℓ= 25 exp( −rT)Φ(ˆSf
+N−1+a(ˆSf
+N−1)hℓ−K
+b(ˆSf
+N−1)√hℓ)
+,
+where Φ is the Normal cumulative distribution function.
+A similar treatment is used for the coarse path, except that i n the ﬁnal
+timestep, we re-use the known value of the Brownian incremen t for the
+second last ﬁne timestep, which corresponds to the ﬁrst half of the ﬁnal
+coarse timestep. This results in the conditional distribut ion for the coarse
+path underlying at maturity matching that of the ﬁne path to w ithinO(h),
+for both the mean and the standard deviation (Giles, Debraba nt and R¨ oßler
+2013), and the corresponding coarse path payoﬀ function is
+Pc
+ℓ−1= 25 exp( −rT)Φ(ˆSc
+N−2+a(ˆSc
+N−2)hℓ−1+b(ˆSc
+N−2)√hℓ−K
+b(ˆSc
+N−2)√hℓ)
+.
+Consequently, the diﬀerence in payoﬀ between the coarse and ﬁ ne paths
+near the payoﬀ discontinuity is O(h1/2), giving a variance which is approxi-
+matelyO(h3/2), and a kurtosis which is approximately O(h−1/2). This leads
+toα=1,β=3/2 andγ=1. Since β > γ, the MLMC complexity is O(ε−2).
+This is all illustrated by the numerical results in Figure 5. 6. One particu-
+larly interesting feature of these results is that there is z ero variance on the
+coarsest level. This is because there is only one timestep on the coarsest
+level, and therefore the conditional expectation is taken i mmediately and
+every sample gives the same payoﬀ.
+It is very important in this conditional expectation formul ation that
+E[Pc
+ℓ−1] =E[Pf
+ℓ−1] so that the numerical payoﬀ approximation on level ℓ−1
+has the sameexpected value regardless of whether it is the co arser or ﬁner of
+the two levels. This ensures that the identity in Equation (2 .4) is respected
+so that the telescoping summation remains valid.
+The conditional expectation technique works well in 1D wher e there is
+a known analytic value for the conditional expectation, but in multiple di-
+mensions it may not be known. In this case, one can use the tech nique of
+“splitting” (Asmussen and Glynn 2007). Here the conditiona l expectation is
+replaced by a numerical estimate, averaging over a number of sub-samples.
+i.e. for each set of Brownian increments up to one ﬁne timeste p before
+the end, one uses a number of samples of the ﬁnal Brownian incr ement to
+produce an average payoﬀ. If the number of sub-samples is chos en appro-
+priately, the variance is the same, to leading order, withou t any increase
+in the computational cost, again to leading order. Because o f its simplicity
+
+===== PAGE 37 =====
+Multilevel Monte Carlo methods 37
+0 2 4 6 8−15−10−50510
+level llog2 variance
+  
+Pl
+Pl− Pl−1
+0 2 4 6 8−15−10−505
+level llog2 |mean|
+  
+Pl
+Pl− Pl−1
+0 2 4 6 800.10.20.30.40.5
+level lconsistency check
+0 2 4 6 8020406080100120
+level lkurtosis
+0 2 4 6 8102103104105106
+level lNl
+  
+10−210−1101102103104105
+accuracy εε2 Cost
+  
+Std MC
+MLMC0.005
+0.01
+0.02
+0.05
+0.1
+Figure 5.6. Numerical results for a digital call option using the Milstein
+discretisation of the GBM SDE, and a conditional expectation MLMC e stimator.
+
+===== PAGE 38 =====
+38 M.B. Giles
+and generality, this is now the author’s preferred approach . Furthermore,
+one can revert to using the Milstein approximation for the ﬁn al timestep.
+The change of measure approach is another approximation to t he condi-
+tional expectation. Using the Euler-Maruyama approximati on for the ﬁnal
+timestep, the ﬁne and coarse path conditional distribution s at maturity are
+two very similar Gaussian distributions. Instead of follow ing the splitting
+approach of taking corresponding samples from these two dis tributions, we
+can take a sample from a third Gaussian distribution (with a m ean and
+variance perhaps equal to the average of the other two). This leads to the
+introduction of a Radon-Nikodym derivative for each path, a nd the diﬀer-
+ence in the payoﬀs from the two paths is then due to the diﬀerence in their
+Radon-Nikodym derivatives.
+In the speciﬁc context of digital options, this is a more comp licated
+method to implement, and the resulting variance is no better . However,
+in other contexts a similar approach can be very eﬀective.
+Lookback and barrier options
+Lookback and barrier options are ﬁnancial options which dep end on the
+minimum (or maximum) values of the underlying asset during t he whole
+simulation interval [0 ,T]. A multilevel estimator based directly on the min-
+imum (or maximum) of the values at the discrete timesteps wil l have a poor
+variance. This is because there is an O(h1/2) variation in the asset value
+within each timestep of size h, and therefore there is an O(hℓ) diﬀerence
+on average between the minimum (or maximum) values for the co arse and
+ﬁne paths. This results in an O(hℓ) variance for lookback options which
+are a Lipschitz function of the minimum (or maximum), and an e ven worse
+O(h1/2
+ℓ) variance for barrier options which are a discontinuous fun ction of
+the minimum (or maximum).
+The key to achieving an improved variance is the deﬁnition of a Brownian
+Bridge interpolant based on the approximation that the drif t and volatil-
+ity do not vary within the timestep (Giles 2008 a). For the ﬁne path, the
+interpolant for timestep [ tn,tn+h] is
+ˆSf(t) =ˆSf
+n+λ(ˆSf
+n+1−ˆSf
+n)+bf
+n(W(t)−Wn−λ(Wn+1−Wn))
+whereλ= (t−tn)/handbf
+n≡b(ˆSf
+n,tn). This interpolant corresponds to a
+Brownian motion with constant drift and volatility, and for this there are
+standard results for the distribution of the minimum or maxi mum within
+each ﬁne timestep (Glasserman 2004) which can be used to cons truct payoﬀ
+approximations.
+A similar construction can be used for the coarse path, but it s timestep
+is twice as large, so the interpolant for the time interval [ tn,tn+2h] is
+ˆSc(t) =ˆSc
+n+λ(ˆSc
+n+2−ˆSc
+n)+bc
+n(W(t)−Wn−λ(Wn+2−Wn))
+
+===== PAGE 39 =====
+Multilevel Monte Carlo methods 39
+whereλ= (t−tn)/(2h) andbc
+n≡b(ˆSc
+n,cn). We can now evaluate this
+interpolant at time tn+h, obtaining
+ˆSc(tn+1) =1
+2(ˆSc
+n+ˆSc
+n+2)+1
+2bc
+n((Wn+1−Wn)−(Wn+2−Wn+1))
+using the Brownian increments Wn+1−WnandWn+2−Wn+1already gen-
+erated for the ﬁne path. The standard Brownian path results c an then be
+used to obtain the coarse path payoﬀ approximations.
+The full details are given in (Giles 2008 a); the outcome is that β=2 for
+lookback options, and β=1.5 for barrier options. Hence, we remain in the
+regime where β>γand the overall complexity is O(ε−2).
+Table 5.2 summarises the convergence behaviour observed nu merically for
+the diﬀerent ﬁnancial option types using the Milstein discre tisation, and the
+supporting numerical analysis by Giles et al. (2013).
+5.3. Multi-dimensional SDEs
+The discussion so far has been for scalar SDEs, but the comput ational
+beneﬁts of Monte Carlo methods arise in higher dimensions. F or multi-
+dimensional SDEs satisfying the usual commutativity condi tion (see, for
+example, p.353 in (Glasserman 2004)) the Milstein discreti sation requires
+only Brownian increments for its implementation, and most o f the analysis
+above carries over very naturally.
+The only diﬃculties are with lookback and barrier options wh ere the
+classical results for the distribution of the minimum or max imum of a one-
+dimensional Brownian motion do not extend to the joint distr ibution of
+the minima or maxima of two correlated Brownian motions. How ever, if
+the ﬁnancial option depends on the weighted average of a set o f underlying
+assets, then the Brownian interpolation for each individua l asset leads nat-
+urally to a Brownian interpolation for the average, and then the standard
+one-dimensional results can be used as usual.
+Figures 5.7 and 5.8 show results for lookback and barrier opt ions based
+on 5 underlying assets. Full details of the numerical constr uction are given
+in (Giles 2009) and can also be viewed within the code (Giles 2 014). The
+MLMCvarianceis O(h2)forthelookbackoption, and O(h3/2)forthebarrier
+option.
+With multi-dimensional SDEs which do not satisfy the commut ativity
+condition, the Milstein discretisation requires the simul ation of L´ evy ar-
+eas, iterated Itˆ o integrals which can only be relatively ea sily simulated
+in 2D. This is an unavoidable problem; the classical result o f Clark and
+Cameron (1980) proves that O(h1/2) strong convergence is the best that
+can be achieved in general using only Brownian increments.
+Nevertheless, GilesandSzpruch(2014) havedevelopedanan tithetictreat-
+ment which achieves a very low variance despite the O(h1/2) strong conver-
+
+===== PAGE 40 =====
+40 M.B. Giles
+0 2 4 6 8−15−10−50510
+level llog2 variance
+  
+Pl
+Pl− Pl−1
+0 2 4 6 8−10−505
+level llog2 |mean|
+  
+Pl
+Pl− Pl−1
+0 2 4 6 800.10.20.30.40.5
+level lconsistency check
+0 2 4 6 877.588.599.5
+level lkurtosis
+0 2 4 6 8102104106108
+level lNl
+  
+10−210−1103104105106
+accuracy εε2 Cost
+  
+Std MC
+MLMC0.01
+0.02
+0.05
+0.1
+0.2
+Figure 5.7. Numerical results for a lookback option on a basket of 5 G BM assets.
+
+===== PAGE 41 =====
+Multilevel Monte Carlo methods 41
+0 2 4 6 8−15−10−50510
+level llog2 variance
+  
+Pl
+Pl− Pl−1
+0 2 4 6 8−10−505
+level llog2 |mean|
+  
+Pl
+Pl− Pl−1
+0 2 4 6 80.050.10.150.20.250.3
+level lconsistency check
+0 2 4 6 801000200030004000500060007000
+level lkurtosis
+0 2 4 6 8102104106108
+level lNl
+  
+10−210−1103104105106
+accuracy εε2 Cost
+  
+Std MC
+MLMC0.01
+0.02
+0.05
+0.1
+0.2
+Figure 5.8. Numerical results for a barrier option on a basket of 5 GB M assets.
+
+===== PAGE 42 =====
+42 M.B. Giles
+gence. The estimator which is used is
+Yℓ=N−1
+ℓ∑
+i1
+2(Pℓ(ωi)+Pℓ(ωa
+i))−Pℓ−1(ωi).
+Hereωirepresents the driving Brownian path, and ωa
+iis an antithetic coun-
+terpart deﬁned by a time-reversal of the Brownian path withi n each coarse
+timestep. This results in the Brownian increments for the an tithetic ﬁne
+path being swapped relative to the original path. Lengthy an alysis proves
+that the average of the ﬁne and antithetic paths is within O(h) of the coarse
+path, and hence the multilevel variance is O(h2) for smooth payoﬀs, and
+O(h3/2) for the standard European call option.
+This treatment has been extended to handle lookback and barr ier op-
+tions (Giles and Szpruch 2013). This combines sub-sampling of the Brown-
+ian path to approximate the L´ evy areas with suﬃcient accura cy to achieve
+O(h3/4) strong convergence, with an antithetic treatment at the ﬁn est level
+of resolution to ensure that the average of the ﬁne paths is wi thinO(h) of
+the coarse path.
+5.4. Computing sensitivities
+In computational ﬁnance, it is important to be able to comput e sensitivities
+in addition to option prices. When the option payoﬀ is contin uous, the
+standardMonteCarloapproachispathwisesensitivityanal ysis(Broadieand
+Glasserman 1996) (developed earlier as Inﬁnitesimal Pertu rbation Analysis
+(L’Ecuyer 1990)) which considers linearised perturbation s to the underlying
+path evolution, and the consequential perturbation to the p ayoﬀ.
+From amultilevel Monte Carlo point of view, the diﬃculty tha t this intro-
+duces is that the derivative of a call option payoﬀ function i s discontinuous.
+Hence, computing ﬁrst order sensitivities for a call option has similar dif-
+ﬁculties to computing the option price for a digital option. Sensitivities
+for digital options can be obtained by ﬁrst using the conditi onal expecta-
+tion approach described previously, and then applying path wise sensitivity
+analysis to this.
+Full details on how to formulate appropriate MLMC estimator s are given
+by Burgos and Giles (2012), and the numerical analysis of the resulting
+variance is given by Burgos (2014).
+5.5. Exit times and Feynman-Kac formula
+The simplest 1D form of the Feynman-Kac formula states that i fu(x,t) is
+the solution of the parabolic PDE
+∂u
+∂t+a(x,t)∂u
+∂x+1
+2b2(x,t)∂2u
+∂x2= 0,
+
+===== PAGE 43 =====
+Multilevel Monte Carlo methods 43
+forx∈V, subject to terminal condition u(x,T) =f(x), and boundary
+condition u(x,t)=g(x) forx∈∂V, thenu(x,t) can also be written as the
+conditional expectation
+u(x,t) =E[f(ST)1τ≥T+g(Sτ)1τ<T|St=x]
+whereStsatisﬁes the SDE
+dSt=a(St,t) dt+b(St,t) dWt
+andτis the exit time
+τ= inf
+t{t:St/∈V}.
+Because of this formula and its multi-dimensional generali sation, and also
+because of other applications which are concerned with the t ime at which
+particles exit a particular domain, there is considerable i nterest in the esti-
+mation of exit times.
+Higham, Mao, Roj, Song and Yin (2013) consider the estimatio n of
+E[τ] using a multilevel approximation based on an Euler-Maruya ma dis-
+cretisation. They prove that this can be achieved for very ge neral multi-
+dimensional SDEs at a computational cost which is O(ε−3|logε|1/2). This
+is better than the O(ε−4) complexity of a standard Monte Carlo simulation
+using the same numerical approximation of the exit time, but is not better
+than the complexity achieved by Gobet and Menozzi (2010) usi ng a Monte
+Carlo simulation with a boundarycorrection which improves the weak order
+of convergence to ﬁrst order.
+Earlier research by Primozic (2011) demonstrates an O(ε−2) complexity
+for a one-dimensional problem. This builds on the Milstein a pproxima-
+tion for barrier options developed by Giles (2008 a), using the approximate
+Brownian interpolation to determine the approximate proba bility that the
+underlying path crosses the boundary within each timestep. This improves
+both the weak convergence and the multilevel variance, givi ngα=1,β=3/2
+andγ=1. This approach is capable of being extended to multi-dime nsional
+SDEs which satisfy the commutativity condition which allow s the use of the
+Milstein discretisation without requiring the simulation of L´ evy areas.
+5.6. Stiﬀ and highly nonlinear SDEs
+In the numerical examples presented above, it is possible to use only one
+timesteponthecoarsestlevel ofapproximation, andstillo btainasuﬃciently
+accurate path simulation so that the resulting payoﬀ approx imation is a
+useful control variate for the next level of approximation.
+However, in other applications this may not be true. If the dr ift term
+has a characteristic time-scale of τ, as in a mean-reverting drift ( θ−St)/τ,
+then when using the explicit Euler-Maruyama discretisatio n the timestep
+h0on the coarsest level cannot be much larger than τwithout encountering
+
+===== PAGE 44 =====
+44 M.B. Giles
+severe numerical stability problems. This is a natural rest riction shared by
+explicit discretisations of ordinary diﬀerential equation s.
+A related problem is addressed by Hutzenthaler, Jentzen and Kloeden
+(2013), who are concerned with SDEs such as
+dSt=−S3
+tdt+ dWt,
+which have a super-linear growth in the drift and/or the vola tility. This
+again leads to numerical instability if a uniform timestep i s used. Their so-
+lution is to introduce a slight modiﬁcation to the Euler-Mar uyama discreti-
+sation which limits the size of the drift term on each level of approximation
+whenStis large, to avoid this instability.
+Otherapproaches to theseproblemsincludetheuseof drift- implicit meth-
+ods(Dereich, NeuenkirchandSzpruch2012, Higham, MaoandS tuart2002),
+or a change or variables equivalent to the use of an integrati ng factor in
+ODEs (see the Heston treatment in (Giles 2008 a) which was suggested by
+Mark Broadie).
+Another important approach, when the diﬃculties are only fo r extreme
+value of St, or for a short time interval, is to use adaptive time-steppi ng.
+Hoel, von Schwerin, Szepessy and Tempone (2012) and Hoel, vo n Schwerin,
+Szepessy and Tempone (2014) construct a multilevel adaptiv e timestepping
+discretisation in which, for each stochastic instance ω, the timesteps used
+on level ℓare a subdivision of those used on level ℓ−1, which in turn are
+a subdivision of those on level ℓ−2, and so on. By doing this, the payoﬀ
+Pℓon levelℓis the same regardless of whether one is computing Pℓ−Pℓ−1
+orPℓ+1−Pℓ, and therefore the MLMC telescoping summation is respected .
+Another notable aspect of their work is the use of adjoint/du al sensitivities
+to determine the optimal timestep size.
+New unpublished work by Giles, S¨ uli, Whittle and Ye impleme nts adap-
+tive time-stepping slightly diﬀerently. Instead of the time steps on one level
+being a subdivision of those on the level above, it uses a comp letely inde-
+pendent adaptation on each level of reﬁnement, with an adapt ive timestep
+of the form
+hℓ= 2−ℓH(ˆSn),
+whereH(S) is independent of level. This results in timesteps which ar e not
+naturally nested. It may appear that this would cause diﬃcul ties in the
+MLMC implementation, but Figure 5.9 tries to illustrate tha t it does not.
+The underlying Brownian path needs to be sampled at a set of ti mes which
+are the union of the simulation times used by the coarse and ﬁn e path. The
+independent Brownian increments can be simulated for each t ime interval,
+and summed to give W(t) at the required times. An outline algorithm to
+implement this is given in Algorithm 3.
+
+===== PAGE 45 =====
+Multilevel Monte Carlo methods 45
+coarse path
+ﬁne patht✲ ✉ ✉ ✉ ✉ ✉ ✉ ✉ ✉
+Figure 5.9. Generation of Brownian increments for a multilevel simulat ion with
+adaptive timestepping
+Algorithm 3 Outline of a multilevel algorithm with adaptive timesteppi ng
+for the time interval [0 ,T]
+t:= 0
+tc:= 0
+tf:= 0
+∆Wc:= 0
+∆Wf:= 0
+while(t < T)do
+told:=t
+t:= min(tc,tf)
+h:=t−told
+∆W:=√
+hZ
+∆Wc:= ∆Wc+∆W
+∆Wf:= ∆Wf+∆W
+ift=tcthen
+update coarse path using ∆ Wc
+compute adapted coarse path timestep hc
+tc:= min(tc+hc,T)
+∆Wc:= 0
+end if
+ift=tfthen
+update ﬁne path using ∆ Wf
+compute adapted ﬁne path timestep hf
+tf:= min(tf+hf,T)
+∆Wf:= 0
+end if
+end while
+compute Pℓ−Pℓ−1
+
+===== PAGE 46 =====
+46 M.B. Giles
+5.7. CDF and density estimation
+In some applications the objective is an estimation of the cu mulative distri-
+bution function (CDF) or density of an output quantity P, rather than its
+expected value.
+Kebaier and Kohatsu-Higa (2008) addressed the problem of co nstructing
+pointwise estimates of the density of the SDE solution ST, using Malliavin
+calculus and a two-level variance reduction based on Kebaie r’s earlier work
+(Kebaier 2005).
+Motivated by an interesting engineering application (Ilie v, Nagapetyan
+and Ritter 2013), a multilevel approach to CDF and density es timation for
+arbitrary output functions has been developed by Giles et al . (2014). The
+CDF of a scalar output Pis represented approximately by a polynomial
+spline function. Pointwise values of the CDF which are used a s knot values
+in the spline construction correspond to expected values of an indicator
+function,
+C(x)≡E[1P<x]≡E[H(x−P)],
+whereH(x) is the Heaviside step function. To improve the multilevel v ari-
+ance, this is smoothed to give
+Cδ(x) =E[(g((x−P)/δ)],
+whereg(x) is a continuous function with g(x)=0 for x<−1, andg(x)=1
+forx>1. The parameter δcontrols the degree of smoothing. As δ→0,
+g(x/δ)→H(x), and the accuracy improves but the variance of the multi-
+level estimator increases. Hence, this application has bot h spline approx-
+imation and smoothing errors in addition to the usual discre tisation and
+sampling errors. Balancing these errors gives the best accu racy for a given
+computational cost. The MLMC approach gives a substantial i mprovement
+in the order of complexity, and numerical examples demonstr ate the savings
+which can be achieved.
+The same paper also discusses the extension to density estim ation. In
+this case, the density ρ(x) of the scalar output Pis given by
+ρ(x) = lim
+δ→0E[
+δ−1g((x−P)/δ)]
+,
+whereg(x) is a continuous function with g(x)=0 for |x|>1, and
+∫1
+−1g(x) dx= 1.
+This has similarities with kernel density estimation (Silv erman 1986), and
+can also be generalised to multi-dimensional outputs.
+
+===== PAGE 47 =====
+Multilevel Monte Carlo methods 47
+6. Jump diﬀusion and L´ evy processes
+6.1. Jump-diﬀusion processes
+With ﬁnite activity jump-diﬀusion processes, such as in the M erton model
+(Merton 1976), it is natural to simulate each individual jum p using a jump-
+adapted discretisation (Mikulevicius and Platen 1988, Pla ten and Bruti-
+Liberati 2010) in which the Brownian diﬀusion between each ju mp is ap-
+proximated using an Euler-Maruyama or Milstein approximat ion, and then
+each jump is simulated exactly.
+If the jump activity rate is constant, then for each stochast ic sample ω
+the jumps on the coarse and ﬁne paths will occur at the same tim e, and
+therefore the extension of the multilevel method is straigh tforward with the
+coarse and ﬁne paths using the same underlying Brownian path s, and the
+same random variables to determine the jump times and streng ths (Xia and
+Giles 2012).
+If the jump rate is path-dependent then the situation is tric kier. If there
+is a known upper bound to the jump rate, then one can use the “th inning”
+approach of Glasserman and Merener (2004) in which a set of ca ndidate
+jump times is simulated based on the constant upper bound, an d then a
+subset of these are selected to be real jumps. The problem wit h the multi-
+level extension of this is that some candidate jumps will be s elected for the
+coarse path but not for the ﬁne path, or vice versa, leading to anO(1) dif-
+ference in the paths and hence the payoﬀs. Xia and Giles (2012) avoid this
+by using a change of measure to ensure that the jump times are t he same
+for both paths; this introduces a Radon-Nikodym into the pay oﬀ evaluation,
+but signiﬁcantly reduces the multilevel correction varian ce.
+6.2. More general processes
+With inﬁnite activity L´ evy processes it is impossible to si mulate each jump.
+One approach is to simulate the large jumps and either neglec t the small
+jumps or approximate their eﬀect by adding a Brownian diﬀusion term
+(Dereich 2011, Dereich and Heidenreich 2011, Marxen 2010). Following
+this approach, the cutoﬀ δℓfor the jumps which are simulated varies with
+level, and δℓ→0 asℓ→ ∞to ensure that the bias converges to zero.
+In the multilevel treatment, when simulating Pℓ−Pℓ−1the jumps fall into
+three categories. The ones which are larger than δℓ−1get simulated in
+both the ﬁne and coarse paths. The ones which are smaller than δℓare
+either neglected for both paths, or approximated by the same Brownian
+increment. The diﬃculty is in the intermediate range [ δℓ,δℓ−1] in which the
+jumps are simulated for the ﬁne path, but neglected or approx imated for
+the coarse path. This is what leads to the diﬀerence in path sim ulations,
+and contributes to a non-zero value for Pℓ−Pℓ−1.
+Alternatively, for many SDEs driven by a L´ evy process it is p ossible to
+
+===== PAGE 48 =====
+48 M.B. Giles
+VG NIG α-stable
+Asian O(h2)O(h2) O(h2)
+lookback O(h)O(h|logh|)O(h2/α−δ)
+barrier o(h1−δ)o(h1/2−δ)o(h1/α−δ)
+Table 6.3. Numerical analysis convergence rates for the multilevel v ariance
+Vℓ≡V[Pℓ−Pℓ−1] for Variance-Gamma, NIG, and spectrally-negative α-stable
+processes and diﬀerent ﬁnancial options. δis any strictly positive constant.
+directly simulate the increments of the L´ evy process over a set of uniform
+timesteps (Schoutens 2003), in exactly the same way as one si mulates Brow-
+nian increments. When estimating the price of European opti ons which de-
+pend only on the ﬁnal value of the L´ evy process, there is no ne ed for MLMC
+as one can directly simulate the ﬁnal value. However, multil evel is still very
+usefulfor path-dependentﬁnancial options such as Asian, l ookback andbar-
+rier options, and there has been good progress in the numeric al analysis of
+these applications (Xia 2014, Xia and Giles 2014). Table 6.3 gives the con-
+vergence rates obtained from the numerical analysis; numer ical experiments
+support these results but suggest they may not be sharp in som e cases.
+For other L´ evy processes, it may be possible in the future to simulate
+the increments by constructing near-perfect (i.e. to withi n the limits of
+ﬁnite precision computer arithmetic) approximations to th e inverse of the
+cumulative distribution function. Where this is possible, it may be the best
+approach to achieve a perfect coupling between the coarse an d ﬁne path
+simulations, since the increments of the driving L´ evy proc ess for the coarse
+path can be obtained trivially by summing the increments for the ﬁne path.
+Finally, we mention the work of Ferreiro-Castilla, Kyprian ou, Scheichl
+and Suryanarayana (2014) who develop a multilevel approach for barrier
+options using a Wiener-Hopf factorisation technique to sam ple exactly from
+the joint distribution of the terminal value of a L´ evy proce ss at an expo-
+nential random stopping time, and its maximum (or minimum) o ver the
+intervening interval. The particularly novel aspect here i s the random ter-
+minal time; by using multiple shorter random periods it is po ssible, because
+of the Central Limit Theorem, to get closer to a desired ﬁxed t erminal
+time, but at an increased cost. In the multilevel coupling, t he thinning ap-
+proach of Glasserman and Merener (2004) is again used to link the coarse
+and ﬁne path simulations. Numerical analysis for lookback o ptions gives a
+complexity which is O(ε−3) for processes of bounded variation, and O(ε−4)
+for processes of unbounded variation. Numerical experimen ts for barrier
+options demonstrate a similar complexity.
+
+===== PAGE 49 =====
+Multilevel Monte Carlo methods 49
+7. PDEs and SPDEs
+After the initial work with MLMC for SDEs, it was immediately clear
+that it was equally applicable to SPDEs, and indeed the compu tational
+savings would be greater because the cost of a single sample i ncreases
+more rapidly with grid resolution for SPDEs with higher spac e-time di-
+mension. The ﬁrst published work was by Graubner (2008); on p arabolic
+SPDEs, and since then there has been a variety of papers on ell iptic (Barth,
+SchwabandZollinger2011, Charrier, Scheichl andTeckentr up 2013, Cliﬀeet
+al. 2011, Teckentrup, Scheichl, Giles and Ullmann 2013), pa rabolic (Barth,
+Lang and Schwab 2013, Giles and Reisinger 2012), hyperbolic (Mishra,
+Schwab and Sukys2012) SPDEs, as well as for mixedelliptic-h yperbolic sys-
+tems (Efendiev, Iliev and Kronsbein 2013, M¨ uller, Jenny an d Meyer 2013).
+In almost all of this work, the construction of the multileve l estimator is
+quite natural, using a geometric sequence of grids and the us ual estimators
+forPℓ−Pℓ−1. It is the numerical analysis of the variance of the multilev el
+estimator which is often very challenging.
+7.1. Two simple examples
+The MATLAB codes accompanying this article include two simp le PDE
+examples.
+Theﬁrstisreally aboundary-valueODEapplication, butit c an beviewed
+as a 1D elliptic PDE, with random coeﬃcients and random forci ng. The
+equation is
+d
+dx(
+c(x)du
+dx)
+=−50Z2,
+on 0<x<1, with boundary data u(0)=u(1)=0. Zis a Normal random
+variable with zero mean and unit variance, and
+c(x) = 1+ax
+withabeing a uniform random variable on the unit interval (0 ,1). The
+output quantity of interest is chosen to be
+P=∫1
+0u(x)dx.
+The multilevel implementation is very easy. Level ℓuses a uniform grid
+with spacing hℓ= 2−(ℓ+1), so there is just one interior grid point on the
+coarsest level. A simple second order central diﬀerence appr oximation is
+used (equivalent to a ﬁnite element approximation with a 1-p oint quadra-
+ture).
+The uniform second order accuracy means that there is a const antK
+such that |P−Pℓ|< Kh2
+ℓand therefore we have α=2,β=4 and γ=1,
+
+===== PAGE 50 =====
+50 M.B. Giles
+0 2 4 6 8−30−20−10010
+level llog2 variance
+  
+Pl
+Pl− Pl−1
+0 2 4 6 8−15−10−505
+level llog2 |mean|
+  
+Pl
+Pl− Pl−1
+0 2 4 6 800.10.20.30.40.5
+level lconsistency check
+0 2 4 6 812131415161718
+level lkurtosis
+0 2 4 6102104106108
+level lNl
+  
+10−210−1102103104
+accuracy εε2 Cost
+  
+Std MC
+MLMC0.005
+0.01
+0.02
+0.05
+0.1
+Figure 7.10. Numerical results for a 1D elliptic PDE with random coeﬃcie nts and
+random forcing.
+
+===== PAGE 51 =====
+Multilevel Monte Carlo methods 51
+resulting in an O(ε−2) complexity. All of these features can be veriﬁed in
+the numerical results in Figure 7.10.
+The second example is a 1D parabolic SPDE, in which u(x,t) satisﬁes the
+SPDE
+du=∂2u
+∂x2dt+10 dW,
+on the domain 0 <x<1 with boundary data u(0,t)=u(1,t)=0 and initial
+datau(x,0)=0. The output functional is chosen to be
+P=∫1
+0u2(x,0.25).
+The multilevel implementation is again very easy. An Euler- Maruyama
+time discretisation with timestep k, combined with a second order space
+discretisation with uniform grid spacing h, gives the discrete approximation
+un+1
+j=un
+j+k
+h2(
+un
+j+1−2un
+j+un
+j−1)
++10∆Wn.
+The level ℓapproximation uses
+hℓ= 2−(ℓ+1), kℓ=1
+4h2
+ℓ.
+Keeping kℓ/h2
+ℓ=1
+4ensures the explicit numerical discretisation is stable on
+all levels. Since the number of grid points doubles on each le vel, and the
+number of timesteps increases by factor 4, the cost per sampl e increases by
+factor 8, giving γ=3.
+Because the stochastic forcing is additive, i.e. the volati lity does not de-
+pend on u(x,t), the Euler-Maruyama discretisation is actually equivale nt to
+a Milstein discretisation and hence the time discretisatio n errors are O(k).
+Thisis of thesame orderas thespatial discretisation error swhich are O(h2),
+and therefore the solution error is O(2−2ℓ) and hence α=2 andβ=4. This
+leads to the optimal complexity of O(ε−2).
+These features are again conﬁrmed in the numerical results s hown in
+Figure 7.11.
+7.2. Elliptic SPDE
+The largest amount of research on multilevel for SPDEs has be en for elliptic
+PDEs with random coeﬃcients. The PDE typically has the form
+−∇·(κ(x,ω)∇p(x,ω)) = 0,x∈D.
+with Dirichlet or Neumann boundary conditions on the bounda ry∂D. For
+sub-surface ﬂow problems, such as the modelling of groundwa ter ﬂow in nu-
+clear waste repositories, the diﬀusivity (or permeability) κis often modelled
+as a lognormal random ﬁeld, i.e. log κis a Gaussian ﬁeld with a uniform
+
+===== PAGE 52 =====
+52 M.B. Giles
+0 2 4 6−20−15−10−50510
+level llog2 variance
+  
+Pl
+Pl− Pl−1
+0 2 4 6−15−10−505
+level llog2 |mean|
+  
+Pl
+Pl− Pl−1
+0 2 4 600.10.20.30.40.50.60.7
+level lconsistency check
+0 2 4 668101214
+level lkurtosis
+0 2 4 6102104106
+level lNl
+  
+10−210−1102103104105106107
+accuracy εε2 Cost
+  
+Std MC
+MLMC0.005
+0.01
+0.02
+0.05
+0.1
+Figure 7.11. Numerical results for a 1D parabolic SPDE with Brownian f orcing.
+
+===== PAGE 53 =====
+Multilevel Monte Carlo methods 53
+mean (which wewill take tobezerofor simplicity) and acovar iance function
+of the general form R(x,y) =r(x−y). Samples of log kare provided by a
+Karhunen-Lo` eve expansion:
+logκ(x,ω) =∞∑
+n=0√
+θnξn(ω)fn(x),
+whereθnare the eigenvalues of R(x,y) in decreasing order, fnare the
+corresponding eigenfunctions, and ξnare independent unit Normal random
+variables. However, it is more eﬃcient to generate them usin g a circulant
+embedding technique which enables the use of FFTs (Dietrich and Newsam
+1997).
+Themultilevel treatment is straightforward. Thespatial g rid resolution is
+doubled on each level. Using the Karhunen-Lo` eve generatio n, the expansion
+is truncated after Kℓterms, with Kℓincreasing with level (Teckentrup et al.
+2013); a similar approach has also been used with the circula nt embedding
+generation.
+In both cases, log κis generated using a row-vector of independent unit
+Normal random variables ξ. The variables for the ﬁne level can be parti-
+tioned into those for the coarse level ξℓ−1, plus some additional variables zℓ,
+givingξℓ= (ξℓ−1,zℓ).
+The numerical analysis of the multilevel approach for these elliptic SPDE
+applications is challenging because the diﬀusivity is unbou nded, but Char-
+rier, Scheichl & Teckentrup (Charrier et al. 2013) have succ essfully analysed
+it for certain output functionals, and Teckentrup et alhave further devel-
+oped the analysis for other output functionals and more gene ral log-normal
+diﬀusivity ﬁelds (Teckentrup et al. 2013, Teckentrup 2013).
+7.3. Parabolic SPDE
+Giles & Reisinger (Giles and Reisinger 2012) consider an unu sual SPDE
+from credit default modelling,
+dp=−µ∂p
+∂xdt+1
+2∂2p
+∂x2dt−√ρ∂p
+∂xdMt, x >0
+subject to boundary condition p(0,t)=0. Here p(x,t) represents the prob-
+ability density function for ﬁrms being a distance xfrom default at time t.
+The diﬀusive term is due to idiosyncratic factors aﬀecting ind ividual ﬁrms,
+whilethestochastic term duetothescalar Brownian motion Mtcorresponds
+to the systemic movement due to random market eﬀects aﬀecting a ll ﬁrms.
+The payoﬀ corresponds to diﬀerent tranches of a credit deriva tive which
+depends on the integral∫∞
+0p(x,t) dxat a set of discrete times.
+A Milstein time discretisation with timestep k, and a central space dis-
+cretisation of the spatial derivatives with uniform spacin ghgives the nu-
+
+===== PAGE 54 =====
+54 M.B. Giles
+merical approximation
+pn+1
+j=pn
+j−µk+√ρkZn
+2h(
+pn
+j+1−pn
+j−1)
++(1−ρ)k+ρkZ2
+n
+2h2(
+pn
+j+1−2pn
+j+pn
+j−1)
+wherepn
+j≈p(jh,nk), and the Znare standard Normal random variables
+so that√
+h Zncorresponds to an increment of the driving scalar Brownian
+motion.
+Themultilevel implementation isverystraightforward. As withthemodel
+parabolic example discussed previously, kℓ=kℓ−1/4 andhℓ=hℓ−1/2 due
+to numerical stability considerations which are analysed i n the paper. The
+coupling between the coarse and ﬁne samples comes from summi ng the ﬁne
+pathBrownianincrementstogivetheincrementsforthecoar sepath,exactly
+the same as for SDEs The computational cost increases by fact or 8 on each
+level, and numerical experiments indicate that the varianc e decreases by
+factor 8, so the overall computational complexity to achiev e anO(ε) RMS
+error is again O(ε−2(logε)2).
+This work has been extended by Bujok and Reisinger (2012) to i nclude a
+systemic jump-diﬀusionterm. They also switch from continuo us monitoring
+of default, which gives the boundarycondition p(0,t)=0 for all t, to discrete
+monitoring which introduces the boundary condition p(x,t)=0 forx≤0 for
+each discrete default date t.
+7.4. Reduced basis approximation
+New research by Vidal-Codina et al. (2014) uses a very diﬀeren t approach
+to SPDE approximation. They start with a high accuracy ﬁnite element
+approximation
+A(ω)u(ω) =f(ω)
+whereωrepresents the dependency on the stochastic input paramete rs.
+They then use a reduced basis approximation with a ﬁxed set of basis func-
+tionsuk
+u(ω)≈K∑
+k=1uk(ω)uk
+which leads to a much smaller system of equations
+AK(ω)
+u1
+u2
+...
+uK
+=fK(ω).
+
+===== PAGE 55 =====
+Multilevel Monte Carlo methods 55
+The output of interest is a function of the solution, so that t hey are inter-
+ested in estimating E[f(u)]. There is an accuracy-cost tradeoﬀ here; larger
+values for Klead togreater accuracy, butat amuch larger cost. TheMLMC
+treatment makes Ka function of the level ℓ, so that most simulations are
+performed with a small value for K, and relatively few with a large value.
+In this application, geometric MLMC is not appropriate and s o they face
+the question of how to choose the levels. As discussed alread y in Section 2.6,
+they start with a set of candidate levels and use a number of tr ial samples
+to obtain an estimate of the variances Vℓ1,ℓ2≡V[Pℓ1−Pℓ2] for all pairs of
+levels. They then use this to determine the optimal subset of levels for the
+main computation.
+8. Continuous-time Markov chains
+Anderson and Higham (2012) developed a very interesting app lication of
+MLMCtocontinuous-timeMarkovChainsimulation. Although theypresent
+their work in the context of stochastic chemical reactions, when species con-
+centrations are extremely low and so stochastic eﬀects becom e signiﬁcant,
+they point out that the method has wide applicability in othe r areas.
+Whenthereisjustonechemicalreaction, the“tau-leaping” method(which
+is essentially the Euler-Maruyama method, approximating t he reaction rate
+as being constant throughout the timestep) gives the discre te equation
+xn+1=xn+P(hλ(xn)),
+wherehis the timestep, λ(xn) is the reaction rate (or propensity function),
+andP(t) represents a unit-rate Poisson random variable over time i nterval
+[0,t]. If this equation deﬁnes the ﬁne path in the multilevel simu lation, then
+the coarse path, with double the timestep, is given by
+xc
+n+2=xc
+n+P(2hλ(xc
+n))
+for even timesteps n.
+The question then is how to couple the coarse and ﬁne path simu lations.
+The key observation in (Anderson and Higham 2012), based on e arlier work
+in a diﬀerent context by Kurtz (1982), is that for any t1,t2>0, the sum of
+two independent Poisson variates P(t1),P(t2) is equivalent in distribution
+toP(t1+t2). Basedonthis, theﬁrststepistoexpressthecoarsepathPo isson
+variate as the sum of two Poisson variates, P(hλ(xc
+n)) corresponding to the
+ﬁrst and second ﬁne path timesteps. For the ﬁrst of the two ﬁne timesteps,
+thecoarseandﬁnepathPoissonvariates arecoupledbydeﬁni ngtwoPoisson
+variates based on the minimum of the two reactions rates, and the absolute
+diﬀerence,
+P1=P(
+hmin(λ(xn),λ(xc
+n)))
+, P2=P(
+h|λ(xn)−λ(xc
+n)|)
+,
+
+===== PAGE 56 =====
+56 M.B. Giles
+and then using P1as the Poisson variate for the path with the smaller
+rate, and P1+P2for the path with the larger rate. This elegant approach
+naturally gives a small diﬀerence in the Poisson variates whe n the diﬀerence
+in rates is small, and leads to a very eﬀective multilevel algo rithm with a
+correction variance which is O(h), leading to an O(ε−2(logε)2) complexity.
+In their paper, Anderson and Higham (2012) treat more genera l sys-
+tems with multiple reactions. They also include an addition al coupling at
+the ﬁnest level to the exact Stochastic Simulation Algorith m developed by
+(Gillespie 1976) which updates the reaction rates after eve ry single reac-
+tion. Hence, their overall multilevel estimator is unbiase d, unlike the esti-
+mators discussed earlier for SDEs, and the complexity is red uced toO(ε−2)
+because the number of levels remains ﬁxed as ε→0. They give a com-
+plete numerical analysis of the variance of their multileve l algorithm; this
+has been further sharpened in more recent work (Anderson, Hi gham and
+Sun 2014). Because stochastic chemical simulations typica lly involve 1000’s
+of reactions, the multilevel method is particularly eﬀectiv e in this context,
+providing computational savings in excess of a factor of 100 (Anderson and
+Higham 2012).
+They also give an interesting numerical example in which an a pproximate
+model with fewer reactions/reactants is used as a control va riate for the full
+system. This kind of multilevel modelling is another possib ility which could
+be considered in a wide variety of circumstances.
+Moraes, Tempone and Vilanova (2014 b) have extended these ideas by
+adaptively switching between tau-leaping which is suitabl e when reaction
+rates are high, and exact simulation which is more appropria te when re-
+action rates are low relative to the timestep. They also deve lop a more
+accurate estimator for the multilevel variance, which othe rwise suﬀers due
+to high kurtosis on the ﬁnest grid levels, and a method for con trolling the
+probability that the tau-leaping leads to xbecoming negative.
+In a second paper, Moraes, Tempone and Vilanova (2014 a) generalise the
+adaptive switching between tau-leaping and exact simulati on to treat each
+reaction separately. This is very beneﬁcial when diﬀerent re actions have
+very diﬀerent propensities. They also introduce a novel cont rol variate for
+the coarsest simulation level which signiﬁcantly reduces t he total simulation
+cost. Numerical examples demonstrating impressive cost sa vings of up to
+1000×relative to standard methods.
+The non-nested adaptive timestepping approach described i n Section 5.6
+for SDEs is equally applicable in this setting. As described in (Giles, Lester
+and Whittle 2015, Lester, Yates, Giles and Baker 2015), the c onstruction is
+exactly the same as illustrated in Figure 5.9, but with Poiss on variates for
+each time interval instead of Brownian increments. This ada ptive timestep-
+ping can be very helpful in cases in which propensities vary g reatly in time.
+
+===== PAGE 57 =====
+Multilevel Monte Carlo methods 57
+9. Nested simulation
+9.1. MLMC treatment
+In nested simulations we are interested in estimating quant ities of the form
+EZ[
+f(
+EW[g(Z,W)])]
+whereZis an outer random variable, and EW[g(Z,W)] is a conditional
+expectation with respect to an independent inner random var iableW.
+For example, in some ﬁnancial applications Zwhich represents diﬀerent
+riskscenarios ,EW[g(Z,W)] representsexposure, conditional onthescenario
+Z, andfmight correspond to the loss in excess of the capital reserve s, so
+thatEZ[
+f(
+EW[g(Z,W)])]
+is the expected shortfall.
+This can be simulated using nested Monte Carlo simulation wi thNouter
+samples Z(n),Minner samples W(m,n)and a standard Monte Carlo esti-
+mator:
+Y=N−1N∑
+n=1f(
+M−1M∑
+m=1g(Z(n),W(m,n)))
+Note that to improve the accuracy of the estimate we need to in crease both
+MandN, and this will signiﬁcantly increase the cost.
+An MLMC implementation is straightforward; on level ℓwe can use Mℓ=
+2ℓinnersamples. To constructa low variance estimate for E[Pℓ−Pℓ−1] where
+E[Pℓ]≡EZ[
+f(
+M−1
+ℓ∑
+mg(Z,W(m)))]
+,
+we use an antithetic approach and split the Mℓsamples of Wfor the “ﬁne”
+value into two subsets of size Mℓ−1for the “coarse” value:
+Yℓ=N−1
+ℓNℓ∑
+n=1{
+f(
+M−1
+ℓMℓ∑
+m=1g(Z(n),W(m,n)))
+−1
+2f
+M−1
+ℓ−1Mℓ−1∑
+m=1g(Z(n),W(m,n))
+
+−1
+2f
+M−1
+ℓ−1Mℓ∑
+m=Mℓ−1+1g(Z(n),W(m,n))
+
+
+
+Note that this has the correct expectation, i.e. E[Yℓ] =E[Pℓ−Pℓ−1].
+If we deﬁne
+
+===== PAGE 58 =====
+58 M.B. Giles
+M−1
+ℓ−1Mℓ−1∑
+m=1g(Z(n),W(m,n)) =E[g(Z(n),W)]+∆g(n)
+1,
+M−1
+ℓ−1Mℓ∑
+m=Mℓ−1+1g(Z(n),W(m,n)) =E[g(Z(n),W)]+∆g(n)
+2,
+then iffis twice diﬀerentiable a Taylor series expansion gives
+Yℓ≈ −1
+4NℓNℓ∑
+n=1f′′(
+E[g(Z(n),W)])(
+∆g(n)
+1−∆g(n)
+2)2
+By the Central Limit Theorem, ∆ g(n)
+1,∆g(n)
+2=O(M−1/2
+ℓ) and therefore
+f′′(
+E[g(Z(n),W)])(
+∆g(n)
+1−∆g(n)
+2)2
+=O(M−1
+ℓ).
+It follows that E[Yℓ]=O(M−1
+ℓ) andVℓ=O(M−2
+ℓ). For the MLMC theorem,
+this corresponds to α=1,β=2,γ=1, so the complexity is O(ε−2).
+This antithetic approach to nested simulation has been deve loped inde-
+pendently by several authors (Haji-Ali 2012, Chen and Liu 20 12, Bujok,
+Hambly and Reisinger 2013).
+Haji-Ali (2012) used it in a mean ﬁeld model for the motion of c rowds,
+in which each person is modelled as a independent agent subje ct to random
+forcing and an additional force due to the collective inﬂuen ce of the crowd.
+This same approach is also relevant to mean ﬁeld problems whi ch arise in
+plasma physics (Rosin et al. 2014).
+Bujok et al. (2013) used multilevel nested simulation for a ﬁ nancial credit
+derivative application. In their case, the function fwas piecewise linear,
+not twice diﬀerentiable, and so the rate of variance converge nce was slightly
+lower, with β= 1.5. However, this is still suﬃciently large to achieve an
+overall complexity which is O(ε−2).
+The pricing of American options is one of the big challenges f or Monte
+Carlo methods in computational ﬁnance, and Belomestny, Sch oenmakers
+and Dickmann (2013) have developed a multilevel Monte Carlo for this pur-
+pose, based on Anderson & Broadie’s dual simulation method ( Andersen
+and Broadie 2004) in which a key component at each timestep in the simu-
+lation is to estimate a conditional expectation using a numb er of sub-paths.
+Intheirmultilevel treatment, Belomestny &Schoenmakersu sethesameuni-
+form timestep on all levels of the simulation, so the quantit y which changes
+between diﬀerent levels of simulation is the number of sub-sa mples used to
+estimate the conditional expectation. Hence, their work is another example
+of nested simulation.
+
+===== PAGE 59 =====
+Multilevel Monte Carlo methods 59
+9.2. MIMC treatment
+The analysis in the previous section assumes that we can comp uteg(Z,W)
+withO(1) cost, but suppose now that Wrepresents a complete Brownian
+path, and so g(Z,W) can not be evaluated exactly; it can only be approxi-
+mated by using some ﬁnite number of timesteps. We could conti nue to use
+MLMC, and on level ℓwe could use 2ℓtimesteps. When using the Milstein
+discretisation (giving ﬁrst order weak and strong converge nce) this would
+still give α=1,β=2. However, we would now have γ=2, because the work
+on successive levels would go up by factor 4 ×, because of using twice as
+many timesteps as well as twice as many inner samples. This th en leads to
+an overall MLMC complexity which is O(ε−2(logε)−2).
+InsteadwecanuseMIMC,togetbacktoanoptimalcomplexityo fO(ε−2).
+We now have a pair of level indices ( l1,l2), with the number of inner samples
+equal to 2ℓ1and the number of timesteps proportional to 2ℓ2. If we use
+the natural extension of the MLMC estimator to the correspon ding MIMC
+estimator, which means (for l1>0,l2>0) using
+Yℓ=N−1
+ℓNℓ∑
+n=1
+
+f
+2−ℓ12ℓ1∑
+1gl2(Z(n),W(m,n))
+
+−1
+2f
+2−ℓ1+12ℓ1−1∑
+1gl2(Z(n),W(m,n))
+
+−1
+2f
+2−ℓ1+12ℓ
+1∑
+2ℓ1−1+1gl2(Z(n),W(m,n))
+
+−f
+2−ℓ12ℓ1∑
+1gl2−1(Z(n),W(m,n))
+
++1
+2f
+2−ℓ1+12ℓ1−1∑
+1gl2−1(Z(n),W(m,n))
+
++1
+2f
+2−ℓ1+12ℓ
+1∑
+2ℓ1−1+1gl2−1(Z(n),W(m,n))
+
+
+
+The subscript on the gterms denotes the level of timestep approximation.
+Carrying out the same analysis as before, performing the Tay lor series
+
+===== PAGE 60 =====
+60 M.B. Giles
+expansion around E[g(Z(n),W)], we obtain
+Yℓ≈ −1
+4NℓNℓ∑
+n=1f′′(
+E[g(Z(n),W)]){(
+∆g(n)
+1,ℓ2−∆g(n)
+2,ℓ2)2
+−(
+∆g(n)
+1,ℓ2−1−∆g(n)
+2,ℓ2−1)2}
+The diﬀerence of squares can be re-arranged as
+(
+∆g(n)
+1,ℓ2−∆g(n)
+2,ℓ2)2
+−(
+∆g(n)
+1,ℓ2−1−∆g(n)
+2,ℓ2−1)2
+=(
+(∆g(n)
+1,ℓ2+∆g(n)
+1,ℓ2−1)−(∆g(n)
+2,ℓ2+∆g(n)
+2,ℓ2−1))
+×
+(
+(∆g(n)
+1,ℓ2−∆g(n)
+1,ℓ2−1)−(∆g(n)
+2,ℓ2−∆g(n)
+2,ℓ2−1))
+Due to the Central Limit Theorem, we have
+∆g(n)
+1,ℓ2+∆g(n)
+1,ℓ2−1=O(2−ℓ1/2)
+∆g(n)
+2,ℓ2+∆g(n)
+2,ℓ2−1=O(2−ℓ1/2)
+and assuming ﬁrst order strong convergence we also have
+∆g(n)
+1,ℓ2−∆g(n)
+1,ℓ2−1=O(2−ℓ1/2−ℓ2)
+∆g(n)
+2,ℓ2−∆g(n)
+2,ℓ2−1=O(2−ℓ1/2−ℓ2)
+Combining these results we obtain
+(
+∆g(n)
+1,ℓ2−∆g(n)
+2,ℓ2)2
+−(
+∆g(n)
+1,ℓ2−1−∆g(n)
+2,ℓ2−1)2
+=O(2−ℓ1−ℓ2)
+and therefore E[Yℓ] =O(2−ℓ1−ℓ2) andVℓ=O(2−2ℓ1−2ℓ2) with a cost per
+sample which is O(2ℓ1+ℓ2). In Theorem 2 this corresponds to α1=α2=
+1,β1=β2=2, and γ1=γ2=1, so the overall complexity is O(ε−2).
+Following the analysis in (Bujok et al. 2013), if the functio nfis continu-
+ous and piecewise diﬀerentiable, rather than being twice diﬀe rentiable, then
+in the MLMC treatment we would get β=1.5, and hence an overall com-
+plexity which is O(ε−2.5). On the other hand, with MIMC we would have
+β1=β2=1.5 and so the complexity would remain O(ε−2). This illustrates
+the beneﬁt of the MIMC approach compared to standard MLMC.
+10. Other applications
+10.1. Markov chains and limiting distributions
+In new research, Glynn and Rhee (2014) consider the applicat ion of their
+randomised version of MLMC to Markov chains, and in particul ar have
+addressed the problem of estimating quantities which are ex pectations with
+
+===== PAGE 61 =====
+Multilevel Monte Carlo methods 61
+levelℓ−1
+levelℓ
+n −Nℓ−Nℓ−1 0r r r r r r r r r r r
+r r r r r r r r r r r r r r r
+✲
+Figure 10.12. Level ℓandℓ−1 paths for contracting Markov chains
+respect to a limiting distribution. In their application, t he Markov chain
+{Xn}in a metric space with metric dis deﬁned by
+X0=x, X n+1=φn(Xn), n≥0
+where{φn}is a sequence of iid random functions. Furthermore, it is as-
+sumed that the φ’s are contracting on average in the sense that
+sup
+x̸=yE[(d(φn(x),φn(y))
+d(x,y))2γ]
+<1
+for some γ∈(0,1). Under these conditions, it is known that the distribu-
+tion ofXnconverges weakly to that of a limit random variable X∞, and
+their objective is to estimate expectations of the form E[f(X∞)], where f
+is H¨ older continuous with exponent γ, so that |f(y)−f(x)| ≤d(x,y)γ.
+An example they oﬀer of a chain satisfying the required condit ions is
+X0= 0, Xn+1=1
+2Xn+ξn, n≥0
+whereP(ξn=0) =P(ξn=1) =1
+2. The invariant distribution in this case is
+the uniform distribution on [0 ,2].
+In the standard MC approach, one would approximate E[f(X∞)] by es-
+timating E[f(XN)] for some large value of N, but this would be a biased
+estimate. Glynn and Rhee (2014) circumvent this problem by m akingN
+increase with level, starting a level ℓsimulation at n=−Nℓand terminat-
+ing it at n= 0, as illustrated in Figure 10.12. The fact that the diﬀerent
+levels terminate at the same time is crucial to the multileve l coupling, the
+levelℓandℓ−1 simulations share the same random φnforn≥ −Nℓ−1.
+Because of the contraction property, the eﬀect of the initial evolution of the
+levelℓpath for n <−Nℓ−1decays exponentially. This gives a coupling with
+a multilevel correction variance which decays as ℓincreases. Because the
+decay is exponential in Nℓ−Nℓ−1, it is appropriate to choose Nℓto increase
+linearly with level.
+A very similar approach can also be used for contracting SDEs which
+converge to a limiting distribution. For these, the level ℓpath will perform
+asimulation forthetimeinterval [ −Tℓ,0], usingtimestep hℓ. Thecoarse and
+ﬁne paths will share the same driving Brownian path for the ov erlapping
+time interval [ −Tℓ−1,0], and the contraction property will ensure that the
+multilevel variance decays with level.
+
+===== PAGE 62 =====
+62 M.B. Giles
+10.2. Variable precision arithmetic
+In the latest CPUs from Intel and AMD, each core has a vector un it which
+can perform 8 single precision or 4 double precision operati ons with one
+instruction. Hence, single precision computations can be t wice as fast as
+double precision on CPUs, and the diﬀerence can be even greate r on GPUs.
+As a very simple example of a two-level MLMC application, Gil es (2013)
+suggestedusingsingleprecisionarithmeticforsampleson level 0, anddouble
+precision arithmetic on level 1. Estimating V0andV1as deﬁned in Section
+1.2 will automatically lead to the optimal allocation of com putational eﬀort
+between the two levels.
+Thisapproachhasbeengeneralisedinnewresearch(Brugger , deSchryver,
+Wehn, Omland, Hefter, Ritter, Kostiuk and Korn 2014). which exploits
+FPGAs (ﬁeld-programmable gate arrays) which can perform co mputations
+withauser-speciﬁednumberofbitstorepresentﬂoating-po int orﬁxed-point
+numbers. Thus, it is possible to implement a multilevel trea tment in which
+the number of bits used increases with level.
+The primary challenge is to ensure that the telescoping sum i s correctly
+respected. In their current work, Brugger et al. (2014) use f ull precision in
+the generation of the random numbers for the Brownian increm ents, and
+then perform the rest of the path calculations with the appro priate number
+of bits, beforedoing theﬁnal summations in full accuracy. T his ensuresthat
+the Brownian increments computed for the coarser path ℓ−1 by summing
+the increments of the ﬁner path ℓ, are consistent with the increments which
+would be generated on level ℓ−1 when it is the ﬁner of the two levels.
+This would not be the case if the increments on level ℓwere generated
+withBℓbits of accuracy, then summed to give increments for level ℓ−1,
+regardless of whether the truncation to the lower accuracy Bℓ−1took place
+beforeor after the summation. Onepossibleway of correctly generating and
+using reduced accuracy Brownian increments would be to use a Brownian
+Bridge construction. Random numbers can be generated in ste ps by
+In→Un→Zn
+whereInis a random integer on a range [0 ,Imax],Un= (In+1
+2)/Imaxis a
+random, approximately uniformly-distributed variable on the interval (0 ,1),
+andZn= Φ−1(Un) is the corresponding N(0,1) random variable. When
+using a Brownian Bridge construction, as long as the Inare generated in
+exactly the same way for each level, the other two steps can be performed
+with the level of accuracy appropriate to the level of the pat h, i.e. with
+higher precision on level ℓthan on level ℓ−1. The Brownian path being
+generated for level ℓis then exactly the same, regardless of whether it is the
+ﬁner or coarser of the two levels being simulated for a partic ular multilevel
+correction. Hence, the telescoping sum will be respected.
+
+===== PAGE 63 =====
+Multilevel Monte Carlo methods 63
+11. Conclusions
+In the last few years there has been considerable progress in the theo-
+retical development, application and analysis of multilev el Monte Carlo
+methods. On the theoretical side, the key extensions are to u nbiased ran-
+domised estimators for applications with a rapid rate of var iance conver-
+gence; Richardson-Romberg extrapolation for improved com putational eﬃ-
+ciency when the rate of variance convergence is low and the we ak error has
+a regular expansion; and multi-index Monte Carlo (MIMC), ge neralising
+multilevel to multiple “directions” in which approximatio ns can be reﬁned.
+On the practical side, the range of applications is growing s teadily, now in-
+cluding SDEs, L´ evy processes, SPDEs, continuous-time Mar kov processes,
+nested simulation, and variable precision arithmetic. Fin ally, on the numer-
+ical analysis side, there has been excellent progress on the variance analysis
+for the full range of applications, as well as for multilevel QMC algorithms.
+This review has attempted to emphasise the conceptual simpl icity of the
+multilevel approach; in essence it is simply a recursive con trol variate strat-
+egy, usingcheapinaccurateapproximationstosomerandomo utputquantity
+as a control variate for more accurate but more costly approx imations.
+In practice, the challenge is to develop a tight coupling bet ween succes-
+sive approximation levels, to minimise the variance of the d iﬀerence in the
+output obtained from each level. One particular diﬃculty wh ich can arise in
+some applications is when the output quantity is a discontin uous function of
+the intermediate solution, as in the case of a digital option associated with
+a Brownian diﬀusion SDE. Three treatments were described to e ﬀectively
+smooth the output to improve the variance in such cases: a ana lytic condi-
+tional expectation, a “splitting” approximation, and a cha nge of measure.
+Similar treatments have been found to be helpful in other con texts.
+It was also shown that techniques such as antithetic variate s can be used
+to improve the variance of the multilevel estimator without improving the
+strong convergence properties of the numerical discretisa tion.
+Looking to the future, there are many directions for further research.
+Some areas to perhaps highlight are:
+•Development and application of algorithms for MLQMC
+There has been excellent recent work on the theoretical anal ysis of
+MLQMC, but this has not yet been matched by the development an d
+application of improved algorithms.
+•New applications using MIMC
+MIMC, the multi-index Monte Carlo method, is probably the mo st
+exciting new theoretical development in this area, and it oﬀe rs con-
+siderable scope for improved computational eﬃciency in a ra nge of
+applications.
+
+===== PAGE 64 =====
+64 M.B. Giles
+•More work on sensitivity analysis
+There has been very little research so far on MLMC for sensiti vity
+analysis, but in some application areas such as mathematica l ﬁnance
+this is very important.
+•Work on combinations with other variance reduction techniq ues, such
+as Latin Hypercube or importance sampling
+It is often helpful to combine diﬀerent variance reduction ap proaches
+to obtain greater overall savings, and it seems likely that M LMC can
+be helpfully combined with other techniques.
+•Nested simulation / mean ﬁeld games
+This looks like a very promising new application area for bot h MLMC
+and MIMC. Such simulations can be very expensive using tradi tional
+Monte Carlo methods, so MLMC/MIMC may give very substantial
+computational savings.
+The MATLAB codes which produced all of the results in this art icle are
+available from(Giles 2014), along withanumberof addition al MLMC appli-
+cationcodesdemonstratingadaptivetimesteppingforSDEs andcontinuous-
+time Markov processes, the use of antithetics for multi-dim ensional SDEs,
+and additional SPDE examples.
+For further information on multilevel Monte Carlo methods, readers can
+refer tohttp://people.maths.ox.ac.uk/gilesm/mlmc community.html
+which lists the research groups working in the area, and thei r main publi-
+cations.
+Acknowledgements
+The author is very grateful to Klaus Ritter and Ra´ ul Tempone for their
+feedback on a draft of this article. Much of the content is the outcome of
+collaborations and interactions with many researchers, to o many to list here
+but all much appreciated.
+REFERENCES
+L.AndersenandM.Broadie(2004),‘Aprimal-dualsimulationalgorith mforpricing
+multi-dimensionalAmericanoptions’, Management Science 50(9),1222–1234.
+D. Anderson and D. Higham (2012), ‘Multi-level Monte Carlo for cont inuous time
+Markov chains with applications in biochemical kinetics’, SIAM Multiscale
+Modeling and Simulation 10(1), 146–179.
+D. Anderson, D. HighamandY. Sun (2014),‘ComplexityofmultilevelM onteCarlo
+tau-leaping’, ArXiv preprint 1310.2676 .
+A. Asmussen and P. Glynn (2007), Stochastic Simulation , Springer, New York.
+R. Avikainen (2009), ‘On irregular functionals of SDEs and the Euler s cheme’,
+Finance and Stochastics 13(3), 381–401.
+
+===== PAGE 65 =====
+Multilevel Monte Carlo methods 65
+I. Babuˇ ska, F. Nobile and R. Tempone (2010), ‘A stochastic colloca tion method for
+elliptic partial diﬀerential equations with random input data’, SIAM Review
+52(2), 317–355.
+I. Babuˇ ska, R. Tempone and G. Zouraris (2004), ‘Galerkin ﬁnite ele ment approxi-
+mations of stochastic elliptic partial diﬀerential equations’, SIAM Journal on
+Numerical Analysis 42(2), 800–825.
+J. Baldeaux and M. Gnewuch (2014), ‘Optimal randomized multilevel a lgorithms
+for inﬁnite-dimensional integration on function spaces with ANOVA- type de-
+composition’, SIAM Journal of Numerical Analysis 52(3), 1128–1155.
+A. Barth, A. Lang and C. Schwab (2013), ‘Multilevel Monte Carlo met hod for
+parabolic stochastic partial diﬀerential equations’, BIT Numerical Mathe-
+matics53(1), 3–27.
+A. Barth, C. Schwab and N. Zollinger (2011), ‘Multi-level Monte Carlo ﬁnite
+element method for elliptic PDEs with stochastic coeﬃcients’, Numerische
+Mathematik 119(1), 123–161.
+D. Belomestny, J. Schoenmakers and F. Dickmann (2013), ‘Multileve l dual ap-
+proach for pricing American style derivatives’, Finance and Stochastics
+17(4), 717–742.
+A. Brandt and V. Ilyin (2003), ‘Multilevel Monte Carlo methods for st udying large
+scale phenomena in ﬂuids’, Journal of Molecular Liquids 105(2-3), 245–248.
+A. Brandt, M. Galun and D. Ron (1994), ‘Optimal multigrid algorithms f or calcu-
+lating thermodynamiclimits’, Journal of Statistical Physics 74(1-2),313–348.
+M. Broadie and P. Glasserman (1996), ‘Estimating security price der ivatives using
+simulation’, Management Science 42(2), 269–285.
+C. Brugger, C. de Schryver, N. Wehn, S. Omland, M. Hefter, K. Rit ter, A. Kostiuk
+and R. Korn (2014), Mixed precision multilevel Monte Carlo on hybrid c om-
+puting systems, in Proceedings of the Conference on Computational Intelli-
+gence for Financial Engineering and Economics , IEEE.
+K. Bujok and C. Reisinger (2012), ‘Numerical valuation of basket cr edit deriva-
+tives in structural jump-diﬀusion models’, Journal of Computational Finance
+15(4), 115–158.
+K. Bujok, B. Hambly and C. Reisinger (2013), ‘Multilevel simulation of f unctionals
+of Bernoulli random variables with application to basket credit deriva tives’,
+Methodology and Computing in Applied Probability pp. 1–26.
+H.-J. Bungartz and M. Griebel (2004), ‘Sparse grids’, Acta Numerica 13, 147–269.
+S. Burgos (2014), The computation of Greeks with multilevel Monte Carlo, DPhil
+thesis, University of Oxford.
+S. Burgos and M. Giles (2012), Computing Greeks using multilevel pat h simula-
+tion, inMonte Carlo and Quasi-Monte Carlo Methods 2010 (L. Plaskota and
+H. Wo´ zniakowski, eds), Springer, pp. 281–296.
+J. Charrier, R. Scheichl and A. Teckentrup (2013), ‘Finite element error analysis of
+elliptic PDEs with randomcoeﬃcients and its application to multilevel Mon te
+Carlo methods’, SIAM Journal on Numerical Analysis 51(1), 322–352.
+N. Chen and Y. Liu (2012), ‘Estimating expectations of functionals o f conditional
+expected via multilevel nested simulation’, Presentation at confere nce on
+Monte Carlo and Quasi-Monte Carlo Methods, Sydney.
+
+===== PAGE 66 =====
+66 M.B. Giles
+J. Clark and R. Cameron (1980), The maximum rate of convergence of discrete
+approximations for stochastic diﬀerential equations, in Stochastic Diﬀerential
+Systems Filtering and Control (B. Grigelionis, ed.), Vol. 25 of Lecture Notes
+in Control and Information Sciences , Springer, pp. 162–171.
+K. Cliﬀe, M. Giles, R. Scheichl and A. Teckentrup (2011), ‘Multilevel M onte Carlo
+methods and applications to elliptic PDEs with random coeﬃcients’, Com-
+puting and Visualization in Science 14(1), 3–15.
+N. Collier, A.-L. Haji-Ali, F. Nobile, E. von Schwerin and R. Tempone (20 14), ‘A
+continuation multilevel Monte Carlo algorithm’, to appear in BIT Numerical
+Mathematics .
+J. Creutzig, S. Dereich, T. M¨ uller-Gronbach and K. Ritter (2009) , ‘Inﬁnite-
+dimensional quadrature and approximation of distributions’, Foundations of
+Computational Mathematics 9(4), 391–429.
+T.DaunandS.Heinrich(2013),ComplexityofBanachspacevalueda ndparametric
+integration, in Monte Carlo and Quasi-Monte Carlo Methods 2012 (J. Dick,
+F. Kuo, G. Peters and I. Sloan, eds), Springer, pp. 297–316.
+T. Daun and S. Heinrich (2014 a), ‘Complexity of parametric initial value problems
+in Banach spaces’, Journal of Complexity p. to appear.
+T. Daun and S. Heinrich (2014 b), ‘Complexity of parametric integration in various
+smoothness classes’, Journal of Complexity p. to appear.
+S. Dereich (2011), ‘Multilevel Monte Carlo algorithms for L´ evy-driv en SDEs with
+Gaussian correction’, Annals of Applied Probability 21(1), 283–311.
+S. Dereich and F. Heidenreich (2011), ‘A multilevel Monte Carlo algorit hm for
+L´ evy-driven stochastic diﬀerential equations’, Stochastic Processes and their
+Applications 121(7), 1565–1587.
+S. Dereich, A. Neuenkirch and L. Szpruch (2012), ‘An Euler-type m ethod for the
+strong approximation of the Cox–Ingersoll–Ross process’, Proc. Roy. Soc. A
+468(2140), 1105–1115.
+J. Dick and M. Gnewuch (2014 a), ‘Inﬁnite-dimensional integration in weighted
+Hilbert spaces: anchored decompositions, optimal deterministic alg orithms,
+and higher order convergence’, Foundations of Computational Mathematics
+pp. 1–51.
+J. Dick and M. Gnewuch (2014 b), ‘Optimal randomized changing dimension algo-
+rithms for inﬁnite-dimensional integration on function spaces with A NOVA-
+type decomposition’, Journal of Approximation Theory 184, 111–145.
+J. Dick, F. Kuo and I. Sloan (2013), ‘High-dimensional integration: t he quasi-
+Monte Carlo way’, Acta Numerica 22, 133–288.
+J. Dick, F. Pillichshammer and B. Waterhouse (2007), ‘The construc tion of good
+extensible rank-1 lattices’, Math. Comp. 77, 2345–2373.
+C. Dietrich and G. Newsam (1997), ‘Fast and exact simulation of stat ionary Gaus-
+sian processes through circulant embedding of the covariance mat rix’,SIAM
+Journal on Scientiﬁc Computing 18(4), 1088–1107.
+Y. Efendiev, O. Iliev and C. Kronsbein (2013), ‘Multilevel Monte Carlo methods
+using ensemble level mixed MsFEM for two-phase ﬂow and transport simu-
+lations’, Computational Geosciences 17(5), 833–850.
+A. Ferreiro-Castilla, A. Kyprianou, R. Scheichl and G. Suryanaray ana (2014),
+
+===== PAGE 67 =====
+Multilevel Monte Carlo methods 67
+‘Multi-level Monte-Carlo simulation for L´ evy processes based on th e Wiener-
+Hopf factorisation’, Stochastic Processes and their Applications 124(2), 985–
+1010.
+M. Giles (2008 a), Improved multilevel Monte Carlo convergence using the Milstein
+scheme, in Monte Carlo and Quasi-Monte Carlo Methods 2006 (A. Keller,
+S. Heinrich and H. Niederreiter, eds), Springer, pp. 343–358.
+M. Giles (2008 b), ‘Multilevel Monte Carlo path simulation’, Operations Research
+56(3), 607–617.
+M. Giles (2009), Multilevel Monte Carlo for basket options, in Proceedings of
+the 2009 Winter Simulation Conference (M. Rossetti, R. Hill, B. Johansson,
+A. Dunkin and R. Ingalls, eds), IEEE, pp. 1283–1290.
+M. Giles (2013), Multilevel Monte Carlo methods, in Monte Carlo and Quasi-
+Monte Carlo Methods 2012 (J. Dick, F. Kuo, G. Peters and I. Sloan, eds),
+Springer, pp. 79–98.
+M. Giles (2014), ‘Matlab code for multilevel Monte Carlo computations ’,
+http://people.maths.ox.ac.uk/gilesm/acta/ .
+M.GilesandC.Reisinger(2012),‘Stochasticﬁnitediﬀerencesandmu ltilevelMonte
+Carlo for a class of SPDEs in ﬁnance’, SIAM Journal of Financial Mathemat-
+ics3(1), 572–592.
+M. Giles and L. Szpruch (2013), Antithetic multilevel Monte Carlo est imation
+for multidimensional SDEs, in Monte Carlo and Quasi-Monte Carlo Methods
+2012(J. Dick, F. Kuo, G. Peters and I. Sloan, eds), Springer, pp. 367– 384.
+M. Giles and L. Szpruch (2014), ‘Antithetic multilevel Monte Carlo est imation for
+multi-dimensional SDEs without L´ evy area simulation’, Annals of Applied
+Probability 24(4), 1585–1620.
+M. Giles and B. Waterhouse (2009), Multilevel quasi-Monte Carlo pat h simula-
+tion, inAdvanced Financial Modelling , Radon Series on Computational and
+Applied Mathematics, De Gruyter, pp. 165–181.
+M. Giles, K. Debrabant and A. R¨ oßler (2013), ‘Numerical analysis of multi-
+level Monte Carlo path simulation using the Milstein discretisation’, ArXiv
+preprint: 1302.4676 .
+M. Giles, D. Higham and X. Mao (2009), ‘Analysing multilevel Monte Carlo for op-
+tions with non-globallyLipschitz payoﬀ’, Finance and Stochastics 13(3), 403–
+413.
+M. Giles, C. Lester and J. Whittle (2015), Simple adaptive timesteppin g for mul-
+tilevel Monte Carlo, in Monte Carlo and Quasi-Monte Carlo Methods 2014 ,
+Springer, p. submitted.
+M. Giles, T. Nagapetyan and K. Ritter (2014), ‘Multilevel Monte Carlo approxi-
+mation of distribution functions and densities’, DFG-SPP 1324 Preprint 157 .
+D. Gillespie (1976), ‘A general method for numerically simulating the st ochas-
+tic time evolution of coupled chemical reactions’, Journal of Computational
+Physics22(4), 403–434.
+P. Glasserman (2004), Monte Carlo Methods in Financial Engineering , Springer,
+New York.
+P. Glasserman and N. Merener (2004), ‘Convergence of a discretiz ation scheme
+for jump-diﬀusion processes with state-dependent intensities’, Proc. Royal
+Soc. London A 460, 111–127.
+
+===== PAGE 68 =====
+68 M.B. Giles
+P. Glynn and C.-H. Rhee (2014), ‘Exact estimation for Markov chain e quilibrium
+expectations’, Journal of Applied Probability .
+E. Gobet and S. Menozzi (2010), ‘Stopped diﬀusion processes: ov ershoots and
+boundary correction’, Stochastic Processes and their Applications 120, 130–
+162.
+S. Graubner (2008), Multi-level Monte Carlo Methoden f¨ ur stoch astische partielle
+Diﬀerentialgleichungen, Diplomarbeit, TU Darmstadt.
+M. Gunzburger, C. Webster and G. Zhang (2014), ‘Stochastic ﬁnit e element meth-
+ods for partial diﬀerential equations with random input data’, Acta Numerica
+23, 521–650.
+A.-L. Haji-Ali (2012), Pedestrian ﬂow in the mean-ﬁeld limit, MSc thes is, KAUST.
+A.-L. Haji-Ali, F. Nobile and R. Tempone (2014 a), ‘Multi Index Monte Carlo:
+when sparsity meets sampling’, ArXiv preprint: 1405.3757 .
+A.-L. Haji-Ali, F. Nobile, E. von Schwerin and R. Tempone (2014 b), ‘Optimiza-
+tion of mesh hierarchies in multilevel Monte Carlo samplers’, ArXiv preprint:
+1403.2480 .
+S. Heinrich (1998), ‘Monte Carlo complexity of global solution of integ ral equa-
+tions’,Journal of Complexity 14(2), 151–175.
+S. Heinrich (2000), The multilevel method of dependent tests, in Advances in
+Stochastic Simulation Methods (N. Balakrishnan, V. Melas and S. Ermakov,
+eds), Springer, pp. 47–61.
+S. Heinrich (2001), Multilevel Monte Carlo methods, in Multigrid Methods , Vol.
+2179 ofLecture Notes in Computer Science , Springer, pp. 58–67.
+S. Heinrich (2006), ‘Monte Carlo approximation of weakly singular inte gral opera-
+tors’,Journal of Complexity 22(2), 192–219.
+S. Heinrich and E. Sindambiwe (1999), ‘Monte Carlo complexity of para metric
+integration’, Journal of Complexity 15(3), 317–341.
+D. Higham, X. Mao and A. Stuart (2002), ‘Strong convergence of e uler-type meth-
+ods for nonlinear stochastic diﬀerential equations’, SIAM Journal on Numer-
+ical Analysis 40(3), 1041–1063.
+D. Higham, X. Mao, M. Roj, Q. Song and G. Yin (2013), ‘Mean exit times and the
+multi-level Monte Carlo method’, SIAM Journal on Uncertainty Quantiﬁca-
+tion1(1), 2–18.
+H. Hoel, E. vonSchwerin, A. Szepessy and R. Tempone (2012), Ada ptive multilevel
+Monte Carlo simulation, in Numerical Analysis of Multiscale Computations
+(B. Engquist, O. Runborg and Y.-H. Tsai, eds), number 82 in‘Lecture Notes
+in Computational Science and Engineering’, Springer, pp. 217–234.
+H. Hoel, E. von Schwerin, A. Szepessy and R. Tempone (2014), ‘Imp lementation
+and analysis of an adaptive multilevel Monte Carlo algorithm’, Monte Carlo
+Methods and Applications 20(1), 1–41.
+M. Hutzenthaler, A. Jentzen and P. Kloeden (2013), ‘Divergence o f the multilevel
+Monte Carlo method’, Annals of Applied Probability 23(5), 1913–1966.
+O. Iliev, T. Nagapetyan and K. Ritter (2013), Monte Carlo simulation of asym-
+metricﬂowﬁeld ﬂowfractionation, in Monte Carlo Methods and Applications:
+Proceedings of the 8th IMACS Seminar on Monte Carlo Methods , de Gruyter,
+pp. 115–123.
+
+===== PAGE 69 =====
+Multilevel Monte Carlo methods 69
+S. Joe and F. Kuo (2008), ‘Constructing Sobol sequences with bet ter two-
+dimensionalprojections’, SIAMJournal on Scientiﬁc Computing 30(5),2635–
+2654.
+A. Kebaier (2005), ‘Statistical Romberg extrapolation: a new varia nce reduction
+method and applications to options pricing’, Annals of Applied Probability
+14(4), 2681–2705.
+A. Kebaier and A. Kohatsu-Higa (2008), ‘An optimal control varian ce reduction
+method for density estimation’, Stochastic Processes and their Applications
+118(2), 2143–2180.
+P. Kloeden and E. Platen (1992), Numerical Solution of Stochastic Diﬀerential
+Equations , Springer, Berlin.
+F. Kuo, C. Schwab and I. Sloan (2012), ‘Multi-level quasi-Monte Car lo ﬁnite ele-
+ment methods for a class of elliptic partial diﬀerential equations with random
+coeﬃcients’, ArXiv preprint: 1208.6349 .
+T. Kurtz (1982), Representation and approximation of counting p rocesses, in Ad-
+vances in ﬁltering and optimal stochastic control , Vol. 42, Springer, pp. 177–
+191.
+P. L’Ecuyer (1990), ‘A uniﬁed view of the IPA, SF and LR gradient est imation
+techniques’, Management Science 36(11), 1364–1383.
+M. Ledoux and M. Talagrand (1991), Probability in Banach spaces: isoperimetry
+and processes , Springer.
+V. Lemaire and G. Pag` es (2013), ‘Multilevel Richardson-Romberg e xtrapolation’,
+ArXiv preprint: 1401.1177 .
+C. Lester, C. Yates, M. Giles and R. Baker (2015), ‘An adapted mult i-level simula-
+tion algorithmforstochasticbiologicalsystems’, Journal of Chemical Physics .
+Q. Li (2007), Numerical Approximation for SDE, PhD thesis, Univer sity of Edin-
+burgh.
+H. Marxen (2010), ‘The multilevel Monte Carlo method used on a L´ ev y driven
+SDE’,Monte Carlo Methods and Applications 16(2), 167–190.
+R. Merton (1976), ‘Option pricing when underlying stock returns ar e discontinu-
+ous’,Journal of Finance 3, 125–144.
+R. Mikulevicius and E. Platen (1988), ‘Time discrete Taylor approximat ions for
+Itˆ o processeswith jump component’, Mathematische Nachrichten 138(1), 93–
+104.
+S. Mishra, C. Schwab and J. Sukys (2012), ‘Multi-level Monte Carlo ﬁ nite vol-
+ume methods for nonlinear systems of conservationlaws in multi-dime nsions’,
+Journal of Computational Physics 231(8), 3365–3388.
+A. Moraes, R. Tempone and P. Vilanova (2014 a), ‘A multilevel adaptive reaction-
+splitting simulation method for stochastic reaction networks’, ArXiv preprint
+1406.1989 .
+A. Moraes, R. Tempone and P. Vilanova (2014 b), ‘Multilevel hybrid Chernoﬀ tau-
+leap’,ArXiv preprint 1403.2943 .
+F. M¨ uller, P. Jenny and D. Meyer (2013), ‘Multilevel Monte Carlo for two phase
+ﬂow and Buckley-Leverett transport in random heterogeneous p orous media’,
+Journal of Computational Physics 250, 685–702.
+B. Niu, F. Hickernell, T. M¨ uller-Gronbach and K. Ritter (2010), ‘Det erministic
+
+===== PAGE 70 =====
+70 M.B. Giles
+multi-level algorithms for inﬁnite-dimensional integration on RN’,Journal of
+Complexity 27(3-4), 331–351.
+E. Platen and N. Bruti-Liberati (2010), Numerical Solution of Stochastic Diﬀeren-
+tial Equations With Jumps in Finance , Springer.
+T. Primozic(2011), Estimatingexpected ﬁrst passagetimes using m ultilevel Monte
+Carlo algorithm, MSc thesis, University of Oxford.
+M. Putko, A. Taylor, P. Newman and L. Green (2002), ‘Approach fo r input uncer-
+tainty propagation and robust design in CFD using sensitivity derivat ives’,
+Journal of Fluids Engineering 124(1), 60–69.
+C.-H. Rhee and P. Glynn (2012), A new approachto unbiased estimat ion for SDEs,
+inProceedings of the 2012 Winter Simulation Conference , IEEE.
+C.-H. Rhee and P. Glynn (2013), ‘Unbiased estimation with square roo t conver-
+gence for SDE models’, Submitted for publication .
+M. Rosin, L. Ricketson, A. Dimits, R. Caﬂisch and B. Cohen (2014), ‘M ultilevel
+Monte Carlo simulation of Coulomb collisions’, Journal of Computational
+Physics247, 140–157.
+W. Schoutens (2003), L´ evy processes in ﬁnance: pricing ﬁnancial derivatives , Wi-
+ley.
+B. Silverman (1986), Density Estimation for Statistics and Data Analysis , Chap-
+man & Hall.
+A. Speight (2009), ‘A multilevel approach to control variates’, Journal of Compu-
+tational Finance 12, 1–25.
+A. Teckentrup (2013), Multilevel Monte Carlo methods and uncert ainty quantiﬁ-
+cation, PhD thesis, University of Bath.
+A. Teckentrup, R. Scheichl, M. Giles and E. Ullmann (2013), ‘Further analysis of
+multilevel Monte Carlo methods for elliptic PDEs with random coeﬃcient s’,
+Numerische Mathematik 125(3), 569–600.
+F. Vidal-Codina, N. Nguyen, M. Giles and J. Peraire (2014), ‘A model a nd vari-
+ance reduction method for computing statistical outputs of stoc hastic elliptic
+partial diﬀerential equations’, ArXiv preprint 1409.1526 .
+Y. Xia (2014), Multilevel Monte Carlo for jump processes, DPhil the sis, University
+of Oxford.
+Y. Xia and M. Giles (2012), Multilevel path simulation for jump-diﬀusion SDEs,
+inMonte Carlo and Quasi-Monte Carlo Methods 2010 (L. Plaskota and
+H. Wo´ zniakowski, eds), Springer, pp. 695–708.
+Y. Xia and M. Giles (2014), ‘Multilevel Monte Carlo for exponential L´ e vy models’,
+submitted .
+D. Xiu and G. Karniadakis (2002), ‘The Wiener–Askey polynomial chao s for
+stochastic diﬀerential equations’, SIAM Journal on Scientiﬁc Computing
+24(2), 619–644.
