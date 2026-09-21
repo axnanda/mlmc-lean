@@ -1,4 +1,3 @@
-import Mathlib
 import MlmcLean.Estimator
 import MlmcLean.Complexity
 
@@ -29,6 +28,7 @@ namespace MLMC
 
 variable {Ω : Type*} [MeasurableSpace Ω] {μ : Measure Ω} [IsProbabilityMeasure μ]
 
+omit [IsProbabilityMeasure μ] in
 /-- Giles (2.2)/(2.3): the variance of a Monte Carlo average of `N` pairwise independent samples
 of common variance `v` is `v / N`.  This is how `V[Y_ℓ] = V_ℓ / N_ℓ` arises. -/
 theorem variance_sample_mean (X : ℕ → Ω → ℝ) (N : ℕ) (hN : 0 < N) (v : ℝ)
@@ -64,7 +64,7 @@ theorem giles_theorem1
     (hP : Integrable P μ) (hPℓ : ∀ ℓ, Integrable (Pℓ ℓ) μ)
     (hY : ∀ ℓ n, MemLp (Y ℓ n) 2 μ)
     (hind : ∀ N : ℕ → ℕ, Pairwise fun i j => IndepFun (Y i (N i)) (Y j (N j)) μ)
-    (h_i : ∀ ℓ, |μ[fun ω => Pℓ ℓ ω - P ω]| ≤ c₁ * (2 : ℝ) ^ (-(α * (ℓ : ℝ))))
+    (h_i : ∀ ℓ : ℕ, |μ[fun ω => Pℓ ℓ ω - P ω]| ≤ c₁ * (2 : ℝ) ^ (-(α * (ℓ : ℝ))))
     (h_ii₀ : ∀ n, μ[Y 0 n] = μ[Pℓ 0])
     (h_ii : ∀ ℓ n, μ[Y (ℓ + 1) n] = μ[fun ω => Pℓ (ℓ + 1) ω - Pℓ ℓ ω])
     (h_var : ∀ ℓ n, 0 < n → variance (Y ℓ n) μ = V ℓ / n)

@@ -44,18 +44,22 @@ No `sorry`, no extra axioms (see `lake build` and `#print axioms` below).
 
 ```
 # needs elan (https://github.com/leanprover/elan); toolchain pinned in lean-toolchain
-lake exe cache get      # Mathlib oleans
-lake build              # builds everything; must print no warnings about sorry
+lake exe cache get      # Mathlib oleans (a few GB)
+lake build              # builds everything; ~20–30 s per file once the Mathlib cache is warm
 ```
 
-To check axioms:
+Each file imports only the Mathlib modules it needs (variance/independence, `logb`/`rpow`,
+geometric sums, floor, Cauchy–Schwarz), not all of Mathlib, so builds stay fast.
 
-```lean
-import MlmcLean
-#print axioms MLMC.giles_theorem1
-#print axioms MLMC.nested_cost_lower_bound
--- expected: propext, Classical.choice, Quot.sound only
+## Verification
+
 ```
+lake env lean scripts/AxiomCheck.lean
+```
+
+prints `#print axioms` for every theorem in the project.  Each must list only
+`propext`, `Classical.choice`, `Quot.sound` — the standard axioms — and in particular no
+`sorryAx`.  `grep -rn sorry MlmcLean/` must be empty.
 
 ## Layout
 

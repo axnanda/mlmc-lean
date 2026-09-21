@@ -1,4 +1,5 @@
-import Mathlib
+import Mathlib.Probability.Moments.Variance
+import Mathlib.Tactic.Linarith
 
 /-!
 # The multilevel Monte Carlo estimator: mean, variance and mean-square error
@@ -41,6 +42,7 @@ theorem mse_eq_variance_add_sq_bias {Y : Ω → ℝ} (hY : MemLp Y 2 μ) (m : �
   rw [h5] at h2
   linarith
 
+omit [IsProbabilityMeasure μ] in
 /-- Giles (2.1)/(2.3), the **mean** of the multilevel estimator.  Condition (ii) of Theorem 1 is
 `E[Y_0] = E[P_0]` and `E[Y_ℓ] = E[P_ℓ − P_{ℓ−1}]` for `ℓ > 0`; the telescoping sum then gives
 `E[∑_{ℓ=0}^{L} Y_ℓ] = E[P_L]`. -/
@@ -50,16 +52,22 @@ theorem mlmc_mean (P : ℕ → Ω → ℝ) (Y : ℕ → Ω → ℝ) (L : ℕ)
     (hℓ : ∀ ℓ, μ[Y (ℓ + 1)] = μ[fun ω => P (ℓ + 1) ω - P ℓ ω]) :
     μ[∑ ℓ ∈ range (L + 1), Y ℓ] = μ[P L] := by
   have hsum : μ[∑ ℓ ∈ range (L + 1), Y ℓ] = ∑ ℓ ∈ range (L + 1), μ[Y ℓ] := by
-    rw [← integral_finset_sum _ (fun ℓ _ => hY ℓ)]
+    rw [← integral_finsetSum _ (fun ℓ _ => hY ℓ)]
     congr 1
     ext ω
     simp [Finset.sum_apply]
   rw [hsum, Finset.sum_range_succ', h0]
   have htel : ∀ ℓ ∈ range L, μ[Y (ℓ + 1)] = μ[P (ℓ + 1)] - μ[P ℓ] := fun ℓ _ => by
     rw [hℓ ℓ, integral_sub (hP _) (hP _)]
-  rw [Finset.sum_congr rfl htel, Finset.sum_range_sub (fun ℓ => μ[P ℓ])]
+  have htele : ∀ n : ℕ, ∑ ℓ ∈ range n, (μ[P (ℓ + 1)] - μ[P ℓ]) = μ[P n] - μ[P 0] := by
+    intro n
+    induction n with
+    | zero => simp
+    | succ n ih => rw [Finset.sum_range_succ, ih]; ring
+  rw [Finset.sum_congr rfl htel, htele L]
   ring
 
+omit [IsProbabilityMeasure μ] in
 /-- Giles (2.3), the **variance** of the multilevel estimator: for pairwise independent
 square-integrable level estimators, `V[∑ Y_ℓ] = ∑ V[Y_ℓ]`. -/
 theorem mlmc_variance (Y : ℕ → Ω → ℝ) (L : ℕ) (hY : ∀ ℓ, MemLp (Y ℓ) 2 μ)
@@ -77,7 +85,7 @@ theorem mlmc_mse (P : ℕ → Ω → ℝ) (Y : ℕ → Ω → ℝ) (L : ℕ) (m 
     μ[fun ω => (∑ ℓ ∈ range (L + 1), Y ℓ ω - m) ^ 2] =
       ∑ ℓ ∈ range (L + 1), variance (Y ℓ) μ + (μ[P L] - m) ^ 2 := by
   have hsum : MemLp (∑ ℓ ∈ range (L + 1), Y ℓ) 2 μ :=
-    memLp_finset_sum' _ (fun ℓ _ => hY ℓ)
+    memLp_finsetSum' _ (fun ℓ _ => hY ℓ)
   have h := mse_eq_variance_add_sq_bias hsum m
   rw [mlmc_variance Y L hY hind,
     mlmc_mean P Y L (fun ℓ => (hY ℓ).integrable one_le_two) hP h0 hℓ] at h

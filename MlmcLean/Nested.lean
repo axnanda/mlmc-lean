@@ -1,4 +1,5 @@
-import Mathlib
+import Mathlib.Data.Fintype.BigOperators
+import Mathlib.Algebra.BigOperators.Group.Finset.Sigma
 import MlmcLean.Allocation
 import MlmcLean.Estimator
 
@@ -159,11 +160,14 @@ theorem nested_mlmc_mse (P Dt : ℕ → Ω → ℝ) (Yt YΔ : ℕ → Ω → ℝ
       ring
     · intro ℓ
       show μ[fun ω => Yt (ℓ + 1) ω + YΔ (ℓ + 1) ω] = μ[fun ω => P (ℓ + 1) ω - P ℓ ω]
-      rw [integral_add ((hYt _).integrable one_le_two) ((hYΔ _).integrable one_le_two), ht, hΔ,
-        integral_sub ((hP _).sub (hP _)) (hDt _), integral_sub (hP _) (hP _),
-        integral_sub (hP _) (hP _)]
+      have e1 : μ[fun ω => Yt (ℓ + 1) ω + YΔ (ℓ + 1) ω] = μ[Yt (ℓ + 1)] + μ[YΔ (ℓ + 1)] :=
+        integral_add ((hYt _).integrable one_le_two) ((hYΔ _).integrable one_le_two)
+      have e2 : μ[fun ω => P (ℓ + 1) ω - P ℓ ω - Dt (ℓ + 1) ω] =
+          μ[fun ω => P (ℓ + 1) ω - P ℓ ω] - μ[Dt (ℓ + 1)] :=
+        integral_sub (f := fun ω => P (ℓ + 1) ω - P ℓ ω) ((hP _).sub (hP _)) (hDt _)
+      rw [e1, ht, hΔ, e2]
       ring
-  have hsum : MemLp (∑ ℓ ∈ range (L + 1), Y ℓ) 2 μ := memLp_finset_sum' _ (fun ℓ _ => hY ℓ)
+  have hsum : MemLp (∑ ℓ ∈ range (L + 1), Y ℓ) 2 μ := memLp_finsetSum' _ (fun ℓ _ => hY ℓ)
   have h := mse_eq_variance_add_sq_bias hsum m
   rw [hvar, hmean] at h
   have hfun : (fun ω => (∑ ℓ ∈ range (L + 1), (Yt ℓ ω + YΔ ℓ ω) - m) ^ 2) =

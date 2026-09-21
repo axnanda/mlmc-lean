@@ -1,4 +1,12 @@
-import Mathlib
+import Mathlib.Analysis.SpecialFunctions.Log.Base
+import Mathlib.Algebra.Field.GeomSum
+import Mathlib.Algebra.Order.Floor.Semiring
+import Mathlib.Tactic.Linarith
+import Mathlib.Tactic.Positivity
+import Mathlib.Tactic.GCongr
+import Mathlib.Tactic.FieldSimp
+import Mathlib.Tactic.Ring
+import Mathlib.Tactic.NormNum
 import MlmcLean.Allocation
 
 /-!
@@ -132,9 +140,9 @@ lemma levelL_bias {α c₁ δ : ℝ} (hα : 0 < α) (hc₁ : 0 < c₁) (hδ : 0 
   rwa [div_le_iff₀ hδ, mul_comm] at h2
 
 /-- `L < max 0 (log₂(c₁/δ)/α) + 1`. -/
-lemma levelL_lt {α c₁ δ : ℝ} (hα : 0 < α) (hc₁ : 0 < c₁) (hδ : 0 < δ) :
+lemma levelL_lt (α c₁ δ : ℝ) :
     (levelL α c₁ δ : ℝ) < max 0 (Real.logb 2 (c₁ / δ) / α) + 1 := by
-  rcases le_or_lt 0 (Real.logb 2 (c₁ / δ) / α) with h | h
+  rcases le_or_gt 0 (Real.logb 2 (c₁ / δ) / α) with h | h
   · calc (levelL α c₁ δ : ℝ) < Real.logb 2 (c₁ / δ) / α + 1 := Nat.ceil_lt_add_one h
       _ ≤ max 0 (Real.logb 2 (c₁ / δ) / α) + 1 := by
           have := le_max_right 0 (Real.logb 2 (c₁ / δ) / α)
@@ -148,7 +156,7 @@ lemma levelL_lt {α c₁ δ : ℝ} (hα : 0 < α) (hc₁ : 0 < c₁) (hδ : 0 < 
 /-- `2^{αL} ≤ 2^α · max 1 (c₁/δ)`. -/
 lemma two_rpow_levelL_le {α c₁ δ : ℝ} (hα : 0 < α) (hc₁ : 0 < c₁) (hδ : 0 < δ) :
     (2 : ℝ) ^ (α * (levelL α c₁ δ : ℝ)) ≤ 2 ^ α * max 1 (c₁ / δ) := by
-  have hL := levelL_lt hα hc₁ hδ
+  have hL := levelL_lt α c₁ δ
   have hcd : 0 < c₁ / δ := div_pos hc₁ hδ
   have h1 : (2 : ℝ) ^ (α * (levelL α c₁ δ : ℝ)) ≤
       2 ^ (α * (max 0 (Real.logb 2 (c₁ / δ) / α) + 1)) :=
@@ -156,24 +164,22 @@ lemma two_rpow_levelL_le {α c₁ δ : ℝ} (hα : 0 < α) (hc₁ : 0 < c₁) (h
   have h2 : (2 : ℝ) ^ (α * (max 0 (Real.logb 2 (c₁ / δ) / α) + 1)) = 2 ^ α * max 1 (c₁ / δ) := by
     rw [mul_add, mul_one, Real.rpow_add two_pos, mul_comm]
     congr 1
-    rcases le_or_lt 0 (Real.logb 2 (c₁ / δ) / α) with h | h
+    rcases le_or_gt 0 (Real.logb 2 (c₁ / δ) / α) with h | h
     · have hlog : 0 ≤ Real.logb 2 (c₁ / δ) := by
         by_contra hneg
-        push_neg at hneg
-        have := div_neg_of_neg_of_pos hneg hα
+        have := div_neg_of_neg_of_pos (not_le.1 hneg) hα
         linarith
       have hge : 1 ≤ c₁ / δ := (Real.logb_nonneg_iff (by norm_num) hcd).1 hlog
       rw [max_eq_right h, alpha_mul_div hα, Real.rpow_logb (by norm_num) (by norm_num) hcd,
         max_eq_right hge]
     · have hlog : Real.logb 2 (c₁ / δ) < 0 := by
         by_contra hnn
-        push_neg at hnn
-        have := div_nonneg hnn hα.le
+        have := div_nonneg (not_lt.1 hnn) hα.le
         linarith
       have hle : c₁ / δ ≤ 1 := by
         by_contra hgt
-        push_neg at hgt
-        have := (Real.logb_nonneg_iff (by norm_num) hcd).2 hgt.le
+        have h' : 0 ≤ Real.logb 2 (c₁ / δ) :=
+          (Real.logb_nonneg_iff (by norm_num) hcd).2 (not_le.1 hgt).le
         linarith
       rw [max_eq_left h.le, mul_zero, Real.rpow_zero, max_eq_left hle]
   rw [h2] at h1
@@ -218,7 +224,7 @@ theorem exists_L_N {α β γ c₁ c₂ c₃ : ℝ} (hα : 0 < α) (hc₁ : 0 < c
   have hτpos : 0 < ε ^ 2 / 2 := by positivity
   have hVpos : ∀ ℓ, 0 < Vb β c₂ ℓ := Vb_pos hc₂
   have hCpos : ∀ ℓ, 0 < Cb γ c₃ ℓ := Cb_pos hc₃
-  have hs : (range (levelL α c₁ (ε / 2) + 1)).Nonempty := nonempty_range_succ
+  have hs : (range (levelL α c₁ (ε / 2) + 1)).Nonempty := ⟨0, Finset.mem_range.2 (Nat.succ_pos _)⟩
   refine ⟨levelL α c₁ (ε / 2),
     optimalN (range (levelL α c₁ (ε / 2) + 1)) (Vb β c₂) (Cb γ c₃) (ε ^ 2 / 2),
     fun ℓ => optimalN_pos hs hVpos hCpos hτpos ℓ, ?_, ?_, ?_, ?_, ?_⟩
@@ -262,7 +268,7 @@ theorem exists_L_N {α β γ c₁ c₂ c₃ : ℝ} (hα : 0 < α) (hc₁ : 0 < c
       _ ≤ 2 ^ α * ((1 + 2 * c₁) / ε) := by gcongr
       _ = K₁ α c₁ / ε := by unfold K₁; ring
   · -- L + 1 ≤ K₂ |log ε|
-    have hL' := levelL_lt hα hc₁ hδpos
+    have hL' := levelL_lt α c₁ (ε / 2)
     have ht : 1 ≤ -Real.log ε := one_le_neg_log hε hε1
     have hlog2 : 0 < Real.log 2 := Real.log_pos (by norm_num)
     have hx : Real.logb 2 (c₁ / (ε / 2)) / α =
@@ -297,8 +303,7 @@ lemma two_rpow_L_le {α p K ε L : ℝ} (hα : 0 < α) (hp : 0 ≤ p) (hK : 0 < 
   have e : (2 : ℝ) ^ (p * L) = ((2 : ℝ) ^ (α * L)) ^ (p / α) := by
     rw [← Real.rpow_mul h2]
     congr 1
-    calc p * L = (p / α) * (α * L) := by
-          rw [mul_comm p, ← mul_assoc, mul_comm L, mul_assoc, alpha_mul_div hα, mul_comm]
+    calc p * L = (p / α) * (α * L) := by rw [← mul_assoc, div_mul_cancel₀ p hα.ne']
       _ = α * L * (p / α) := by ring
   rw [e, Real.rpow_neg hε.le, ← div_eq_mul_inv, ← Real.div_rpow hK.le hε.le]
   exact Real.rpow_le_rpow (Real.rpow_nonneg h2 _) h (div_nonneg hp hα.le)
@@ -324,6 +329,9 @@ lemma tail_cost_bound {α γ c₃ K ε : ℝ} (hα : 0 < α) (hγ : 0 < γ) (hc�
 lemma eps_inv_sq_eq {ε : ℝ} (hε : 0 < ε) : ε⁻¹ ^ 2 = ε ^ (-2 : ℝ) := by
   rw [Real.rpow_neg hε.le, Real.rpow_two, inv_pow]
 
+-- `hβ : 0 < β` is one of Giles' hypotheses; the proof below never needs it (only
+-- `α ≥ ½ min(β,γ)` and `γ > 0` enter), so we keep it for fidelity and silence the linter.
+set_option linter.unusedVariables false in
 /-- **Giles' Theorem 1 — deterministic core.**  Under the hypotheses of Theorem 1, with
 `V_ℓ = c₂ 2^{−βℓ}` and `C_ℓ = c₃ 2^{γℓ}`, there is `c₄ > 0` such that for every `0 < ε < e⁻¹`
 there are `L` and `N_ℓ ≥ 1` with `bias² + ∑ V_ℓ/N_ℓ < ε²` and
@@ -357,7 +365,7 @@ theorem mlmc_complexity_core {α β γ c₁ c₂ c₃ : ℝ} (hα : 0 < α) (hβ
     refine ⟨2 * (c₂ * c₃) * (1 - r)⁻¹ ^ 2 + T, by positivity, ?_⟩
     intro ε hε hε1
     obtain ⟨L, N, hN, hbias, hvar, hcost, hL, -⟩ := exists_L_N (β := β) (γ := γ) hα hc₁ hc₂ hc₃ hε hε1
-    refine ⟨L, N, hN, by linarith, ?_⟩
+    refine ⟨L, N, hN, by have := pow_pos hε 2; linarith, ?_⟩
     have hε1' : ε < 1 := eps_lt_one hε1
     have hA : (∑ ℓ ∈ range (L + 1), r ^ ℓ) ^ 2 ≤ (1 - r)⁻¹ ^ 2 := by
       have := geom_sum_le_of_lt_one hr0.le hr1 (L + 1)
@@ -367,7 +375,7 @@ theorem mlmc_complexity_core {α β γ c₁ c₂ c₃ : ℝ} (hα : 0 < α) (hβ
     have hε2 : ε ^ (-(γ / α)) ≤ ε ^ (-2 : ℝ) :=
       Real.rpow_le_rpow_of_exponent_ge hε hε1'.le (by linarith)
     have hbound : complexityBound α β γ ε = ε ^ (-2 : ℝ) := by
-      unfold complexityBound; rw [if_pos hlt]
+      unfold complexityBound; simp [hlt]
     rw [hbound]
     have hKp : 0 ≤ K₁ α c₁ ^ (γ / α) := Real.rpow_nonneg hK₁.le _
     calc ∑ ℓ ∈ range (L + 1), (N ℓ : ℝ) * Cb γ c₃ ℓ
@@ -393,7 +401,7 @@ theorem mlmc_complexity_core {α β γ c₁ c₂ c₃ : ℝ} (hα : 0 < α) (hβ
     intro ε hε hε1
     obtain ⟨L, N, hN, hbias, hvar, hcost, hL, hL1⟩ :=
       exists_L_N (β := β) (γ := γ) hα hc₁ hc₂ hc₃ hε hε1
-    refine ⟨L, N, hN, by linarith, ?_⟩
+    refine ⟨L, N, hN, by have := pow_pos hε 2; linarith, ?_⟩
     have hε1' : ε < 1 := eps_lt_one hε1
     have ht : 1 ≤ -Real.log ε := one_le_neg_log hε hε1
     have hsum : ∑ ℓ ∈ range (L + 1), r ^ ℓ = (L : ℝ) + 1 := by
@@ -413,8 +421,7 @@ theorem mlmc_complexity_core {α β γ c₁ c₂ c₃ : ℝ} (hα : 0 < α) (hβ
         _ = ε ^ (-2 : ℝ) * 1 := by ring
         _ ≤ ε ^ (-2 : ℝ) * (Real.log ε) ^ 2 := by gcongr
     have hbound : complexityBound α β γ ε = ε ^ (-2 : ℝ) * (Real.log ε) ^ 2 := by
-      unfold complexityBound
-      rw [if_neg (by rw [heq]; exact lt_irrefl _), if_pos heq]
+      unfold complexityBound; simp [heq]
     rw [hbound]
     have hKp : 0 ≤ K₁ α c₁ ^ (γ / α) := Real.rpow_nonneg hK₁.le _
     calc ∑ ℓ ∈ range (L + 1), (N ℓ : ℝ) * Cb γ c₃ ℓ
@@ -441,7 +448,7 @@ theorem mlmc_complexity_core {α β γ c₁ c₂ c₃ : ℝ} (hα : 0 < α) (hβ
     intro ε hε hε1
     obtain ⟨L, N, hN, hbias, hvar, hcost, hL, -⟩ :=
       exists_L_N (β := β) (γ := γ) hα hc₁ hc₂ hc₃ hε hε1
-    refine ⟨L, N, hN, by linarith, ?_⟩
+    refine ⟨L, N, hN, by have := pow_pos hε 2; linarith, ?_⟩
     have hε1' : ε < 1 := eps_lt_one hε1
     -- (∑ r^ℓ)² ≤ r^{2L} (r/(r−1))² and r^{2L} = 2^{(γ−β)L} ≤ K₁^{(γ−β)/α} ε^{−(γ−β)/α}
     have hr2L : r ^ (2 * L) = (2 : ℝ) ^ ((γ - β) * (L : ℝ)) := by
@@ -463,15 +470,14 @@ theorem mlmc_complexity_core {α β γ c₁ c₂ c₃ : ℝ} (hα : 0 < α) (hβ
     have hB := tail_cost_bound hα hγ hc₃ hK₁ hε L hL
     -- exponent bookkeeping
     have hexp : ε ^ (-2 : ℝ) * ε ^ (-((γ - β) / α)) = ε ^ (-2 - (γ - β) / α) := by
-      rw [← Real.rpow_add hε]; congr 1; ring
+      rw [show (-2 : ℝ) - (γ - β) / α = -2 + -((γ - β) / α) by ring, Real.rpow_add hε]
     have hε2 : ε ^ (-(γ / α)) ≤ ε ^ (-2 - (γ - β) / α) := by
       apply Real.rpow_le_rpow_of_exponent_ge hε hε1'.le
       -- -2 - (γ-β)/α ≤ -(γ/α)  ⟺  β/α ≤ 2
       have : (γ - β) / α = γ / α - β / α := by ring
       rw [this]; linarith
     have hbound : complexityBound α β γ ε = ε ^ (-2 - (γ - β) / α) := by
-      unfold complexityBound
-      rw [if_neg (not_lt.2 hgt.le), if_neg hgt.ne]
+      unfold complexityBound; simp [hgt.ne, not_lt.2 hgt.le]
     rw [hbound]
     have hKp : 0 ≤ K₁ α c₁ ^ (γ / α) := Real.rpow_nonneg hK₁.le _
     calc ∑ ℓ ∈ range (L + 1), (N ℓ : ℝ) * Cb γ c₃ ℓ

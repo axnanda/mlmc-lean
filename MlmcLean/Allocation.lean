@@ -1,4 +1,12 @@
-import Mathlib
+import Mathlib.Analysis.Real.Sqrt
+import Mathlib.Algebra.Order.Floor.Semiring
+import Mathlib.Algebra.Order.BigOperators.Ring.Finset
+import Mathlib.Tactic.Linarith
+import Mathlib.Tactic.Positivity
+import Mathlib.Tactic.GCongr
+import Mathlib.Tactic.FieldSimp
+import Mathlib.Tactic.Ring
+import Mathlib.Tactic.NormNum
 
 /-!
 # Optimal sample allocation for (nested) multilevel Monte Carlo
@@ -137,9 +145,11 @@ theorem optimalN_variance (hs : s.Nonempty) (hV : ∀ i, 0 < V i) (hC : ∀ i, 0
   calc ∑ i ∈ s, V i / (optimalN s V C τ i : ℝ)
       ≤ ∑ i ∈ s, τ * Real.sqrt (V i * C i) / S s V C := Finset.sum_le_sum h1
     _ = τ := by
-        rw [← Finset.sum_div, ← Finset.mul_sum]
-        change τ * S s V C / S s V C = τ
-        rw [mul_div_assoc, div_self hS.ne', mul_one]
+        have hterm : ∀ i ∈ s, τ * Real.sqrt (V i * C i) / S s V C =
+            τ / S s V C * Real.sqrt (V i * C i) := fun i _ => by ring
+        rw [Finset.sum_congr rfl hterm, ← Finset.mul_sum]
+        change τ / S s V C * S s V C = τ
+        rw [div_mul_cancel₀ _ hS.ne']
 
 /-- The rounded-up optimal allocation costs at most the Lagrange value `τ⁻¹ S²` plus the
 rounding-up overhead `∑ C i` (one extra sample per index). -/
