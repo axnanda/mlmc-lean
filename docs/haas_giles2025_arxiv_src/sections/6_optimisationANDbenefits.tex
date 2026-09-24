@@ -1,0 +1,141 @@
+\section{Global bit-width optimisation} \label{sec:optimisation}
+In the previous sections we have determined a model of the error made at each level when computing in low precision in fixed-point arithmetic 
+and a model of the cost of each sample.
+In this section we detail how to fix the optimal bit-widths $d_{i,\ell}$ of each variable $i$ on each level $\ell$ such that the overall cost \eqref{eq:cost_nested} is minimised and the overall variance \eqref{eq:var_nested} is under a user-specified threshold.
+
+As mentioned in \Cref{sec:MLMC} the total cost after the number of samples in the nested framework were optimised is 
+\begin{equation}
+\varepsilon^{-2}
+    \left(\sum_{\ell=0}^L \sqrt{\Tilde{V}_\ell \Tilde{C}_\ell}+ \sqrt{V^{\Delta}_\ell C^{\Delta}_\ell} \right)^2.
+\end{equation}
+We make the assumption that the variance $\Tilde{V}_\ell$ of the FPGA sample 
+is approximately equal to $V_\ell \triangleq \mathbb{V}[\Delta P_\ell]$. Therefore it will be possible to compute it on the CPU before optimising the bit-widths. The variance $V^{\Delta}_\ell$ of the correction term depends on the precision used in the FPGA calculation and is approximated by $V_{indep}(d_{1,\ell}, \ldots, d_{m_\ell,\ell})$ as justified in the previous section.
+Therefore the bit-widths of all variables of level $\ell$ can be optimised independently of the other levels by minimising %the level cost 
+\begin{equation} \label{eq:level_cost}
+    \sqrt{\Tilde{V}_\ell \Tilde{C}_\ell}+ \sqrt{V^{\Delta}_\ell C^{\Delta}_\ell}.
+\end{equation}
+Then the number of samples that need to be generated to determine the variance and expectation estimates can be derived analytically as shown in \Cref{sec:MLMC}.
+
+Note that this optimisation is independent of the overall desired accuracy $\varepsilon$, therefore the bit-widths can be optimised off-line from time to time (for example once a month as the market parameters evolve slowly), which saves the time of solving the optimisation problem on-line. The on-line MLMC simulation is then similar to the classical MLMC algorithm described in \cite{GILES2008}, the only difference being that we need to approximate two expectations at each level, $\mathbb{E}[\widetilde{\Delta P}_\ell]$ and $\mathbb{E}[\Delta P_\ell - \widetilde{\Delta P}_\ell]$.
+
+
+\subsection{Bit-width optimisation using a Lagrange multiplier} 
+To optimise the bit-widths of all variables in the nested MLMC framework, at each level the aim is to minimise the level cost \eqref{eq:level_cost} which, using the fact that $C_\ell \gg \Tilde{C}_\ell$, is approximated as
+\begin{equation}\label{eq:level_cost2}
+    \sqrt{V_\ell \Tilde{C}_\ell} + \sqrt{V^{\Delta}_\ell C_\ell}.
+\end{equation}
+To do this, we use a Lagrange multiplier approach. To give the intuition, minimising $V^{\Delta}_\ell(d)$ subject to a fixed $\Tilde{C}_\ell(d)$ leads to the equation
+\begin{equation} \label{Lagr}
+    \dfrac{\partial V^{\Delta}_\ell}{\partial d_{i,\ell}} +\lambda \, \dfrac{\partial \Tilde{C}_\ell}{\partial d_{i,\ell}} = 0
+\end{equation}
+for a value of the Lagrange multiplier $\lambda$ which gives the desired $\Tilde{C}_\ell(d)$. Hence, the Lagrange multiplier $\lambda$ controls the trade-off between cost and variance. 
+Note also that because of the form of the variance bound (\ref{optimistic}) and cost (\ref{cost_sq}), equation (\ref{Lagr}) gives a set of uncoupled nonlinear scalar equations for each pair $i, \ell$, which are easily solved to obtain $d_{i,\ell}$.
+
+Similarly, minimising \eqref{eq:level_cost2} by equating its derivative to zero gives 
+\begin{equation}
+    \sqrt{C_\ell/V^{\Delta}_\ell(d)}\ \dfrac{\partial V^{\Delta}_\ell}{\partial d_{i,\ell}} +\sqrt{V_\ell/\Tilde{C}_\ell(d)}\ \dfrac{\partial \Tilde{C}_\ell}{\partial d_{i,\ell}} = 0
+\end{equation}
+so it is again of the form \eqref{Lagr}, where $\lambda = \sqrt{V_\ell V_\ell^{\Delta}(d)/C_\ell \Tilde{C}_\ell(d)}$ gives the optimal trade-off between cost and variance. The idea is therefore that given a guess of $\lambda$ we solve iteratively a system for the bit-widths $d_{i,\ell}$, then update the value of $\lambda$ until we reach the optimal solution of the overall problem.
+
+\begin{figure}
+    \centering
+    \begin{minipage}{.48\textwidth}
+        \centering
+        \includegraphics[width=1\linewidth]{figsEPS/fig3a}
+    \end{minipage}
+    \begin{minipage}{.48\textwidth}
+        \centering
+        \includegraphics[width=1\linewidth]{figsEPS/fig3b}
+    \end{minipage}
+    \caption{$\sqrt{\Tilde{C}/C}+ \sqrt{\Tilde{V}/V}$ versus $\lambda$ for levels 0 and 8.}   \label{fig:cost_lambda}
+\end{figure}
+
+\Cref{fig:cost_lambda} shows the level cost \eqref{eq:level_cost2} versus $\lambda$ for both uniform bit-widths and optimised bit-widths. For each uniform bit-width from 4 to 16, it computes $\lambda$ based on
+\begin{equation}
+    \sum_i \dfrac{\partial V_\ell^{\Delta}}{\partial d_{i,\ell}} +\lambda \sum_i \dfrac{\partial \Tilde{C}_\ell}{\partial d_{i,\ell}} = 0
+\end{equation}
+then uses this value of $\lambda$ to determine initial values for $d_{i,\ell}$ by solving a system of equations. From the solution, it determines the values of \eqref{eq:level_cost2} for uniform and optimised bit-widths, which gives the optimal cost over $\lambda$ represented in \Cref{fig:cost_lambda}. Although we do not prove it formally we can see that the 
+the resulting function 
+is convex which ensures the existence of an optimum.
+The optimal value for $\lambda$ is then determined by golden section search optimisation,
+giving the optimal bit-widths shown in \Cref{fig:optimal_bw}, and the level cost ratios from \Cref{fig:cost_comparison}. 
+
+The numerical results in \Cref{fig:cost_comparison} show that the cost factor for both uniform and optimised bit-widths is smaller than 1 which means that the nested framework is cheaper than the standard Multilevel Monte Carlo. \Cref{fig:cost_comparison} also confirms that the optimisation method we suggest improves the level cost compared to the best uniform bit-width choice. 
+
+
+The main limitation is that considering the increase of the bit widths over level, the assumption $\Tilde{C}_\ell \ll C_\ell$ might not be relevant for all levels as the cost of the fixed-point operations becomes comparable to the cost of the path generation on the CPU. 
+Despite this, the nested framework is relevant at least on the first levels, which are the levels where most paths are computed, therefore the framework offers important overall savings. For instance, compared to the standard MLMC algorithm, our \Cref{fig:cost_comparison} shows a factor 7 in computational cost savings at level 0 and a factor 5 at level 1. Our experiment shows that the cost per time step and per sample on the FPGA with optimised bit-widths would be 41 for level 0 and 277 for level 1,
+while the value of the cost per time step and per sample on the CPU ($=C_\ell/N$) is $C_{RNG}=10^4$.
+
+
+\begin{figure}[h]
+\centering
+\begin{minipage}{.48\textwidth}
+%  \centering
+  \includegraphics[width=0.9\linewidth]{figsEPS/fig4a}
+  \captionof{figure}{Optimal bit-widths for each variable, best uniform bit-width, and required RNG accuracy, all versus level.}
+  \label{fig:optimal_bw}
+\end{minipage}%
+\hspace{.02\textwidth}
+\begin{minipage}{.48\textwidth}
+%  \centering
+  \includegraphics[width=0.9\linewidth]{figsEPS/fig4b}
+  \captionof{figure}{$\sqrt{\Tilde{C}/C}+ \sqrt{\Tilde{V}/V}$ versus level for optimal bit-widths and best uniform bit-width.}
+  \label{fig:cost_comparison}
+\end{minipage}
+\end{figure}
+
+
+\subsection{Rounding the bit-widths to integer values}
+The next step is then rounding the bit-widths to positive integers in order to configure the fixed-point variables. In practice we observed for the single level case that the Lagrange multiplier approach was good enough compared to several integer programming approaches that we tested to optimise the bit-widths. The solution from the Lagrange multiplier approach is real and can be rounded as follows. For each level $\ell$ and each variable $i$, first round down the solution to $d^*_{i,\ell} = d_{i,\ell}$ and compute the ratio
+\begin{equation}
+    r_{i,\ell} = \frac{V_{indep}(d^*_{1,\ell}, \ldots, d^*_{i,\ell}, \ldots)-V_{indep}(d^*_{1,\ell}, \ldots, d^*_{i,\ell}+1, \ldots)}{\Tilde{C}(d^*_{1,\ell}, \ldots, d^*_{i,\ell}+1, \ldots)-\Tilde{C}(d^*_{1,\ell}, \ldots, d^*_{i,\ell}, \ldots)}. 
+    \label{eq:ratio_lagr}
+\end{equation}
+Then order the ratios in decreasing order and add one bit to the variables with the highest ratio until the constraint on the error is satisfied. This heuristic performs well and is guaranteed to obtain a feasible solution.
+
+However in the following subsection we chose to keep the bit-widths equal to the real solution in order to analyse the overall trends.
+
+
+
+\subsection{Discussion on bit-width trends}
+In order to explain the evolution of the bit-widths we use a similar approach to \cite{Rounding_error_oliver} to estimate the size of the fixed-point variables : assume that $h\ll \sqrt{h}$ and $\sigma$, $r, S_0,Z_i = \mathcal{O}(1)$, then 
+we obtain
+\begin{align}
+    &con2, \, mul1, \, sum1,\, mul2 \sim \sqrt{h} \\
+    &con1 \sim h \\
+    &S \sim 1.
+\end{align}
+The takeaway is that the variables $S_i$ are the largest. Moreover we know that they are used in an addition at the end of each time step calculation, which explains why these variables need the largest bit-widths in order to avoid introducing extra errors and why their bit-width increases at each level as the timestep increments and the MLMC correction $\Delta P_\ell$ become smaller.
+
+In \Cref{fig:optimal_bw}, the order and slope of the bit-widths over levels are consistent with the order of the operations in the path generation and with the size of each variable.
+
+
+Moreover looking at the \textit{variance factors} $\frac{1}{12}\mathbb{E}[\Bar{x}^2_i]4^{e_{i,\ell}}$ in \Cref{fig:var_factor}, for variables $S$ and $mul2$ we notice that the factors are approximately multiplied by 2 at every level. Therefore, using the fact 
+% that we observe 
+that $d_{S,\ell+1}=d_{S,\ell}+1$ is equivalent to 
+division by 4 in the corresponding squared rounding error, the bound on the average error $\mathbb{E}[\Bar{S}_i^2 \delta S^2_i]$ is divided by 2 at every level. In fact a similar argument can be used for the error coming from $mul2$ and numerically \Cref{fig:indep_errors} confirms that all variables give a similar evolution in the squared errors. This is a very important observation because it shows that the portion of the overall error due to a certain variable is constant over levels. In other words, to leading order, all errors are roughly of the same size. This is intuitive because if an error was "disproportionately" small, there would be potential for cost savings with a small increase in the error.
+
+As a consequence, if we sum the independent errors in \Cref{fig:indep_errors} and compare that to the Figure 4 from \cite{Rounding_error_oliver}, this shows that adapting the precision of the variables over levels allows us to keep improving the accuracy of the low precision estimate as the time step tends to 0. On the contrary, if the bit-widths in the low precision path generation were fixed, starting at a certain level, the accuracy would decrease. Indeed in the fixed precision case the rounding error at each time step of the Euler-Maruyama scheme is of order $\mathcal{O}(h^{-1}2^{e_{S,\ell}-d_{S,\ell}})$ \cite{arciniega,Rounding_error_oliver} (neglecting the effect of approximate random variables) so for large time steps the net error in $S_N$ is dominated by the time step, however for small time steps the rounding errors due to the finite precision are relatively large. Therefore %not only 
+our framework not only allocates the relevant number of bits to each variable within a level but %it 
+also ensures that the precision evolves with level such that the net error evolves like the time step $h$.
+
+
+\begin{figure}[h]
+\centering
+\begin{minipage}{.48\textwidth}
+  \centering
+  \includegraphics[width=1\linewidth]{figsEPS/var_factors}
+  \captionof{figure}{Factors $\frac{1}{12}\mathbb{E}[\Bar{x}^2_i]4^{e_{i,\ell}}$ from the overall variance $V_{indep}(d)$. }
+  \label{fig:var_factor}
+\end{minipage}%
+\hspace{0.02\textwidth}
+\begin{minipage}{.48\textwidth}
+  \centering
+  \includegraphics[width=1\linewidth]{figsEPS/independent_errors}
+  \captionof{figure}{Upper bounds $\frac{1}{12} \mathbb{E}[\Bar{x}^2_i]4^{e_{i,\ell}-d_{i,\ell}}$ on the expected squared errors $\mathbb{E}[\Bar{x}_i^2 \delta x_i^2]$.}
+  \label{fig:indep_errors}
+\end{minipage}
+\end{figure}
+
+

@@ -1,0 +1,158 @@
+\begin{thebibliography}{25}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Arciniega and Allen(2003)]{arciniega}
+A.~Arciniega and E.~Allen.
+\newblock Rounding error in numerical solution of stochastic differential equations.
+\newblock \emph{Stoch. Anal. Appl.}, 21\penalty0 (2):\penalty0 281--300, 2003.
+\newblock \doi{10.1081/SAP-120019286}.
+
+\bibitem[Boutros et~al.(2017)Boutros, Grady, Abbas, and Chow]{HFT2}
+A.~Boutros, B.~Grady, M.~Abbas, and P.~Chow.
+\newblock Build fast, trade fast: {FPGA}-based high-frequency trading using high-level synthesis.
+\newblock In \emph{2017 International Conference on ReConFigurable Computing and FPGAs (ReConFig)}, pages 1--6, 2017.
+\newblock \doi{10.1109/RECONFIG.2017.8279781}.
+
+\bibitem[Brugger et~al.(2014)Brugger, de~Schryver, Wehn, Omland, Hefter, Ritter, Kostiuk, and Korn]{brugger2014mixed}
+C.~Brugger, C.~de~Schryver, N.~Wehn, S.~Omland, M.~Hefter, K.~Ritter, A.~Kostiuk, and R.~Korn.
+\newblock Mixed precision {M}ultilevel {M}onte {C}arlo on hybrid computing systems.
+\newblock In \emph{Proceedings of the IEEE Conference on Computational Intelligence for Financial Engineering \& Economics (CIFEr)}, pages 215--222. IEEE, 2014.
+\newblock \doi{10.1109/CIFEr.2014.6924076}.
+
+\bibitem[Cheung et~al.(2007)Cheung, Lee, Luk, and Villasenor]{Cheung2007HardwareGO}
+R.~Cheung, D.-U. Lee, W.~Luk, and J.~Villasenor.
+\newblock Hardware generation of arbitrary random number distributions from uniform distributions via the inversion method.
+\newblock \emph{IEEE Transactions on Very Large Scale Integration (VLSI) Systems}, 15:\penalty0 952--962, 2007.
+\newblock \doi{10.1109/TVLSI.2007.900748}.
+
+\bibitem[Chow et~al.(2012)Chow, Tse, Jin, Luk, Leong, and Thomas]{ChowMixedPrecisionStandardMC}
+G.~Chow, A.~Tse, Q.~Jin, W.~Luk, P.~Leong, and D.~Thomas.
+\newblock A mixed precision {M}onte {C}arlo methodology for reconfigurable accelerator systems.
+\newblock In \emph{Proceedings of the ACM/SIGDA International Symposium on Field Programmable Gate Arrays}, FPGA '12, page 57–66, New York, NY, USA, 2012. Association for Computing Machinery.
+\newblock \doi{10.1145/2145694.2145705}.
+
+\bibitem[de~Schryver et~al.(2013)de~Schryver, Torruella, and Wehn]{Schryver2013AMM}
+C.~de~Schryver, P.~Torruella, and N.~Wehn.
+\newblock A multi-level {M}onte {C}arlo {FPGA} accelerator for option pricing in the {H}eston model.
+\newblock \emph{2013 Design, Automation \& Test in Europe Conference \& Exhibition (DATE)}, pages 248--253, 2013.
+\newblock \doi{10.7873/DATE.2013.063}.
+
+\bibitem[Gaffar et~al.(2002)Gaffar, Mencer, Luk, Cheung, and Shirazi]{bitwidth-AD}
+A.~Gaffar, O.~Mencer, W.~Luk, P.~Cheung, and N.~Shirazi.
+\newblock Floating-point bitwidth analysis via automatic differentiation.
+\newblock In \emph{2002 IEEE International Conference on Field-Programmable Technology}, pages 79--88, 2002.
+\newblock \doi{10.1109/FPT.2002.1188677}.
+
+\bibitem[Gaffar et~al.(2004)Gaffar, Mencer, Luk, and Cheung]{unifying-bwoptim}
+A.~Gaffar, O.~Mencer, W.~Luk, and P.~Cheung.
+\newblock Unifying bit-width optimisation for fixed-point and floating-point designs.
+\newblock In \emph{12th Annual IEEE Symposium on Field-Programmable Custom Computing Machines}, pages 79--88, 2004.
+\newblock \doi{10.5555/1025123.1025818}.
+
+\bibitem[Giles(2008)]{GILES2008}
+M.~Giles.
+\newblock Multilevel {M}onte {C}arlo path simulation.
+\newblock \emph{Oper. Res.}, 56\penalty0 (3):\penalty0 607--617, 2008.
+\newblock \doi{10.1287/opre.1070.0496}.
+
+\bibitem[Giles(2015)]{Giles_overview17}
+M.~Giles.
+\newblock Multilevel {M}onte {C}arlo methods.
+\newblock \emph{Acta Numer.}, 24:\penalty0 259–328, 2015.
+\newblock \doi{10.1017/S096249291500001X}.
+
+\bibitem[Giles and Sheridan-Methven(2021)]{NestedOliver}
+M.~Giles and O.~Sheridan-Methven.
+\newblock Analysis of nested multilevel {M}onte {C}arlo using approximate normal random variables.
+\newblock \emph{SIAM/ASA J. Uncertain. Quantif.}, 10:\penalty0 200--226, 2021.
+\newblock \doi{10.1137/21M1399385}.
+
+\bibitem[Giles and Sheridan-Methven(2023)]{approximateICDF_Oliver}
+M.~Giles and O.~Sheridan-Methven.
+\newblock Approximating inverse cumulative distribution functions to produce approximate random variables.
+\newblock \emph{ACM Trans. Math. Software}, 49\penalty0 (3), sep 2023.
+\newblock \doi{10.1145/3604935}.
+
+\bibitem[Glasserman(2004)]{glasserman04}
+P.~Glasserman.
+\newblock \emph{{M}onte {C}arlo Methods in Financial Engineering}.
+\newblock Springer, New York, 2004.
+\newblock \doi{10.1007/978-0-387-21617-1}.
+
+\bibitem[Intel()]{norminv_routine_intel}
+Intel.
+\newblock Developer reference for {I}ntel® one{API} {M}ath {K}ernel {L}ibrary for {C}. {v?CdfNormInv}.
+\newblock Available at : \url{https://www.intel.com/content/www/us/en/docs/onemkl/developer-reference-c/2024-1/v-cdfnorminv.html}.
+\newblock (Accessed: 21 November 2024).
+
+\bibitem[Leber et~al.(2011)Leber, Geib, and Litz]{HFT1}
+C.~Leber, B.~Geib, and H.~Litz.
+\newblock High frequency trading acceleration using {FPGA}s.
+\newblock In \emph{2011 21st International Conference on Field Programmable Logic and Applications}, pages 317--322, 2011.
+\newblock \doi{10.1109/FPL.2011.64}.
+
+\bibitem[Lee et~al.(2004)Lee, Luk, Villasenor, and Cheung]{thom14}
+D.-U. Lee, W.~Luk, J.~D. Villasenor, and P.~Y.~K. Cheung.
+\newblock A {G}aussian noise generator for hardware-based simulations.
+\newblock \emph{IEEE Trans. Comput.}, 53\penalty0 (12):\penalty0 1523–1534, Dec 2004.
+\newblock \doi{10.1109/TC.2004.106}.
+
+\bibitem[Lee et~al.(2006)Lee, Gaffar, Cheung, Mencer, Luk, and Constantinides]{Lee2006}
+D.-U. Lee, A.~Gaffar, R.~Cheung, O.~Mencer, W.~Luk, and G.~Constantinides.
+\newblock Accuracy-guaranteed bit-width optimization.
+\newblock \emph{IEEE Transactions on Computer-Aided Design of Integrated Circuits and Systems}, 25\penalty0 (10):\penalty0 1990--2000, October 2006.
+\newblock \doi{10.1109/TCAD.2006.873887}.
+
+\bibitem[Lee et~al.(2009)Lee, Cheung, Luk, and Villasenor]{Lee_segmentation}
+D.-U. Lee, R.~Cheung, W.~Luk, and J.~Villasenor.
+\newblock Hierarchical segmentation for hardware function evaluation.
+\newblock \emph{IEEE Transactions on Very Large Scale Integration (VLSI) Systems}, 17\penalty0 (1):\penalty0 103--116, 2009.
+\newblock \doi{10.1109/TVLSI.2008.2003165}.
+
+\bibitem[Lindsey et~al.(2016)Lindsey, Leslie, and Luk]{lindsey2016domain}
+B.~Lindsey, M.~Leslie, and W.~Luk.
+\newblock A {D}omain {S}pecific {L}anguage for accelerated {M}ultilevel {M}onte {C}arlo simulations.
+\newblock In \emph{Proceedings of the IEEE 27th International Conference on Application-specific Systems, Architectures and Processors (ASAP)}. IEEE, 2016.
+\newblock \doi{10.1109/ASAP.2016.7760778}.
+
+\bibitem[Malik and Hemani(2016)]{Malik2016GaussianRN}
+J.~S. Malik and A.~Hemani.
+\newblock Gaussian random number generation: A survey on hardware architectures.
+\newblock \emph{ACM Comput. Surv.}, 49\penalty0 (3), Nov. 2016.
+\newblock \doi{10.1145/2980052}.
+
+\bibitem[MathWorks()]{fi_toolbox}
+MathWorks.
+\newblock Fixed-{P}oint {D}esigner documentation.
+\newblock Available at : \url{https://uk.mathworks.com/help/fixedpoint/}.
+\newblock (Accessed: November 2024).
+
+\bibitem[Menon et~al.(2018)Menon, Lam, Osei-Kuffuor, Schordan, Lloyd, Mohror, and Hittinger]{ADAPT}
+H.~Menon, M.~Lam, D.~Osei-Kuffuor, M.~Schordan, S.~Lloyd, K.~Mohror, and J.~Hittinger.
+\newblock {ADAPT}: Algorithmic differentiation applied to floating-point precision tuning.
+\newblock In \emph{SC18: International Conference for High Performance Computing, Networking, Storage and Analysis}, pages 614--626, 2018.
+\newblock \doi{10.1109/SC.2018.00051}.
+
+\bibitem[Sheridan-Methven and Giles(2024)]{Rounding_error_oliver}
+O.~Sheridan-Methven and M.~Giles.
+\newblock Rounding error using low precision approximate random variables.
+\newblock \emph{SIAM J. Sci. Comput.}, 46\penalty0 (4), 2024.
+\newblock \doi{10.1137/23M1552814}.
+
+\bibitem[Thomas et~al.(2009)Thomas, Howes, and Luk]{Thomas2009ACO}
+D.~Thomas, L.~Howes, and W.~Luk.
+\newblock A comparison of {CPU}s, {GPU}s, {FPGA}s, and massively parallel processor arrays for random number generation.
+\newblock In \emph{Symposium on Field Programmable Gate Arrays}, 2009.
+\newblock \doi{10.1145/1508128.1508139}.
+
+\bibitem[Woods et~al.(2008)Woods, McAllister, Lightbody, and Yi]{woods2008fpga}
+R.~Woods, J.~McAllister, G.~Lightbody, and Y.~Yi.
+\newblock \emph{{FPGA}-based implementation of signal processing systems}.
+\newblock John Wiley \& Sons, 2008.
+\newblock \doi{10.1002/9781119079231}.
+
+\end{thebibliography}

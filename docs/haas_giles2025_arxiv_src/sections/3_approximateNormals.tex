@@ -1,0 +1,97 @@
+\section{Approximate random normally distributed numbers} \label{sec:RNG}
+In this section we summarise three methods that could be used to generate approximate random normal variables that are used in the low precision path generation. 
+All methods below are classified as \textit{inversion methods}, because they are based on applying an approximation of the inverse normal CDF $\Phi$ to a random uniform variable $U$. The first and the third methods approximate $\Phi^{-1}$ by a Piecewise Constant (PWC) function on uniform intervals included in $[0,1]$. The second method is based on previous work by Lee et al. \cite{Cheung2007HardwareGO, Lee_segmentation} and approximates $\Phi^{-1}$ by a Piecewise Linear (PWL) function on dyadic intervals, ie. intervals that are progressively divided by 2 as we get closer to the singularities of $\Phi^{-1}$. The approximation accuracy of the first and second methods were analysed asymptotically in \cite{approximateICDF_Oliver}. Note that, in practice, we exploit the symmetry of $\Phi^{-1}$ so we only need to approximate it on $[0,1/2]$.
+
+In order to compute the correction terms we need to be able to generate a couple of random normal increments $(Z,\Tilde{Z})$ in double and reduced precision respectively.
+In all three approaches below, $Z$ is computed on the CPU either with a piecewise polynomial approximation of $\Phi^{-1}$ of degree 5 on the hierarchical interval segmentation described in \cite{Cheung2007HardwareGO}, or more directly using a math routine that applies $\Phi^{-1}$ to a vector such as in \cite{norminv_routine_intel}. Therefore for each of the following methods we only detail how to obtain $\Tilde{Z}$ and the corresponding full precision uniform variable $U$ (from which computing $Z$ is trivial).
+
+To fix the notation, we consider that the double precision uniform variable $U$ corresponds to a $D$-bit integer that we denote by $J$ and the associated low precision uniform variable corresponds to a $d$-bit integer denoted by $j$.
+
+\subsection{Piecewise constant approximation on uniform intervals (Method 1)} %\label{method1}
+In the first approach, the inverse CDF $\Phi^{-1}$ is approximated by a constant value on uniform intervals $\mathcal{I}_j=[u_j , u_{j+1}]\subset [0,1/2]$  with $u_j = 2^{-d} j, j<2^{d-1}$. We simply construct a Look-Up-Table (LUT) of size $2^{d-1}$ containing the constant values $Z_j$ that the approximate random number takes when the input uniform variable is inside the interval $\mathcal{I}$. The leading bit of $j$ gives the sign of the normal increment, which allows us to extend the approximation of $\Phi^{-1}$ on the interval $[1/2,1]$. The next $d-1$ bits are used to pick the right value in a LUT.
+Locating the interval corresponding to the input uniform variable $U$ is trivial since the integer $j$ maps to the index of the interval. Therefore the evaluation of the approximate random number is cheap once the random integer $J$ has been generated.
+
+To determine the optimal constants $Z_j$ the mean squared error (MSE)
+\begin{equation}
+    \int_{u_j}^{u_{j+1}} \left(Z_j-\Phi^{-1}(u) \right)^2 du
+\end{equation}
+is minimised with respect to the LUT values $Z_j$. This gives that $Z_j$ is the mean of $\Phi^{-1}$ over the interval $\mathcal{I}_j$ :
+\begin{equation}
+    Z_j = 2^d \int_{u_j}^{u_{j+1}} \Phi^{-1}(u)du.
+\end{equation}
+Then the corresponding full precision uniform variable is defined as $U = 2^{- D}\left(J + \frac{1}{2}\right)$. 
+
+The issue with this approach is that the LUT is of size $2^{d-1}$, which may not fit on the FPGA or may take up too much hardware resources, for example for $d=10$ the LUT stores $2^9=512$ values.
+
+
+\subsection{Sum of several variables (Method 2)} %\label{section_meth3}
+Another approach is to reduce further the precision of the approximate random variables generated with the LUT from method 1 and sum several of them to improve the statistical quality of the final approximate normal variables. For example take an integer $n$ that divides $d$ and produce an approximate random number $X^{(1)}$ from the first $d/n$ bits of $j$, then $X^{(2)}$ from the next $d/n$ bits and so on, where each $X^{(i)}$ follows approximately the distribution $\mathcal{N}(0,1/n)$.
+Then $\sum_{i=1}^n X^{(i)}$ has approximately the distribution $\mathcal{N}(0,1)$.
+
+The idea of summing several approximate random numbers was already used in \cite{Thomas2009ACO,Malik2016GaussianRN,thom14} with $n=8$, $n=4$ and $n=2$ respectively. In particular, \cite{Thomas2009ACO} used the piecewise linear approximation on dyadic intervals (see next subsection) to generate the lower precision random numbers $X^{(i)}$.
+
+The difference between the method introduced below and the previous literature is an optimisation stage where the coefficients stored in the LUT are adapted iteratively, which improves the quality of the estimation compared to simply taking the LUT values $Z_j$ described previously. 
+The second difference compared to previous work is the coupling between the low precision and full precision uniform variables that is required in our application.
+We explain the method for two variables ($n=2$), as it is generalised in a trivial way. 
+
+Take the integer $j$ and split it into two integers with bit-widths $d/2$. Both streams of lower precision variables $X^{(1)},X^{(2)}$ are computed with the same LUT of size $2^{d/2-1}$. This LUT is initialised using the method 1 and dividing the LUT values by $\sqrt{2}$. Therefore let's note $X_j$ the values in the small LUT. Using this initial LUT 
+we form a larger LUT of size $2^{d}$ by computing all possible sums $\pm X_k\pm X_l$ and ordering the outputs $\Tilde{Z}_j$ in ascending order. This step defines a permutation $\pi$ such that $\pi(j)$ gives the position of the random number $\Tilde{Z}_j$ in the ordered list. Then we perform a least-squared minimisation of 
+\begin{equation}
+    \sum_{j=1}^{2^{d}} (Z_{\pi(j)}-\Tilde{Z}_j)^2
+\end{equation}
+where the $Z_{\pi(j)}$ are obtained with a LUT of size $2^{d-1}$ as in the previous subsection.
+In this minimisation problem, the variables $\Tilde{Z}_j$ are considered as linear variables of the decision variables, which are the values $X_j$ from the small LUT that we want to optimise.
+
+After this step update the permutation $\pi$ by ordering the resulting $\Tilde{Z}_j$ and repeat the least-squares optimisation. The algorithm stops when the permutation has converged.
+In practice we observed that for $d=10$ and $d=12$ this process takes about 20 and 100 iterations respectively, and that the optimisation stage considerably reduces the MSE (see \Cref{fig:MSE_plot}).
+
+Finally, generating the coupled full precision variable requires taking into account the permutation $\pi$. When the optimised LUT is used and the input integer is $j$, the output is the value $\Tilde{Z}_j$, which is an approximate of $\Phi^{-1}(2^{-d}\pi (j))$. Therefore the corresponding uniform variable used on the CPU is
+\begin{equation}
+    U = 2^{-d}\pi (j) + 2^{-D}\left((J-2^{D-d}j)+ \frac{1}{2}\right) = 2^{-d}(\pi (j) -j ) + 2^{-D}\left(J+\frac{1}{2}\right).
+\end{equation}
+The permutation $\pi$ only needs to be stored (in a permutation table of size $2^{d}$) and used on the CPU while the RNG on the FPGA is done using only the optimised LUT of size $2^{d/2-1}$.
+
+Generalising the method to $n>2$ variables is straightforward. The only change is that the values of the small LUT are divided by $\sqrt{n}$ and $n$ low precision variables are summed to obtain the $\Tilde{Z}_j$. The coupled uniform variable used on the CPU is defined with exactly the same formula as in the two variables case.
+
+
+\subsection{Piecewise linear approximation on dyadic intervals \linebreak (Method 3)}
+Another way to reduce the size of the LUT is to use dyadic intervals as suggested in \cite{Cheung2007HardwareGO,approximateICDF_Oliver}. Again we consider that the leading bit of $j$ is a sign bit used to flip the sign of an approximate normal variable when $U>\frac{1}{2}$ and the next bits are used for the approximation of $\Phi^{-1}(U)$.
+The approximate random number corresponding to integer $j$ is defined as $\Bar{Z}_j = a + bj$, with a separate pair $(a, b)$ for each interval $\mathcal{I}'_i=[\![ 2^{i-1}, 2^{i}-1]\!]$, where $i$ is the leading non-zero bit of the integer $j$. The coefficients are stored in a LUT of size $d - 1$ and the values $(a, b)$ are again obtained by minimising the MSE. A simple calculation shows that
+\begin{equation} \label{mse_dyadic}
+    \int_{u_j}^{u_{j+1}} (\bar{Z}_j - \Phi^{-1}(u))^2 du = 2^{−d} (\bar{Z}_j - Z_j )^2 + \int_{u_j}^{u_{j+1}} (Z_j - \Phi^{-1}(u))^2 du
+\end{equation}
+where $Z_j$ is defined as in method 1. Therefore to calculate the pairs $(a, b)$ we only need to minimise
+\begin{equation}
+    \sum_{j=1}^{2^{d-1}} (\Bar{Z}_j - Z_j )^2.
+\end{equation}
+
+\Cref{mse_dyadic} also shows that for the same value of $d$ this approximation cannot be as good as the method 1, but the motivation for method 3 is that the size of the LUT is considerably reduced.
+The uniform CPU variable $U$ is defined in the same way as in method 1 and the coupling $(\Tilde{Z} , Z)$ follows naturally.
+
+
+\subsection{Comparison of the three inversion methods}
+In this section we discuss the advantages and drawbacks of the approximate RNG methods above.
+We compare roughly the three approximation methods by looking at the resulting MSE (see \Cref{fig:MSE_plot}).
+
+\begin{figure}[!h]
+    \centering
+    \includegraphics[width=0.7\linewidth]{figsEPS/MSE_plot}
+    \caption{Mean-squared error for RNG methods 1, 2 (before and after LUT optimisation) and 3 over the bit-width $d$ of the random integer $j$.} 
+    \label{fig:MSE_plot}
+\end{figure}
+
+First note that, for the same $d$, the MSE obtained in methods 2 and 3 are necessarily larger than in method 1 (see \eqref{mse_dyadic}). Despite this, for $d=10$ the dyadic approximation is only slightly worse, which is probably because for the first two dyadic intervals there are only two points in each so $\Bar{Z}_j$ will exactly match $Z_j$. However for $d=12$ there is nearly a factor 2 difference, which illustrates that the MSE does not evolve in the same way depending on the type of intervals that is used. As illustrated by \Cref{fig:MSE_plot} and the convergence analysis from \cite{approximateICDF_Oliver},
+as $d$ tends to infinity, the uniform intervals give $MSE \longrightarrow 0$ and the dyadic intervals give $MSE \longrightarrow C$, for some positive constant $C$. The latter is because with our simple dyadic segmentation, when $d$ increases by 1 the MSE is reduced only in the interval closest to 0, so the error due to the other intervals remains the same.
+This is the reason why the dyadic intervals were split further into smaller uniform intervals in \cite{Lee_segmentation} as it improves the approximation of the inverse CDF. 
+However their address location process is too complex for our needs, so we do not consider improving the segmentation of the dyadic method further.
+
+
+Next, it is also interesting to compare methods 2 with $d$ bits against the method 1 with $d-1$ bits, since most of the values in method 2 occur in pairs ($X_i+X_j$ and $X_j+X_i$). The corresponding MSE values are very close but looking at the actual values, we saw that method 2 is slightly more accurate, probably due to the extra values of the form $X_i+X_i$.
+The \Cref{fig:MSE_plot} also illustrates that both method 1 and 2 have their MSE divided by 2 each time $d$ increases by 1. This was theoretically expected for method 1 (see \cite{approximateICDF_Oliver}) and is intuitively true for method 2 after the optimisation stage as the MSE is minimised such that the $\Tilde{Z}_j$ approximate the $Z_j$ corresponding to a larger LUT, so the slope of the MSE in method 2 should be similar to that of method 1. 
+
+Hence the double variable approach shows good accuracy for significantly reduced LUT size, with only a factor 2 increase in the MSE for the same value of $d$. The optimisation stage contributes significantly to the accuracy of method 2. This might be because the optimisation allows some values of the table to take more "extreme" values to better approximate the tail of the distribution. This is consistent with an increase in the maximal value after optimisation that we have observed. %(see \Cref{tab:error_comp}).
+
+
+In conclusion, methods 2 and 3 are suitable for computing approximate random normal variables that could be used in the nested framework very cheaply and with relatively small hardware requirements. However tests on real hardware are needed to
+verify the efficiency of their implementation on current FPGAs. 
+Also with dyadic intervals, the MSE value cannot be arbitrarily small, which might limit the number of levels where this method is relevant.

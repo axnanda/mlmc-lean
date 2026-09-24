@@ -1,0 +1,42 @@
+
+=== payoff: call   v_l = V[dP - dP~]/V[dP]   (speedup cap = 1/v, per-level factor >= sqrt(v)) ===
+input quantizer                           bits      MSE   2*MSE  l=0  l=1  l=2  l=3  l=4  l=5  l=6  l=7
+ternary moment-matched (1/6,2/3,1/6)      1.58 2.69e-01 5.4e-01  0.336  0.637  0.660  0.678  0.679  0.677  0.674  0.681
+ternary Lloyd-Max (MSE-optimal)           1.58 1.90e-01 3.8e-01  0.234  0.463  0.462  0.471  0.469  0.476  0.471  0.478
+ternary Lloyd-Max + error feedback        1.58 1.90e-01 3.8e-01  0.234  0.601  0.601  0.628  0.651  0.663  0.693  0.712
+paper Method 1, d= 1 bits                 1.00 3.63e-01 7.3e-01  0.412  0.626  0.740  0.707  0.709  0.716  0.712  0.717
+paper Method 1, d= 2 bits                 2.00 1.39e-01 2.8e-01  0.160  0.380  0.377  0.381  0.376  0.381  0.379  0.385
+paper Method 1, d= 3 bits                 3.00 5.50e-02 1.1e-01  0.063  0.193  0.188  0.190  0.189  0.191  0.191  0.196
+paper Method 1, d= 4 bits                 4.00 2.22e-02 4.4e-02  0.025  0.075  0.094  0.097  0.097  0.096  0.097  0.102
+paper Method 1, d= 6 bits                 6.00 3.91e-03 7.8e-03  0.004  0.013  0.020  0.024  0.025  0.026  0.028  0.031
+paper Method 1, d= 8 bits                 8.00 7.43e-04 1.5e-03  8e-04  0.002  0.004  0.005  0.006  0.007  0.007  0.009
+paper Method 1, d=10 bits                10.00 1.50e-04 3.0e-04  2e-04  3e-04  7e-04  0.001  0.001  0.002  0.002  0.002
+paper Method 1, d=12 bits                12.00 3.13e-05 6.3e-05  3e-05  5e-05  1e-04  3e-04  4e-04  4e-04  4e-04  5e-04
+
+=== payoff: linear   v_l = V[dP - dP~]/V[dP]   (speedup cap = 1/v, per-level factor >= sqrt(v)) ===
+input quantizer                           bits      MSE   2*MSE  l=0  l=1  l=2  l=3  l=4  l=5  l=6  l=7
+ternary moment-matched (1/6,2/3,1/6)      1.58 2.69e-01 5.4e-01  0.268  0.488  0.499  0.502  0.507  0.509  0.510  0.512
+ternary Lloyd-Max (MSE-optimal)           1.58 1.90e-01 3.8e-01  0.190  0.334  0.344  0.346  0.346  0.351  0.349  0.349
+ternary Lloyd-Max + error feedback        1.58 1.90e-01 3.8e-01  0.190  0.497  0.573  0.612  0.642  0.650  0.663  0.668
+paper Method 1, d= 1 bits                 1.00 3.63e-01 7.3e-01  0.364  0.580  0.590  0.593  0.597  0.601  0.600  0.601
+paper Method 1, d= 2 bits                 2.00 1.39e-01 2.8e-01  0.139  0.252  0.259  0.260  0.262  0.264  0.263  0.264
+paper Method 1, d= 3 bits                 3.00 5.50e-02 1.1e-01  0.055  0.104  0.107  0.107  0.108  0.109  0.108  0.109
+paper Method 1, d= 4 bits                 4.00 2.22e-02 4.4e-02  0.022  0.043  0.044  0.044  0.045  0.045  0.045  0.045
+paper Method 1, d= 6 bits                 6.00 3.91e-03 7.8e-03  0.004  0.008  0.008  0.008  0.008  0.008  0.008  0.008
+paper Method 1, d= 8 bits                 8.00 7.43e-04 1.5e-03  8e-04  0.001  0.002  0.002  0.001  0.002  0.002  0.002
+paper Method 1, d=10 bits                10.00 1.50e-04 3.0e-04  2e-04  3e-04  3e-04  3e-04  3e-04  3e-04  3e-04  3e-04
+paper Method 1, d=12 bits                12.00 3.13e-05 6.3e-05  3e-05  6e-05  8e-05  7e-05  6e-05  7e-05  6e-05  6e-05
+
+=== payoff: digital   v_l = V[dP - dP~]/V[dP]   (speedup cap = 1/v, per-level factor >= sqrt(v)) ===
+input quantizer                           bits      MSE   2*MSE  l=0  l=1  l=2  l=3  l=4  l=5  l=6  l=7
+ternary moment-matched (1/6,2/3,1/6)      1.58 2.69e-01 5.4e-01  0.748  2.911  1.116  1.197  1.070  1.004  1.015  4.752
+ternary Lloyd-Max (MSE-optimal)           1.58 1.90e-01 3.8e-01  0.474  1.000  1.462  1.011  1.000  1.340  2.489  1.000
+ternary Lloyd-Max + error feedback        1.58 1.90e-01 3.8e-01  0.474  1.000  1.526  1.016  1.000  1.147  3.296  1.001
+paper Method 1, d= 1 bits                 1.00 3.63e-01 7.3e-01  0.370  1.000  1.000  1.000  1.000  1.000  2.439  1.000
+paper Method 1, d= 2 bits                 2.00 1.39e-01 2.8e-01  0.370  1.000  1.329  1.407  1.890  2.006  1.924  1.962
+paper Method 1, d= 3 bits                 3.00 5.50e-02 1.1e-01  0.107  1.962  1.747  1.797  1.899  1.900  1.880  1.847
+paper Method 1, d= 4 bits                 4.00 2.22e-02 4.4e-02  0.107  1.466  1.570  1.673  1.772  1.824  1.838  1.884
+paper Method 1, d= 6 bits                 6.00 3.91e-03 7.8e-03  0.021  0.439  0.733  1.039  1.297  1.502  1.667  1.787
+paper Method 1, d= 8 bits                 8.00 7.43e-04 1.5e-03  0.004  0.127  0.228  0.383  0.610  0.835  1.107  1.400
+paper Method 1, d=10 bits                10.00 1.50e-04 3.0e-04  4e-04  0.035  0.057  0.120  0.212  0.318  0.494  0.736
+paper Method 1, d=12 bits                12.00 3.13e-05 6.3e-05  4e-04  0.008  0.014  0.034  0.068  0.100  0.161  0.304

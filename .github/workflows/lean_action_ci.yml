@@ -5,11 +5,8 @@ on:
   pull_request:
   workflow_dispatch:
 
-# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
-  contents: read # Read access to repository contents
-  pages: write # Write access to GitHub Pages
-  id-token: write # Write access to ID tokens
+  contents: read
 
 jobs:
   build:
@@ -18,4 +15,12 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: leanprover/lean-action@v1
-      - uses: leanprover-community/docgen-action@v1
+      # Axiom audit: every main theorem may depend only on propext, Classical.choice, Quot.sound.
+      - name: Axiom audit (fails on sorryAx or extra axioms)
+        run: |
+          set -o pipefail
+          lake env lean scripts/AxiomCheck.lean | tee axioms.txt
+          if grep -q "sorryAx" axioms.txt; then echo "::error::sorry found"; exit 1; fi
+          if grep "depends on axioms" axioms.txt | grep -vE "\[propext, Classical.choice, Quot.sound\]"; then
+            echo "::error::unexpected axioms"; exit 1
+          fi

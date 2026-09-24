@@ -1,0 +1,308 @@
+% use of FPGAs in finance/ other applications :
+@INPROCEEDINGS{HFT1,
+  author={Leber, Christian and Geib, Benjamin and Litz, Heiner},
+  booktitle={2011 21st International Conference on Field Programmable Logic and Applications}, 
+  title={High Frequency Trading Acceleration Using {FPGA}s}, 
+  year={2011},
+  volume={},
+  number={},
+  pages={317-322},
+  keywords={Protocols;Engines;Field programmable gate arrays;Decoding;Feeds;Hardware;Software;FPGA;high frequency trading;low latency;FAST;FIX;Ethernet;UDP},
+  doi={10.1109/FPL.2011.64}}
+
+@INPROCEEDINGS{HFT2,
+  author={Boutros, Andrew and Grady, Brett and Abbas, Mustafa and Chow, Paul},
+  booktitle={2017 International Conference on ReConFigurable Computing and FPGAs (ReConFig)}, 
+  title={Build fast, trade fast: {FPGA}-based high-frequency trading using high-level synthesis}, 
+  year={2017},
+  volume={},
+  number={},
+  pages={1-6},
+  keywords={Algorithm design and analysis;Protocols;Hardware;Field programmable gate arrays;Software algorithms;IP networks;Switches},
+  doi={10.1109/RECONFIG.2017.8279781}}
+
+@book{woods2008fpga,
+  title={{FPGA}-based implementation of signal processing systems},
+  author={Woods, Roger and McAllister, John and Lightbody, Gaye and Yi, Ying},
+  year={2008},
+  publisher={John Wiley \& Sons},
+doi={10.1002/9781119079231}
+}
+
+%---------------------------------
+%% background on MC and MLMC :
+
+@book{glasserman04
+,author    = "Glasserman, P."
+,title     = "{M}onte {C}arlo Methods in Financial Engineering"
+,publisher = "Springer, New York"
+,year      = "2004"
+,doi = "10.1007/978-0-387-21617-1"
+}
+
+
+@Article{Giles_overview17, 
+title={Multilevel {M}onte {C}arlo methods}, 
+volume={24}, 
+DOI={10.1017/S096249291500001X}, 
+journal={Acta Numer.}, 
+author={Giles, M.B.}, 
+year={2015}, pages={259–328}}
+
+
+@Article{Giles2008,
+  author = {M.B. Giles},
+  title = {Multilevel {M}onte {C}arlo Path Simulation},
+  journal = {Oper. Res.},
+  volume = {56},
+  number = {3},
+  pages = {607--617},
+  year = {2008},
+  doi = {10.1287/opre.1070.0496}
+}
+
+% ----------------------------------
+% Previous research on MLMC with mixed-precision and / or FPGAs :
+
+@InProceedings{lindsey2016domain,
+  author    = {B. Lindsey and M. Leslie and W. Luk},
+  title     = {A {D}omain {S}pecific {L}anguage for Accelerated {M}ultilevel {M}onte {C}arlo Simulations},
+  booktitle = {Proceedings of the IEEE 27th International Conference on Application-specific Systems, Architectures and Processors (ASAP)},
+  year      = {2016},
+  pages     = {},
+  publisher = {IEEE},
+  doi={10.1109/ASAP.2016.7760778}
+}
+
+@InProceedings{brugger2014mixed,
+  author    = {C. Brugger and C. de Schryver and N. Wehn and S. Omland and M. Hefter and K. Ritter and A. Kostiuk and R. Korn},
+  title     = {Mixed Precision {M}ultilevel {M}onte {C}arlo on Hybrid Computing Systems},
+  booktitle = {Proceedings of the IEEE Conference on Computational Intelligence for Financial Engineering \& Economics (CIFEr)},
+  year      = {2014},
+  pages     = {215--222},
+  publisher = {IEEE},
+  doi={10.1109/CIFEr.2014.6924076}
+}
+
+
+@InProceedings{ChowMixedPrecisionStandardMC,
+author = {Chow, G.C.T. and Tse, A.H.T and Jin, Q. and Luk, W. and Leong, P.H.W. and Thomas, D.B.},
+title = {A mixed precision {M}onte {C}arlo methodology for reconfigurable accelerator systems},
+year = {2012},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+doi = {10.1145/2145694.2145705},
+booktitle = {Proceedings of the ACM/SIGDA International Symposium on Field Programmable Gate Arrays},
+pages = {57–66},
+numpages = {10},
+keywords = {Monte Carlo, mixed precision},
+location = {Monterey, California, USA},
+series = {FPGA '12}
+}
+
+@Article{Schryver2013AMM,
+  title={A multi-level {M}onte {C}arlo {FPGA} accelerator for option pricing in the {H}eston model},
+  author={C. de Schryver and P. Torruella and N. Wehn},
+  journal={2013 Design, Automation \& Test in Europe Conference \& Exhibition (DATE)},
+  year={2013},
+  pages={248-253},
+  doi={10.7873/DATE.2013.063}
+}
+
+@InProceedings{MixedPrecisionMLMC2014,
+  author={Brugger, C. and de Schryver, C. and Wehn, N. and Omland, S. and Hefter, M. and Ritter, K. and Kostiuk, A. and Korn, R.},
+  booktitle={2014 IEEE Conference on Computational Intelligence for Financial Engineering & Economics (CIFEr)}, 
+  title={Mixed precision multilevel {M}onte {C}arlo on hybrid computing systems}, 
+  year={2014},
+  volume={},
+  number={},
+  pages={215-222},
+  keywords={Field programmable gate arrays;Computer architecture;Computational modeling;Accuracy;Pricing;Hardware;Runtime},
+  doi={10.1109/CIFEr.2014.6924076}} % == brigger2014 !! enlever le doublon
+
+
+% --------------------------------------
+%% Oliver and Mike's works :
+@Article{NestedOliver,
+  title={Analysis of nested multilevel {M}onte {C}arlo using approximate Normal random variables},
+  author={M.B. Giles and O. Sheridan-Methven},
+  journal={SIAM/ASA J. Uncertain. Quantif.},
+  year={2021},
+  volume={10},
+  pages={200-226},
+  doi={10.1137/21M1399385}
+}
+
+
+@Article{Rounding_error_oliver,
+title = {Rounding error using low precision approximate random variables},
+author = {Sheridan-Methven, O. and Giles, M.B.},
+year = {2024},
+pages = {},
+journal={SIAM J. Sci. Comput.},
+volume={46},
+number={4},
+doi={10.1137/23M1552814} 
+}
+
+@Article{approximateICDF_Oliver,
+author = {Giles, M.B. and Sheridan-Methven, O.},
+title = {Approximating Inverse Cumulative Distribution Functions to Produce Approximate Random Variables},
+year = {2023},
+issue_date = {September 2023},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+volume = {49},
+number = {3},
+doi = {10.1145/3604935},
+journal = {ACM Trans. Math. Software},
+month = {sep},
+articleno = {26},
+numpages = {29},
+keywords = {and high-performance computing, the Milstein scheme, the Euler-Maruyama scheme, multilevel Monte Carlo, the non-central χ2 distribution, the Cox-Ingersoll-Ross process, geometric Brownian motion, the Gaussian distribution, random number generation, inverse cumulative distribution functions, random variables, Approximations}
+}
+
+% Arciniega :
+@Article{arciniega,
+author = {Armando Arciniega and Edward Allen},
+title = {Rounding Error in Numerical Solution of Stochastic Differential Equations},
+journal = {Stoch. Anal. Appl.},
+volume = {21},
+number = {2},
+pages = {281--300},
+year = {2003},
+doi = {10.1081/SAP-120019286}
+} % publisher = {Taylor \& Francis},
+
+% ----------------------------------------
+% Bit-width optimisation (+AD) literature :
+@Article{Lee2006,
+  author    = {D.-U. Lee and A.A. Gaffar and R.C.C. Cheung and O. Mencer and W. Luk and G.A. Constantinides},
+  title     = {Accuracy-Guaranteed Bit-Width Optimization},
+  journal   = {IEEE Transactions on Computer-Aided Design of Integrated Circuits and Systems},
+  volume    = {25},
+  number    = {10},
+  year      = {2006},
+  pages     = {1990-2000},
+  month     = {October},
+doi = {10.1109/TCAD.2006.873887}
+}
+
+
+@INPROCEEDINGS{bitwidth-AD,
+  author={Gaffar, A.A. and Mencer, O. and Luk, W. and Cheung, P.Y.K. and Shirazi, N.},
+  booktitle={2002 IEEE International Conference on Field-Programmable Technology}, 
+  title={Floating-point bitwidth analysis via automatic differentiation}, 
+  year={2002},
+  volume={},
+  number={},
+  pages={79-88},
+  doi={10.1109/FPT.2002.1188677}}
+
+
+@INPROCEEDINGS{unifying-bwoptim,
+  author={Gaffar, A.A. and Mencer, O. and Luk, W. and Cheung, P.Y.K.},
+  booktitle={12th Annual IEEE Symposium on Field-Programmable Custom Computing Machines}, 
+  title={Unifying bit-width optimisation for fixed-point and floating-point designs}, 
+  year={2004},
+  volume={},
+  number={},
+  pages={79-88},
+  keywords={Design optimization;Hardware;Finite impulse response filter;Discrete cosine transforms;Ray tracing;Function approximation;Educational institutions;Dynamic range;Field programmable gate arrays;Filtering},
+  doi={10.5555/1025123.1025818}}
+
+
+@INPROCEEDINGS{ADAPT,
+  author={Menon, H. and Lam, M.O. and Osei-Kuffuor, D. and Schordan, M. and Lloyd, S. and Mohror, K. and Hittinger, J.},
+  booktitle={SC18: International Conference for High Performance Computing, Networking, Storage and Analysis}, 
+  title={{ADAPT}: Algorithmic Differentiation Applied to Floating-Point Precision Tuning}, 
+  year={2018},
+  volume={},
+  number={},
+  pages={614-626},
+  keywords={Tools;Sensitivity;Tuning;Benchmark testing;Adaptation models;Space exploration;Approximation algorithms},
+  doi={10.1109/SC.2018.00051}}
+
+% -------------------------------------
+% Random number generation :
+
+@InProceedings{Thomas2009ACO,
+  title={A comparison of {CPU}s, {GPU}s, {FPGA}s, and massively parallel processor arrays for random number generation},
+  author={D.B. Thomas and L.W. Howes and W.C. Luk},
+  booktitle={Symposium on Field Programmable Gate Arrays},
+  year={2009},
+doi = {10.1145/1508128.1508139}}
+
+@misc{norminv_routine_intel,
+  author = {Intel},
+  title = {Developer Reference for {I}ntel® one{API} {M}ath {K}ernel {L}ibrary for {C}. {v?CdfNormInv}},
+  howpublished = {Available at : \url{https://www.intel.com/content/www/us/en/docs/onemkl/developer-reference-c/2024-1/v-cdfnorminv.html}},
+  note = {(Accessed: 21 November 2024)}
+}
+
+
+@Article{Cheung2007HardwareGO,
+  title={Hardware Generation of Arbitrary Random Number Distributions From Uniform Distributions Via the Inversion Method},
+  author={R.C.C. Cheung and D.-U. Lee and W.C. Luk and J.D. Villasenor},
+  journal={IEEE Transactions on Very Large Scale Integration (VLSI) Systems},
+  year={2007},
+  volume={15},
+  pages={952-962},
+  doi={10.1109/TVLSI.2007.900748}
+}
+
+
+@article{Malik2016GaussianRN,
+author = {Malik, Jamshaid Sarwar and Hemani, Ahmed},
+title = {Gaussian Random Number Generation: A Survey on Hardware Architectures},
+year = {2016},
+issue_date = {September 2017},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+volume = {49},
+number = {3},
+doi = {10.1145/2980052},
+journal = {ACM Comput. Surv.},
+month = nov,
+articleno = {53},
+numpages = {37},
+}
+
+
+@ARTICLE{Lee_segmentation,
+  author={Lee, D.-U. and Cheung, R.C.C. and Luk, W.C. and Villasenor, J.D.},
+  journal={IEEE Transactions on Very Large Scale Integration (VLSI) Systems}, 
+  title={Hierarchical Segmentation for Hardware Function Evaluation}, 
+  year={2009},
+  volume={17},
+  number={1},
+  pages={103-116},
+  keywords={Hardware;Polynomials;Field programmable gate arrays;Arithmetic;Application specific integrated circuits;Approximation methods;Dynamic range;Signal synthesis;Design automation;Digital systems;Circuit synthesis;design automation;digital systems;field-programmable gate arrays (FPGAs);piecewise poly nomial approximation},
+  doi={10.1109/TVLSI.2008.2003165}}
+
+@Article{thom14,
+author = {Lee, Dong-U and Luk, Wayne and Villasenor, John D. and Cheung, Peter Y. K.},
+title = {A {G}aussian Noise Generator for Hardware-Based Simulations},
+year = {2004},
+issue_date = {December 2004},
+publisher = {IEEE Computer Society},
+address = {USA},
+volume = {53},
+number = {12},
+doi = {10.1109/TC.2004.106},
+journal = {IEEE Trans. Comput.},
+month = {Dec},
+pages = {1523–1534},
+numpages = {12},
+}
+
+% ----------------------
+% pointers to code/software we have used :
+
+@misc{fi_toolbox,
+  author = {MathWorks},
+  title = {Fixed-{P}oint {D}esigner documentation},
+  howpublished = {Available at : \url{https://uk.mathworks.com/help/fixedpoint/}},
+  note = {(Accessed: November 2024)}
+} %date= {May 2023},
+

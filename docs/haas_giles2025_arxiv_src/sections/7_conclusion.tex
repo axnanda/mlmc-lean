@@ -1,0 +1,7 @@
+\section{Conclusion and future directions} \label{sec:conclusion}
+
+In this paper we proposed a nested MLMC framework that offers important computational savings by performing most calculations in low precision and exploiting approximate random normal variables for the low precision path calculations. The low precision calculations could be performed in fixed precision on an FPGA for greater efficiency, and we suggested a procedure to optimise the bit-widths of every variable at each Monte Carlo level. This is an important improvement over previous mixed precision MLMC frameworks which held the lower precision fixed \cite{Rounding_error_oliver} or defined uniform bit-width at every level heuristically \cite{brugger2014mixed}. Our numerical results suggest that for the first levels our procedure reduces the cost at these levels by a factor 5 or 7. Hence the overall savings are significant since most paths are calculated on the first levels. Our approach would be even more efficient for the Milstein scheme because its higher order strong convergence leads to a greater proportion of the computational costs being on the coarsest levels.
+
+The next stage of the research project will be to implement the RNG methods and the nested framework on FPGAs to determine the hardware requirements and confirm the extent of the computational savings. It would also be good to compare the performance benefits to using half-precision floating point arithmetic on GPUs or CPUs for the low-accuracy computations.
+
+

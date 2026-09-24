@@ -1,0 +1,58 @@
+\documentclass[a4paper]{article}
+\usepackage[margin=1.2in]{geometry}
+\usepackage{amssymb,amsmath, hyperref, cleveref, makecell, epsfig, amsthm, listings, tikz, subfig, subcaption, graphicx, tikz,dsfont}
+\usepackage{algorithm, algpseudocode, algorithmicx, algcompatible}
+\usepackage[square,numbers,sort]{natbib}
+\usepackage{doi}
+
+
+% break long url to several lines
+\usepackage{url}
+\def\UrlBreaks{\do\/\do-}
+\usepackage{breakurl}
+
+% solves issue with minus sign 
+\DeclareUnicodeCharacter{2212}{\textendash}
+
+%%%%%%
+% title and authors :
+\title{A nested MLMC framework for efficient simulations on FPGAs}
+\author{Irina-Beatrice Haas\thanks{irina-beatrice.haas@maths.ox.ac.uk} \and Michael B. Giles \thanks{mike.giles@maths.ox.ac.uk}}
+\date{February 2025}
+
+\hypersetup{
+%	unicode,
+%	colorlinks,
+%	breaklinks,
+%	urlcolor=cyan, 
+%	linkcolor=blue, 
+	pdfauthor={Irina-Beatrice Haas, Michael B. Giles},
+	pdftitle={A nested MLMC framework for efficient simulations on FPGAs},
+	pdfsubject={A nested MLMC framework for efficient simulations on FPGAs},
+	pdfkeywords={Multilevel Monte Carlo, nested MLMC, FPGAs},
+%	pdfproducer={LaTeX},
+%	pdfcreator={pdflatex}
+}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+    Multilevel Monte Carlo (MLMC) reduces the total computational cost of financial option pricing by combining SDE approximations with multiple resolutions. This paper explores a further avenue for reducing cost and improving power efficiency through the use of low precision calculations on configurable hardware devices such as Field-Programmable Gate Arrays (FPGAs). We propose a new framework that exploits approximate random variables and fixed-point operations with optimised precision to generate most SDE paths with a lower cost and reduce the overall cost of the MLMC framework. We first discuss several methods for the cheap generation of approximate random Normal increments. To set the bit-width of variables in the path generation we then propose a rounding error model and optimise the precision of all variables on each MLMC level. With these key improvements, our proposed framework offers higher computational savings than the existing mixed-precision MLMC frameworks.
+\end{abstract}
+
+
+\input{sections/1_introduction}
+\input{sections/2_MLMCandNestedMLMC}
+\input{sections/3_approximateNormals}
+\input{sections/4_errorModel}
+\input{sections/5_cost_model}
+\input{sections/6_optimisationANDbenefits}
+\input{sections/7_conclusion}
+
+\bibliographystyle{abbrvnat}
+\bibliography{main}
+
+
+\end{document}

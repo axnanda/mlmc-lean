@@ -1,0 +1,78 @@
+\section{Multilevel Monte Carlo and nested Multilevel Monte Carlo} \label{sec:MLMC}
+
+In this paper we want to estimate the expectation of some payoff functional $P$ that is computed on an underlying asset price $S_t$ that follows the SDE
+\begin{equation}
+{\rm d}S_t = a(S_t,t)\, {\rm d}t + b(S_t,t)\, {\rm d}W_t.
+\end{equation}
+The solution of the SDE is approximated with the Euler-Maruyama scheme. 
+Letting $S_i$
+denote the approximation at time $t_i\triangleq ih$, where $h$ is the size of each time step,
+the approximate solution is given by 
+\begin{equation}\label{eq:GBM_sde}
+    S_{i+1} = S_{i} + a(S_i,t_i)h +  b(S_i,t_i) \sqrt{h}\, Z_i
+\end{equation}
+where $Z_i$ is a random increment that follows the normal distribution $\mathcal{N}(0,1)$.
+
+
+\subsection{Multilevel Monte Carlo}
+
+The idea of the MLMC method is to use different levels of time discretisation in order to split the computational work such that the total cost is minimised and the desired overall accuracy is achieved. 
+
+We use $L+1$ levels that we denote by the index $\ell\in\{0,1, \ldots, L\}$. For each level $\ell$ we define an approximate payoff $P_\ell$ computed in full-precision with a time step of size $h_\ell = 2^{-\ell} T$. For $L$ sufficiently large we have the weak convergence $\mathbb{E}[P_L] \approx \mathbb{E}[P]$. The main idea of MLMC is to decompose $\mathbb{E}[P_L]$ as follows
+\begin{equation} \label{classic_MLMC_iden}
+    \mathbb{E}[P_L]=\sum_{\ell=0}^L \mathbb{E}[P_\ell-P_{\ell-1}]
+\end{equation}
+with the convention $P_{-1}=0$. In each sample of $\Delta P_\ell \triangleq P_\ell-P_{\ell-1}$ both terms are computed using the same Brownian motion \cite{Giles_overview17,NestedOliver}, that is to say that the fine path uses the approximate solution to the SDE from the Euler-Maruyama scheme with $2^\ell$ time-steps :
+\begin{equation}
+    S^{f}_{i+1} = S^{f}_{i} + a(S^{f}_{i}, t_i) h + b(S^{f}_{i},t_i) \, \sqrt{h}\, Z_i
+\end{equation}
+and the coarser path is computed as
+\begin{equation}
+    S^{c}_{i+1} = S^{c}_{i} + a(S^{c}_{2\lfloor i/2\rfloor}, t_{2\lfloor i/2\rfloor})\, h + b(S^{c}_{2\lfloor i/2\rfloor},t_{2\lfloor i/2\rfloor})\, \sqrt{h} \, Z_i,
+\end{equation}
+so that when $i$ is even, $S^{c}_{i+1}$ and $S^{c}_{i+2}$ are both computed using the drift and volatility evaluated based on $S^{c}_{i}$, $t_i$.
+For each level the expectation $\mathbb{E}[\Delta P_\ell]$ is approximated using a standard Monte Carlo estimator with $N_\ell$ samples. 
+Then defining % noting
+$C_\ell$ and $V_\ell$ to be the cost and variance of a sample of $\Delta P_\ell$, the overall cost of the estimation and the overall variance are 
+\begin{align}
+    Cost &= \sum_{\ell=0}^L N_\ell C_\ell \\
+    Variance &= \sum_{\ell=0}^L N_\ell^{-1} V_\ell.
+\end{align}
+Using a Lagrange multiplier $\lambda\in \mathbb{R}$ and treating the number of samples $N_{\ell}$ as real variables, we then minimise the cost under the constraint $Variance = \varepsilon^2$. We obtain that the number of optimal samples on each level is $N_\ell = \lambda \sqrt{V_\ell/C_\ell}$, where $\lambda = \varepsilon^{-2} \sum_{\ell=0}^L \sqrt{V_\ell C_\ell}$ and, ignoring the small increase in the cost when $N_\ell$ are rounded up to integers, the overall cost of the MLMC estimator is
+\begin{equation}\label{total_cost_MLMC}
+    Cost_{MLMC}=\varepsilon^{-2} \left( \sum_{\ell=0}^L \sqrt{V_\ell C_\ell}\right)^2.
+\end{equation}
+For comparison, noting $V=\mathbb{V}[\hat{P}]$ and $C$ the variance and cost in the standard Monte Carlo estimator the overall cost would be $\varepsilon^{-2} VC$. As  \cite{Giles_overview17} shows, if the factor $V_\ell C_\ell$ decreases (resp. increases) with level then the total cost of MLMC is approximately $\varepsilon^{-2} V_0 C_0$ (resp. $\varepsilon^{-2} V_L C_L$) so it is smaller than the standard Monte Carlo cost by a factor $C_0/C_L$ (resp. $V_L/V_0$). Since we know that the cost of a sample increases with level and for Lipschitz payoffs for the Euler-Maruyama scheme the variance $V_\ell$ decreases exponentially with level, the former leads to the MLMC estimation being cheaper than the standard Monte Carlo estimation.
+
+
+\subsection{Nested Multilevel Monte Carlo}
+
+In the nested framework we further decompose each term from the sum \eqref{classic_MLMC_iden} such that each of the full precision expectations are decomposed into a low precision estimate and a correction term. This formulation was already used in \cite{NestedOliver} and ensures that the expectations rigorously cancel out.
+Formally, we split each level expectation $\mathbb{E}[\Delta P_\ell]$ as follows :
+\begin{equation} \label{chap:nested_exp}
+    \mathbb{E}[P_L] = \sum_{\ell=0}^L  \mathbb{E}[\widetilde{\Delta P}_\ell] + \mathbb{E}[\Delta P_\ell - \widetilde{\Delta P}_\ell].
+\end{equation}
+We use tildes to denote the variables that are computed in low precision.
+Again each expectation is obtained with a standard Monte Carlo estimator using $\Tilde{N}_\ell$ samples for $\mathbb{E}[\widetilde{\Delta P}_\ell]$ and $N^{\Delta}_\ell$ samples for $\mathbb{E}[\Delta P_\ell - \widetilde{\Delta P}_\ell]$. We note $\Tilde{C}_\ell$ the cost of a sample of $\widetilde{\Delta P}_\ell$ and $C^{\Delta}_\ell$ the cost of a sample of $\Delta P_\ell - \widetilde{\Delta P}_\ell$, and similarly $\Tilde{V}_\ell = \mathbb{V}[\widetilde{\Delta P}_\ell]$ and $V^{\Delta}_\ell = \mathbb{V}[\Delta P_\ell-\widetilde{\Delta P}_\ell]$.
+Then the total computational cost and the total variance of the nested estimator of the output is
+\begin{align}
+    Cost &= \sum_{\ell=0}^L \Tilde{N}_\ell \Tilde{C}_\ell + N^{\Delta}_\ell C^{\Delta}_\ell \label{eq:cost_nested}\\
+    Variance &= \sum_{\ell=0}^L \Tilde{N}_\ell^{-1} \Tilde{V}_\ell + (N^{\Delta}_\ell)^{-1} V^{\Delta}_\ell. \label{eq:var_nested}
+\end{align}
+Suppose we would like the overall variance to be smaller than $\varepsilon^2$, then similarly to the standard MLMC case, using a Lagrange multiplier $\lambda_M \in \mathbb{R}$ gives $N^{\Delta}_\ell = \lambda_M \sqrt{V^{\Delta}_\ell/C^{\Delta}_\ell}$ and $ \Tilde{N}_\ell = \lambda_M \sqrt{\Tilde{V}_\ell/\Tilde{C}_\ell}$ for all levels $\ell$. Plugging these expressions back in $Variance = \varepsilon^2$ gives the total cost
+\begin{equation}
+    Cost_{nested} = \varepsilon^{-2} \left( \sum_{\ell=0}^L \sqrt{\Tilde{V}_\ell\Tilde{C}_\ell}+\sqrt{V^{\Delta}_\ell C^{\Delta}_\ell} \right)^2.
+\end{equation}
+As \cite{NestedOliver} shows, roughly speaking, if $V^{\Delta}_\ell/\Tilde{V}_\ell \ll \Tilde{C}_\ell/C^{\Delta}_\ell \ll 1$ then the nested estimation leads to a computational saving of a factor approximately $\max_\ell \Tilde{C}_\ell / C^{\Delta}_\ell$ compared to the standard MLMC framework. 
+
+
+The cost of computing a sample of the correction term is $C^{\Delta}_\ell = C_\ell+ \Tilde{C}_\ell$ where $C_\ell$ is the cost of generating $\Delta P_\ell$ in full precision. 
+The key point of our framework is that the constant $C_\ell$ is much larger than $\Tilde{C}_\ell$ at least on the first MC levels, which leads to important computational savings as most samples generated in MLMC are on these levels.
+Moreover, in the low precision path generation, instead of using random increments that are in full precision we use approximate random normal increments $\Tilde{Z}_i$ as follows 
+\begin{equation}\label{eq:GBM_sde_fi}
+    \Tilde{S}_{i+1} = \Tilde{S}_{i} + a(\Tilde{S}_i,t_i) \, h + b(\Tilde{S}_i,t_i)\, \sqrt{h}  \, \Tilde{Z}_i.
+\end{equation}
+Ideally the cost of RNG on the FPGA would be almost negligible, so that the path generation on the FPGA is performed very cheaply.
+
+
+

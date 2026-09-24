@@ -1,0 +1,20 @@
+\section{Cost model for the path generation}\label{sec:costModel}
+In this section we define an expression for the sample costs $C^{\Delta}_\ell, \Tilde{C}_\ell$ as functions of the bit-widths $d_{i,\ell}$. This will allow us to obtain the full expression of the optimised objective as a function of known quantities and the bit-widths.
+
+On the FPGA, if we neglect the cost of RNG, the cost $\Tilde{C}_\ell$ of computing $\widetilde{\Delta P}_\ell$ equals the sum of the cost of the elementary operations. In particular for a classical European option based on a GBM there are only additions and multiplications between two variables. 
+According to the cost model from \cite{Lee2006}, letting $\mathcal{M}$ be the index set of all pairs of variables that are involved in a multiplication and $\mathcal{S}$ the analogue for additions, the cost of computing a path of $\widetilde{\Delta P}_\ell$ is 
+\begin{equation} \label{cost_real}
+    \Tilde{C}_\ell(d_{1,\ell},\ldots,d_{m_\ell,\ell}) = \sum_{(i,j) \in \mathcal{M}}  d_{i,\ell} d_{j,\ell} + \sum_{(i,j) \in \mathcal{S}}  \max(d_{i,\ell},d_{j,\ell}). % + \Tilde{c}
+\end{equation}
+However, replacing $d_{i,\ell} d_{j,\ell}$ by its upper bound $\frac{1}{2}(d^2_{i,\ell} + d^2_{j,\ell})$, and $\max(d_{i,\ell},d_{j,\ell})$ by its upper bound $d_{i,\ell}+d_{j,\ell}$ we instead use the following form for the cost :
+\begin{equation} \label{cost_sq} 
+    \Tilde{C}_\ell(d_{1,\ell},\ldots,d_{m_\ell,\ell}) = \frac{1}{2}\sum_{i=1}^{m_\ell} M_{i,\ell} d_{i,\ell}^2 + \sum_{i=1}^{m_\ell} M'_{i,\ell} d_{i,\ell}
+\end{equation}
+where $M_{i,\ell}$ (resp. $ M'_{i,\ell}$), denote the number of multiplications (resp. additions) in which the variable $x_i$ % $i$ 
+is involved. %This is an over-estimation since, assuming all bit-widths are larger than 2, $d_a + d_b \leq \frac{1}{2}(d_a^2 + d_b^2)$ and $d_a \times d_b \leq \frac{1}{2}(d_a^2 + d_b^2)$.
+This form of the cost model is a sum of terms which depend on only one $d_{i,\ell}$; this will be an advantage in the optimisation which is described next.
+
+On the other hand, on the CPU most of the computational cost comes from generating a full precision random normal increment $Z_i$ at each time step ; the other operations performed to compute $\Delta P_\ell$ have a negligible cost. Hence noting $C_{RNG}$ the computational cost of one full precision normal number we get $C_\ell \approx 2^\ell C_{RNG}$.
+The improvement in our framework comes from the fact that, at least on the first levels, $C_{RNG}$ is very large compared to $\Tilde{C}_\ell/N$ so using approximate random variables on the FPGA and optimal bit-widths allows one to compute only a few expensive CPU paths.
+
+

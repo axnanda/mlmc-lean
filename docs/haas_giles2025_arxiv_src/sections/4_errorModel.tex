@@ -1,0 +1,104 @@
+\section{Error model based on a linear approximation} \label{sec:error_model}
+In order to choose the right precision in the FPGA calculations we need to approximate the overall error caused by the accumulation of rounding errors in the low precision path simulation. In this section, focusing on the single level Monte Carlo estimator to simplify the exposition, we model the overall rounding error $P-\Tilde{P}$ and find an estimate of its variance.
+
+
+\subsection{Fixed-point arithmetic and notation}
+The low precision calculations would be performed on the FPGA in fixed-point arithmetic, therefore contrarily to calculating in floating-point arithmetic here the size and precision of each variable are fixed. We denote $x_i, \: i=1, \ldots, m$ the intermediary variables computed to obtain the final output $P$. As a testcase, we consider Geometric Brownian Motion (GBM) and distinguished the intermediary variables $con1, con2$ etc. whose definitions are given in \Cref{alg:GMB_code_forward}. This algorithm details how we decomposed the operations to compute each time step from \eqref{eq:GBM_sde_fi}.
+
+\begin{algorithm}[h]
+\caption{Geometric Brownian Motion path calculation (decomposed in elementary operations to show the intermediary fixed-point variables)}\label{alg:GMB_code_forward}
+\begin{algorithmic}
+%\State \textbf{Inputs:} interest rate $r$, volatility $\sigma$, maturity $T$, initial asset price $S_0$, number of time steps $N$
+\STATE $h \gets T/N$
+\STATE $con1 \gets r \times h$
+\STATE $con2 \gets \sqrt{h} \times \sigma$
+\STATE generate (approximate) random normal increments $\Tilde{Z}_i$ for $i=1, \ldots, N$ % this version of the algorithm generates all normals before the for loop because the same normals are used in the backward loop -- otherwise the RNG would be inside the for loop below
+\FOR{$i=1, \ldots, N$}
+\STATE $mul1_i \gets con2 \times \Tilde{Z}_i$
+\STATE $sum1_i \gets con1 + mul1_i$
+\STATE $mul2_i \gets S_i \times sum1_i$
+\STATE $S_{i+1} \gets S_i + mul2_i$
+\ENDFOR
+\end{algorithmic}
+\end{algorithm}
+
+The fixed-point equivalent of variable $x_i$ is defined as $\Tilde{x}_i = (-1)^s 2^{e_i-d_i}n$, where $n$ is a non negative integer smaller than $2^{d_i}$. The parameters $e_i$ are called \textit{exponents} and represent the size of the variables. We determined them from running $10^6$ paths and considering the maximum absolute value that occurs for each variable. The variables $d_i$ are the \textit{bit-widths} and represent the \textit{precision} of the variable $\Tilde{x}_i$. They are the decision variables in our optimisation problem. Finally here $s$ is the value of the sign bit. For simplicity we consider that all variables are signed, therefore the total word-length of variable $\Tilde{x}_i$ is $d_i+1$. We note the rounding error on each operation as $\delta x_i = x_i - \Tilde{x}_i$ and used round-to-nearest when truncating the result of a bit-wise operation, which leads to the following bound :
+\begin{equation}\label{bound_rounding_error}
+    |\delta x_i | \leq 2^{e_i-d_i-1}.
+\end{equation}
+Without making any assumption on the distribution of the errors we then have that
+\begin{equation} \label{bound_err2}
+    \mathbb{E}[\delta x_i^2] = 4^{e_i-d_i-1}.
+\end{equation}
+If additionally we assume that the rounding errors $\delta x_i$ are uniform variables over $[-2^{e_i-d_i-1},\\ 2^{e_i-d_i-1}]$ we get the expected squared rounding error
+\begin{equation} \label{bound_err}
+    \mathbb{E}[\delta x_i^2] = 4^{e_i-d_i}/12.
+\end{equation}
+These bounds will be used below to derive a bound on the error variance $\mathbb{V}[P-\Tilde{P}]$ that depends explicitly on the bit-widths. 
+
+
+\subsection{Error model when all variables are truncated to fixed-point arithmetic}
+Now we can approximate the error in 
+the output $P$ when we approximate it by its lower precision analogue $\Tilde{P}$, which is computed in fixed-point arithmetic based on the fixed-precision intermediary variables $\Tilde{x}_i$. 
+We consider that the rounding errors $\delta x_i$ are small and use a first order Taylor expansion to approximate the overall error as
+\begin{equation}
+    P- \Tilde{P}  \approx \sum_{i=1}^m \frac{\partial P}{\partial x_i} \delta x_i.
+\end{equation} 
+The partial derivatives of the payoff represent how sensitive the output is to an error in the variable $x_i$. We define the \textit{sensitivity} of the payoff $P$ to variable $x_i$ as
+\begin{equation}
+    \Bar{x}_i = \frac{\partial P}{\partial x_i}. % or \triangleq
+\end{equation}
+We use algorithmic differentiation \cite{unifying-bwoptim,bitwidth-AD,ADAPT} and $10^6$ paths to compute the sensitivities $\Bar{x}_i$ at the same time as the exponents $e_i$.
+Then the variance of the overall error is
+\begin{equation} \label{overall_var}
+    \mathbb{V}[P- \Tilde{P}] = \sum_{i=1}^m \mathbb{V}[\Bar{x}_i\delta x_i] + 2 \sum_{i\ne j\in[1,m]} Cov\left(\Bar{x}_i\delta x_i,\Bar{x}_j\delta x_j\right).
+\end{equation}
+
+Note that in our application some inputs are random normally distributed variables, therefore the sensitivities and the rounding errors are also random. We assume that the sensitivities $\bar{x}_i$ and the rounding errors $\delta x_i$ are independent for all $i=1,\ldots, m$. It always holds that $\mathbb{V}[\Bar{x}_i \delta x_i] \leq \mathbb{E}[\Bar{x}_i^2 \delta x_i^2]$ so we bound the overall error \Cref{overall_var} in two ways.
+
+If we assume that the individual errors $\Bar{x}_i\delta x_i$ are independent and use \eqref{bound_err} we get the \textit{optimistic} upper bound on the path error variance \eqref{overall_var} :
+\begin{equation} \label{optimistic}
+    \mathbb{V}[P- \Tilde{P}] \leq \frac{1}{12}\sum_{i=1}^m \mathbb{E}[\Bar{x}_i^2] \: 4^{e_i-d_i} \triangleq V_{indep}(d_1,\ldots,d_m)
+\end{equation}
+On the other hand, if we assume perfect correlation between errors, \\ ie.  $Cov\left(\Bar{x}_i\delta x_i,\Bar{x}_j\delta x_j\right) = \sqrt{\mathbb{V}[\Bar{x}_i\delta x_i]\mathbb{V}[\Bar{x}_j\delta x_j]}$ and use the more general bound \eqref{bound_err2} then we obtain a \textit{pessimistic} upper bound :
+\begin{equation} \label{pessimistic}
+    \mathbb{V}[P- \Tilde{P}] \leq \left( \sum_{i=1}^m \sqrt{\mathbb{E}[\Bar{x}_i^2]}\: 2^{e_i-d_i-1} \right)^2 \triangleq V_{corr}(d_1,\ldots,d_m).
+\end{equation}
+These expressions do not contain the rounding errors and depend explicitly on the bit-widths $d_i$. 
+
+
+\subsection{Extended error model that incorporates the approximate random numbers}
+In addition if we consider that at each time step we use approximate random normal increments, we simply modify the previous bounds :
+\begin{align} \label{eq:extended}
+    V'_{indep}(d_1,\ldots,d_m) &= \frac{1}{12}\sum_{i=1}^{m'} \mathbb{E}[\Bar{x}_i^2]\: 4^{e_i-d_i} + \frac{1}{12}\sum_{j=1}^{N} \mathbb{E}[\Bar{Z}_j^2]\times MSE\\
+    V'_{corr}(d_1,\ldots,d_m) &= \left( \sum_{i=1}^{m'} \sqrt{\mathbb{E}[\Bar{x}_i^2]}\: 2^{e_i-d_i-1} + \sum_{j=1}^{N}\sqrt{\mathbb{E}[\Bar{Z}_j^2]\times MSE} \right)^2.
+\end{align}
+Here $N$ is the number of time steps, $Z_j$ are the random normal increments used in the full precision path generation, $\Bar{Z}_j$ is the sensitivity $\partial P/\partial Z_j$, and $MSE =\mathbb{E}[|Z_j-\Tilde{Z}_j|^2]$ where the lower precision increment $\Tilde{Z}_j$ is obtained with one of the methods from \Cref{sec:RNG}.
+
+Therefore to integrate both approximate random variables and fixed-point arithmetic, in practice at each level after the bit-widths for all variables (including $Z$) are optimised we can for instance choose the size of the LUT such that the term containing the MSE in \eqref{eq:extended} is smaller or equal to $V_{indep}$. 
+
+
+\subsection{Numerical experiments} To check the validity of our model, we performed several numerical experiments in Matlab using the Fixed-Point Designer toolbox \cite{fi_toolbox} which allows the user to specify the number of bits and the exponent of each variable.
+In our tests we focused on a European vanilla call option based on GBM with interest rate $r=0.05$, volatility $\sigma=0.2$, and maturity $T=1$ for $N=1$ and $N=16$ time steps. For $N=1$ there is a single Monte Carlo level, while for $N=16$ we considered the fourth MLMC correction level. Note that in this section the low precision random increments $\Tilde{Z}_i$ were obtained only by truncating the full precision ones to $d$ bits.
+
+First of all we implemented the backward sensitivity analysis.
+Then we compared the bounds \eqref{optimistic} and \eqref{pessimistic} and the variance $\mathbb{V}[P-\Tilde{P}]$ obtained from running  paths. As shown in \Cref{fig:error_model1}, where we used the same bit-width for all variables, the bounds are respected, therefore we take the expression \eqref{optimistic} to approximate the variance of the correction terms in the next sections, because this bound is tighter than \eqref{pessimistic}.
+
+\begin{figure}[h]
+\centering
+\begin{minipage}{.5\textwidth}
+  \centering
+  \includegraphics[width=1\linewidth]{figsEPS/error_bounds_level_0}
+\end{minipage}%
+\begin{minipage}{.5\textwidth}
+  \centering
+  \includegraphics[width=1\linewidth]{figsEPS/error_bounds_level_4}
+\end{minipage}
+\caption{Simulated variance of the error and variance estimates that assume independence or perfect correlation of errors, for $N = 1$ (left) and $N=16$ (right) time steps.}
+\label{fig:error_model1}
+\end{figure}
+
+
+We also made several tests to check that the bound is valid including when instead of rounding the random normal variables to get the low precision normal increments we use approximate random normal variables as described in \Cref{sec:RNG}. The tests confirmed that the variance obtained numerically with approximate RNG respects the bounds $V'_{indep},V'_{corr}$. Therefore we use the bound that assumes independence of errors to approximate $V^{\Delta}_\ell$ in the overall bit-width optimisation.
+
+
