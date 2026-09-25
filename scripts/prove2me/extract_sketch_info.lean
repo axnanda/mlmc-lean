@@ -124,7 +124,7 @@ unsafe def main (args : List String) : IO UInt32 := do
   let (env, messages) ← processHeader header {} messages inputCtx
   IO.println (Json.mkObj [("kind", Json.str "imports"),
     ("modules", Json.arr (env.imports.map fun i => Json.str i.module.toString)),
-    ("headerEnd", (header.getTailPos?.map (posJson inputCtx.fileMap ·)).getD Json.null)]).compress
+    ("headerEnd", (header.raw.getTailPos?.map (posJson inputCtx.fileMap ·)).getD Json.null)]).compress
   let cmdState := Command.mkState env messages {}
   let cmdState := { cmdState with infoState := { enabled := true } }
   let s ← IO.processCommands inputCtx parserState cmdState

@@ -34,7 +34,10 @@ jobs:
           mv decl_graph.jsonl facts/
           for f in MlmcLean/*.lean; do
             m=$(basename "$f" .lean)
-            lake env lean --run scripts/prove2me/extract_sketch_info.lean "$f" MLMC > "facts/sketch_info.$m.jsonl"
+            if ! lake env lean --run scripts/prove2me/extract_sketch_info.lean "$f" MLMC \
+                > "facts/sketch_info.$m.jsonl"; then
+              cat "facts/sketch_info.$m.jsonl"; exit 1
+            fi
           done
           wc -l facts/*
       - uses: actions/upload-artifact@v4

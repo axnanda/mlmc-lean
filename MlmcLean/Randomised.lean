@@ -122,6 +122,7 @@ lemma hasSum_measureReal_level (hK : Measurable K) :
   simp only [e1] at h
   exact h
 
+omit [IsProbabilityMeasure μ] in
 /-- **Expectation over a random level.**  Let the level `K` be independent of each `g ℓ`.  If
 `∑_ℓ P(K = ℓ) E|g_ℓ| < ∞`, then `g_K` is integrable and `E[g_K] = ∑_ℓ P(K = ℓ) E[g_ℓ]`. -/
 theorem integral_comp_level (hK : Measurable K) (g : ℕ → Ω → ℝ) (hgm : ∀ ℓ, Measurable (g ℓ))
