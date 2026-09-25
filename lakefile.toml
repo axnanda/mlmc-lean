@@ -9,10 +9,12 @@ relaxedAutoImplicit = false
 # weak.linter.mathlibStandardSet = true  -- not a Mathlib contribution; skip header/style linters
 maxSynthPendingDepth = 3
 
+# Pinned to the prove2.me default verification environment (Lean v4.33.1, Mathlib 0df444a) so
+# that every file here compiles exactly as it does on the platform's servers.
 [[require]]
 name = "mathlib"
-scope = "leanprover-community"
-rev = "v4.35.0-rc2"
+git = "https://github.com/leanprover-community/mathlib4.git"
+rev = "0df444a360eaa60ab8c11dca51a86af692955474"
 
 [[lean_lib]]
 name = "MlmcLean"
