@@ -18,6 +18,10 @@ jobs:
       - name: prove2.me uploader tests
         run: python3 scripts/prove2me/test_upload.py
       - uses: leanprover/lean-action@v1
+      # The generator on a small Lean-core-only fixture (recursion, implicit simp lemmas, modules
+      # without project imports, section variables): catches generator regressions in seconds.
+      - name: prove2.me generator regression test (fixture)
+        run: bash scripts/prove2me/fixture/run.sh
       # Axiom audit: every main theorem may depend only on propext, Classical.choice, Quot.sound.
       - name: Axiom audit (fails on sorryAx or extra axioms)
         run: |

@@ -100,7 +100,24 @@ tree by skeleton subtraction, one node per main theorem plus every long or reuse
 type and uses no `sorry`), and `upload.py` (idempotent, dependency-ordered, private by default;
 publishing is a separate, explicit step). CI regenerates, builds and validates the tree on every
 push and tests the uploader against a mock of the API (`test_upload.py`). The metadata
-(titles, statements, sources) is in `prove2me/metadata.json`.
+(titles, statements, sources) is in `prove2me/metadata.json`; the mission proposals are in
+`prove2me/proposals/` and are created by `propose.py`.
+
+To upload (needs a prove2.me API key, `p2m_…`, of the account that should own the results):
+
+```
+# either locally, after `lake build` and the extraction/generation steps of the CI workflow:
+export PROVE2ME_API_KEY=p2m_...
+python3 scripts/prove2me/upload.py --preflight   # environment, account, name clashes
+python3 scripts/prove2me/upload.py               # private upload, resumable; ends with a status table
+python3 scripts/prove2me/propose.py              # the mission proposals (drafts, never submitted)
+# or from GitHub: add the repository secret PROVE2ME_API_KEY and run the workflow
+# "prove2.me upload" (.github/workflows/prove2me_upload.yml; it must be on the default branch).
+```
+
+Everything is uploaded **private**. `upload.py --make-public --confirm-irreversible` publishes the
+whole tree and cannot be undone; the proposals are audited and submitted by the account owner on
+the website.
 
 ## Experiments (Python)
 
