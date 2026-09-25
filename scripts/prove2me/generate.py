@@ -34,7 +34,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-PROJECT_PREFIX = "MlmcLean"
+PROJECT_PREFIX = "MlmcLean"  # overridden by --prefix
+SRC_ROOT = ROOT  # overridden by --root
 
 # Syntax kinds of the top-level commands that shape the scope of later declarations.
 K_NAMESPACE = "Lean.Parser.Command.namespace"
@@ -83,7 +84,7 @@ class Module:
     def __init__(self, name: str, facts_dir: Path):
         self.name = name
         rel = name.replace(".", "/") + ".lean"
-        self.path = ROOT / rel
+        self.path = SRC_ROOT / rel
         self.rel = rel
         self.text = self.path.read_bytes()
         fpath = facts_dir / f"sketch_info.{name.split('.')[-1]}.jsonl"
@@ -94,7 +95,8 @@ class Module:
         if len(imports) != 1:
             fail(f"{fpath}: expected one imports fact")
         self.imports: list[str] = imports[0]["modules"]
-        self.header_end: int = imports[0]["headerEnd"]["offset"]
+        he = imports[0]["headerEnd"]
+        self.header_end: int = he["offset"] if he else 0  # no `import` lines: empty header
         self.cmds = sorted((r for r in rows if r["kind"] == "cmd"), key=lambda r: r["start"]["offset"])
         self.decl_facts = sorted((r for r in rows if r["kind"] == "decl"),
                                  key=lambda r: r["declStart"]["offset"])
@@ -189,27 +191,30 @@ def external_union(modules: dict[str, Module], mods: list[str]) -> list[str]:
 
 
 def main() -> None:
+    global PROJECT_PREFIX, SRC_ROOT
     ap = argparse.ArgumentParser()
     ap.add_argument("--facts", default=str(ROOT / "prove2me" / "facts"))
     ap.add_argument("--out", default=str(ROOT / "prove2me" / "platform"))
     ap.add_argument("--plan", default=str(ROOT / "scripts" / "prove2me" / "plan.json"))
     ap.add_argument("--payload", default=str(ROOT / "prove2me" / "payload.json"))
+    ap.add_argument("--root", default=str(ROOT), help="source tree root (contains <prefix>/*.lean)")
+    ap.add_argument("--prefix", default="MlmcLean", help="project module prefix")
     args = ap.parse_args()
+    PROJECT_PREFIX = args.prefix
+    SRC_ROOT = Path(args.root)
     plan = json.loads(Path(args.plan).read_text())
     decls, modules = load(Path(args.facts), plan)
 
-    nodes: list[str] = plan["nodes"]
-    for n in nodes:
+    targets: list[str] = plan["targets"]
+    for n in targets:
         if n not in decls:
-            fail(f"plan node {n} is not a project declaration")
-        if not ASCII_IDENT.match(n):
-            fail(f"node name {n} is not a conservative ASCII identifier")
+            fail(f"plan target {n} is not a project declaration")
         if decls[n].kind != "theorem":
-            fail(f"plan node {n} is not a theorem")
+            fail(f"plan target {n} is not a theorem")
 
-    # ---- Phase 2: reachability from the nodes, then classification ----
+    # ---- Phase 2: reachability from the targets, then classification ----
     reach: set[str] = set()
-    work = list(nodes)
+    work = list(targets)
     while work:
         x = work.pop()
         if x in reach or x not in decls:
@@ -223,8 +228,41 @@ def main() -> None:
         if decls[x].is_instance:  # type: ignore[attr-defined]
             fail(f"instance {x} is reachable; not supported by this generator")
 
+    theorems = {x for x in reach if decls[x].kind == "theorem"}
+    users: dict[str, set[str]] = {x: set() for x in theorems}
+    for y in reach:
+        for x in decls[y].value_deps:
+            if x in users and x != y:
+                users[x].add(y)
+
+    def proof_lines(x: str) -> int:
+        f = decls[x].fact
+        return f["declEnd"]["line"] - f["valStart"]["line"] if f and f["valStart"] else 0
+
+    force_node = set(plan.get("forceNode", []))
+    force_inline = set(plan.get("forceInline", []))
+    paper_named = set(plan.get("paperNamed", []))
+    node_set = set(targets) | force_node
+    changed = True
+    while changed:  # the "used by >= 2 nodes" signal depends on the node set: iterate
+        changed = False
+        for x in sorted(theorems - node_set - force_inline):
+            lines = proof_lines(x)
+            signal = (len(users[x] & node_set) >= 2
+                      or any(decls[u].module != decls[x].module for u in users[x])
+                      or decls[x].fact["docstring"] is not None
+                      or x in paper_named)
+            if lines > 40 or (lines > 10 and signal):
+                node_set.add(x)
+                changed = True
+    nodes: list[str] = sorted(node_set, key=lambda x: (decls[x].module,
+                                                       decls[x].fact["declStart"]["offset"]))
+    for n in nodes:
+        if not ASCII_IDENT.match(n):
+            fail(f"node name {n} is not a conservative ASCII identifier")
+
     def_material = {x for x in reach if decls[x].kind != "theorem"}
-    helpers = {x for x in reach if decls[x].kind == "theorem" and x not in nodes}
+    helpers = theorems - node_set
     for x in def_material:
         for y in decls[x].type_deps | decls[x].value_deps:
             if y in reach and decls[y].kind == "theorem":
@@ -234,13 +272,15 @@ def main() -> None:
             if y in reach and y not in def_material:
                 fail(f"statement of {n} mentions non-definition {y}")
 
-    bundle_name = plan["defBundles"]
+    bundle_name: dict[str, str] = dict(plan.get("defBundles", {}))
     bundles: dict[str, list[str]] = {}
     for x in sorted(def_material, key=lambda x: decls[x].fact["declStart"]["offset"]):
         bundles.setdefault(decls[x].module, []).append(x)
     for m in bundles:
-        if m not in bundle_name:
-            fail(f"module {m} has definitions but no Def bundle name in plan.json")
+        # default bundle name: <bundlePrefix><last module component>
+        bundle_name.setdefault(m, plan.get("bundlePrefix", "") + m.split(".")[-1])
+        if not ASCII_IDENT.match(bundle_name[m]) or "." in bundle_name[m]:
+            fail(f"bundle name {bundle_name[m]} is not an ASCII identifier")
 
     mod_order = []
     for m in modules:
@@ -431,9 +471,11 @@ def main() -> None:
         visit(n)
     payload["upload_order"] = order
     payload["classification"] = {
+        "targets": targets,
         "nodes": nodes,
         "inline_helpers": sorted(helpers),
         "definitions": {bundle_name[m]: v for m, v in bundles.items()},
+        "proof_lines": {x: proof_lines(x) for x in sorted(theorems)},
     }
     Path(args.payload).write_text(json.dumps(payload, indent=1, ensure_ascii=False) + "\n")
     print(f"{len(payload['definitions'])} Def bundles, {len(nodes)} nodes, "

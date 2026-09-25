@@ -154,6 +154,7 @@ theorem integral_comp_level (hK : Measurable K) (g : ℕ → Ω → ℝ) (hgm : 
 
 variable {Pl : ℕ → Ω → ℝ} {p : ℕ → ℝ}
 
+omit [IsProbabilityMeasure μ] in
 /-- `E|Y| < ∞` and `E[Y] = ∑_ℓ E[P_ℓ − P_{ℓ−1}]` for the single-term estimator. -/
 theorem integral_singleTerm (hK : Measurable K) (hPlm : ∀ ℓ, Measurable (Pl ℓ))
     (hPl : ∀ ℓ, Integrable (Pl ℓ) μ) (hp : ∀ ℓ, μ.real {ω | K ω = ℓ} = p ℓ)

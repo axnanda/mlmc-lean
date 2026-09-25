@@ -2,6 +2,7 @@ import Mathlib.Algebra.BigOperators.Fin
 import Mathlib.Algebra.BigOperators.Group.Finset.Sigma
 import Mathlib.Data.Fintype.Pi
 import Mathlib.Data.Real.Basic
+import Mathlib.Tactic.Ring
 
 /-!
 # Multi-indices, cross-differences and box telescoping
