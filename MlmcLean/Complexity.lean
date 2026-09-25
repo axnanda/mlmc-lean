@@ -138,7 +138,7 @@ lemma geom_sum_le_of_one_lt {r : ℝ} (hr : 1 < r) (n : ℕ) :
 /-- Giles' choice of `L`: the least integer with `c₁ 2^{−αL} ≤ δ`, i.e. `L = ⌈log₂(c₁/δ)/α⌉₊`. -/
 noncomputable def levelL (α c₁ δ : ℝ) : ℕ := ⌈Real.logb 2 (c₁ / δ) / α⌉₊
 
-lemma alpha_mul_div (hα : 0 < α) (l : ℝ) : α * (l / α) = l := by
+lemma alpha_mul_div {α : ℝ} (hα : 0 < α) (l : ℝ) : α * (l / α) = l := by
   calc α * (l / α) = l * (α / α) := by ring
     _ = l := by rw [div_self hα.ne', mul_one]
 

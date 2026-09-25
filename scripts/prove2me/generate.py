@@ -29,6 +29,7 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import subprocess
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -352,6 +353,7 @@ def main() -> None:
             "definition_name": bundle_name[m],
             "module": bundle_module(m),
             "source_module": m,
+            "source_file": mod.rel,
             "declarations": bundles[m],
             "imports": [i for i in imports if i.startswith("Definitions.")],
             "definition": code,
@@ -470,6 +472,13 @@ def main() -> None:
     for n in nodes:
         visit(n)
     payload["upload_order"] = order
+    # the commit the upload text was generated from; upload.py pins its source links to it
+    try:
+        payload["source_commit"] = subprocess.run(
+            ["git", "rev-parse", "HEAD"], cwd=SRC_ROOT, capture_output=True, text=True,
+            check=True).stdout.strip()
+    except (OSError, subprocess.CalledProcessError):
+        payload["source_commit"] = None
     payload["classification"] = {
         "targets": targets,
         "nodes": nodes,
