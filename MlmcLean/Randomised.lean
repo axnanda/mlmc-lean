@@ -180,6 +180,7 @@ theorem integral_singleTerm (hK : Measurable K) (hPlm : ∀ ℓ, Measurable (Pl 
   refine tsum_congr fun ℓ => ?_
   rw [hp ℓ, integral_const_mul, ← mul_assoc, mul_inv_cancel₀ (hp0 ℓ).ne', one_mul]
 
+omit [IsProbabilityMeasure μ] in
 /-- **Unbiasedness of the single-term estimator** (Giles 2015, §2.2, p. 10):
 `E[Y] = ∑_ℓ E[P_ℓ − P_{ℓ−1}] = E[P]`. -/
 theorem singleTerm_unbiased (P : Ω → ℝ) (hK : Measurable K) (hPlm : ∀ ℓ, Measurable (Pl ℓ))

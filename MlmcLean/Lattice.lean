@@ -2,10 +2,8 @@ import MlmcLean.MultiIndex
 import MlmcLean.Complexity
 import Mathlib.Algebra.BigOperators.Group.Finset.Piecewise
 import Mathlib.Algebra.BigOperators.Ring.Finset
-import Mathlib.Analysis.SpecificLimits.Normed
 import Mathlib.Data.Fintype.BigOperators
 import Mathlib.Order.Interval.Finset.Nat
-import Mathlib.Topology.Algebra.InfiniteSum.Order
 
 /-!
 # Lattice sums over the MIMC index sets `{ℓ ∈ ℕ^D : θ·ℓ ≤ L}`
@@ -50,7 +48,7 @@ noncomputable def crit (δ : Fin D → ℝ) : ℕ := (univ.filter fun d => δ d 
 lemma mem_box {n : ℕ} {ℓ : Fin D → ℕ} : ℓ ∈ box D n ↔ ∀ d, ℓ d < n := by
   simp only [box, Fintype.mem_piFinset, Finset.mem_range]
 
-lemma box_mono {n n' : ℕ} (h : n ≤ n') : box D n ⊆ box D n' := fun ℓ hℓ =>
+lemma box_mono {n n' : ℕ} (h : n ≤ n') : box D n ⊆ box D n' := fun _ hℓ =>
   mem_box.2 fun d => lt_of_lt_of_le (mem_box.1 hℓ d) h
 
 lemma dot_nonneg {a : Fin D → ℝ} (ha : ∀ d, 0 ≤ a d) (ℓ : Fin D → ℕ) : 0 ≤ dot a ℓ :=
@@ -67,7 +65,9 @@ lemma sum_box_succ (n : ℕ) (f : (Fin (D + 1) → ℕ) → ℝ) :
 
 lemma crit_succ (δ : Fin (D + 1) → ℝ) :
     crit δ = (if δ 0 = 0 then 1 else 0) + crit (Fin.tail δ) := by
-  simp only [crit, Finset.card_filter, Fin.sum_univ_succ, Fin.tail]
+  unfold crit
+  rw [Finset.card_filter, Finset.card_filter, Fin.sum_univ_succ]
+  rfl
 
 /-- Every finite set of multi-indices lies in a box. -/
 lemma exists_subset_box (s : Finset (Fin D → ℕ)) : ∃ n, s ⊆ box D n := by
@@ -125,6 +125,74 @@ lemma card_filter_mul_le {θ₀ : ℝ} (hθ : 0 < θ₀) (z : ℝ) (n : ℕ) :
       ≤ (range (⌊max z 0 / θ₀⌋₊ + 1)).card := by exact_mod_cast Finset.card_le_card hsub
     _ = ⌊max z 0 / θ₀⌋₊ + 1 := by rw [Finset.card_range, Nat.cast_add, Nat.cast_one]
     _ ≤ max z 0 / θ₀ + 1 := by linarith [Nat.floor_le hz]
+
+/-! ### Polynomials against exponentials -/
+
+/-- For `p ≥ 0` and `κ > 0` there is `K` with `(1 + x)^p ≤ K e^{κx}` for all `x ≥ 0`. -/
+lemma one_add_rpow_le_exp {p κ : ℝ} (hp : 0 ≤ p) (hκ : 0 < κ) :
+    ∃ K : ℝ, 0 < K ∧ ∀ x : ℝ, 0 ≤ x → (1 + x) ^ p ≤ K * Real.exp (κ * x) := by
+  rcases hp.eq_or_lt with h0 | hpos
+  · refine ⟨1, one_pos, fun x hx => ?_⟩
+    rw [← h0, Real.rpow_zero, one_mul]
+    exact Real.one_le_exp (mul_nonneg hκ.le hx)
+  · have hp0 : p ≠ 0 := hpos.ne'
+    have hκp : 0 ≤ κ / p := (div_pos hκ hpos).le
+    set M := max 1 (p / κ) with hM
+    have hM1 : 1 ≤ M := le_max_left _ _
+    have hMp : p / κ ≤ M := le_max_right _ _
+    refine ⟨M ^ p, Real.rpow_pos_of_pos (by linarith) _, fun x hx => ?_⟩
+    have hx1 : 0 ≤ 1 + κ / p * x := by have := mul_nonneg hκp hx; linarith
+    have hMk : 1 ≤ M * (κ / p) := by
+      have e : p / κ * (κ / p) = 1 := by
+        rw [div_mul_div_comm, mul_comm κ p]
+        exact div_self (mul_ne_zero hp0 hκ.ne')
+      calc (1 : ℝ) = p / κ * (κ / p) := e.symm
+        _ ≤ M * (κ / p) := mul_le_mul_of_nonneg_right hMp hκp
+    have h1 : 1 + x ≤ M * (1 + κ / p * x) := by
+      have hx' : x ≤ M * (κ / p) * x := le_mul_of_one_le_left hx hMk
+      calc 1 + x ≤ M + M * (κ / p) * x := by linarith
+        _ = M * (1 + κ / p * x) := by ring
+    have h2 : (1 + κ / p * x) ^ p ≤ Real.exp (κ * x) := by
+      have h3 : 1 + κ / p * x ≤ Real.exp (κ / p * x) := by
+        linarith [Real.add_one_le_exp (κ / p * x)]
+      calc (1 + κ / p * x) ^ p ≤ (Real.exp (κ / p * x)) ^ p :=
+            Real.rpow_le_rpow hx1 h3 hp
+        _ = Real.exp (κ * x) := by
+            rw [← Real.exp_mul]
+            congr 1
+            field_simp
+    calc (1 + x) ^ p ≤ (M * (1 + κ / p * x)) ^ p := Real.rpow_le_rpow (by linarith) h1 hp
+      _ = M ^ p * (1 + κ / p * x) ^ p := Real.mul_rpow (by linarith) hx1
+      _ ≤ M ^ p * Real.exp (κ * x) :=
+          mul_le_mul_of_nonneg_left h2 (Real.rpow_nonneg (by linarith) _)
+
+/-- For `p ≥ 0` and `κ > 0`, `|log ε|^p ε^κ` is bounded on `0 < ε < 1`. -/
+lemma neg_log_rpow_mul_rpow_le {p κ : ℝ} (hp : 0 ≤ p) (hκ : 0 < κ) :
+    ∃ K : ℝ, 0 < K ∧ ∀ ε : ℝ, 0 < ε → ε < 1 → (-Real.log ε) ^ p * ε ^ κ ≤ K := by
+  obtain ⟨K, hK, h⟩ := one_add_rpow_le_exp hp hκ
+  refine ⟨K, hK, fun ε hε hε1 => ?_⟩
+  have ht : 0 ≤ -Real.log ε := by linarith [Real.log_neg hε hε1]
+  have h1 : (-Real.log ε) ^ p ≤ (1 + -Real.log ε) ^ p := Real.rpow_le_rpow ht (by linarith) hp
+  have h2 := h (-Real.log ε) ht
+  have h3 : ε ^ κ = Real.exp (-(κ * -Real.log ε)) := by
+    rw [Real.rpow_def_of_pos hε]
+    congr 1
+    ring
+  calc (-Real.log ε) ^ p * ε ^ κ
+      ≤ (K * Real.exp (κ * -Real.log ε)) * Real.exp (-(κ * -Real.log ε)) := by
+        rw [h3]
+        exact mul_le_mul_of_nonneg_right (h1.trans h2) (Real.exp_pos _).le
+    _ = K := by
+        rw [mul_assoc, ← Real.exp_add]
+        simp
+
+/-- For `p ≥ 0` and `κ > 0` there is `K` with `(1 + x)^p ≤ K 2^{κx}` for all `x ≥ 0`. -/
+lemma one_add_rpow_le_two_rpow {p κ : ℝ} (hp : 0 ≤ p) (hκ : 0 < κ) :
+    ∃ K : ℝ, 0 < K ∧ ∀ x : ℝ, 0 ≤ x → (1 + x) ^ p ≤ K * (2 : ℝ) ^ (κ * x) := by
+  obtain ⟨K, hK, h⟩ := one_add_rpow_le_exp hp (mul_pos (Real.log_pos one_lt_two) hκ)
+  refine ⟨K, hK, fun x hx => ?_⟩
+  rw [Real.rpow_def_of_pos two_pos, ← mul_assoc]
+  exact h x hx
 
 /-! ### Slab sums -/
 
@@ -319,18 +387,6 @@ theorem slab_bound : ∀ {D : ℕ} (θ δ : Fin D → ℝ), (∀ d, 0 < θ d) �
 
 /-! ### Tail and inner sums -/
 
-/-- `∑_j (j + 1)^p r^j` converges for `0 < r < 1`. -/
-lemma summable_succ_pow_mul_geom {r : ℝ} (hr0 : 0 < r) (hr1 : r < 1) (p : ℕ) :
-    Summable fun j : ℕ => ((j : ℝ) + 1) ^ p * r ^ j := by
-  have hr : ‖r‖ < 1 := by rw [Real.norm_eq_abs, abs_of_pos hr0]; exact hr1
-  have h := (summable_nat_add_iff 1).2 (summable_pow_mul_geometric_of_norm_lt_one p hr)
-  refine (h.mul_left r⁻¹).congr fun j => ?_
-  have hr' : r⁻¹ * r = 1 := inv_mul_cancel₀ hr0.ne'
-  push_cast
-  calc r⁻¹ * (((j : ℝ) + 1) ^ p * r ^ (j + 1)) = ((j : ℝ) + 1) ^ p * r ^ j * (r⁻¹ * r) := by
-        ring
-    _ = ((j : ℝ) + 1) ^ p * r ^ j := by rw [hr', mul_one]
-
 /-- **Tail sums** (the MIMC bias).  With `θ, δ, m` as in `slab_bound` and `a > 0`, uniformly in
 the box size `n` and in `L ≥ 0`: `∑_{θ·ℓ > L} 2^{−aθ·ℓ − δ·ℓ} ≤ K (1 + L)^{m−1} 2^{−aL}`. -/
 theorem tail_bound {θ δ : Fin D → ℝ} (hθ : ∀ d, 0 < θ d) (hδ : ∀ d, 0 ≤ δ d) {a : ℝ}
@@ -339,11 +395,43 @@ theorem tail_bound {θ δ : Fin D → ℝ} (hθ : ∀ d, 0 < θ d) (hδ : ∀ d,
       ∑ ℓ ∈ box D n, (if L < dot θ ℓ then (2 : ℝ) ^ (-(a * dot θ ℓ) - dot δ ℓ) else 0) ≤
         K * (1 + L) ^ (crit δ - 1) * (2 : ℝ) ^ (-(a * L)) := by
   obtain ⟨Ks, hKs, hslab⟩ := slab_bound θ δ hθ hδ
-  have hq0 : 0 < (2 : ℝ) ^ (-a) := Real.rpow_pos_of_pos two_pos _
-  have hq1 : (2 : ℝ) ^ (-a) < 1 := Real.rpow_lt_one_of_one_lt_of_neg one_lt_two (by linarith)
-  have hsum := summable_succ_pow_mul_geom hq0 hq1 (crit δ - 1)
-  set G := ∑' j : ℕ, ((j : ℝ) + 1) ^ (crit δ - 1) * ((2 : ℝ) ^ (-a)) ^ j with hG
-  have hG0 : 0 ≤ G := tsum_nonneg fun j => by positivity
+  -- `∑_j (1+j)^{m−1} 2^{−aj}` is bounded uniformly over finite sets of `j`
+  obtain ⟨K_A, hK_A, hA⟩ := one_add_rpow_le_two_rpow
+    (Nat.cast_nonneg (crit δ - 1) : (0 : ℝ) ≤ ((crit δ - 1 : ℕ) : ℝ)) (half_pos ha)
+  have hq0' : 0 ≤ (2 : ℝ) ^ (-(a / 2)) := (Real.rpow_pos_of_pos two_pos _).le
+  have hq1' : (2 : ℝ) ^ (-(a / 2)) < 1 :=
+    Real.rpow_lt_one_of_one_lt_of_neg one_lt_two (by linarith)
+  set G : ℝ := K_A * (1 - (2 : ℝ) ^ (-(a / 2)))⁻¹ with hG
+  have hG0 : 0 ≤ G := mul_nonneg hK_A.le (inv_nonneg.2 (by linarith))
+  have hgeom : ∀ T : Finset ℕ,
+      ∑ j ∈ T, ((j : ℝ) + 1) ^ (crit δ - 1) * ((2 : ℝ) ^ (-a)) ^ j ≤ G := by
+    intro T
+    have hpt : ∀ j : ℕ, ((j : ℝ) + 1) ^ (crit δ - 1) * ((2 : ℝ) ^ (-a)) ^ j ≤
+        K_A * ((2 : ℝ) ^ (-(a / 2))) ^ j := by
+      intro j
+      have h1 : ((j : ℝ) + 1) ^ (crit δ - 1) ≤ K_A * (2 : ℝ) ^ (a / 2 * j) := by
+        rw [add_comm, ← Real.rpow_natCast]
+        exact hA j (Nat.cast_nonneg j)
+      have h2 : (2 : ℝ) ^ (a / 2 * j) * ((2 : ℝ) ^ (-a)) ^ j = ((2 : ℝ) ^ (-(a / 2))) ^ j := by
+        rw [← two_rpow_mul_nat, ← two_rpow_mul_nat, ← Real.rpow_add two_pos]
+        congr 1
+        ring
+      calc ((j : ℝ) + 1) ^ (crit δ - 1) * ((2 : ℝ) ^ (-a)) ^ j
+          ≤ K_A * (2 : ℝ) ^ (a / 2 * j) * ((2 : ℝ) ^ (-a)) ^ j :=
+            mul_le_mul_of_nonneg_right h1 (pow_nonneg (Real.rpow_pos_of_pos two_pos _).le _)
+        _ = K_A * ((2 : ℝ) ^ (-(a / 2))) ^ j := by rw [mul_assoc, h2]
+    calc ∑ j ∈ T, ((j : ℝ) + 1) ^ (crit δ - 1) * ((2 : ℝ) ^ (-a)) ^ j
+        ≤ ∑ j ∈ T, K_A * ((2 : ℝ) ^ (-(a / 2))) ^ j := Finset.sum_le_sum fun j _ => hpt j
+      _ ≤ ∑ j ∈ range (T.sup id + 1), K_A * ((2 : ℝ) ^ (-(a / 2))) ^ j := by
+          apply Finset.sum_le_sum_of_subset_of_nonneg
+          · intro j hj
+            rw [Finset.mem_range, Nat.lt_add_one_iff]
+            exact Finset.le_sup (f := id) hj
+          · intro j _ _
+            exact mul_nonneg hK_A.le (pow_nonneg hq0' _)
+      _ = K_A * ∑ j ∈ range (T.sup id + 1), ((2 : ℝ) ^ (-(a / 2))) ^ j := by
+          rw [Finset.mul_sum]
+      _ ≤ G := mul_le_mul_of_nonneg_left (geom_sum_le_of_lt_one hq0' hq1' _) hK_A.le
   refine ⟨Ks * G, mul_nonneg hKs hG0, fun n L hL => ?_⟩
   -- each fibre `{⌊θ·ℓ − L⌋₊ = j}` of the tail lies in the slab `L + j ≤ θ·ℓ ≤ L + j + 1`
   have hfib : ∀ j : ℕ, ∑ ℓ ∈ (box D n).filter (fun ℓ => ⌊dot θ ℓ - L⌋₊ = j),
@@ -419,9 +507,8 @@ theorem tail_bound {θ δ : Fin D → ℝ} (hθ : ∀ d, 0 < θ d) (hδ : ∀ d,
             ((j : ℝ) + 1) ^ (crit δ - 1) * ((2 : ℝ) ^ (-a)) ^ j := by
         rw [Finset.mul_sum]
     _ ≤ (2 : ℝ) ^ (-(a * L)) * (Ks * (1 + L) ^ (crit δ - 1)) * G := by
-        apply mul_le_mul_of_nonneg_left _ (mul_nonneg (Real.rpow_pos_of_pos two_pos _).le
+        exact mul_le_mul_of_nonneg_left (hgeom _) (mul_nonneg (Real.rpow_pos_of_pos two_pos _).le
           (mul_nonneg hKs (pow_nonneg (by linarith) _)))
-        exact hsum.sum_le_tsum _ fun j _ => by positivity
     _ = Ks * G * (1 + L) ^ (crit δ - 1) * (2 : ℝ) ^ (-(a * L)) := by ring
 
 /-- **Inner sums** (the MIMC cost).  With `θ, δ, m` as in `slab_bound` and `c ≥ 0`, uniformly in
@@ -598,73 +685,5 @@ lemma card_indexSet_le {θ : Fin D → ℝ} (hθ : ∀ d, 0 < θ d) {L : ℝ} (h
         nlinarith
     _ = (1 + L) ^ D * ∏ d, (1 / θ d + 1) := by
         rw [Finset.prod_mul_distrib, Finset.prod_const, Finset.card_univ, Fintype.card_fin]
-
-/-! ### Polynomials against exponentials -/
-
-/-- For `p ≥ 0` and `κ > 0` there is `K` with `(1 + x)^p ≤ K e^{κx}` for all `x ≥ 0`. -/
-lemma one_add_rpow_le_exp {p κ : ℝ} (hp : 0 ≤ p) (hκ : 0 < κ) :
-    ∃ K : ℝ, 0 < K ∧ ∀ x : ℝ, 0 ≤ x → (1 + x) ^ p ≤ K * Real.exp (κ * x) := by
-  rcases hp.eq_or_lt with h0 | hpos
-  · refine ⟨1, one_pos, fun x hx => ?_⟩
-    rw [← h0, Real.rpow_zero, one_mul]
-    exact Real.one_le_exp (mul_nonneg hκ.le hx)
-  · have hp0 : p ≠ 0 := hpos.ne'
-    have hκp : 0 ≤ κ / p := (div_pos hκ hpos).le
-    set M := max 1 (p / κ) with hM
-    have hM1 : 1 ≤ M := le_max_left _ _
-    have hMp : p / κ ≤ M := le_max_right _ _
-    refine ⟨M ^ p, Real.rpow_pos_of_pos (by linarith) _, fun x hx => ?_⟩
-    have hx1 : 0 ≤ 1 + κ / p * x := by have := mul_nonneg hκp hx; linarith
-    have hMk : 1 ≤ M * (κ / p) := by
-      have e : p / κ * (κ / p) = 1 := by
-        rw [div_mul_div_comm, mul_comm κ p]
-        exact div_self (mul_ne_zero hp0 hκ.ne')
-      calc (1 : ℝ) = p / κ * (κ / p) := e.symm
-        _ ≤ M * (κ / p) := mul_le_mul_of_nonneg_right hMp hκp
-    have h1 : 1 + x ≤ M * (1 + κ / p * x) := by
-      have hx' : x ≤ M * (κ / p) * x := le_mul_of_one_le_left hx hMk
-      calc 1 + x ≤ M + M * (κ / p) * x := by linarith
-        _ = M * (1 + κ / p * x) := by ring
-    have h2 : (1 + κ / p * x) ^ p ≤ Real.exp (κ * x) := by
-      have h3 : 1 + κ / p * x ≤ Real.exp (κ / p * x) := by
-        linarith [Real.add_one_le_exp (κ / p * x)]
-      calc (1 + κ / p * x) ^ p ≤ (Real.exp (κ / p * x)) ^ p :=
-            Real.rpow_le_rpow hx1 h3 hp
-        _ = Real.exp (κ * x) := by
-            rw [← Real.exp_mul]
-            congr 1
-            field_simp
-    calc (1 + x) ^ p ≤ (M * (1 + κ / p * x)) ^ p := Real.rpow_le_rpow (by linarith) h1 hp
-      _ = M ^ p * (1 + κ / p * x) ^ p := Real.mul_rpow (by linarith) hx1
-      _ ≤ M ^ p * Real.exp (κ * x) :=
-          mul_le_mul_of_nonneg_left h2 (Real.rpow_nonneg (by linarith) _)
-
-/-- For `p ≥ 0` and `κ > 0`, `|log ε|^p ε^κ` is bounded on `0 < ε < 1`. -/
-lemma neg_log_rpow_mul_rpow_le {p κ : ℝ} (hp : 0 ≤ p) (hκ : 0 < κ) :
-    ∃ K : ℝ, 0 < K ∧ ∀ ε : ℝ, 0 < ε → ε < 1 → (-Real.log ε) ^ p * ε ^ κ ≤ K := by
-  obtain ⟨K, hK, h⟩ := one_add_rpow_le_exp hp hκ
-  refine ⟨K, hK, fun ε hε hε1 => ?_⟩
-  have ht : 0 ≤ -Real.log ε := by linarith [Real.log_neg hε hε1]
-  have h1 : (-Real.log ε) ^ p ≤ (1 + -Real.log ε) ^ p := Real.rpow_le_rpow ht (by linarith) hp
-  have h2 := h (-Real.log ε) ht
-  have h3 : ε ^ κ = Real.exp (-(κ * -Real.log ε)) := by
-    rw [Real.rpow_def_of_pos hε]
-    congr 1
-    ring
-  calc (-Real.log ε) ^ p * ε ^ κ
-      ≤ (K * Real.exp (κ * -Real.log ε)) * Real.exp (-(κ * -Real.log ε)) := by
-        rw [h3]
-        exact mul_le_mul_of_nonneg_right (h1.trans h2) (Real.exp_pos _).le
-    _ = K := by
-        rw [mul_assoc, ← Real.exp_add]
-        simp
-
-/-- For `p ≥ 0` and `κ > 0` there is `K` with `(1 + x)^p ≤ K 2^{κx}` for all `x ≥ 0`. -/
-lemma one_add_rpow_le_two_rpow {p κ : ℝ} (hp : 0 ≤ p) (hκ : 0 < κ) :
-    ∃ K : ℝ, 0 < K ∧ ∀ x : ℝ, 0 ≤ x → (1 + x) ^ p ≤ K * (2 : ℝ) ^ (κ * x) := by
-  obtain ⟨K, hK, h⟩ := one_add_rpow_le_exp hp (mul_pos (Real.log_pos one_lt_two) hκ)
-  refine ⟨K, hK, fun x hx => ?_⟩
-  rw [Real.rpow_def_of_pos two_pos, ← mul_assoc]
-  exact h x hx
 
 end MLMC
