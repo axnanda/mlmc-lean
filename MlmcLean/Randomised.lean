@@ -180,10 +180,14 @@ theorem integral_singleTerm (hK : Measurable K) (hPlm : ∀ ℓ, Measurable (Pl 
   refine tsum_congr fun ℓ => ?_
   rw [hp ℓ, integral_const_mul, ← mul_assoc, mul_inv_cancel₀ (hp0 ℓ).ne', one_mul]
 
+-- `hP`: `P` is the quantity whose mean `E[P]` is estimated (Giles 2015, §2.2), so it is integrable;
+-- the proof does not use it (without it, `E[P]` would be read as the junk value `0`).
 omit [IsProbabilityMeasure μ] in
+set_option linter.unusedVariables false in
 /-- **Unbiasedness of the single-term estimator** (Giles 2015, §2.2, p. 10):
 `E[Y] = ∑_ℓ E[P_ℓ − P_{ℓ−1}] = E[P]`. -/
-theorem singleTerm_unbiased (P : Ω → ℝ) (hK : Measurable K) (hPlm : ∀ ℓ, Measurable (Pl ℓ))
+theorem singleTerm_unbiased (P : Ω → ℝ) (hP : Integrable P μ) (hK : Measurable K)
+    (hPlm : ∀ ℓ, Measurable (Pl ℓ))
     (hPl : ∀ ℓ, Integrable (Pl ℓ) μ) (hp : ∀ ℓ, μ.real {ω | K ω = ℓ} = p ℓ)
     (hp0 : ∀ ℓ, 0 < p ℓ) (hind : ∀ ℓ, IndepFun K (levelDiff Pl ℓ) μ)
     (hsum : Summable fun ℓ => ∫ ω, |levelDiff Pl ℓ ω| ∂μ)
@@ -579,7 +583,7 @@ theorem randomised_mlmc_finite [IsProbabilityMeasure μ] {K : Ω → ℕ} {Pl : 
       hlim)
     rw [Real.norm_eq_abs, ← integral_sub (hPl1 L) hP, ← two_rpow_mul_nat, neg_mul]
     exact h_i L
-  obtain ⟨hint, hmean⟩ := singleTerm_unbiased P hK hPlm (fun ℓ => (hPl ℓ).integrable one_le_two)
+  obtain ⟨hint, hmean⟩ := singleTerm_unbiased P hP hK hPlm (fun ℓ => (hPl ℓ).integrable one_le_two)
     hp hp0 hind hsum hconv
   exact ⟨hint, hmean, (singleTerm_variance hK hPlm hPl hp hp0 hind hVs).1, hCs⟩
 

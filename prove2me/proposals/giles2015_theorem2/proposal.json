@@ -1,0 +1,29 @@
+{
+ "comment": "Mission proposal for prove2.me (mission_captain.md). Created by scripts/prove2me/propose.py from the uploaded tree: every item is a reference to an uploaded theorem or definition bundle. Only the account owner can audit and submit it (on the website).",
+ "name": "Multi-Index Monte Carlo: the MIMC complexity theorem (Giles 2015, Theorem 2)",
+ "mission_type": "ResearchPaper",
+ "visibility": "private",
+ "fields": [
+  "probability",
+  "numerical-analysis"
+ ],
+ "description_file": "description.md",
+ "definitions": [
+  "MLMC_Lattice",
+  "MLMC_MultiIndex",
+  "MLMC_Theorem2"
+ ],
+ "goal": "MLMC.giles_theorem2",
+ "milestones": [
+  {
+   "theorem": "MLMC.sum_crossDiff",
+   "title": "§2.4 — the telescoping sum of cross-differences",
+   "description": "With $\\Delta_d P_{\\boldsymbol\\ell}\\equiv P_{\\boldsymbol\\ell}-P_{\\boldsymbol\\ell-\\mathbf e_d}$ and the cross-difference $\\boldsymbol\\Delta P_{\\boldsymbol\\ell}\\equiv\\big(\\prod_{d=1}^D\\Delta_d\\big)P_{\\boldsymbol\\ell}$, the cross-differences telescope: $\\sum_{\\boldsymbol\\ell\\le\\mathbf k}\\boldsymbol\\Delta P_{\\boldsymbol\\ell}=P_{\\mathbf k}$ for every $\\mathbf k\\in\\mathbb N^D$, the finite form of $\\mathbb{E}[P]=\\sum_{\\boldsymbol\\ell\\ge\\mathbf 0}\\mathbb{E}[\\boldsymbol\\Delta P_{\\boldsymbol\\ell}]$ (Giles 2015, §2.4, p. 13)."
+  },
+  {
+   "theorem": "MLMC.giles_theorem2_boundary",
+   "title": "Theorem 2 — the case $\\alpha_d \\ge \\tfrac12\\beta_d$",
+   "description": "Theorem 2 under the weaker condition $\\alpha_d\\ge\\tfrac12\\beta_d$ (equality allowed), where \\\"the form of the exponents is more complicated\\\" and the paper states none: the same three regimes with some exponents $e_1,e_2$ (Giles 2015, §2.4, Theorem 2, p. 14). The linked formal version has $e_1=2D_2+D$ and $e_2=(D_2-1)(2+\\eta)+D$."
+  }
+ ]
+}

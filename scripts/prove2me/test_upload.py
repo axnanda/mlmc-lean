@@ -32,6 +32,7 @@ class Mock:
         self.calls = []
         self.polls = {}
         self.me = "user-me"
+        self.proposals = {}
     def item_by_name(self, name):
         return next((i for i in self.items.values() if i["theorem_name"] == name), None)
 
@@ -79,6 +80,13 @@ class H(BaseHTTPRequestHandler):
         m = re.match(r"^/theorems/([^/]+)$", p)
         if m:
             return self._send(200, M.items[m.group(1)])
+        if p == "/fields":
+            fields = [{"id": "f-prob", "slug": "probability", "name": "Probability", "mission_count": 3},
+                      {"id": "f-num", "slug": "numerical-analysis", "name": "Numerical analysis", "mission_count": 1}]
+            return self._send(200, {"fields": [f for f in fields if q.get("q", "") in f["slug"]], "total": 2})
+        m = re.match(r"^/mission-proposals/([^/]+)$", p)
+        if m:
+            return self._send(200, M.proposals[m.group(1)])
         if p == "/verify":
             s = M.subs[q["submission_id"]]
             M.polls[s["id"]] = M.polls.get(s["id"], 0) + 1
@@ -113,11 +121,47 @@ class H(BaseHTTPRequestHandler):
             tid = m.group(1).decode(); sid = str(uuid.uuid4())
             M.subs[sid] = {"id": sid, "theorem_id": tid, "status": "PENDING"}
             return self._send(202, {"submission_id": sid})
+        if p == "/mission-proposals":
+            b = json.loads(raw)
+            assert b["mission_type"] == "ResearchPaper" and b["field_ids"] and b["visibility"] == "private"
+            pid = str(uuid.uuid4())
+            M.proposals[pid] = {"id": pid, **b, "items": [], "milestones": [], "status": "Draft"}
+            return self._send(201, M.proposals[pid])
+        m = re.match(r"^/mission-proposals/([^/]+)/items$", p)
+        if m:
+            b = json.loads(raw); pr = M.proposals[m.group(1)]
+            assert b["kind"] == "reference" and b["theorem_id"] in M.items
+            if any(it["theorem_id"] == b["theorem_id"] for it in pr["items"]):
+                return self._send(409, {"error": "already in proposal"})
+            it = {"id": str(uuid.uuid4()), "kind": "reference", "theorem_id": b["theorem_id"]}
+            pr["items"].append(it)
+            return self._send(201, it)
+        m = re.match(r"^/mission-proposals/([^/]+)/milestones$", p)
+        if m:
+            b = json.loads(raw); pr = M.proposals[m.group(1)]
+            assert b["item_id"] in {it["id"] for it in pr["items"]} and b["item_id"] != pr.get("main_item_id")
+            pr["milestones"].append(b)
+            return self._send(201, b)
         m = re.match(r"^/theorems/([^/]+)/make-public$", p)
         if m:
             M.items[m.group(1)]["visibility"] = "public"
             return self._send(200, {"made_public": [m.group(1)]})
         return self._send(404, {"error": p})
+
+def _do_patch(self):
+    u = urlparse(self.path); p = u.path.replace("/api/v1", "")
+    raw = self._body()
+    M.calls.append(("PATCH", p))
+    m = re.match(r"^/mission-proposals/([^/]+)$", p)
+    if m:
+        b = json.loads(raw); pr = M.proposals[m.group(1)]
+        assert set(b["item_order"]) == {it["id"] for it in pr["items"]}
+        pr.update(b)
+        return self._send(200, pr)
+    return self._send(404, {"error": p})
+
+
+H.do_PATCH = _do_patch
 
 srv = ThreadingHTTPServer(("127.0.0.1", 0), H)
 threading.Thread(target=srv.serve_forever, daemon=True).start()
@@ -172,4 +216,42 @@ assert all(i["visibility"] == "private" for i in M.items.values())
 code, out = run("--make-public", "--confirm-irreversible"); print(out); assert code == 0, out
 assert all(i["visibility"] == "public" for i in M.items.values())
 code, out = run("--verify-final"); assert code == 0, out
+# ---- propose.py: proposals on top of the uploaded tree ----
+spec2 = importlib.util.spec_from_file_location("propose", REPO / "scripts/prove2me/propose.py")
+sys.path.insert(0, str(REPO / "scripts/prove2me"))
+pr_mod = importlib.util.module_from_spec(spec2); spec2.loader.exec_module(pr_mod)
+pr_mod.up.BASE = up.BASE; pr_mod.up.ROOT = root; pr_mod.ROOT = root; pr_mod.up.time.sleep = lambda s: None
+pdir = root / "prove2me" / "proposals" / "demo"; pdir.mkdir(parents=True)
+(pdir / "description.md").write_text("## Motivation\n$\\mathbb{E}[P]$\n")
+(pdir / "proposal.json").write_text(json.dumps({
+    "name": "Demo", "mission_type": "ResearchPaper", "visibility": "private",
+    "fields": ["probability"], "description_file": "description.md", "definitions": ["MLMC_A"],
+    "goal": "X.top", "milestones": [{"theorem": "X.leaf", "title": "Lemma 1 — leaf", "description": "d"},
+                                    {"theorem": "X.mid", "title": "Lemma 2 — mid", "description": "d"}]}))
+
+
+def run_propose(*argv):
+    sys.argv = ["propose.py", *argv]
+    out = io.StringIO()
+    code = 0
+    with contextlib.redirect_stdout(out), contextlib.redirect_stderr(out):
+        try:
+            pr_mod.main()
+        except SystemExit as e:
+            code = e.code or 0
+    return code, out.getvalue()
+
+
+code, out = run_propose("--dry-run"); assert code == 0, out
+code, out = run_propose(); print(out); assert code == 0, out
+(prop,) = M.proposals.values()
+ids = {it["theorem_id"]: it["id"] for it in prop["items"]}
+name_to_tid = {i["theorem_name"]: t for t, i in M.items.items()}
+assert prop["main_item_id"] == ids[name_to_tid["X.top"]]
+assert prop["item_order"][0] == ids[name_to_tid["MLMC_A"]] and prop["item_order"][-1] == prop["main_item_id"]
+assert [m["milestone_title"] for m in prop["milestones"]] == ["Lemma 1 — leaf", "Lemma 2 — mid"]
+assert prop["description"].startswith("## Motivation")
+n_before = len(M.calls)
+code, out = run_propose(); assert code == 0, out
+assert [c for c in M.calls[n_before:] if c[0] in ("POST", "PATCH") and c[1] != "/agent/refresh"] == []
 print("ALL UPLOAD TESTS PASSED")

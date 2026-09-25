@@ -121,6 +121,10 @@ Deviations and implicit assumptions made explicit:
   `∑ E|P_ℓ − P_{ℓ−1}| < ∞` (equivalent to `E|Y| < ∞`) and `E[P_L] → E[P]`; the variance formula
   assumes `∑ p_ℓ⁻¹E[(P_ℓ − P_{ℓ−1})²] < ∞` (equivalent to `E[Y²] < ∞`). The level is assumed
   independent of each `P_ℓ − P_{ℓ−1}` and the approximations measurable.
+* `singleTerm_unbiased` assumes `P` integrable. The proof does not need it, but without it the
+  blind read-back showed a degenerate reading: for non-integrable `P`, `E[P]` is Lean's junk value
+  `0` and the statement says `E[P_L] → 0 ⇒ E[Y] = 0`. The paper's `P` has a mean, so the
+  hypothesis is the paper's (added 2026-09-25 after the read-back).
 * "Not possible when β ≤ γ" needs the rates to be attained, `V_ℓ ≥ c₂2^{−βℓ}`, `C_ℓ ≥ c₃2^{γℓ}`
   (the paper's "∝"); upper bounds alone cannot rule anything out.
 * The paper's "optimal choice for p_ℓ" comes from minimising the approximate cost

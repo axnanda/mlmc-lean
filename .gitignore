@@ -9,3 +9,4 @@ __pycache__/
 /prove2me/payload.json
 /prove2me/upload_state.json
 /prove2me/credentials.json
+/prove2me/proposal_state.json
