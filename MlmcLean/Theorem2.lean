@@ -706,7 +706,6 @@ theorem mimc_complexity_core [NeZero D] {α β γ : Fin D → ℝ} {c₁ c₂ c�
     have hε2 : ε⁻¹ ^ 2 * ε ^ (-η) = ε ^ (-2 - η) := by
       rw [eps_inv_sq_eq hε, ← Real.rpow_add hε]
       congr 1
-      ring
     rw [hexp]
     calc 2 * (c₂ * c₃) * ε⁻¹ ^ 2 * (∑ ℓ ∈ indexSet θ L, (2 : ℝ) ^ dot g ℓ) ^ 2
         ≤ 2 * (c₂ * c₃) * ε⁻¹ ^ 2 * ((K_I * G) ^ 2 * (K_P ^ η * K_L ^ (((m : ℝ) - 1) * (2 + η)) *
@@ -809,8 +808,8 @@ theorem mimc_complexity [NeZero D] {α β γ : Fin D → ℝ} {c₁ c₂ c₃ : 
       ≤ K_M * mimcBound η (2 * m) ((m - 1) * (2 + η)) ε +
         K_X * (K_abs * mimcBound η (2 * m) ((m - 1) * (2 + η)) ε) := by
         rw [mul_assoc K_X]
-        exact add_le_add_left (mul_le_mul_of_nonneg_left (hX.trans
-          (mul_le_mul_of_nonneg_left hB hK_abs.le)) hK_X) _
+        exact add_le_add le_rfl (mul_le_mul_of_nonneg_left (hX.trans
+          (mul_le_mul_of_nonneg_left hB hK_abs.le)) hK_X)
     _ ≤ (K_M + K_X * K_abs + 1) * mimcBound η (2 * m) ((m - 1) * (2 + η)) ε := by
         nlinarith [hB0]
 

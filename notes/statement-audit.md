@@ -148,6 +148,52 @@ per-sample form follows from `variance_sample_mean`). Deviations: variance `≤ 
 `= ε²` (same minimum); `C^Δ_ℓ = C_ℓ + C̃_ℓ` is not imposed (the statements hold for any
 `C^Δ_ℓ > 0`, so this is a generalisation).
 
+### Giles (2015) Theorem 2 (MIMC) — `giles_theorem2`, `giles_theorem2_boundary` (`MlmcLean/Theorem2.lean`, M3)
+
+Paper (G15 §2.4, pp. 12–14, read from the typeset PDF): backward differences
+`Δ_d P_ℓ ≡ P_ℓ − P_{ℓ−e_d}`, cross-difference `ΔP_ℓ ≡ (∏_{d=1}^D Δ_d) P_ℓ`, telescoping
+`E[P] = ∑_{ℓ≥0} E[ΔP_ℓ]`. *Theorem 2. If there exist independent estimators Y_ℓ based on N_ℓ
+Monte Carlo samples, each with expected cost C_ℓ and variance V_ℓ, and positive D-dimensional
+vectors α, β, γ, with α_d ≥ ½β_d, and also positive constants c₁, c₂, c₃ such that
+i) |E[P_ℓ − P]| → 0 as min_d ℓ_d → ∞, iii) E[Y_ℓ] = E[ΔP_ℓ], ii) |E[Y_ℓ]| ≤ c₁2^{−α·ℓ},
+iv) V_ℓ ≤ c₂2^{−β·ℓ}, v) C_ℓ ≤ c₃2^{γ·ℓ}, then there exists a positive constant c₄ such that for
+any ε < e⁻¹ there is a set of levels 𝓛, and integers N_ℓ for which the multilevel estimator
+Y = ∑_{ℓ∈𝓛} Y_ℓ has MSE ≡ E[(Y − E[P])²] < ε² with a computational complexity C with bound
+E[C] ≤ c₄ε⁻² (η < 0), c₄ε⁻²|log ε|^{e₁} (η = 0), c₄ε^{−2−η}|log ε|^{e₂} (η > 0), where
+η = max_d (γ_d − β_d)/α_d. When α_d > ½β_d for all d, the exponents for the logarithmic terms are
+e₁ = 2D₂, e₂ = (D₂ − 1)(2 + η), where D₂ is the number of dimensions d for which
+(γ_d − β_d)/α_d = η. The form of the exponents is more complicated when α_d = ½β_d for some d.*
+
+| Paper | Lean | Match |
+|---|---|---|
+| level index `ℓ ∈ ℕ^D` | `ℓ : Fin D → ℕ`, `[NeZero D]` | ✓ (`D ≥ 1` is implicit: `η` is a maximum over the directions) |
+| `Δ_d P_ℓ = P_ℓ − P_{ℓ−e_d}`, `ΔP_ℓ = (∏_d Δ_d) P_ℓ` | `crossDiff p ℓ`, defined by recursion on `D`, with `P_{ℓ−e_d}` read as `0` when `ℓ_d = 0` (the paper's `P_{−1} ≡ 0` in each direction); `crossDiff_one` is the `D = 1` case `P_ℓ − P_{ℓ−1}`, and an `example` checks Figure 2.1 (`ΔP_{(5,4)}` uses the four values at `(5,4), (4,4), (5,3), (4,3)`) | ✓ |
+| telescoping `E[P] = ∑_{ℓ≥0} E[ΔP_ℓ]` | `sum_crossDiff`: `∑_{ℓ ≤ k} ΔP_ℓ = P_k` over every box; the proof uses this finite identity and condition i) | ✓ (the infinite-sum form is not needed) |
+| independent `Y_ℓ`, `N_ℓ` samples, expected cost `C_ℓ`, variance `V_ℓ` | as for Theorem 1: `Y ℓ n`, random costs `Cost ℓ n` with `E[Cost ℓ n] = n C_ℓ`, `V[Y ℓ n] = V_ℓ/n` for `n ≥ 1`, pairwise independence across levels for every `N ≥ 1`, `Y ℓ n ∈ L²` | ✓ (same reading as Theorem 1; pairwise independence is weaker than the paper's) |
+| positive `α, β, γ` with `α_d ≥ ½β_d`, positive `c₁, c₂, c₃` | `hα hβ hγ`, `hαβ : β d / 2 < α d` (`giles_theorem2`) or `β d / 2 ≤ α d` (`giles_theorem2_boundary`); `hc₁ hc₂ hc₃` | ✓ (`β_d > 0` is unused by the proof; kept for fidelity) |
+| i) `|E[P_ℓ − P]| → 0` as `min_d ℓ_d → ∞` | `h_i : ∀ δ > 0, ∃ n₀, ∀ ℓ, (∀ d, n₀ ≤ ℓ_d) → |E[P_ℓ − P]| < δ` | ✓ (the definition of this limit) |
+| iii) `E[Y_ℓ] = E[ΔP_ℓ]` | `h_iii` (for `n ≥ 1`, as in Theorem 1, finding 3) | ✓ |
+| ii) `|E[Y_ℓ]| ≤ c₁2^{−α·ℓ}` | `h_ii` (for `n ≥ 1`) | ✓ |
+| iv), v) | `h_iv`, `h_v` with `dot a ℓ = ∑_d a_d ℓ_d` | ✓ |
+| `∃ c₄ > 0 ∀ ε < e⁻¹ ∃ 𝓛, N_ℓ` | `∃ c₄, 0 < c₄ ∧ ∀ ε, 0 < ε → ε < exp(−1) → ∃ (𝓛 : Finset _) N, (∀ ℓ, 0 < N ℓ) ∧ …` | ✓ (`𝓛` finite, `N_ℓ ≥ 1`) |
+| `MSE < ε²` | `μ[(∑_{ℓ∈𝓛} Y ℓ (N ℓ) − μ[P])²] < ε²` | ✓ |
+| `E[C] ≤ c₄ · (three regimes)`, `e₁ = 2D₂`, `e₂ = (D₂−1)(2+η)` for `α_d > ½β_d` | `μ[∑_{ℓ∈𝓛} Cost ℓ (N ℓ)] ≤ c₄ · mimcBound η (2D₂) ((D₂−1)(2+η)) ε` with `mimcBound η e₁ e₂ ε = ε⁻²`, `ε⁻²|log ε|^{e₁}`, `ε^{−2−η}|log ε|^{e₂}` for `η < 0`, `= 0`, `> 0`; `η = mimcEta`, `D₂ = mimcD2` | ✓ |
+| exponents when some `α_d = ½β_d`: "more complicated", not stated | `giles_theorem2_boundary`: `e₁ = 2D₂ + D`, `e₂ = (D₂−1)(2+η) + D` | not a paper statement: a valid (not necessarily sharp) bound for the case the paper leaves open |
+
+**Label typo in the paper.** The statement lists the conditions as i), iii), ii), iv), v): "iii)"
+is the unbiasedness `E[Y_ℓ] = E[ΔP_ℓ]` and "ii)" is the decay `|E[Y_ℓ]| ≤ c₁2^{−α·ℓ}`, while the
+Notes that follow call unbiasedness ii) and the weak-error rate iii). The Lean hypothesis names
+follow the statement (`h_iii` is unbiasedness, `h_ii` the decay), and the docstrings say so.
+
+Lemmas behind the proof, not paper statements: the summation region is a simplex
+`{θ·ℓ ≤ L}` ("of the form `ℓ·n ≤ L` … with strictly positive components", p. 15);
+`slab_bound`, `tail_bound`, `inner_bound`, `card_indexSet_le` (lattice sums over it, with the
+multiplicity of the critical directions); `mimc_complexity_core`, `mimc_complexity`,
+`mimc_complexity_boundary` (the deterministic statements: bias, variance and cost with
+`V_ℓ = c₂2^{−β·ℓ}`, `C_ℓ = c₃2^{γ·ℓ}`); `mimc_mse_cost` (from the deterministic form to the
+probability space, for any bound function); `integrable_integral_crossDiff`
+(`E[ΔP_ℓ] = Δ(E[P_·])_ℓ`).
+
 ### Deterministic core — `mlmc_complexity_core`, `exists_L_N`
 
 Not paper statements; they are the steps of the proof sketch on p. 7 ("L is chosen so that

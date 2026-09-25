@@ -14,6 +14,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v7
+      # The prove2.me uploader against a local mock of the API (no network, fake key).
+      - name: prove2.me uploader tests
+        run: python3 scripts/prove2me/test_upload.py
       - uses: leanprover/lean-action@v1
       # Axiom audit: every main theorem may depend only on propext, Classical.choice, Quot.sound.
       - name: Axiom audit (fails on sorryAx or extra axioms)
@@ -55,7 +58,7 @@ jobs:
           python3 - <<'PY'
           import json, os
           if not os.path.exists("prove2me/payload.json"):
-              raise SystemExit("no payload")
+              raise SystemExit(print("no payload (an earlier step failed)"))
           p = json.load(open("prove2me/payload.json"))
           c = p["classification"]
           print("@@PLAN", json.dumps({"nodes": c["nodes"], "helpers": c["inline_helpers"],
