@@ -40,11 +40,36 @@ jobs:
             fi
           done
           wc -l facts/*
-      - uses: actions/upload-artifact@v4
-        with:
-          name: prove2me-facts
-          path: facts
-      - name: Print facts
+      # Phases 2-5: generate the platform tree by skeleton subtraction, build it with the platform's
+      # options, and validate the exact upload text (type diff; solutions match their stubs).
+      - name: prove2.me platform tree (generate, build, validate)
         run: |
-          for f in facts/*; do echo "@@FILE $f"; cat "$f"; echo; done
-          echo "@@END"
+          set -eo pipefail
+          python3 scripts/prove2me/generate.py --facts facts --out prove2me/platform \
+            --payload prove2me/payload.json
+          lake build Definitions Theorems Solutions
+          python3 scripts/prove2me/validate.py --jobs 4
+      - name: prove2.me plan summary
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import json, os
+          if not os.path.exists("prove2me/payload.json"):
+              raise SystemExit("no payload")
+          p = json.load(open("prove2me/payload.json"))
+          c = p["classification"]
+          print("@@PLAN", json.dumps({"nodes": c["nodes"], "helpers": c["inline_helpers"],
+                                     "definitions": c["definitions"],
+                                     "order": p["upload_order"]}))
+          for t in p["theorems"]:
+              print("@@NODE", t["theorem_name"], t["source_file"], *t["source_lines"],
+                    c["proof_lines"].get(t["theorem_name"]))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: prove2me
+          path: |
+            facts
+            prove2me/platform
+            prove2me/payload.json
