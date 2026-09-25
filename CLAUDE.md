@@ -4,6 +4,12 @@ This is a Lean 4 + Mathlib formalisation of multilevel Monte Carlo (MLMC) comple
 `PLAN.md` (milestones and ground rules) and `README.md` (what is proved, modelling choices) before
 changing anything.
 
+## Fresh start
+
+Start from scratch. Don't rely on previous Claude sessions or chats, or on AI-written summaries
+of the papers. The only sources of truth are the papers in `docs/` and what you verify yourself
+in this repo. Treat README claims and `notes/` as unverified leads. Begin with `PLAN.md` M0.
+
 ## Build and verify
 
 ```bash

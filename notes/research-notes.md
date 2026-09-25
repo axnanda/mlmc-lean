@@ -3,6 +3,9 @@
 Working notes that go with the Lean formalisation in this repo. They record what was checked,
 how, and what was concluded, so the work can be picked up without redoing it.
 
+> **Background only, not authoritative.** Verify anything used from here against the papers in
+> `docs/`. None of it is needed for the Lean milestones M0–M3 in `PLAN.md`.
+
 Sources: **[G15]** M.B. Giles, *Multilevel Monte Carlo methods*, Acta Numerica 24 (2015).
 **[HG25]** I.-B. Haas, M.B. Giles, *A nested MLMC framework for efficient simulations on FPGAs*,
 arXiv:2502.07123. PDFs, extracted text and the HG25 LaTeX source are in `docs/`.
@@ -13,7 +16,6 @@ arXiv:2502.07123. PDFs, extracted text and the HG25 LaTeX source are in `docs/`.
 4. Hardware notes: AWS F2 and Inferentia/Trainium
 5. Strategy: what implementations would and would not show
 6. Open directions
-7. Earlier material
 
 ## 1. How the Haas–Giles argument works
 
@@ -181,16 +183,6 @@ which the nested correction already handles, so it makes nesting worse.
 
 A general filter for any "cheap approximate X" idea: speedup ≤ `min(cost ratio, 1/v)`, and `v`
 depends on strong (per-sample) accuracy.
-
-## 7. Earlier material
-
-Private claude.ai conversations:
-- "Giles multilevel Monte Carlo paper explanation" (2026-03-17):
-  https://claude.ai/chat/324318b5-90b8-4f2e-b234-cf19e35177a8. It has three LaTeX summaries
-  (Sonnet 4.6 output, unverified, not copied here) and a review of an earlier, incomplete Lean
-  attempt.
-- "Apache TVM accelerator for quantized MLMC simulation" (2026-02-08):
-  https://claude.ai/chat/34732c9f-e187-4b5c-8a51-ed781ad1d38b
 
 ## References
 

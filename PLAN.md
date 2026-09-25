@@ -3,9 +3,20 @@
 **Goal.** Machine-checked Lean 4 + Mathlib proofs of the multilevel Monte Carlo (MLMC) complexity
 bounds, stated as in the papers and with zero `sorry`, building on what is already proven here.
 
-## Status (2026-09-24)
+## Fresh start (read first)
 
-These are done and axiom-clean (see the README table and "Modelling choices"):
+- **Start from scratch.** Don't rely on, search for, or try to reconstruct previous Claude
+  sessions or chats, and don't use AI-written summaries of the papers. Nothing from earlier
+  sessions carries over.
+- **Sources of truth:** the papers in `docs/` (Giles 2015 and Haas–Giles 2025, including the
+  LaTeX source) and what you can verify yourself in this repo (`lake build` plus the axiom
+  audit).
+- **Treat everything else as unverified:** the Status section below, README claims and `notes/`
+  are leads to check, not facts. `notes/` is optional background and isn't needed for M0–M3.
+
+## Status (2026-09-24, to be re-verified in M0)
+
+These are claimed done and axiom-clean (see the README table and "Modelling choices"):
 - **Giles (2015) Theorem 1:** `MLMC.giles_theorem1`, on a probability space, and
   `MLMC.mlmc_complexity_core`, the deterministic core with all three regimes and an explicit c₄.
 - **Optimal sample allocation:** the Cauchy–Schwarz lower bound and the rounded-up integer
@@ -39,8 +50,15 @@ Don't bump them unless blocked.
 
 ## Milestones
 
-**M0: Verify the baseline (first).** Run the setup above. The build and axiom audit must be green
-before any change, and GitHub Actions must be green on `master`.
+**M0: Re-verify everything independently (first).**
+- Run the setup above. The build and axiom audit must pass, and GitHub Actions must be green on
+  `master`.
+- Audit statement fidelity from scratch. For each main theorem in `scripts/AxiomCheck.lean`,
+  read the matching statement in the paper (Giles 2015 Theorem 1 and §2; Haas–Giles eq. 9–12)
+  and check that the Lean hypotheses and conclusion match it. A proof that compiles shows the
+  Lean statement is true, not that it is the paper's statement.
+- Write the result to `notes/statement-audit.md` (paper statement, Lean statement, deviations).
+  Fix or document every deviation before starting M1.
 
 **M1: Polish the existing results (small).**
 - Asymptotic corollaries of Theorem 1: each regime as an `Asymptotics.IsBigO` statement as
