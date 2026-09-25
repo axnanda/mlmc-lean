@@ -24,3 +24,24 @@ jobs:
           if grep "depends on axioms" axioms.txt | grep -vE "\[propext, Classical.choice, Quot.sound\]"; then
             echo "::error::unexpected axioms"; exit 1
           fi
+      # prove2.me upload pipeline, Phase 1: the declaration graph (Stage 1) and the per-file
+      # sketch facts (Stage 2) that scripts/prove2me/generate.py consumes.
+      - name: prove2.me facts (Stage 1 declaration graph, Stage 2 sketch facts)
+        run: |
+          set -eo pipefail
+          mkdir -p facts
+          lake env lean scripts/prove2me/extract_decl_graph.lean
+          mv decl_graph.jsonl facts/
+          for f in MlmcLean/*.lean; do
+            m=$(basename "$f" .lean)
+            lake env lean --run scripts/prove2me/extract_sketch_info.lean "$f" MLMC > "facts/sketch_info.$m.jsonl"
+          done
+          wc -l facts/*
+      - uses: actions/upload-artifact@v4
+        with:
+          name: prove2me-facts
+          path: facts
+      - name: Print facts
+        run: |
+          for f in facts/*; do echo "@@FILE $f"; cat "$f"; echo; done
+          echo "@@END"

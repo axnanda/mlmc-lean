@@ -96,9 +96,11 @@ lemma setIntegral_level (hK : Measurable K) {h : Ω → ℝ} (hm : Measurable h)
     _ = μ.real {ω | K ω = ℓ} * ∫ ω, h ω ∂μ := by
         rw [hφK, integral_indicator_one hs]
 
+omit [MeasurableSpace Ω] in
 lemma iUnion_level_eq_univ (K : Ω → ℕ) : ⋃ ℓ, {ω | K ω = ℓ} = Set.univ :=
   Set.eq_univ_of_forall fun ω => Set.mem_iUnion.2 ⟨K ω, rfl⟩
 
+omit [MeasurableSpace Ω] in
 lemma pairwise_disjoint_level (K : Ω → ℕ) :
     Pairwise (Function.onFun Disjoint fun ℓ => {ω | K ω = ℓ}) := fun i j hij =>
   Set.disjoint_left.2 fun ω (hi : K ω = i) (hj : K ω = j) => hij (hi.symm.trans hj)
@@ -107,7 +109,8 @@ lemma pairwise_disjoint_level (K : Ω → ℕ) :
 lemma hasSum_measureReal_level (hK : Measurable K) :
     HasSum (fun ℓ => μ.real {ω | K ω = ℓ}) 1 := by
   have h := hasSum_integral_iUnion (μ := μ) (f := fun _ => (1 : ℝ))
-    (fun ℓ => hK (measurableSet_singleton ℓ)) (pairwise_disjoint_level K)
+    (fun ℓ => (hK (measurableSet_singleton ℓ) : MeasurableSet {ω | K ω = ℓ}))
+    (pairwise_disjoint_level K)
     (by rw [iUnion_level_eq_univ K]; exact integrableOn_const)
   simpa [setIntegral_const, iUnion_level_eq_univ K] using h
 
@@ -389,7 +392,7 @@ lemma geom_identities (β γ : ℝ) (ℓ : ℕ) :
   · rw [← mul_pow, ← Real.rpow_add h2, ← two_rpow_mul_nat]
     congr 1
     ring
-  · rw [← two_rpow_mul_nat γ ℓ, ← mul_pow, ← Real.rpow_add h2]
+  · rw [two_rpow_mul_nat γ ℓ, ← mul_pow, ← Real.rpow_add h2]
     congr 2
     ring
 
@@ -439,8 +442,8 @@ theorem randomised_summable {β γ c₂ c₃ : ℝ} (hγ : 0 < γ) (hγβ : γ <
 `∑_ℓ p_ℓ⁻¹ V_ℓ` and `∑_ℓ p_ℓ C_ℓ` finite. -/
 theorem randomised_not_summable {β γ c₂ c₃ : ℝ} (hβγ : β ≤ γ) (hc₂ : 0 < c₂) (hc₃ : 0 < c₃)
     {V C p : ℕ → ℝ} (hp : ∀ ℓ, 0 < p ℓ)
-    (hV : ∀ ℓ, c₂ * (2 : ℝ) ^ (-(β * (ℓ : ℝ))) ≤ V ℓ)
-    (hC : ∀ ℓ, c₃ * (2 : ℝ) ^ (γ * (ℓ : ℝ)) ≤ C ℓ) :
+    (hV : ∀ ℓ : ℕ, c₂ * (2 : ℝ) ^ (-(β * (ℓ : ℝ))) ≤ V ℓ)
+    (hC : ∀ ℓ : ℕ, c₃ * (2 : ℝ) ^ (γ * (ℓ : ℝ)) ≤ C ℓ) :
     ¬ (Summable (fun ℓ => V ℓ / p ℓ) ∧ Summable (fun ℓ => p ℓ * C ℓ)) := by
   rintro ⟨h1, h2⟩
   have hlim : Tendsto (fun ℓ => V ℓ / p ℓ * (p ℓ * C ℓ)) atTop (𝓝 0) := by
@@ -527,7 +530,6 @@ theorem randomised_optimal_p_eq {V C : ℕ → ℝ} (hV : ∀ ℓ, 0 < V ℓ) (h
     simp_rw [e1, e2]
     rw [tsum_mul_left, tsum_div_const]
     field_simp [hZ0.ne']
-    ring
 
 /-- **Finite variance and finite expected cost with the tightened condition (iii)**
 (Giles 2015, §2.2 with the second-moment form of (iii) from p. 7).  Suppose `K` has the level
