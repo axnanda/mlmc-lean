@@ -12,7 +12,9 @@ import Mathlib.Tactic.NormNum
 # Optimal sample allocation for (nested) multilevel Monte Carlo
 
 References:
-* M.B. Giles, *Multilevel Monte Carlo methods*, Acta Numerica 24 (2015), §1.3, eq. (1.1)–(1.2).
+* M.B. Giles, *Multilevel Monte Carlo methods*, Acta Numerica 24 (2015), §1.3, p. 4: the
+  Lagrange-multiplier allocation `N_ℓ = μ √(V_ℓ/C_ℓ)`, `μ = ε⁻² ∑ √(V_ℓ C_ℓ)` (unnumbered) and the
+  resulting cost (1.1).
 * I.-B. Haas, M.B. Giles, *A nested MLMC framework for efficient simulations on FPGAs*,
   arXiv:2502.07123 (2025), eq. (6)–(8) and (10)–(12).
 
@@ -97,13 +99,65 @@ theorem cost_lower_bound (s : Finset ι) (V C n : ι → ℝ) {τ : ℝ} (hτ : 
     _ = ∑ i ∈ s, n i * C i := by
         rw [mul_comm, mul_assoc, mul_inv_cancel₀ hτ.ne', mul_one]
 
+/-- One term of the Lagrange-multiplier allocation: with `n = τ⁻¹ √(V/C) S`,
+`V / n = τ √(V C) / S`. -/
+lemma lagrange_variance_term {V C τ S : ℝ} (hV : 0 < V) (hC : 0 < C) (hτ : 0 < τ) (hS : 0 < S) :
+    V / (τ⁻¹ * Real.sqrt (V / C) * S) = τ * Real.sqrt (V * C) / S := by
+  have harg : 0 < τ⁻¹ * Real.sqrt (V / C) * S :=
+    mul_pos (mul_pos (inv_pos.2 hτ) (Real.sqrt_pos.2 (div_pos hV hC))) hS
+  rw [div_eq_div_iff harg.ne' hS.ne']
+  have hid := sqrt_div_mul_sqrt_mul hV.le hC
+  have hττ : τ * τ⁻¹ = 1 := mul_inv_cancel₀ hτ.ne'
+  calc V * S
+      = (Real.sqrt (V / C) * Real.sqrt (V * C)) * S := by rw [hid]
+    _ = (τ * τ⁻¹) * ((Real.sqrt (V / C) * Real.sqrt (V * C)) * S) := by rw [hττ, one_mul]
+    _ = τ * Real.sqrt (V * C) * (τ⁻¹ * Real.sqrt (V / C) * S) := by ring
+
+/-- **Giles (1.1)**, **Haas–Giles (8)**: the optimal cost is exactly `τ⁻¹ (∑ √(V i C i))²`.
+Among all real allocations `n i > 0` with total variance `∑ V i / n i ≤ τ`, the least cost
+`∑ n i C i` is `τ⁻¹ (∑ √(V i C i))²`; it is attained by the Lagrange-multiplier allocation
+`n i = μ √(V i / C i)` with `μ = τ⁻¹ ∑ √(V j C j)` (Giles 2015, §1.3, p. 4, with `τ = ε²`),
+which meets the variance constraint with equality. -/
+theorem optimal_cost_isLeast (s : Finset ι) (V C : ι → ℝ) {τ : ℝ} (hτ : 0 < τ)
+    (hV : ∀ i ∈ s, 0 < V i) (hC : ∀ i ∈ s, 0 < C i) :
+    IsLeast {c | ∃ n : ι → ℝ, (∀ i ∈ s, 0 < n i) ∧ ∑ i ∈ s, V i / n i ≤ τ ∧
+        c = ∑ i ∈ s, n i * C i}
+      (τ⁻¹ * (∑ i ∈ s, Real.sqrt (V i * C i)) ^ 2) := by
+  refine ⟨?_, ?_⟩
+  · -- attained by the Lagrange-multiplier allocation
+    rcases s.eq_empty_or_nonempty with rfl | hs
+    · exact ⟨fun _ => 1, by simp, by simp [hτ.le], by simp⟩
+    set S := ∑ i ∈ s, Real.sqrt (V i * C i) with hS_def
+    have hS : 0 < S := Finset.sum_pos (fun i hi => Real.sqrt_pos.2 (mul_pos (hV i hi) (hC i hi))) hs
+    refine ⟨fun i => τ⁻¹ * Real.sqrt (V i / C i) * S, fun i hi => ?_, ?_, ?_⟩
+    · exact mul_pos (mul_pos (inv_pos.2 hτ) (Real.sqrt_pos.2 (div_pos (hV i hi) (hC i hi)))) hS
+    · -- the variance constraint holds with equality
+      dsimp only
+      apply le_of_eq
+      rw [Finset.sum_congr rfl fun i hi => lagrange_variance_term (hV i hi) (hC i hi) hτ hS]
+      have hterm : ∀ i ∈ s, τ * Real.sqrt (V i * C i) / S = τ / S * Real.sqrt (V i * C i) :=
+        fun i _ => by ring
+      rw [Finset.sum_congr rfl hterm, ← Finset.mul_sum, ← hS_def, div_mul_cancel₀ _ hS.ne']
+    · -- the cost is `τ⁻¹ S²`
+      dsimp only
+      have hterm : ∀ i ∈ s, τ⁻¹ * Real.sqrt (V i / C i) * S * C i =
+          τ⁻¹ * S * Real.sqrt (V i * C i) := fun i hi => by
+        rw [← sqrt_div_mul (hV i hi).le (hC i hi)]
+        ring
+      rw [Finset.sum_congr rfl hterm, ← Finset.mul_sum, ← hS_def]
+      ring
+  · -- every admissible allocation costs at least `τ⁻¹ S²` (Cauchy–Schwarz)
+    rintro c ⟨n, hn, hvar, rfl⟩
+    exact cost_lower_bound s V C n hτ (fun i hi => (hV i hi).le) (fun i hi => (hC i hi).le) hn hvar
+
 /-! ### The rounded-up optimal allocation -/
 
 /-- `S = ∑ i ∈ s, √(V i C i)`, the quantity whose square gives the optimal cost. -/
 noncomputable def S (s : Finset ι) (V C : ι → ℝ) : ℝ := ∑ i ∈ s, Real.sqrt (V i * C i)
 
-/-- Giles (1.2): the optimal number of samples `τ⁻¹ √(V i / C i) · S`, rounded **up** to an
-integer (Giles: "the optimal value is rounded up to the nearest integer"). -/
+/-- The optimal number of samples `τ⁻¹ √(V i / C i) · S` (Giles 2015, §1.3, p. 4: `N_ℓ = μ √(V_ℓ/C_ℓ)`
+with `μ = ε⁻² ∑ √(V_ℓ C_ℓ)`), rounded **up** to an integer (Giles, proof of Theorem 1: "the optimal
+value is rounded up to the nearest integer"). -/
 noncomputable def optimalN (s : Finset ι) (V C : ι → ℝ) (τ : ℝ) (i : ι) : ℕ :=
   ⌈τ⁻¹ * Real.sqrt (V i / C i) * S s V C⌉₊
 

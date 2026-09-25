@@ -1,28 +1,38 @@
 import MlmcLean.Estimator
 import MlmcLean.Complexity
+import Mathlib.Analysis.Asymptotics.Defs
+import Mathlib.Topology.Order.LeftRightNhds
 
 /-!
 # Giles' Theorem 1 on a probability space
 
-Reference: M.B. Giles, *Multilevel Monte Carlo methods*, Acta Numerica 24 (2015), Theorem 1.
+Reference: M.B. Giles, *Multilevel Monte Carlo methods*, Acta Numerica 24 (2015), §2.1,
+Theorem 1 (p. 6–7).
 
 This file states Theorem 1 as Giles states it — for random variables on a probability space
 `(Ω, μ)` — and proves it from
 
-* `MlmcLean.Estimator`: `MSE = ∑ V[Y_ℓ] + (E[P_L] − E[P])²` (Giles (2.3)),
+* `MlmcLean.Estimator`: `MSE = ∑ V[Y_ℓ] + (E[P_L] − E[P])²` (Giles (2.1), (2.3)),
 * `MlmcLean.Complexity`: the deterministic choice of `L`, `N_ℓ` and the three cost regimes.
 
 **Data.**
 * `P : Ω → ℝ` — the quantity of interest, `Pℓ ℓ` — its level-`ℓ` approximation;
 * `Y ℓ n : Ω → ℝ` — the level-`ℓ` estimator "based on `n` Monte Carlo samples";
-* `V ℓ` — the per-sample variance at level `ℓ` (`V[Y_ℓ] = V_ℓ / N_ℓ`, Giles (2.3));
-* `C ℓ` — the expected cost per sample at level `ℓ` (total cost `∑ N_ℓ C_ℓ`).
+* `V ℓ` — the variance of one sample at level `ℓ`, so `V[Y_ℓ] = V_ℓ / N_ℓ` (Giles (2.3));
+* `C ℓ` — the expected cost of one sample at level `ℓ`;
+* `Cost ℓ n : Ω → ℝ` — the (random) cost of computing `Y ℓ n`, with `E[Cost ℓ n] = n C_ℓ`.
 
-**Hypotheses (i)–(iv)** are stated verbatim from the paper.  Independence of the estimators
-across levels is assumed for every choice of sample sizes, since the theorem *chooses* `N_ℓ`.
+**Hypotheses (i)–(iv)** are stated verbatim from the paper.  The theorem *chooses* the sample
+sizes, so the estimators are given for every sample size `n ≥ 1`, and independence across levels
+is assumed for every choice of sample sizes.
+
+* `giles_theorem1` — the theorem, with the paper's conclusion `E[C] ≤ c₄ · (…)` for the random
+  total cost `C = ∑_ℓ Cost ℓ (N ℓ)`;
+* `giles_theorem1_cost_sum` — the same with the cost written as `∑ N_ℓ C_ℓ` (`= E[C]`);
+* `giles_theorem1_isBigO` — the three regimes as `Asymptotics.IsBigO` statements as `ε → 0⁺`.
 -/
 
-open MeasureTheory ProbabilityTheory Finset
+open MeasureTheory ProbabilityTheory Finset Filter Asymptotics Topology
 
 namespace MLMC
 
@@ -44,29 +54,20 @@ theorem variance_sample_mean (X : ℕ → Ω → ℝ) (N : ℕ) (hN : 0 < N) (v 
   have hN' : (N : ℝ) ≠ 0 := Nat.cast_ne_zero.2 hN.ne'
   field_simp
 
-/-- **Giles' Theorem 1.**
-Let `P` be a random variable and `Pℓ ℓ` its level-`ℓ` approximation.  If there exist independent
-estimators `Y ℓ N` based on `N` Monte Carlo samples, each with expected cost `C ℓ` and variance
-`V ℓ` (per sample), and positive constants `α, β, γ, c₁, c₂, c₃` with `α ≥ ½ min(β,γ)` and
-
-  (i)   `|E[Pℓ ℓ − P]| ≤ c₁ 2^{−αℓ}`,
-  (ii)  `E[Y 0 N] = E[Pℓ 0]`, `E[Y (ℓ+1) N] = E[Pℓ (ℓ+1) − Pℓ ℓ]`,
-  (iii) `V ℓ ≤ c₂ 2^{−βℓ}`,
-  (iv)  `C ℓ ≤ c₃ 2^{γℓ}`,
-
-then there is `c₄ > 0` such that for every `ε < e⁻¹` there are `L` and `N ℓ ≥ 1` for which the
-multilevel estimator `∑_{ℓ=0}^{L} Y ℓ (N ℓ)` has `MSE = E[(Y − E[P])²] < ε²` and total cost
-`∑ N ℓ · C ℓ ≤ c₄ ε⁻²` if `β > γ`, `c₄ ε⁻² (log ε)²` if `β = γ`, `c₄ ε^{−2−(γ−β)/α}` if `β < γ`. -/
-theorem giles_theorem1
+/-- **Giles' Theorem 1, with the cost written as `∑_ℓ N_ℓ C_ℓ`.**
+Hypotheses as in `giles_theorem1`; the conclusion bounds `∑_{ℓ=0}^{L} N_ℓ C_ℓ`, which is the
+expected total cost `E[C]` when each level-`ℓ` sample has expected cost `C_ℓ`. -/
+theorem giles_theorem1_cost_sum
     (P : Ω → ℝ) (Pℓ : ℕ → Ω → ℝ) (Y : ℕ → ℕ → Ω → ℝ) (V C : ℕ → ℝ)
     {α β γ c₁ c₂ c₃ : ℝ} (hα : 0 < α) (hβ : 0 < β) (hγ : 0 < γ)
     (hc₁ : 0 < c₁) (hc₂ : 0 < c₂) (hc₃ : 0 < c₃) (hαβγ : min β γ / 2 ≤ α)
     (hP : Integrable P μ) (hPℓ : ∀ ℓ, Integrable (Pℓ ℓ) μ)
     (hY : ∀ ℓ n, MemLp (Y ℓ n) 2 μ)
-    (hind : ∀ N : ℕ → ℕ, Pairwise fun i j => IndepFun (Y i (N i)) (Y j (N j)) μ)
+    (hind : ∀ N : ℕ → ℕ, (∀ ℓ, 0 < N ℓ) →
+      Pairwise fun i j => IndepFun (Y i (N i)) (Y j (N j)) μ)
     (h_i : ∀ ℓ : ℕ, |μ[fun ω => Pℓ ℓ ω - P ω]| ≤ c₁ * (2 : ℝ) ^ (-(α * (ℓ : ℝ))))
-    (h_ii₀ : ∀ n, μ[Y 0 n] = μ[Pℓ 0])
-    (h_ii : ∀ ℓ n, μ[Y (ℓ + 1) n] = μ[fun ω => Pℓ (ℓ + 1) ω - Pℓ ℓ ω])
+    (h_ii₀ : ∀ n, 0 < n → μ[Y 0 n] = μ[Pℓ 0])
+    (h_ii : ∀ ℓ n, 0 < n → μ[Y (ℓ + 1) n] = μ[fun ω => Pℓ (ℓ + 1) ω - Pℓ ℓ ω])
     (h_var : ∀ ℓ n, 0 < n → variance (Y ℓ n) μ = V ℓ / n)
     (h_iii : ∀ ℓ, V ℓ ≤ c₂ * (2 : ℝ) ^ (-(β * (ℓ : ℝ))))
     (h_iv : ∀ ℓ, C ℓ ≤ c₃ * (2 : ℝ) ^ (γ * (ℓ : ℝ))) :
@@ -81,9 +82,9 @@ theorem giles_theorem1
   refine ⟨L, N, hN, ?_, ?_⟩
   · -- mean-square error
     have hind' : Set.Pairwise ↑(range (L + 1)) fun i j => IndepFun (Y i (N i)) (Y j (N j)) μ :=
-      fun i _ j _ hij => hind N hij
+      fun i _ j _ hij => hind N hN hij
     rw [mlmc_mse Pℓ (fun ℓ => Y ℓ (N ℓ)) L (μ[P]) (fun ℓ => hY ℓ (N ℓ)) hPℓ hind'
-      (h_ii₀ (N 0)) (fun ℓ => h_ii ℓ (N (ℓ + 1)))]
+      (h_ii₀ (N 0) (hN 0)) (fun ℓ => h_ii ℓ (N (ℓ + 1)) (hN (ℓ + 1)))]
     have hb : (μ[Pℓ L] - μ[P]) ^ 2 ≤ (c₁ * (2 : ℝ) ^ (-(α * (L : ℝ)))) ^ 2 := by
       have h := h_i L
       rw [integral_sub (hPℓ L) hP] at h
@@ -102,5 +103,110 @@ theorem giles_theorem1
           intro ℓ _
           exact mul_le_mul_of_nonneg_left (h_iv ℓ) (by positivity)
       _ ≤ c₄ * complexityBound α β γ ε := hcost
+
+/-- **Giles' Theorem 1** (Giles 2015, §2.1, Theorem 1).
+Let `P` be a random variable and `Pℓ ℓ` its level-`ℓ` approximation.  Suppose there are
+estimators `Y ℓ n` based on `n` Monte Carlo samples, independent across levels, whose samples at
+level `ℓ` have variance `V ℓ` (so `V[Y ℓ n] = V ℓ / n`) and expected cost `C ℓ` (so the random
+cost `Cost ℓ n` of computing `Y ℓ n` has `E[Cost ℓ n] = n C ℓ`), and positive constants
+`α, β, γ, c₁, c₂, c₃` with `α ≥ ½ min(β,γ)` and
+
+  (i)   `|E[Pℓ ℓ − P]| ≤ c₁ 2^{−αℓ}`,
+  (ii)  `E[Y 0 n] = E[Pℓ 0]`, `E[Y (ℓ+1) n] = E[Pℓ (ℓ+1) − Pℓ ℓ]`,
+  (iii) `V ℓ ≤ c₂ 2^{−βℓ}`,
+  (iv)  `C ℓ ≤ c₃ 2^{γℓ}`.
+
+Then there is `c₄ > 0` such that for every `0 < ε < e⁻¹` there are `L` and `N ℓ ≥ 1` for which
+the multilevel estimator `Y = ∑_{ℓ=0}^{L} Y ℓ (N ℓ)` has `MSE = E[(Y − E[P])²] < ε²` and its
+computational cost `C = ∑_{ℓ=0}^{L} Cost ℓ (N ℓ)` has expectation
+`E[C] ≤ c₄ ε⁻²` if `β > γ`, `c₄ ε⁻² (log ε)²` if `β = γ`, `c₄ ε^{−2−(γ−β)/α}` if `β < γ`. -/
+theorem giles_theorem1
+    (P : Ω → ℝ) (Pℓ : ℕ → Ω → ℝ) (Y : ℕ → ℕ → Ω → ℝ) (Cost : ℕ → ℕ → Ω → ℝ) (V C : ℕ → ℝ)
+    {α β γ c₁ c₂ c₃ : ℝ} (hα : 0 < α) (hβ : 0 < β) (hγ : 0 < γ)
+    (hc₁ : 0 < c₁) (hc₂ : 0 < c₂) (hc₃ : 0 < c₃) (hαβγ : min β γ / 2 ≤ α)
+    (hP : Integrable P μ) (hPℓ : ∀ ℓ, Integrable (Pℓ ℓ) μ)
+    (hY : ∀ ℓ n, MemLp (Y ℓ n) 2 μ)
+    (hind : ∀ N : ℕ → ℕ, (∀ ℓ, 0 < N ℓ) →
+      Pairwise fun i j => IndepFun (Y i (N i)) (Y j (N j)) μ)
+    (hCost : ∀ ℓ n, 0 < n → Integrable (Cost ℓ n) μ)
+    (h_cost : ∀ ℓ n, 0 < n → μ[Cost ℓ n] = n * C ℓ)
+    (h_i : ∀ ℓ : ℕ, |μ[fun ω => Pℓ ℓ ω - P ω]| ≤ c₁ * (2 : ℝ) ^ (-(α * (ℓ : ℝ))))
+    (h_ii₀ : ∀ n, 0 < n → μ[Y 0 n] = μ[Pℓ 0])
+    (h_ii : ∀ ℓ n, 0 < n → μ[Y (ℓ + 1) n] = μ[fun ω => Pℓ (ℓ + 1) ω - Pℓ ℓ ω])
+    (h_var : ∀ ℓ n, 0 < n → variance (Y ℓ n) μ = V ℓ / n)
+    (h_iii : ∀ ℓ, V ℓ ≤ c₂ * (2 : ℝ) ^ (-(β * (ℓ : ℝ))))
+    (h_iv : ∀ ℓ, C ℓ ≤ c₃ * (2 : ℝ) ^ (γ * (ℓ : ℝ))) :
+    ∃ c₄ : ℝ, 0 < c₄ ∧ ∀ ε : ℝ, 0 < ε → ε < Real.exp (-1) →
+      ∃ (L : ℕ) (N : ℕ → ℕ), (∀ ℓ, 0 < N ℓ) ∧
+        μ[fun ω => (∑ ℓ ∈ range (L + 1), Y ℓ (N ℓ) ω - μ[P]) ^ 2] < ε ^ 2 ∧
+        μ[fun ω => ∑ ℓ ∈ range (L + 1), Cost ℓ (N ℓ) ω] ≤ c₄ * complexityBound α β γ ε := by
+  obtain ⟨c₄, hc₄, h⟩ := giles_theorem1_cost_sum P Pℓ Y V C hα hβ hγ hc₁ hc₂ hc₃ hαβγ hP hPℓ hY
+    hind h_i h_ii₀ h_ii h_var h_iii h_iv
+  refine ⟨c₄, hc₄, fun ε hε hε1 => ?_⟩
+  obtain ⟨L, N, hN, hmse, hcost⟩ := h ε hε hε1
+  refine ⟨L, N, hN, hmse, ?_⟩
+  have hE : μ[fun ω => ∑ ℓ ∈ range (L + 1), Cost ℓ (N ℓ) ω] =
+      ∑ ℓ ∈ range (L + 1), (N ℓ : ℝ) * C ℓ := by
+    rw [integral_finsetSum _ fun ℓ _ => hCost ℓ (N ℓ) (hN ℓ)]
+    exact Finset.sum_congr rfl fun ℓ _ => h_cost ℓ (N ℓ) (hN ℓ)
+  rw [hE]
+  exact hcost
+
+/-- **Giles' Theorem 1, asymptotic form** (Giles 2015, §2.1, Theorem 1, read as `ε → 0⁺`).
+Under the hypotheses of `giles_theorem1_cost_sum` and nonnegative costs `C ℓ ≥ 0`, one can choose
+`L(ε)` and `N_ℓ(ε) ≥ 1` for all `0 < ε < e⁻¹` so that `MSE < ε²`, and the cost
+`ε ↦ ∑_{ℓ ≤ L(ε)} N_ℓ(ε) C_ℓ` is, as `ε → 0⁺`,
+`O(ε⁻²)` if `β > γ`, `O(ε⁻² (log ε)²)` if `β = γ`, and `O(ε^{−2−(γ−β)/α})` if `β < γ`. -/
+theorem giles_theorem1_isBigO
+    (P : Ω → ℝ) (Pℓ : ℕ → Ω → ℝ) (Y : ℕ → ℕ → Ω → ℝ) (V C : ℕ → ℝ)
+    {α β γ c₁ c₂ c₃ : ℝ} (hα : 0 < α) (hβ : 0 < β) (hγ : 0 < γ)
+    (hc₁ : 0 < c₁) (hc₂ : 0 < c₂) (hc₃ : 0 < c₃) (hαβγ : min β γ / 2 ≤ α)
+    (hP : Integrable P μ) (hPℓ : ∀ ℓ, Integrable (Pℓ ℓ) μ)
+    (hY : ∀ ℓ n, MemLp (Y ℓ n) 2 μ)
+    (hind : ∀ N : ℕ → ℕ, (∀ ℓ, 0 < N ℓ) →
+      Pairwise fun i j => IndepFun (Y i (N i)) (Y j (N j)) μ)
+    (h_i : ∀ ℓ : ℕ, |μ[fun ω => Pℓ ℓ ω - P ω]| ≤ c₁ * (2 : ℝ) ^ (-(α * (ℓ : ℝ))))
+    (h_ii₀ : ∀ n, 0 < n → μ[Y 0 n] = μ[Pℓ 0])
+    (h_ii : ∀ ℓ n, 0 < n → μ[Y (ℓ + 1) n] = μ[fun ω => Pℓ (ℓ + 1) ω - Pℓ ℓ ω])
+    (h_var : ∀ ℓ n, 0 < n → variance (Y ℓ n) μ = V ℓ / n)
+    (h_iii : ∀ ℓ, V ℓ ≤ c₂ * (2 : ℝ) ^ (-(β * (ℓ : ℝ))))
+    (h_iv : ∀ ℓ, C ℓ ≤ c₃ * (2 : ℝ) ^ (γ * (ℓ : ℝ)))
+    (hC : ∀ ℓ, 0 ≤ C ℓ) :
+    ∃ (L : ℝ → ℕ) (N : ℝ → ℕ → ℕ),
+      (∀ ε : ℝ, 0 < ε → ε < Real.exp (-1) → (∀ ℓ, 0 < N ε ℓ) ∧
+        μ[fun ω => (∑ ℓ ∈ range (L ε + 1), Y ℓ (N ε ℓ) ω - μ[P]) ^ 2] < ε ^ 2) ∧
+      (γ < β → (fun ε => ∑ ℓ ∈ range (L ε + 1), (N ε ℓ : ℝ) * C ℓ) =O[𝓝[>] 0]
+        fun ε => ε ^ (-2 : ℝ)) ∧
+      (β = γ → (fun ε => ∑ ℓ ∈ range (L ε + 1), (N ε ℓ : ℝ) * C ℓ) =O[𝓝[>] 0]
+        fun ε => ε ^ (-2 : ℝ) * (Real.log ε) ^ 2) ∧
+      (β < γ → (fun ε => ∑ ℓ ∈ range (L ε + 1), (N ε ℓ : ℝ) * C ℓ) =O[𝓝[>] 0]
+        fun ε => ε ^ (-2 - (γ - β) / α)) := by
+  obtain ⟨c₄, -, h⟩ := giles_theorem1_cost_sum P Pℓ Y V C hα hβ hγ hc₁ hc₂ hc₃ hαβγ hP hPℓ hY
+    hind h_i h_ii₀ h_ii h_var h_iii h_iv
+  -- choose `L ε` and `N ε` for every `ε`, with the guarantees for `0 < ε < e⁻¹`
+  have h' : ∀ ε : ℝ, ∃ (L : ℕ) (N : ℕ → ℕ), 0 < ε → ε < Real.exp (-1) →
+      (∀ ℓ, 0 < N ℓ) ∧
+        μ[fun ω => (∑ ℓ ∈ range (L + 1), Y ℓ (N ℓ) ω - μ[P]) ^ 2] < ε ^ 2 ∧
+        ∑ ℓ ∈ range (L + 1), (N ℓ : ℝ) * C ℓ ≤ c₄ * complexityBound α β γ ε := by
+    intro ε
+    by_cases hε : 0 < ε ∧ ε < Real.exp (-1)
+    · obtain ⟨L, N, hLN⟩ := h ε hε.1 hε.2
+      exact ⟨L, N, fun _ _ => hLN⟩
+    · exact ⟨0, fun _ => 1, fun h1 h2 => absurd ⟨h1, h2⟩ hε⟩
+  choose L N hLN using h'
+  have hO : (fun ε => ∑ ℓ ∈ range (L ε + 1), (N ε ℓ : ℝ) * C ℓ) =O[𝓝[>] 0]
+      fun ε => complexityBound α β γ ε := by
+    refine IsBigO.of_bound c₄ ?_
+    filter_upwards [Ioo_mem_nhdsGT (Real.exp_pos (-1))] with ε hε
+    obtain ⟨-, -, hcost⟩ := hLN ε hε.1 hε.2
+    have h0 : 0 ≤ ∑ ℓ ∈ range (L ε + 1), (N ε ℓ : ℝ) * C ℓ :=
+      Finset.sum_nonneg fun ℓ _ => mul_nonneg (Nat.cast_nonneg _) (hC ℓ)
+    rw [Real.norm_of_nonneg h0, Real.norm_of_nonneg (complexityBound_nonneg hε.1)]
+    exact hcost
+  refine ⟨L, N, fun ε h1 h2 => ⟨(hLN ε h1 h2).1, (hLN ε h1 h2).2.1⟩, fun hlt => ?_,
+    fun heq => ?_, fun hgt => ?_⟩
+  · exact hO.congr_right fun ε => complexityBound_of_lt hlt ε
+  · exact hO.congr_right fun ε => complexityBound_of_eq heq ε
+  · exact hO.congr_right fun ε => complexityBound_of_gt hgt ε
 
 end MLMC

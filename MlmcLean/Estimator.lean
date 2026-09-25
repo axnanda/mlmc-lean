@@ -4,16 +4,18 @@ import Mathlib.Tactic.Linarith
 /-!
 # The multilevel Monte Carlo estimator: mean, variance and mean-square error
 
-Reference: M.B. Giles, *Multilevel Monte Carlo methods*, Acta Numerica 24 (2015), §2,
+Reference: M.B. Giles, *Multilevel Monte Carlo methods*, Acta Numerica 24 (2015), §1.3 and §2.1,
 eq. (2.1)–(2.3).
 
-Giles writes `E[P_L] = E[P_0] + ∑_{ℓ=1}^{L} E[P_ℓ − P_{ℓ−1}]` (2.1), estimates each term by an
-independent estimator `Y_ℓ`, and states for `Y = ∑_{ℓ=0}^{L} Y_ℓ`:
+Giles writes the telescoping identity `E[P_L] = E[P_0] + ∑_{ℓ=1}^{L} E[P_ℓ − P_{ℓ−1}]` (§1.3, p. 4),
+estimates each term by an independent estimator `Y_ℓ`, and states for `Y = ∑_{ℓ=0}^{L} Y_ℓ`
 
-  `E[Y] = E[P_L]`,  `V[Y] = ∑_{ℓ} V[Y_ℓ]`   (2.3)
+  `MSE ≡ E[(Y − E[P])²] = V[Y] + (E[Y] − E[P])²`   (2.1)
+  `E[Y] = E[P_L]`,  `V[Y] = ∑_{ℓ} N_ℓ⁻¹ V_ℓ`         (2.3)
 
-and `MSE = E[(Y − E[P])²] = V[Y] + (E[Y] − E[P])²`.  These are the three probabilistic facts
-used in the proof of his Theorem 1; everything else in that proof is real analysis
+(the second equality of (2.3) combines `V[Y] = ∑_ℓ V[Y_ℓ]` with `V[Y_ℓ] = N_ℓ⁻¹ V_ℓ`, see
+`variance_sample_mean` in `MlmcLean/Theorem1.lean`).  These are the probabilistic facts used in the
+proof of his Theorem 1; everything else in that proof is real analysis
 (see `MlmcLean/Complexity.lean`).
 
 We formalise them on an arbitrary probability space `(Ω, μ)` with Mathlib's
@@ -26,8 +28,8 @@ namespace MLMC
 
 variable {Ω : Type*} [MeasurableSpace Ω] {μ : Measure Ω} [IsProbabilityMeasure μ]
 
-/-- **Mean-square-error decomposition** `E[(Y − m)²] = Var[Y] + (E[Y] − m)²`
-for any square-integrable `Y` and any real target `m`. -/
+/-- **Mean-square-error decomposition** (Giles 2015, eq. (2.1)): `E[(Y − m)²] = Var[Y] + (E[Y] − m)²`
+for any square-integrable `Y` and any real target `m` (Giles: `m = E[P]`). -/
 theorem mse_eq_variance_add_sq_bias {Y : Ω → ℝ} (hY : MemLp Y 2 μ) (m : ℝ) :
     μ[fun ω => (Y ω - m) ^ 2] = variance Y μ + (μ[Y] - m) ^ 2 := by
   have h1 : MemLp (fun ω => Y ω - m) 2 μ := hY.sub (memLp_const m)
@@ -43,7 +45,7 @@ theorem mse_eq_variance_add_sq_bias {Y : Ω → ℝ} (hY : MemLp Y 2 μ) (m : �
   linarith
 
 omit [IsProbabilityMeasure μ] in
-/-- Giles (2.1)/(2.3), the **mean** of the multilevel estimator.  Condition (ii) of Theorem 1 is
+/-- Giles (2.3), the **mean** of the multilevel estimator.  Condition (ii) of Theorem 1 is
 `E[Y_0] = E[P_0]` and `E[Y_ℓ] = E[P_ℓ − P_{ℓ−1}]` for `ℓ > 0`; the telescoping sum then gives
 `E[∑_{ℓ=0}^{L} Y_ℓ] = E[P_L]`. -/
 theorem mlmc_mean (P : ℕ → Ω → ℝ) (Y : ℕ → Ω → ℝ) (L : ℕ)
@@ -75,7 +77,7 @@ theorem mlmc_variance (Y : ℕ → Ω → ℝ) (L : ℕ) (hY : ∀ ℓ, MemLp (Y
     variance (∑ ℓ ∈ range (L + 1), Y ℓ) μ = ∑ ℓ ∈ range (L + 1), variance (Y ℓ) μ :=
   IndepFun.variance_sum (fun ℓ _ => hY ℓ) hind
 
-/-- **MSE of the multilevel estimator** (Giles, proof of Theorem 1, first display):
+/-- **MSE of the multilevel estimator** (Giles 2015, (2.1) combined with (2.3)):
 `E[(∑ Y_ℓ − m)²] = ∑ V[Y_ℓ] + (E[P_L] − m)²`, for any target `m` (Giles: `m = E[P]`). -/
 theorem mlmc_mse (P : ℕ → Ω → ℝ) (Y : ℕ → Ω → ℝ) (L : ℕ) (m : ℝ)
     (hY : ∀ ℓ, MemLp (Y ℓ) 2 μ) (hP : ∀ ℓ, Integrable (P ℓ) μ)
