@@ -129,7 +129,7 @@ theorem giles_theorem1
     (hind : ∀ N : ℕ → ℕ, (∀ ℓ, 0 < N ℓ) →
       Pairwise fun i j => IndepFun (Y i (N i)) (Y j (N j)) μ)
     (hCost : ∀ ℓ n, 0 < n → Integrable (Cost ℓ n) μ)
-    (h_cost : ∀ ℓ n, 0 < n → μ[Cost ℓ n] = n * C ℓ)
+    (h_cost : ∀ ℓ (n : ℕ), 0 < n → μ[Cost ℓ n] = n * C ℓ)
     (h_i : ∀ ℓ : ℕ, |μ[fun ω => Pℓ ℓ ω - P ω]| ≤ c₁ * (2 : ℝ) ^ (-(α * (ℓ : ℝ))))
     (h_ii₀ : ∀ n, 0 < n → μ[Y 0 n] = μ[Pℓ 0])
     (h_ii : ∀ ℓ n, 0 < n → μ[Y (ℓ + 1) n] = μ[fun ω => Pℓ (ℓ + 1) ω - Pℓ ℓ ω])
