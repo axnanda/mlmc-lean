@@ -108,11 +108,19 @@ lemma pairwise_disjoint_level (K : Ω → ℕ) :
 /-- The level probabilities `P(K = ℓ)` sum to one. -/
 lemma hasSum_measureReal_level (hK : Measurable K) :
     HasSum (fun ℓ => μ.real {ω | K ω = ℓ}) 1 := by
-  have h := hasSum_integral_iUnion (μ := μ) (f := fun _ => (1 : ℝ))
-    (fun ℓ => (hK (measurableSet_singleton ℓ) : MeasurableSet {ω | K ω = ℓ}))
-    (pairwise_disjoint_level K)
-    (by rw [iUnion_level_eq_univ K]; exact integrableOn_const)
-  simpa [setIntegral_const, iUnion_level_eq_univ K] using h
+  have hs : ∀ ℓ, MeasurableSet {ω | K ω = ℓ} := fun ℓ => hK (measurableSet_singleton ℓ)
+  have hint : IntegrableOn (fun _ => (1 : ℝ)) (⋃ ℓ, {ω | K ω = ℓ}) μ := by
+    rw [iUnion_level_eq_univ K]
+    exact integrableOn_const
+  have h := hasSum_integral_iUnion hs (pairwise_disjoint_level K) hint
+  have e1 : ∀ ℓ, ∫ _ in {ω | K ω = ℓ}, (1 : ℝ) ∂μ = μ.real {ω | K ω = ℓ} := fun ℓ => by
+    rw [setIntegral_const, smul_eq_mul, mul_one]
+  have e2 : ∫ _ in ⋃ ℓ, {ω | K ω = ℓ}, (1 : ℝ) ∂μ = 1 := by
+    rw [iUnion_level_eq_univ K, setIntegral_const, smul_eq_mul, mul_one, probReal_univ]
+  rw [e2] at h
+  convert h using 1
+  funext ℓ
+  exact (e1 ℓ).symm
 
 /-- **Expectation over a random level.**  Let the level `K` be independent of each `g ℓ`.  If
 `∑_ℓ P(K = ℓ) E|g_ℓ| < ∞`, then `g_K` is integrable and `E[g_K] = ∑_ℓ P(K = ℓ) E[g_ℓ]`. -/
@@ -508,26 +516,29 @@ noncomputable def optimalLevelProb (V C : ℕ → ℝ) (ℓ : ℕ) : ℝ :=
 theorem randomised_optimal_p_eq {V C : ℕ → ℝ} (hV : ∀ ℓ, 0 < V ℓ) (hC : ∀ ℓ, 0 < C ℓ)
     (hS : Summable fun ℓ => Real.sqrt (V ℓ * C ℓ)) (hZ : Summable fun ℓ => Real.sqrt (V ℓ / C ℓ)) :
     (∀ ℓ, 0 < optimalLevelProb V C ℓ) ∧ HasSum (optimalLevelProb V C) 1 ∧
+      Summable (fun ℓ => V ℓ / optimalLevelProb V C ℓ) ∧
+      Summable (fun ℓ => optimalLevelProb V C ℓ * C ℓ) ∧
       (∑' ℓ, V ℓ / optimalLevelProb V C ℓ) * (∑' ℓ, optimalLevelProb V C ℓ * C ℓ) =
         (∑' ℓ, Real.sqrt (V ℓ * C ℓ)) ^ 2 := by
   set Z := ∑' k, Real.sqrt (V k / C k) with hZ_def
   have hq : ∀ ℓ, 0 < Real.sqrt (V ℓ / C ℓ) := fun ℓ => Real.sqrt_pos.2 (div_pos (hV ℓ) (hC ℓ))
   have hZ0 : 0 < Z := hZ.tsum_pos (fun ℓ => (hq ℓ).le) 0 (hq 0)
   have hpos : ∀ ℓ, 0 < optimalLevelProb V C ℓ := fun ℓ => div_pos (hq ℓ) hZ0
-  refine ⟨hpos, ?_, ?_⟩
+  have e1 : ∀ ℓ, V ℓ / optimalLevelProb V C ℓ = Z * Real.sqrt (V ℓ * C ℓ) := fun ℓ => by
+    unfold optimalLevelProb
+    rw [← hZ_def, div_div_eq_mul_div, div_eq_iff (hq ℓ).ne']
+    have hid := sqrt_div_mul_sqrt_mul (hV ℓ).le (hC ℓ)
+    linear_combination (-Z) * hid
+  have e2 : ∀ ℓ, optimalLevelProb V C ℓ * C ℓ = Real.sqrt (V ℓ * C ℓ) / Z := fun ℓ => by
+    unfold optimalLevelProb
+    rw [← hZ_def, ← sqrt_div_mul (hV ℓ).le (hC ℓ)]
+    ring
+  refine ⟨hpos, ?_, (hS.mul_left Z).congr fun ℓ => (e1 ℓ).symm,
+    (hS.div_const Z).congr fun ℓ => (e2 ℓ).symm, ?_⟩
   · have h := hZ.hasSum.div_const Z
     rw [← hZ_def, div_self hZ0.ne'] at h
     exact h
-  · have e1 : ∀ ℓ, V ℓ / optimalLevelProb V C ℓ = Z * Real.sqrt (V ℓ * C ℓ) := fun ℓ => by
-      unfold optimalLevelProb
-      rw [← hZ_def, div_div_eq_mul_div, div_eq_iff (hq ℓ).ne']
-      have hid := sqrt_div_mul_sqrt_mul (hV ℓ).le (hC ℓ)
-      linear_combination (-Z) * hid
-    have e2 : ∀ ℓ, optimalLevelProb V C ℓ * C ℓ = Real.sqrt (V ℓ * C ℓ) / Z := fun ℓ => by
-      unfold optimalLevelProb
-      rw [← hZ_def, ← sqrt_div_mul (hV ℓ).le (hC ℓ)]
-      ring
-    simp_rw [e1, e2]
+  · simp_rw [e1, e2]
     rw [tsum_mul_left, tsum_div_const]
     field_simp [hZ0.ne']
 
