@@ -22,6 +22,16 @@ import MlmcLean
 #print axioms MLMC.giles_theorem1_standard
 #print axioms MLMC.exists_iid_inputs
 #print axioms MLMC.giles_theorem1_iid
+#print axioms MLMC.integral_comp_level
+#print axioms MLMC.singleTerm_unbiased
+#print axioms MLMC.singleTerm_variance
+#print axioms MLMC.singleTerm_variance_ge
+#print axioms MLMC.summable_of_memLp_singleTerm
+#print axioms MLMC.randomised_summable
+#print axioms MLMC.randomised_not_summable
+#print axioms MLMC.randomised_optimal_p
+#print axioms MLMC.randomised_optimal_p_eq
+#print axioms MLMC.randomised_mlmc_finite
 #print axioms MLMC.nested_cost_lower_bound
 #print axioms MLMC.nested_optimal_allocation
 #print axioms MLMC.nested_mlmc_mse
