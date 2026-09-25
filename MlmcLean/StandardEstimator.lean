@@ -116,7 +116,8 @@ lemma variance_levelEstimator [IsProbabilityMeasure μ] (hω : ∀ p, MeasurePre
     (fun n => (hω (ℓ, n)).variance_fun_comp (measurable_levelDiff hPlm ℓ).aemeasurable)
     (fun a _ b _ hab => hX.indepFun (i := (ℓ, a)) (j := (ℓ, b)) (by simpa using hab))
 
-/-- The level-`i` block of samples `ω^{(i,0)}, …, ω^{(i,M-1)}` as one random variable. -/
+omit [MeasurableSpace Ω₀] [MeasurableSpace Ω] in
+/-- The level-`k` estimator is a function of the block of inputs `ω^{(k,0)}, …, ω^{(k,M-1)}`. -/
 lemma levelEstimator_eq_comp (Pl : ℕ → Ω₀ → ℝ) (ω : ℕ × ℕ → Ω → Ω₀) (k M : ℕ) :
     levelEstimator Pl ω k M =
       (fun t : ({k} ×ˢ range M : Finset (ℕ × ℕ)) → Ω₀ =>
@@ -186,7 +187,6 @@ theorem giles_theorem1_standard [IsProbabilityMeasure μ] [IsProbabilityMeasure 
     (fun N _ i j hij => indepFun_levelEstimator (fun p => (hω p).measurable) hind hPlm hij _ _)
     (fun ℓ n _ => integrable_finsetSum _ fun k _ => hcost ℓ k)
     (fun ℓ n _ => by
-      dsimp only
       rw [integral_finsetSum _ fun k _ => hcost ℓ k]
       simp [hcostC])
     (fun ℓ => by
@@ -194,7 +194,6 @@ theorem giles_theorem1_standard [IsProbabilityMeasure μ] [IsProbabilityMeasure 
       rw [tr (fun y => Pl ℓ y - P y) ((hPl1 ℓ).sub hP)]
       exact h_i ℓ)
     (fun n hn => by
-      dsimp only
       rw [integral_levelEstimator hω hPlm hPl 0 hn, tr (Pl 0) (hPl1 0), levelDiff_zero])
     (fun ℓ n hn => by
       dsimp only
