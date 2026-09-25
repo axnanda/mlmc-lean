@@ -34,8 +34,10 @@ lake build                              # this project: ~1–2 min once the cach
 lake env lean scripts/AxiomCheck.lean   # each theorem: [propext, Classical.choice, Quot.sound] only
 ```
 
-The pins are Lean `v4.35.0-rc2` and the Mathlib tag `v4.35.0-rc2` (see `lake-manifest.json`).
-Don't bump them unless blocked.
+The pins are Lean `v4.33.1` and Mathlib `0df444a` (see `lake-manifest.json`): the default
+verification environment of prove2.me, so that every file compiles exactly as on the platform's
+servers (the build also uses the platform's `autoImplicit = false`). Don't bump them unless the
+platform does; `scripts/prove2me/upload.py` checks that the environment is still offered.
 
 ## Ground rules
 
@@ -50,7 +52,10 @@ Don't bump them unless blocked.
 
 ## Milestones
 
-**M0: Re-verify everything independently (first).**
+**M0: Re-verify everything independently (first).** ✅ Done 2026-09-25: build and axiom audit
+green in CI; `notes/statement-audit.md` records five deviations found and fixed (miscited
+equation numbers, condition (ii) at `n = 0`, `E[C]` instead of `∑ N_ℓ C_ℓ`, and Theorem 1 for the
+actual estimator (2.2)) and audits every later milestone the same way.
 - Run the setup above. The build and axiom audit must pass, and GitHub Actions must be green on
   `master`.
 - Audit statement fidelity from scratch. For each main theorem in `scripts/AxiomCheck.lean`,
@@ -60,14 +65,19 @@ Don't bump them unless blocked.
 - Write the result to `notes/statement-audit.md` (paper statement, Lean statement, deviations).
   Fix or document every deviation before starting M1.
 
-**M1: Polish the existing results (small).**
+**M1: Polish the existing results (small).** ✅ Done: `giles_theorem1` bounds `E[C]` for random
+costs; `giles_theorem1_isBigO`; eq. (1.1) optimality `optimal_cost_isLeast`; Theorem 1 for the
+estimator (2.2) built from i.i.d. samples (`giles_theorem1_standard`, `giles_theorem1_iid`).
 - Asymptotic corollaries of Theorem 1: each regime as an `Asymptotics.IsBigO` statement as
   ε → 0⁺ (`𝓝[>] 0`).
 - Random per-sample cost with expectation `C_ℓ`, as Giles allows. This closes a gap listed in
   the README's modelling choices.
 - Done when: the new statements are in `AxiomCheck.lean` and the README table is updated.
 
-**M2: Randomised (single-term) MLMC (Giles 2015 §2.2; Rhee & Glynn).**
+**M2: Randomised (single-term) MLMC (Giles 2015 §2.2; Rhee & Glynn).** ✅ Done
+(`MlmcLean/Randomised.lean`). Note: the paper only claims the two *necessary* series are finite
+for `β > γ`; the full variance can diverge under (i)–(iv) alone (counterexample in
+`notes/statement-audit.md`), so finiteness is proved under the second-moment form of (iii).
 - Prove unbiasedness `E[Y] = E[P]` under the paper's conditions, plus the second-moment/variance
   formula.
 - Prove that with `β > γ` and `p_ℓ ∝ 2^{−(β+γ)ℓ/2}`, both the variance and the expected cost are
@@ -75,6 +85,9 @@ Don't bump them unless blocked.
 - Done when: the statements match §2.2, with zero `sorry`.
 
 **M3: Multi-Index Monte Carlo (Giles 2015 §2.4, Theorem 2; Haji-Ali, Nobile & Tempone).**
+✅ Done: `giles_theorem2` (all `D`, all three regimes, the paper's `e₁ = 2D₂`,
+`e₂ = (D₂−1)(2+η)` for `α_d > ½β_d`) and `giles_theorem2_boundary` (`α_d ≥ ½β_d`, where the paper
+leaves the exponents open, with `e₁ = 2D₂ + D`, `e₂ = (D₂−1)(2+η) + D`).
 - Start with the η < 0 case, then η = 0 and η > 0 with the `|log ε|` exponents `e₁`, `e₂`.
 - The hard part is summing over index sets `{ℓ : δ·ℓ ≤ L}` (lattice-point counting).
 - Done when: Theorem 2 is proved as stated, or a clearly documented subset is (e.g. D = 2 first).
@@ -94,7 +107,15 @@ precision.**
   exactly as in the papers.
 - **Hardware and benchmark work** (see `notes/research-notes.md` §5).
 
+## prove2.me
+
+The platform's upload standard (prove2me_workspace `upload_full_project.md`) is implemented in
+`scripts/prove2me/`: Lean extractors for the declaration graph and per-file facts, a generator
+that builds the `Definitions/Theorems/Solutions` tree by skeleton subtraction, a validator (stub
+types equal the source types; every solution has exactly its stub's type; no `sorry`), and an
+idempotent, private-by-default uploader. CI runs all of it on every push. Uploading needs an
+account API key; making the tree public is irreversible and waits for Alex.
+
 ## Open questions for Alex
 
-- The prove2me submission format and requirements (which theorems, what packaging).
-- Priority between M2 and M3 once M1 is done.
+- Whether to make the uploaded tree public, and whether to launch the mission proposal.

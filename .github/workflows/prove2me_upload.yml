@@ -1,0 +1,66 @@
+name: prove2.me upload
+
+# Manually triggered upload of the generated platform tree to prove2.me (upload_full_project.md,
+# Phase 7), from GitHub's runners.  Needs the repository secret PROVE2ME_API_KEY (a `p2m_…` key of
+# the account that should own the uploads); the key is only ever sent to https://prove2.me/api/v1.
+# Everything is uploaded private.  Making the tree public is irreversible and deliberately not
+# offered here: run `scripts/prove2me/upload.py --make-public --confirm-irreversible` yourself.
+# Reruns are safe: the uploader rebuilds its state from the account's publish-job history.
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "preflight (log in, check environment and names), upload, or verify-final"
+        required: true
+        default: preflight
+        type: choice
+        options: [preflight, upload, verify-final]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: prove2me-upload
+  cancel-in-progress: false
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    steps:
+      - uses: actions/checkout@v7
+      - uses: leanprover/lean-action@v1
+      - name: Generate, build and validate the platform tree
+        run: |
+          set -eo pipefail
+          mkdir -p facts
+          lake env lean scripts/prove2me/extract_decl_graph.lean
+          mv decl_graph.jsonl facts/
+          for f in MlmcLean/*.lean; do
+            m=$(basename "$f" .lean)
+            lake env lean --run scripts/prove2me/extract_sketch_info.lean "$f" MLMC \
+              > "facts/sketch_info.$m.jsonl"
+          done
+          python3 scripts/prove2me/generate.py --facts facts --out prove2me/platform \
+            --payload prove2me/payload.json
+          lake build Definitions Theorems Solutions
+          python3 scripts/prove2me/validate.py --jobs 4
+          python3 scripts/prove2me/upload.py --dry-run
+      - name: Upload (${{ inputs.mode }})
+        env:
+          PROVE2ME_API_KEY: ${{ secrets.PROVE2ME_API_KEY }}
+          MODE: ${{ inputs.mode }}
+        run: |
+          case "$MODE" in
+            preflight)    python3 scripts/prove2me/upload.py --preflight ;;
+            upload)       python3 scripts/prove2me/upload.py ;;
+            verify-final) python3 scripts/prove2me/upload.py --verify-final ;;
+          esac
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: prove2me-upload-state
+          path: |
+            prove2me/upload_state.json
+            prove2me/payload.json

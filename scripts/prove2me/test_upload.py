@@ -2,7 +2,7 @@
 
 Checks: a fresh upload publishes definitions, stubs and solutions (all private) in order; a rerun
 after the state file is lost submits nothing (state is rebuilt from the server's publish-job
-history); source links are pinned to the payload's commit; `--make-public` refuses to run without
+history); with `--link-source`, source links are pinned to the payload's commit; `--make-public` refuses to run without
 `--confirm-irreversible` and then publishes every node.  No network access: the uploader's base URL
 is pointed at a local mock inside this process, with a fake API key.
 
@@ -155,7 +155,7 @@ def run(*argv):
 state = root / "prove2me" / "upload_state.json"
 if state.exists(): state.unlink()
 code, out = run("--dry-run"); assert code == 0, out
-code, out = run(); print(out); assert code == 0, out
+code, out = run("--link-source"); print(out); assert code == 0, out
 assert all(i["status"] in ("Proved", "Definition") for i in M.items.values())
 posts = [c for c in M.calls if c[0] == "POST" and c[1] != "/agent/refresh"]
 assert len([c for c in posts if c[1] == "/submit-problem"]) == 3 and len([c for c in posts if c[1] == "/verify"]) == 3

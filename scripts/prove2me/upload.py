@@ -21,8 +21,10 @@ are already Proved.  Nothing is ever submitted twice under the same name.
 Inputs (all in the repository):
   prove2me/payload.json    exact upload text, produced by scripts/prove2me/generate.py
   prove2me/metadata.json   titles, natural-language statements, sources, tags, explanations
-Source links: each `source` is the paper citation from the metadata followed by a link to the
-Lean source at the commit the payload was generated from (payload `source_commit`).
+Source links: each `source` is the paper citation from the metadata.  With `--link-source` it is
+followed by a link to the Lean source at the commit the payload was generated from (payload
+`source_commit`); only use that once the GitHub repository is public, or the links are dead for
+everyone but its owner.
 Credentials: the Prove2me API key (starts with `p2m_`) from $PROVE2ME_API_KEY or from
 `prove2me/credentials.json` ({"api_key": "..."}; gitignored).  It is only ever sent to
 https://prove2.me/api/v1.
@@ -31,6 +33,7 @@ Usage:
   python3 scripts/prove2me/upload.py --dry-run      # validate payload + metadata, no network
   python3 scripts/prove2me/upload.py --preflight    # log in, check environment and name clashes
   python3 scripts/prove2me/upload.py                # upload everything, private (resumable)
+  python3 scripts/prove2me/upload.py --link-source  # same, with links to the (public) Lean repo
   python3 scripts/prove2me/upload.py --verify-final # list the project's theorems and statuses
   python3 scripts/prove2me/upload.py --make-public --confirm-irreversible
                                                     # publish the whole tree (cannot be undone)
@@ -222,7 +225,8 @@ def tags_for(meta_entry: dict) -> list[str]:
 
 
 def source_for(meta_entry: dict, item: dict, commit: str | None) -> str:
-    """Paper citation (metadata) + link to the Lean source at the generating commit."""
+    """Paper citation (metadata), plus a link to the Lean source at the generating commit when
+    `commit` is given (`--link-source`)."""
     s = meta_entry["source"]
     if commit and item.get("source_file"):
         link = f"{REPO_URL}/blob/{commit}/{item['source_file']}"
@@ -392,9 +396,10 @@ def preflight(c: Client, payload: dict, state: State) -> tuple[dict, str]:
     return env_param, me
 
 
-def upload(c: Client, payload: dict, meta: dict, state: State, env_param: dict) -> None:
+def upload(c: Client, payload: dict, meta: dict, state: State, env_param: dict,
+           link_source: bool = False) -> None:
     S = state.data
-    commit = payload.get("source_commit")
+    commit = payload.get("source_commit") if link_source else None
     # 1. definitions, in dependency order
     for d in payload["definitions"]:
         name = d["definition_name"]
@@ -552,6 +557,8 @@ def main() -> None:
                     help="publish the uploaded tree; irreversible, needs --confirm-irreversible")
     ap.add_argument("--confirm-irreversible", action="store_true",
                     help="confirms that the account owner approved making the tree public")
+    ap.add_argument("--link-source", action="store_true",
+                    help="append a link to the Lean source (only once the GitHub repo is public)")
     ap.add_argument("--state", default=str(ROOT / "prove2me" / "upload_state.json"))
     args = ap.parse_args()
     payload, meta = load_inputs()
@@ -581,7 +588,7 @@ def main() -> None:
     if args.make_public:
         make_public(c, payload, state, env_param)
         return
-    upload(c, payload, meta, state, env_param)
+    upload(c, payload, meta, state, env_param, link_source=args.link_source)
     verify_final(c, payload, state, env_param)
 
 

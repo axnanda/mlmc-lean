@@ -166,6 +166,17 @@ def load(facts_dir: Path, plan: dict):
     return decls, modules
 
 
+def is_simp(d: Decl, modules: dict[str, "Module"]) -> bool:
+    """`@[simp]` (possibly among other attributes) in the declaration's modifiers."""
+    f = d.fact
+    if f is None or f["declId"] is None:
+        return False
+    head = modules[d.module].slice(f["declStart"]["offset"], f["declId"]["start"]["offset"])
+    if f["docstring"] is not None:  # the docstring may mention `simp`; look after it
+        head = head.split("-/", 1)[-1]
+    return re.search(r"@\[[^\]]*\bsimp\b", head) is not None
+
+
 def project_closure(modules: dict[str, Module], m: str) -> list[str]:
     """`m` and its transitive project imports, dependencies first."""
     seen: list[str] = []
@@ -229,7 +240,24 @@ def main() -> None:
         if decls[x].is_instance:  # type: ignore[attr-defined]
             fail(f"instance {x} is reachable; not supported by this generator")
 
-    theorems = {x for x in reach if decls[x].kind == "theorem"}
+    # Structural `@[simp]` lemmas about definitions (e.g. `rfl` equations) are Def-material: they are
+    # kept, attribute and all, in their module's Definitions bundle ("trivial structural lemmas",
+    # contribute.md), because `simp` uses them implicitly: an `rfl` simp lemma leaves no trace in
+    # the proof terms Stage 1 reads, so no dependency edge would ever pull it into a solution.
+    reach_defs = {x for x in reach if decls[x].kind != "theorem"}
+    structural: set[str] = set()
+    changed = True
+    while changed:
+        changed = False
+        for x, d in decls.items():
+            if x in structural or d.kind != "theorem" or d.fact is None or not is_simp(d, modules):
+                continue
+            deps = {y for y in d.type_deps | d.value_deps if y in decls and decls[y].fact is not None}
+            if deps and deps <= reach_defs | structural:
+                structural.add(x)
+                changed = True
+    reach |= structural
+    theorems = {x for x in reach if decls[x].kind == "theorem"} - structural
     users: dict[str, set[str]] = {x: set() for x in theorems}
     for y in reach:
         for x in decls[y].value_deps:
@@ -262,11 +290,11 @@ def main() -> None:
         if not ASCII_IDENT.match(n):
             fail(f"node name {n} is not a conservative ASCII identifier")
 
-    def_material = {x for x in reach if decls[x].kind != "theorem"}
+    def_material = reach_defs | structural
     helpers = theorems - node_set
     for x in def_material:
         for y in decls[x].type_deps | decls[x].value_deps:
-            if y in reach and decls[y].kind == "theorem":
+            if y in reach and y not in def_material:
                 fail(f"definition {x} cites theorem {y} (a Def-embedded theorem); move it")
     for n in nodes:
         for y in decls[n].type_deps:
@@ -383,6 +411,20 @@ def main() -> None:
                                           decls[h].fact["declStart"]["offset"]))
         return order, sorted(kids), mods
 
+    bundle_of_module = {bundle_module(m): m for m in bundles}
+
+    def names_in(imports: list[str]) -> set[str]:
+        """Project declarations provided by the given Definitions imports."""
+        out: set[str] = set()
+        for i in imports:
+            if i in bundle_of_module:
+                out.update(bundles[bundle_of_module[i]])
+        return out
+
+    def ns_known(ns: str, names: set[str]) -> bool:
+        """`open ns` only succeeds once some declaration lives in `ns` (else: unknown namespace)."""
+        return any(x.startswith(ns + ".") for x in names)
+
     for n in nodes:
         d = decls[n]
         mod = modules[d.module]
@@ -398,7 +440,7 @@ def main() -> None:
         pre_lines += [f"import {i}" for i in stub_imports]
         pre_lines.append("")
         pre_lines += [c for fr in d.frames if fr.kind == "file" for c in fr.cmds]
-        if d.ns_path:
+        if d.ns_path and ns_known(d.ns_path, names_in(stub_imports)):
             pre_lines.append(f"open {d.ns_path}")
         pre_lines += [c for fr in d.frames if fr.kind != "file" for c in fr.cmds]
         pre_lines += wrappers  # hoisted `c in` wrappers, now standalone commands
@@ -439,11 +481,16 @@ def main() -> None:
                 lines.append(f"end {hd.ns_path}")
             lines.append("")
         lines += [c for fr in d.frames if fr.kind == "file" for c in fr.cmds]
-        if d.ns_path:
+        if d.ns_path and ns_known(d.ns_path, names_in(sol_imports) | set(kids) | set(hs)):
             lines.append(f"open {d.ns_path}")
         lines += [c for fr in d.frames if fr.kind != "file" for c in fr.cmds]
         prefix = mod.slice(f["declStart"]["offset"], f["innerStart"]["offset"])
         body = mod.slice(f["declId"]["end"]["offset"], f["declEnd"]["offset"])
+        # A declaration can only name itself in recursive calls; in the solution it is `solution`.
+        short = n.rsplit(".", 1)[-1]
+        self_ref = re.compile(r"(?<![\w.'!?])(?:" + re.escape(n) + "|" + re.escape(short)
+                              + r")(?![\w'!?])")
+        body = self_ref.sub("solution", body)
         lines.append("")
         lines.append(prefix + "theorem solution" + body)
         code = "\n".join(lines) + "\n"
