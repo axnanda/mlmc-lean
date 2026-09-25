@@ -73,6 +73,7 @@ section levelSelection
 
 variable [IsProbabilityMeasure μ] {K : Ω → ℕ}
 
+omit [IsProbabilityMeasure μ] in
 /-- If the level `K` is independent of `h`, then `∫_{K = ℓ} h = P(K = ℓ) E[h]`. -/
 lemma setIntegral_level (hK : Measurable K) {h : Ω → ℝ} (hm : Measurable h)
     (hi : IndepFun K h μ) (ℓ : ℕ) :
@@ -118,9 +119,8 @@ lemma hasSum_measureReal_level (hK : Measurable K) :
   have e2 : ∫ _ in ⋃ ℓ, {ω | K ω = ℓ}, (1 : ℝ) ∂μ = 1 := by
     rw [iUnion_level_eq_univ K, setIntegral_const, smul_eq_mul, mul_one, probReal_univ]
   rw [e2] at h
-  convert h using 1
-  funext ℓ
-  exact (e1 ℓ).symm
+  simp only [e1] at h
+  exact h
 
 /-- **Expectation over a random level.**  Let the level `K` be independent of each `g ℓ`.  If
 `∑_ℓ P(K = ℓ) E|g_ℓ| < ∞`, then `g_K` is integrable and `E[g_K] = ∑_ℓ P(K = ℓ) E[g_ℓ]`. -/
