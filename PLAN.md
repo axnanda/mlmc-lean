@@ -14,14 +14,19 @@ bounds, stated as in the papers and with zero `sorry`, building on what is alrea
 - **Treat everything else as unverified:** the Status section below, README claims and `notes/`
   are leads to check, not facts. `notes/` is optional background and isn't needed for M0–M3.
 
-## Status (2026-09-24, to be re-verified in M0)
+## Status (2026-09-25, re-verified in M0; CI builds and audits every push)
 
-These are claimed done and axiom-clean (see the README table and "Modelling choices"):
-- **Giles (2015) Theorem 1:** `MLMC.giles_theorem1`, on a probability space, and
-  `MLMC.mlmc_complexity_core`, the deterministic core with all three regimes and an explicit c₄.
-- **Optimal sample allocation:** the Cauchy–Schwarz lower bound and the rounded-up integer
-  allocation (`MlmcLean/Allocation.lean`).
-- **Haas–Giles (2025) nested estimator, eq. (9)–(12):** `MlmcLean/Nested.lean`.
+Proved with zero `sorry` and only `propext`, `Classical.choice`, `Quot.sound` (see the README
+table and `notes/statement-audit.md`, which compares every statement with the papers):
+- **Giles (2015) Theorem 1** on a probability space with random costs (`giles_theorem1`), its
+  deterministic core (`mlmc_complexity_core`), big-O forms, and the theorem for the estimator
+  (2.2) built from independent samples (`giles_theorem1_standard`, `giles_theorem1_iid`).
+- **Eq. (1.1), (2.1)–(2.3)** and the optimal sample allocation (`MlmcLean/Allocation.lean`,
+  `MlmcLean/Estimator.lean`).
+- **Randomised MLMC**, Giles §2.2 (`MlmcLean/Randomised.lean`).
+- **Giles (2015) Theorem 2 (MIMC)** for every dimension and all three regimes
+  (`giles_theorem2`, `giles_theorem2_boundary`).
+- **Haas–Giles (2025) nested estimator, eq. (9)–(12)** (`MlmcLean/Nested.lean`).
 
 ## Setup and verification (Linux / cloud session)
 
@@ -113,8 +118,13 @@ The platform's upload standard (prove2me_workspace `upload_full_project.md`) is 
 `scripts/prove2me/`: Lean extractors for the declaration graph and per-file facts, a generator
 that builds the `Definitions/Theorems/Solutions` tree by skeleton subtraction, a validator (stub
 types equal the source types; every solution has exactly its stub's type; no `sorry`), and an
-idempotent, private-by-default uploader. CI runs all of it on every push. Uploading needs an
-account API key; making the tree public is irreversible and waits for Alex.
+idempotent, private-by-default uploader. CI runs all of it on every push: the tree has 62
+theorem nodes (the 44 audited main theorems and 18 long or shared lemmas), 8 definition bundles
+and 70 inlined helpers, and validates with 0 failures. `prove2me/metadata.json` holds the
+titles, natural-language statements, sources and proof explanations; `prove2me/proposals/` the
+mission proposals for Theorems 1 and 2 (`propose.py`). Uploading needs an account API key (CI's
+opt-in `upload` job, or `upload.py` locally); making the tree public is irreversible and waits
+for Alex.
 
 ## Open questions for Alex
 
