@@ -208,7 +208,8 @@ theorem giles_theorem1_standard [IsProbabilityMeasure μ] [IsProbabilityMeasure 
 
 /-- Independent inputs exist for every input distribution: on the infinite product space
 `Ω₀^{ℕ×ℕ}` with the product measure `ν^{⊗(ℕ×ℕ)}`, the coordinate maps are mutually independent,
-each with law `ν`.  So the hypotheses of `giles_theorem1_standard` are never vacuous. -/
+each with law `ν`.  So the input hypotheses of `giles_theorem1_standard` (independent inputs with
+law `ν`) can be met for every input distribution `ν`. -/
 theorem exists_iid_inputs (ν : Measure Ω₀) [IsProbabilityMeasure ν] :
     IsProbabilityMeasure (Measure.infinitePi fun _ : ℕ × ℕ => ν) ∧
       iIndepFun (fun (p : ℕ × ℕ) (x : ℕ × ℕ → Ω₀) => x p) (Measure.infinitePi fun _ => ν) ∧
