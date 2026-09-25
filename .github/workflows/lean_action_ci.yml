@@ -56,6 +56,13 @@ jobs:
             --payload prove2me/payload.json
           lake build Definitions Theorems Solutions
           python3 scripts/prove2me/validate.py --jobs 4
+          # every node and bundle has complete metadata; proposals reference uploaded names only
+          if [ -f prove2me/metadata.json ]; then
+            python3 scripts/prove2me/upload.py --dry-run
+            python3 scripts/prove2me/propose.py --dry-run
+          else
+            echo "::warning::prove2me/metadata.json not written yet; upload dry run skipped"
+          fi
       - name: prove2.me plan summary
         if: always()
         run: |
@@ -80,3 +87,32 @@ jobs:
             facts
             prove2me/platform
             prove2me/payload.json
+
+  # Opt-in upload of the validated tree to prove2.me, from GitHub's runners. Enable it with the
+  # repository variable PROVE2ME_UPLOAD = true and the repository secret PROVE2ME_API_KEY (a `p2m_…`
+  # key of the account that should own the uploads; the uploader sends it only to
+  # https://prove2.me/api/v1). Everything is uploaded private; reruns are idempotent (the uploader
+  # rebuilds its state from the account's publish-job history). Making the tree public is not done
+  # here: run `scripts/prove2me/upload.py --make-public --confirm-irreversible` deliberately.
+  upload:
+    needs: build
+    if: ${{ vars.PROVE2ME_UPLOAD == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    concurrency:
+      group: prove2me-upload
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v4
+        with:
+          name: prove2me
+      - name: Upload to prove2.me (private)
+        env:
+          PROVE2ME_API_KEY: ${{ secrets.PROVE2ME_API_KEY }}
+        run: python3 scripts/prove2me/upload.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: prove2me-upload-state
+          path: prove2me/upload_state.json

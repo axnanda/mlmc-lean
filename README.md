@@ -111,9 +111,11 @@ export PROVE2ME_API_KEY=p2m_...
 python3 scripts/prove2me/upload.py --preflight   # environment, account, name clashes
 python3 scripts/prove2me/upload.py               # private upload, resumable; ends with a status table
 python3 scripts/prove2me/propose.py              # the mission proposals (drafts, never submitted)
-# or from GitHub: add the repository secret PROVE2ME_API_KEY and run the workflow
-# "prove2.me upload" (.github/workflows/prove2me_upload.yml; it must be on the default branch).
 ```
+
+or from GitHub, without a local build: add the repository secret `PROVE2ME_API_KEY` and the
+repository variable `PROVE2ME_UPLOAD = true`; the `upload` job of the CI workflow then uploads the
+tree that the `build` job generated and validated, on every run (reruns submit nothing twice).
 
 Everything is uploaded **private**. `upload.py --make-public --confirm-irreversible` publishes the
 whole tree and cannot be undone; the proposals are audited and submitted by the account owner on
