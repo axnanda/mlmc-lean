@@ -87,7 +87,12 @@
     "MLMC.consistency_sd",
     "MLMC.sampleVariance_sd",
     "MLMC.kurtosis_of_ternary",
-    "MLMC.tendsto_kurtosis_atTop"
+    "MLMC.tendsto_kurtosis_atTop",
+    "MLMC.levelKeep_product",
+    "MLMC.levelDrop_test",
+    "MLMC.levelDrop_variance",
+    "MLMC.levelDrop_perfect_correlation",
+    "MLMC.levelDrop_uncorrelated"
   ],
   "bundlePrefix": "MLMC_",
   "paperNamed": [],

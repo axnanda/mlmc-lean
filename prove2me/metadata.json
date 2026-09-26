@@ -1133,6 +1133,59 @@
     "probability",
     "monte-carlo"
    ]
+  },
+  "MLMC.levelKeep_product": {
+   "theorem_title": "Giles (2015), §2.6: keeping level $\\ell$, the least variance × cost of the two estimators involving it is $V_{\\ell+1}C_{\\ell+1}(1+\\sqrt{V_\\ell C_\\ell/(V_{\\ell+1}C_{\\ell+1})})^2$",
+   "natural_language_statement": "Giles (2015), §2.6, asks whether a level $\\ell$ should be kept or dropped. \"If we keep level $\\ell$ then the contribution to the overall multilevel estimator due to samples involving level $\\ell$ is $N_\\ell^{-1}\\sum_{n}(P^{(n)}_\\ell-P^{(n)}_{\\ell-1})+N_{\\ell+1}^{-1}\\sum_n(P^{(n)}_{\\ell+1}-P^{(n)}_\\ell)$ … and so the product of the combined variance and combined cost is $V_{\\ell+1}C_{\\ell+1}\\big(1+\\sqrt{V_\\ell C_\\ell/(V_{\\ell+1}C_{\\ell+1})}\\big)^2$\" for the optimal ratio of $N_\\ell$ to $N_{\\ell+1}$. This result states that this value is the least possible product.\n\nLet $V_\\ell,V_{\\ell+1},C_\\ell,C_{\\ell+1}>0$ be the per-sample variances and costs of the corrections on levels $\\ell$ and $\\ell+1$. Then the least value of\n\n$$\n\\Big(\\frac{V_\\ell}{N_\\ell}+\\frac{V_{\\ell+1}}{N_{\\ell+1}}\\Big)\\big(N_\\ell C_\\ell+N_{\\ell+1}C_{\\ell+1}\\big)\n$$\n\nover all real $N_\\ell,N_{\\ell+1}>0$ exists and equals\n\n$$\nV_{\\ell+1}C_{\\ell+1}\\Big(1+\\sqrt{V_\\ell C_\\ell/(V_{\\ell+1}C_{\\ell+1})}\\Big)^2 .\n$$\n\n**Formalization Note** The sample numbers are real, as in the paper's Lagrange-multiplier analysis; the minimum is `IsLeast` of the set of products.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §2.6, pp. 18–19 of the author's version (the combined variance, combined cost and their product when level ℓ is kept).",
+   "explanation": "The value equals $(\\sqrt{V_\\ell C_\\ell}+\\sqrt{V_{\\ell+1}C_{\\ell+1}})^2$, because $x(1+\\sqrt{y/x})^2=(\\sqrt y+\\sqrt x)^2$ for $x>0$. It is attained at $N_\\ell=\\sqrt{V_\\ell/C_\\ell}$, $N_{\\ell+1}=\\sqrt{V_{\\ell+1}/C_{\\ell+1}}$, where both the variance and the cost equal $\\sqrt{V_\\ell C_\\ell}+\\sqrt{V_{\\ell+1}C_{\\ell+1}}$. It is a lower bound by `cost_lower_bound` (Cauchy–Schwarz) for the two levels, with the variance target equal to the variance of the given allocation.",
+   "tags": [
+    "multilevel-monte-carlo",
+    "optimization"
+   ]
+  },
+  "MLMC.levelDrop_test": {
+   "theorem_title": "Giles (2015), eq. (2.5): the level-dropping test holds iff dropping level $\\ell$ lowers the optimal cost (1.1)",
+   "natural_language_statement": "Giles (2015), §2.6: \"The question now is whether\n\n$$\n\\widetilde V_{\\ell+1}\\widetilde C_{\\ell+1}<V_{\\ell+1}C_{\\ell+1}\\Big(1+\\sqrt{V_\\ell C_\\ell/(V_{\\ell+1}C_{\\ell+1})}\\Big)^2.\\qquad(2.5)\n$$\n\nIf this test is true, then it is best to drop level $\\ell$, because for a fixed computational cost this will deliver the lower variance, or for a fixed variance it can be achieved at a lower computational cost.\" Here $\\widetilde V_{\\ell+1}=\\mathbb V[P_{\\ell+1}-P_{\\ell-1}]$ and $\\widetilde C_{\\ell+1}$ is the cost of one sample of it. This result proves that (2.5) is exactly the condition under which dropping level $\\ell$ improves the optimum of the whole hierarchy.\n\nLet $s$ be a finite set indexing the other levels, with per-sample variances and costs $V_i,C_i\\in\\mathbb R$ ($i\\in s$). Let $V_\\ell,C_\\ell,\\widetilde V_{\\ell+1},\\widetilde C_{\\ell+1}\\in\\mathbb R$, $V_{\\ell+1},C_{\\ell+1}>0$ and $\\tau>0$. Then\n\n$$\n\\tau^{-1}\\Big(\\sum_{i\\in s}\\sqrt{V_iC_i}+\\sqrt{\\widetilde V_{\\ell+1}\\widetilde C_{\\ell+1}}\\Big)^2<\\tau^{-1}\\Big(\\sum_{i\\in s}\\sqrt{V_iC_i}+\\sqrt{V_\\ell C_\\ell}+\\sqrt{V_{\\ell+1}C_{\\ell+1}}\\Big)^2\n$$\n\nif and only if (2.5) holds.\n\nBy (1.1) (`optimal_cost_isLeast`), $\\tau^{-1}(\\sum\\sqrt{V C})^2$ is the least cost of a multilevel estimator with variance at most $\\tau$ over the levels used, and by the dual problem (`optimal_variance_isLeast`) the same expression with $\\tau$ a cost budget is the least variance for that cost. The left side is the value with level $\\ell$ dropped (the correction $P_{\\ell+1}-P_{\\ell-1}$ replaces the two corrections on levels $\\ell$ and $\\ell+1$), the right side the value with level $\\ell$ kept.\n\n**Formalization Note** Square roots of negative numbers are $0$ in Lean, so no sign conditions are needed on $V_i,C_i,V_\\ell,C_\\ell,\\widetilde V_{\\ell+1},\\widetilde C_{\\ell+1}$; the interpretation as optimal costs uses positive variances and costs.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §2.6, eq. (2.5), p. 19 of the author's version.",
+   "explanation": "The right side of (2.5) equals $(\\sqrt{V_\\ell C_\\ell}+\\sqrt{V_{\\ell+1}C_{\\ell+1}})^2$. Multiplying by $\\tau^{-1}>0$ and squaring are strictly monotone on nonnegative numbers, so the cost comparison is equivalent to $\\sqrt{\\widetilde V_{\\ell+1}\\widetilde C_{\\ell+1}}<\\sqrt{V_\\ell C_\\ell}+\\sqrt{V_{\\ell+1}C_{\\ell+1}}$ after cancelling the common sum, and $\\sqrt x<y\\iff x<y^2$ for $y>0$.",
+   "tags": [
+    "multilevel-monte-carlo",
+    "optimization",
+    "complexity"
+   ]
+  },
+  "MLMC.levelDrop_variance": {
+   "theorem_title": "Giles (2015), §2.6: $\\widetilde V_{\\ell+1}=V_{\\ell+1}+2\\rho\\sqrt{V_\\ell V_{\\ell+1}}+V_\\ell$",
+   "natural_language_statement": "Giles (2015), §2.6: \"Using the standard result for the variance of a sum of two random variables, we have $\\widetilde V_{\\ell+1}=V_{\\ell+1}+2\\rho\\sqrt{V_\\ell V_{\\ell+1}}+V_\\ell$, where $\\rho$ is the correlation between $P_{\\ell+1}-P_\\ell$ and $P_\\ell-P_{\\ell-1}$.\"\n\nLet $(\\Omega,\\mathcal F,\\mu)$ be a probability space and $X,Y:\\Omega\\to\\mathbb R$ square-integrable with $\\mathbb V[X]>0$ and $\\mathbb V[Y]>0$ (in the paper $X=P_{\\ell+1}-P_\\ell$ and $Y=P_\\ell-P_{\\ell-1}$, so $X+Y=P_{\\ell+1}-P_{\\ell-1}$). Let $\\rho=\\mathrm{Cov}[X,Y]/\\sqrt{\\mathbb V[X]\\,\\mathbb V[Y]}$. Then\n\n$$\n\\mathbb V[X+Y]=\\mathbb V[X]+2\\rho\\sqrt{\\mathbb V[Y]\\,\\mathbb V[X]}+\\mathbb V[Y].\n$$\n\n**Formalization Note** $\\rho$ is `correlation X Y μ`.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §2.6, p. 20 of the author's version.",
+   "explanation": "Mathlib's `variance_fun_add` gives $\\mathbb V[X+Y]=\\mathbb V[X]+2\\,\\mathrm{Cov}[X,Y]+\\mathbb V[Y]$, and $\\rho\\sqrt{\\mathbb V[Y]\\mathbb V[X]}=\\mathrm{Cov}[X,Y]$ because the square root is positive.",
+   "tags": [
+    "probability",
+    "multilevel-monte-carlo"
+   ]
+  },
+  "MLMC.levelDrop_perfect_correlation": {
+   "theorem_title": "Giles (2015), §2.6: with perfectly correlated increments ($\\rho=1$) and $C_\\ell\\le C_{\\ell+1}$ the test (2.5) fails, so level $\\ell$ is kept",
+   "natural_language_statement": "Giles (2015), §2.6: \"If $\\rho=1$, and so we have perfect correlation between the increments at different levels, then $\\widetilde V_{\\ell+1}=V_{\\ell+1}\\big(1+\\sqrt{V_\\ell/V_{\\ell+1}}\\big)^2$. Since $C_\\ell<C_{\\ell+1}$, it follows that the test (2.5) is never satisfied, and so it is best to retain level $\\ell$.\" As in the paper, the cost of $P_{\\ell+1}-P_{\\ell-1}$ is taken to be $\\widetilde C_{\\ell+1}=C_{\\ell+1}$.\n\nLet $(\\Omega,\\mathcal F,\\mu)$ be a probability space, $X,Y:\\Omega\\to\\mathbb R$ square-integrable with $\\mathbb V[X]>0$, $\\mathbb V[Y]>0$ and correlation $\\rho=1$ ($X=P_{\\ell+1}-P_\\ell$, $Y=P_\\ell-P_{\\ell-1}$, so $V_{\\ell+1}=\\mathbb V[X]$, $V_\\ell=\\mathbb V[Y]$ and $\\widetilde V_{\\ell+1}=\\mathbb V[X+Y]$), and let $0<C_\\ell\\le C_{\\ell+1}$. Then\n\n1. $\\widetilde V_{\\ell+1}=V_{\\ell+1}\\big(1+\\sqrt{V_\\ell/V_{\\ell+1}}\\big)^2$; and\n2. the test (2.5) with $\\widetilde C_{\\ell+1}=C_{\\ell+1}$ fails: $\\widetilde V_{\\ell+1}C_{\\ell+1}\\not<V_{\\ell+1}C_{\\ell+1}\\big(1+\\sqrt{V_\\ell C_\\ell/(V_{\\ell+1}C_{\\ell+1})}\\big)^2$.\n\n**Formalization Note** The paper's strict $C_\\ell<C_{\\ell+1}$ is weakened to $C_\\ell\\le C_{\\ell+1}$.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §2.6, p. 20 of the author's version (the case ρ = 1).",
+   "explanation": "With $\\rho=1$, `levelDrop_variance` gives $\\widetilde V_{\\ell+1}=V_{\\ell+1}+2\\sqrt{V_\\ell V_{\\ell+1}}+V_\\ell=(\\sqrt{V_\\ell}+\\sqrt{V_{\\ell+1}})^2=V_{\\ell+1}(1+\\sqrt{V_\\ell/V_{\\ell+1}})^2$. Since $C_\\ell\\le C_{\\ell+1}$, $\\sqrt{V_\\ell C_\\ell/(V_{\\ell+1}C_{\\ell+1})}\\le\\sqrt{V_\\ell/V_{\\ell+1}}$, so the right side of (2.5) is at most $V_{\\ell+1}C_{\\ell+1}(1+\\sqrt{V_\\ell/V_{\\ell+1}})^2=\\widetilde V_{\\ell+1}C_{\\ell+1}$, contradicting the strict test.",
+   "tags": [
+    "multilevel-monte-carlo",
+    "probability",
+    "optimization"
+   ]
+  },
+  "MLMC.levelDrop_uncorrelated": {
+   "theorem_title": "Giles (2015), §2.6: with uncorrelated increments ($\\rho=0$) the test (2.5) reads $1+V_\\ell/V_{\\ell+1}<(1+\\sqrt{V_\\ell C_\\ell/(V_{\\ell+1}C_{\\ell+1})})^2$",
+   "natural_language_statement": "Giles (2015), §2.6: \"if $\\rho=0$, and so the increments at different levels are independent, then $\\widetilde V_{\\ell+1}=V_{\\ell+1}+V_\\ell$ and so we drop level $\\ell$ if $1+V_\\ell/V_{\\ell+1}<\\big(1+\\sqrt{V_\\ell C_\\ell/(V_{\\ell+1}C_{\\ell+1})}\\big)^2$.\" As in the paper, $\\widetilde C_{\\ell+1}=C_{\\ell+1}$.\n\nLet $(\\Omega,\\mathcal F,\\mu)$ be a probability space, $X,Y:\\Omega\\to\\mathbb R$ square-integrable with $\\mathbb V[X]>0$, $\\mathbb V[Y]>0$ and correlation $\\rho=0$ ($X=P_{\\ell+1}-P_\\ell$, $Y=P_\\ell-P_{\\ell-1}$, $V_{\\ell+1}=\\mathbb V[X]$, $V_\\ell=\\mathbb V[Y]$, $\\widetilde V_{\\ell+1}=\\mathbb V[X+Y]$), and let $C_\\ell\\in\\mathbb R$, $C_{\\ell+1}>0$. Then\n\n1. $\\widetilde V_{\\ell+1}=V_{\\ell+1}+V_\\ell$; and\n2. the test (2.5) with $\\widetilde C_{\\ell+1}=C_{\\ell+1}$, $\\widetilde V_{\\ell+1}C_{\\ell+1}<V_{\\ell+1}C_{\\ell+1}\\big(1+\\sqrt{V_\\ell C_\\ell/(V_{\\ell+1}C_{\\ell+1})}\\big)^2$, holds if and only if $1+V_\\ell/V_{\\ell+1}<\\big(1+\\sqrt{V_\\ell C_\\ell/(V_{\\ell+1}C_{\\ell+1})}\\big)^2$.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §2.6, p. 20 of the author's version (the case ρ = 0).",
+   "explanation": "With $\\rho=0$, `levelDrop_variance` gives $\\widetilde V_{\\ell+1}=V_{\\ell+1}+V_\\ell$. Then $(V_{\\ell+1}+V_\\ell)C_{\\ell+1}=V_{\\ell+1}C_{\\ell+1}(1+V_\\ell/V_{\\ell+1})$, and dividing the test by $V_{\\ell+1}C_{\\ell+1}>0$ gives the stated condition.",
+   "tags": [
+    "multilevel-monte-carlo",
+    "probability",
+    "optimization"
+   ]
   }
  },
  "definitions": {

@@ -90,6 +90,11 @@ import MlmcLean
 #print axioms MLMC.sampleVariance_sd
 #print axioms MLMC.kurtosis_of_ternary
 #print axioms MLMC.tendsto_kurtosis_atTop
+#print axioms MLMC.levelKeep_product
+#print axioms MLMC.levelDrop_test
+#print axioms MLMC.levelDrop_variance
+#print axioms MLMC.levelDrop_perfect_correlation
+#print axioms MLMC.levelDrop_uncorrelated
 -- helper lemmas that the prove2.me generator promotes to nodes
 #print axioms MLMC.sqrt_Vb_mul_Cb
 #print axioms MLMC.two_rpow_levelL_le
