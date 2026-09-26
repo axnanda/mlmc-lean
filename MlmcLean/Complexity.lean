@@ -12,8 +12,10 @@ import MlmcLean.Allocation
 /-!
 # Giles' MLMC complexity theorem — the real-analysis core
 
-Reference: M.B. Giles, *Multilevel Monte Carlo methods*, Acta Numerica 24 (2015), Theorem 1
-(a slight generalisation of Giles 2008, Theorem 3.1, and of Cliffe–Giles–Scheichl–Teckentrup 2011).
+Reference: M.B. Giles, *Multilevel Monte Carlo methods*, Acta Numerica 24 (2015), §2.1, Theorem 1
+(pp. 6–7 of the author's version; per p. 7, "a slight generalisation of the original theorem in
+(Giles 2008b)", corresponding to the theorem of Cliffe, Giles, Scheichl and Teckentrup (2011) up to
+the use of expected costs).
 
 **Theorem 1 (Giles).** Let `P` be a random variable and `P_ℓ` its level-`ℓ` approximation.
 If there exist independent estimators `Y_ℓ` based on `N_ℓ` Monte Carlo samples, each with
@@ -29,28 +31,32 @@ then there is a constant `c₄ > 0` such that for every `ε < e⁻¹` there are 
 `Y = ∑_{ℓ=0}^{L} Y_ℓ` has `MSE < ε²` and expected cost
 `E[C] ≤ c₄ ε⁻²` (β > γ), `c₄ ε⁻² (log ε)²` (β = γ), `c₄ ε^{−2−(γ−β)/α}` (β < γ).
 
-By `MlmcLean/Estimator.lean`, `MSE = ∑ V_ℓ/N_ℓ + (E[P_L] − E[P])²`, so — exactly as in Giles'
-proof — everything reduces to the following deterministic statement, proved in this file as
+By `MlmcLean/Estimator.lean`, `MSE = ∑ V_ℓ/N_ℓ + (E[P_L] − E[P])²`, so — as in Giles' proof
+sketch (p. 7) — everything reduces to the following deterministic statement, proved in this file as
 `mlmc_complexity_core`: with `V_ℓ := c₂ 2^{−βℓ}` and `C_ℓ := c₃ 2^{γℓ}` there are `L` and
 integers `N_ℓ ≥ 1` with
 
   `(c₁ 2^{−αL})² + ∑_{ℓ ≤ L} V_ℓ / N_ℓ < ε²`  and  `∑_{ℓ ≤ L} N_ℓ C_ℓ ≤ c₄ · bound(ε)`.
 
-The proof follows Giles verbatim:
-1. choose `L = ⌈log₂(2c₁/ε)/α⌉` so that the bias is `≤ ε/2`;
-2. choose `N_ℓ = ⌈τ⁻¹ √(V_ℓ/C_ℓ) ∑ √(V_k C_k)⌉` with `τ = ε²/2` (Giles §1.3, p. 4, rounded up),
-   which makes the variance `≤ ε²/2` and the cost `≤ τ⁻¹ (∑ √(V_ℓ C_ℓ))² + ∑ C_ℓ`
+The proof follows the strategy of Giles' sketch (p. 7: "L is chosen so that
+`(E[Y]−E[P])² < ½ε²`, and the constant of proportionality for `N_ℓ` is chosen so that
+`V[Y] < ½ε²` … the optimal value is rounded up"), with the error split `bias ≤ ε/2`,
+`variance ≤ ε²/2` and explicit constants of our own:
+1. choose `L = ⌈log₂(2c₁/ε)/α⌉₊` so that the bias bound `c₁ 2^{−αL}` is `≤ ε/2`;
+2. choose `N_ℓ = ⌈τ⁻¹ √(V_ℓ/C_ℓ) ∑ √(V_k C_k)⌉₊` with `τ = ε²/2` (the allocation of §1.3, p. 4,
+   rounded up), which makes the variance `≤ ε²/2` and the cost `≤ τ⁻¹ (∑ √(V_ℓ C_ℓ))² + ∑ C_ℓ`
    (`MlmcLean/Allocation.lean`);
 3. `√(V_ℓ C_ℓ) = √(c₂c₃) · 2^{(γ−β)ℓ/2}` is a geometric sequence, and the three regimes
-   `β > γ`, `β = γ`, `β < γ` are the three behaviours of its partial sums; the tail `∑ C_ℓ` is
-   `O(2^{γL}) = O(ε^{−γ/α})`, absorbed using `α ≥ ½ min(β,γ)`.
+   `β > γ`, `β = γ`, `β < γ` are the three behaviours of its partial sums; the rounding-up
+   overhead `∑ C_ℓ` is `O(2^{γL}) = O(ε^{−γ/α})`, absorbed using `α ≥ ½ min(β,γ)`.
 -/
 
 open Finset Real
 
 namespace MLMC
 
-/-- The three complexity regimes of Giles' Theorem 1. -/
+/-- The three complexity regimes of Giles' Theorem 1 (Giles 2015, §2.1, p. 7): `ε⁻²` for
+`β > γ`, `ε⁻² (log ε)²` for `β = γ`, `ε^{−2−(γ−β)/α}` for `β < γ`. -/
 noncomputable def complexityBound (α β γ ε : ℝ) : ℝ :=
   if γ < β then ε ^ (-2 : ℝ)
   else if β = γ then ε ^ (-2 : ℝ) * (Real.log ε) ^ 2
@@ -72,10 +78,12 @@ lemma complexityBound_nonneg {α β γ ε : ℝ} (hε : 0 < ε) : 0 ≤ complexi
   unfold complexityBound
   split_ifs <;> positivity
 
-/-- Bound (iii) on the per-sample variance at level `ℓ`: `c₂ 2^{−βℓ}`. -/
+/-- The bound of condition (iii) of Giles' Theorem 1 (Giles 2015, §2.1) on the per-sample variance
+at level `ℓ`: `c₂ 2^{−βℓ}`. -/
 noncomputable def Vb (β c₂ : ℝ) (ℓ : ℕ) : ℝ := c₂ * (2 : ℝ) ^ (-(β * (ℓ : ℝ)))
 
-/-- Bound (iv) on the per-sample cost at level `ℓ`: `c₃ 2^{γℓ}`. -/
+/-- The bound of condition (iv) of Giles' Theorem 1 (Giles 2015, §2.1) on the per-sample cost at
+level `ℓ`: `c₃ 2^{γℓ}`. -/
 noncomputable def Cb (γ c₃ : ℝ) (ℓ : ℕ) : ℝ := c₃ * (2 : ℝ) ^ (γ * (ℓ : ℝ))
 
 lemma Vb_pos {β c₂ : ℝ} (hc₂ : 0 < c₂) (ℓ : ℕ) : 0 < Vb β c₂ ℓ :=
@@ -89,7 +97,8 @@ lemma Cb_pos {γ c₃ : ℝ} (hc₃ : 0 < c₃) (ℓ : ℕ) : 0 < Cb γ c₃ ℓ
 lemma two_rpow_mul_nat (y : ℝ) (n : ℕ) : (2 : ℝ) ^ (y * n) = ((2 : ℝ) ^ y) ^ n :=
   Real.rpow_mul_natCast (by norm_num) y n
 
-/-- `√(V_ℓ C_ℓ) = √(c₂ c₃) · r^ℓ` with `r = 2^{(γ−β)/2}`. -/
+/-- `√(V_ℓ C_ℓ) = √(c₂ c₃) · r^ℓ` with `r = 2^{(γ−β)/2}` (Giles 2015, p. 7: "the cost on level
+`ℓ` is proportional to `2^{(γ−β)ℓ/2}`"). -/
 lemma sqrt_Vb_mul_Cb {β γ c₂ c₃ : ℝ} (hc₂ : 0 < c₂) (hc₃ : 0 < c₃) (ℓ : ℕ) :
     Real.sqrt (Vb β c₂ ℓ * Cb γ c₃ ℓ) =
       Real.sqrt (c₂ * c₃) * ((2 : ℝ) ^ ((γ - β) / 2)) ^ ℓ := by
@@ -135,14 +144,16 @@ lemma geom_sum_le_of_one_lt {r : ℝ} (hr : 1 < r) (n : ℕ) :
 
 /-! ### Step 1 — choice of the finest level `L` -/
 
-/-- Giles' choice of `L`: the least integer with `c₁ 2^{−αL} ≤ δ`, i.e. `L = ⌈log₂(c₁/δ)/α⌉₊`. -/
+/-- The finest level used in the proof of Theorem 1 (Giles 2015, p. 7): for `α, c₁, δ > 0`, the
+least natural number `L` with `c₁ 2^{−αL} ≤ δ`, i.e. `⌈log₂(c₁/δ)/α⌉₊`.  The proof takes
+`δ = ε/2`; Giles' sketch only requires `(E[Y] − E[P])² < ½ε²`. -/
 noncomputable def levelL (α c₁ δ : ℝ) : ℕ := ⌈Real.logb 2 (c₁ / δ) / α⌉₊
 
 lemma alpha_mul_div {α : ℝ} (hα : 0 < α) (l : ℝ) : α * (l / α) = l := by
   calc α * (l / α) = l * (α / α) := by ring
     _ = l := by rw [div_self hα.ne', mul_one]
 
-/-- The bias at level `L` is at most `δ`. -/
+/-- The bias bound at the level `levelL` is at most `δ` (proof of Theorem 1, Giles 2015, p. 7). -/
 lemma levelL_bias {α c₁ δ : ℝ} (hα : 0 < α) (hc₁ : 0 < c₁) (hδ : 0 < δ) :
     c₁ * (2 : ℝ) ^ (-(α * (levelL α c₁ δ : ℝ))) ≤ δ := by
   have hx : Real.logb 2 (c₁ / δ) / α ≤ (levelL α c₁ δ : ℝ) := Nat.le_ceil _
@@ -155,7 +166,8 @@ lemma levelL_bias {α c₁ δ : ℝ} (hα : 0 < α) (hc₁ : 0 < c₁) (hδ : 0 
   rw [Real.rpow_neg (by norm_num), ← div_eq_mul_inv, div_le_iff₀ hp]
   rwa [div_le_iff₀ hδ, mul_comm] at h2
 
-/-- `L < max 0 (log₂(c₁/δ)/α) + 1`. -/
+/-- `L < max 0 (log₂(c₁/δ)/α) + 1` for `L = levelL α c₁ δ` (proof of Theorem 1, Giles 2015,
+p. 7). -/
 lemma levelL_lt (α c₁ δ : ℝ) :
     (levelL α c₁ δ : ℝ) < max 0 (Real.logb 2 (c₁ / δ) / α) + 1 := by
   rcases le_or_gt 0 (Real.logb 2 (c₁ / δ) / α) with h | h
@@ -169,7 +181,8 @@ lemma levelL_lt (α c₁ δ : ℝ) :
     push_cast
     linarith
 
-/-- `2^{αL} ≤ 2^α · max 1 (c₁/δ)`. -/
+/-- `2^{αL} ≤ 2^α · max 1 (c₁/δ)` for `L = levelL α c₁ δ` (proof of Theorem 1, Giles 2015,
+p. 7: "`2^{−αL} = O(ε)`"). -/
 lemma two_rpow_levelL_le {α c₁ δ : ℝ} (hα : 0 < α) (hc₁ : 0 < c₁) (hδ : 0 < δ) :
     (2 : ℝ) ^ (α * (levelL α c₁ δ : ℝ)) ≤ 2 ^ α * max 1 (c₁ / δ) := by
   have hL := levelL_lt α c₁ δ
@@ -203,10 +216,12 @@ lemma two_rpow_levelL_le {α c₁ δ : ℝ} (hα : 0 < α) (hc₁ : 0 < c₁) (h
 
 /-! ### Step 2 — the ε-dependent choice of `L` and `N_ℓ` -/
 
-/-- The constant `K1 = 2^α (1 + 2c₁)`; we get `2^{αL} ≤ K1/ε`. -/
+/-- The constant `K1 = 2^α (1 + 2c₁)`, a device of this formalisation of the proof of Theorem 1
+(Giles 2015, p. 7): `2^{αL} ≤ K1/ε`. -/
 noncomputable def K1 (α c₁ : ℝ) : ℝ := 2 ^ α * (1 + 2 * c₁)
 
-/-- The constant `K2`; we get `L + 1 ≤ K2 · |log ε|`. -/
+/-- The constant `K2`, a device of this formalisation of the proof of Theorem 1 (Giles 2015,
+p. 7): `L + 1 ≤ K2 · |log ε|`. -/
 noncomputable def K2 (α c₁ : ℝ) : ℝ := (|Real.log (2 * c₁)| + 1) / (α * Real.log 2) + 2
 
 lemma K1_pos {α c₁ : ℝ} (hc₁ : 0 < c₁) : 0 < K1 α c₁ := by
@@ -225,7 +240,9 @@ lemma one_le_neg_log {ε : ℝ} (hε : 0 < ε) (hε1 : ε < Real.exp (-1)) : 1 �
   rw [Real.log_exp] at this
   linarith
 
-/-- **Giles' construction of `L` and `N_ℓ`** and the four estimates his proof extracts from it. -/
+/-- **The choice of `L` and `N_ℓ`** in this formalisation of the proof of Theorem 1 (Giles 2015,
+p. 7): `L = levelL α c₁ (ε/2)` and the rounded-up optimal allocation, with five estimates:
+bias² `≤ ε²/4`, variance `≤ ε²/2`, the cost, `2^{αL} ≤ K1/ε` and `L + 1 ≤ K2 |log ε|`. -/
 theorem exists_L_N {α β γ c₁ c₂ c₃ : ℝ} (hα : 0 < α) (hc₁ : 0 < c₁) (hc₂ : 0 < c₂)
     (hc₃ : 0 < c₃) {ε : ℝ} (hε : 0 < ε) (hε1 : ε < Real.exp (-1)) :
     ∃ (L : ℕ) (N : ℕ → ℕ), (∀ ℓ, 0 < N ℓ) ∧
@@ -250,13 +267,12 @@ theorem exists_L_N {α β γ c₁ c₂ c₃ : ℝ} (hα : 0 < α) (hc₁ : 0 < c
     calc (c₁ * (2 : ℝ) ^ (-(α * (levelL α c₁ (ε / 2) : ℝ)))) ^ 2 ≤ (ε / 2) ^ 2 := by gcongr
       _ = ε ^ 2 / 4 := by ring
   · -- variance
-    exact optimalN_variance hs hVpos hCpos hτpos
+    exact optimalN_variance hs (fun ℓ _ => hVpos ℓ) (fun ℓ _ => hCpos ℓ) hτpos
   · -- cost
-    have hc := optimalN_cost hs hVpos hCpos hτpos
-    have hS : S (range (levelL α c₁ (ε / 2) + 1)) (Vb β c₂) (Cb γ c₃) =
+    have hc := optimalN_cost hs (fun ℓ _ => hVpos ℓ) (fun ℓ _ => hCpos ℓ) hτpos
+    have hS : ∑ ℓ ∈ range (levelL α c₁ (ε / 2) + 1), Real.sqrt (Vb β c₂ ℓ * Cb γ c₃ ℓ) =
         Real.sqrt (c₂ * c₃) *
           ∑ ℓ ∈ range (levelL α c₁ (ε / 2) + 1), ((2 : ℝ) ^ ((γ - β) / 2)) ^ ℓ := by
-      unfold S
       rw [Finset.mul_sum]
       exact Finset.sum_congr rfl fun ℓ _ => sqrt_Vb_mul_Cb hc₂ hc₃ ℓ
     have hτinv : (ε ^ 2 / 2)⁻¹ = 2 * ε⁻¹ ^ 2 := by
@@ -311,7 +327,8 @@ theorem exists_L_N {α β γ c₁ c₂ c₃ : ℝ} (hα : 0 < α) (hc₁ : 0 < c
 
 /-! ### Step 3 — the three regimes -/
 
-/-- `2^{pL} ≤ K1^{p/α} ε^{−p/α}` whenever `2^{αL} ≤ K1/ε` and `p ≥ 0`. -/
+/-- `2^{pL} ≤ K^{p/α} ε^{−p/α}` whenever `2^{αL} ≤ K/ε` and `p ≥ 0` (proof of Theorem 1,
+Giles 2015, p. 7). -/
 lemma two_rpow_L_le {α p K ε L : ℝ} (hα : 0 < α) (hp : 0 ≤ p) (hK : 0 < K) (hε : 0 < ε)
     (h : (2 : ℝ) ^ (α * L) ≤ K / ε) :
     (2 : ℝ) ^ (p * L) ≤ K ^ (p / α) * ε ^ (-(p / α)) := by
@@ -324,8 +341,9 @@ lemma two_rpow_L_le {α p K ε L : ℝ} (hα : 0 < α) (hp : 0 ≤ p) (hK : 0 < 
   rw [e, Real.rpow_neg hε.le, ← div_eq_mul_inv, ← Real.div_rpow hK.le hε.le]
   exact Real.rpow_le_rpow (Real.rpow_nonneg h2 _) h (div_nonneg hp hα.le)
 
-/-- The cost of the levels themselves (the rounding-up overhead `∑ C_ℓ`):
-`c₃ ∑_{ℓ≤L} 2^{γℓ} ≤ c₃ (2^γ/(2^γ−1)) K1^{γ/α} ε^{−γ/α}`. -/
+/-- The rounding-up overhead `∑_{ℓ≤L} C_ℓ` (proof of Theorem 1, Giles 2015, p. 7: "the optimal
+value is rounded up"): `c₃ ∑_{ℓ≤L} 2^{γℓ} ≤ c₃ (2^γ/(2^γ−1)) K^{γ/α} ε^{−γ/α}` whenever
+`2^{αL} ≤ K/ε`. -/
 lemma tail_cost_bound {α γ c₃ K ε : ℝ} (hα : 0 < α) (hγ : 0 < γ) (hc₃ : 0 < c₃) (hK : 0 < K)
     (hε : 0 < ε) (L : ℕ) (hL : (2 : ℝ) ^ (α * (L : ℝ)) ≤ K / ε) :
     c₃ * ∑ ℓ ∈ range (L + 1), ((2 : ℝ) ^ γ) ^ ℓ ≤
@@ -345,13 +363,13 @@ lemma tail_cost_bound {α γ c₃ K ε : ℝ} (hα : 0 < α) (hγ : 0 < γ) (hc�
 lemma eps_inv_sq_eq {ε : ℝ} (hε : 0 < ε) : ε⁻¹ ^ 2 = ε ^ (-2 : ℝ) := by
   rw [Real.rpow_neg hε.le, Real.rpow_two, inv_pow]
 
--- `hβ : 0 < β` is one of Giles' hypotheses; the proof below never needs it (only
--- `α ≥ ½ min(β,γ)` and `γ > 0` enter), so we keep it for fidelity and silence the linter.
 set_option linter.unusedVariables false in
-/-- **Giles' Theorem 1 — deterministic core.**  Under the hypotheses of Theorem 1, with
+/-- **Giles' Theorem 1 — deterministic core** (a step of this formalisation's proof of Giles 2015,
+§2.1, Theorem 1; not stated in the paper).  Under the hypotheses of Theorem 1, with
 `V_ℓ = c₂ 2^{−βℓ}` and `C_ℓ = c₃ 2^{γℓ}`, there is `c₄ > 0` such that for every `0 < ε < e⁻¹`
-there are `L` and `N_ℓ ≥ 1` with `bias² + ∑ V_ℓ/N_ℓ < ε²` and
-`∑ N_ℓ C_ℓ ≤ c₄ · complexityBound α β γ ε`. -/
+there are `L` and `N_ℓ ≥ 1` with `(bias bound)² + ∑ V_ℓ/N_ℓ < ε²` and
+`∑ N_ℓ C_ℓ ≤ c₄ · complexityBound α β γ ε`.  The hypothesis `β > 0` is one of Giles'; the proof
+does not use it (only `α ≥ ½ min(β,γ)` and `γ > 0` enter). -/
 theorem mlmc_complexity_core {α β γ c₁ c₂ c₃ : ℝ} (hα : 0 < α) (hβ : 0 < β) (hγ : 0 < γ)
     (hc₁ : 0 < c₁) (hc₂ : 0 < c₂) (hc₃ : 0 < c₃) (hαβγ : min β γ / 2 ≤ α) :
     ∃ c₄ : ℝ, 0 < c₄ ∧ ∀ ε : ℝ, 0 < ε → ε < Real.exp (-1) →
@@ -380,7 +398,8 @@ theorem mlmc_complexity_core {α β γ c₁ c₂ c₃ : ℝ} (hα : 0 < α) (hβ
     have h1r : 0 < 1 - r := by linarith
     refine ⟨2 * (c₂ * c₃) * (1 - r)⁻¹ ^ 2 + T, by positivity, ?_⟩
     intro ε hε hε1
-    obtain ⟨L, N, hN, hbias, hvar, hcost, hL, -⟩ := exists_L_N (β := β) (γ := γ) hα hc₁ hc₂ hc₃ hε hε1
+    obtain ⟨L, N, hN, hbias, hvar, hcost, hL, -⟩ :=
+      exists_L_N (β := β) (γ := γ) hα hc₁ hc₂ hc₃ hε hε1
     refine ⟨L, N, hN, by have := pow_pos hε 2; linarith, ?_⟩
     have hε1' : ε < 1 := eps_lt_one hε1
     have hA : (∑ ℓ ∈ range (L + 1), r ^ ℓ) ^ 2 ≤ (1 - r)⁻¹ ^ 2 := by

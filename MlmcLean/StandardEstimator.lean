@@ -1,4 +1,5 @@
 import MlmcLean.Theorem1
+import MlmcLean.LevelDiff
 import Mathlib.Probability.Independence.Basic
 import Mathlib.Probability.Independence.InfinitePi
 import Mathlib.Probability.ProductMeasure
@@ -12,7 +13,8 @@ and §2.1, eq. (2.2)–(2.3) and Theorem 1.
 `MlmcLean/Theorem1.lean` proves Theorem 1 for *any* family of estimators satisfying its
 hypotheses.  This file constructs the estimator Giles actually uses,
 
-  `Y = ∑_{ℓ=0}^{L} Y_ℓ`,  `Y_ℓ = N_ℓ⁻¹ ∑_{n=1}^{N_ℓ} (P_ℓ^{(ℓ,n)} − P_{ℓ−1}^{(ℓ,n)})`,  `P_{−1} ≡ 0`,  (2.2)
+  `Y = ∑_{ℓ=0}^{L} Y_ℓ`,  `Y_ℓ = N_ℓ⁻¹ ∑_{n=1}^{N_ℓ} (P_ℓ^{(ℓ,n)} − P_{ℓ−1}^{(ℓ,n)})`,
+  `P_{−1} ≡ 0`  (2.2),
 
 where the `n`-th sample on level `ℓ` evaluates the fine and the coarse approximation on the same
 random input `ω^{(ℓ,n)}`, and "independent samples are used at each level of correction" (p. 4).
@@ -37,18 +39,9 @@ section defs
 
 variable {Ω₀ Ω : Type*}
 
-/-- The level-`ℓ` correction `ΔP_ℓ = P_ℓ − P_{ℓ−1}`, with `P_{−1} ≡ 0` (Giles 2015, (2.2)). -/
-noncomputable def levelDiff (Pl : ℕ → Ω₀ → ℝ) : ℕ → Ω₀ → ℝ
-  | 0 => Pl 0
-  | ℓ + 1 => fun y => Pl (ℓ + 1) y - Pl ℓ y
-
-@[simp] lemma levelDiff_zero (Pl : ℕ → Ω₀ → ℝ) : levelDiff Pl 0 = Pl 0 := rfl
-
-@[simp] lemma levelDiff_succ (Pl : ℕ → Ω₀ → ℝ) (ℓ : ℕ) :
-    levelDiff Pl (ℓ + 1) = fun y => Pl (ℓ + 1) y - Pl ℓ y := rfl
-
 /-- Giles (2.2): the level-`ℓ` estimator with `N` samples,
-`Y_ℓ = N⁻¹ ∑_{n<N} (P_ℓ − P_{ℓ−1})(ω^{(ℓ,n)})`. -/
+`Y_ℓ = N⁻¹ ∑_{n<N} (P_ℓ − P_{ℓ−1})(ω^{(ℓ,n)})` (the paper's sample index `n = 1, …, N` is shifted
+to `0, …, N−1`).  For `N = 0` this is `0⁻¹ · 0 = 0`; every theorem assumes `N ≥ 1`. -/
 noncomputable def levelEstimator (Pl : ℕ → Ω₀ → ℝ) (ω : ℕ × ℕ → Ω → Ω₀) (ℓ N : ℕ) (x : Ω) : ℝ :=
   (N : ℝ)⁻¹ * ∑ n ∈ range N, levelDiff Pl ℓ (ω (ℓ, n) x)
 
@@ -69,14 +62,6 @@ section prob
 variable {Ω₀ Ω : Type*} [MeasurableSpace Ω₀] [MeasurableSpace Ω] {ν : Measure Ω₀}
   {μ : Measure Ω} {Pl : ℕ → Ω₀ → ℝ} {ω : ℕ × ℕ → Ω → Ω₀}
 
-lemma measurable_levelDiff (hPl : ∀ ℓ, Measurable (Pl ℓ)) : ∀ ℓ, Measurable (levelDiff Pl ℓ)
-  | 0 => hPl 0
-  | ℓ + 1 => (hPl (ℓ + 1)).sub (hPl ℓ)
-
-lemma memLp_levelDiff (hPl : ∀ ℓ, MemLp (Pl ℓ) 2 ν) : ∀ ℓ, MemLp (levelDiff Pl ℓ) 2 ν
-  | 0 => hPl 0
-  | ℓ + 1 => (hPl (ℓ + 1)).sub (hPl ℓ)
-
 /-- Integrals transport along a measure-preserving map. -/
 lemma integral_comp_of_measurePreserving {φ : Ω → Ω₀} (hφ : MeasurePreserving φ μ ν)
     {f : Ω₀ → ℝ} (hf : AEStronglyMeasurable f ν) : ∫ x, f (φ x) ∂μ = ∫ y, f y ∂ν := by
@@ -91,20 +76,24 @@ lemma memLp_levelEstimator (hω : ∀ p, MeasurePreserving (ω p) μ ν)
     (hPl : ∀ ℓ, MemLp (Pl ℓ) 2 ν) (ℓ N : ℕ) : MemLp (levelEstimator Pl ω ℓ N) 2 μ :=
   (memLp_finsetSum _ fun n _ => memLp_sample hω hPl ℓ n).const_mul _
 
-/-- Condition (ii) of Theorem 1 holds for the estimator (2.2): `E[Y_ℓ] = E[P_ℓ − P_{ℓ−1}]`. -/
+/-- Condition (ii) of Theorem 1 holds for the estimator (2.2) (Giles 2015, §2.1): for `N ≥ 1`
+samples with inputs of law `ν`, `E[Y_ℓ] = E[P_ℓ − P_{ℓ−1}]`. -/
 lemma integral_levelEstimator [IsProbabilityMeasure μ] (hω : ∀ p, MeasurePreserving (ω p) μ ν)
-    (hPlm : ∀ ℓ, Measurable (Pl ℓ)) (hPl : ∀ ℓ, MemLp (Pl ℓ) 2 ν) (ℓ : ℕ) {N : ℕ} (hN : 0 < N) :
+    (hPl : ∀ ℓ, Integrable (Pl ℓ) ν) (ℓ : ℕ) {N : ℕ} (hN : 0 < N) :
     μ[levelEstimator Pl ω ℓ N] = ∫ y, levelDiff Pl ℓ y ∂ν := by
+  have hint : ∀ n, Integrable (fun x => levelDiff Pl ℓ (ω (ℓ, n) x)) μ := fun n =>
+    ((hω (ℓ, n)).integrable_comp (integrable_levelDiff hPl ℓ).aestronglyMeasurable).2
+      (integrable_levelDiff hPl ℓ)
   have hterm : ∀ n, ∫ x, levelDiff Pl ℓ (ω (ℓ, n) x) ∂μ = ∫ y, levelDiff Pl ℓ y ∂ν := fun n =>
-    integral_comp_of_measurePreserving (hω (ℓ, n)) (measurable_levelDiff hPlm ℓ).aestronglyMeasurable
+    integral_comp_of_measurePreserving (hω (ℓ, n)) (integrable_levelDiff hPl ℓ).aestronglyMeasurable
   simp only [levelEstimator]
-  rw [integral_const_mul, integral_finsetSum _ fun n _ =>
-    (memLp_sample hω hPl ℓ n).integrable one_le_two]
+  rw [integral_const_mul, integral_finsetSum _ fun n _ => hint n]
   simp only [hterm, Finset.sum_const, Finset.card_range, nsmul_eq_mul]
   have hN' : (N : ℝ) ≠ 0 := Nat.cast_ne_zero.2 hN.ne'
   rw [← mul_assoc, inv_mul_cancel₀ hN', one_mul]
 
-/-- Giles (2.3): `V[Y_ℓ] = N_ℓ⁻¹ V_ℓ` with `V_ℓ = V[P_ℓ − P_{ℓ−1}]`, for independent inputs. -/
+/-- The per-level identity behind Giles (2.3) (Giles 2015, §2.1; §1.3, p. 4): for `N ≥ 1` samples
+with independent inputs of law `ν`, `V[Y_ℓ] = N⁻¹ V_ℓ` with `V_ℓ = V[P_ℓ − P_{ℓ−1}]`. -/
 lemma variance_levelEstimator [IsProbabilityMeasure μ] (hω : ∀ p, MeasurePreserving (ω p) μ ν)
     (hind : iIndepFun ω μ) (hPlm : ∀ ℓ, Measurable (Pl ℓ)) (hPl : ∀ ℓ, MemLp (Pl ℓ) 2 ν)
     (ℓ : ℕ) {N : ℕ} (hN : 0 < N) :
@@ -146,6 +135,30 @@ lemma indepFun_levelEstimator (hωm : ∀ p, Measurable (ω p)) (hind : iIndepFu
   rw [levelEstimator_eq_comp Pl ω i Ni, levelEstimator_eq_comp Pl ω j Nj]
   exact (hind.indepFun_finset _ _ hST hωm).comp (hmeas i Ni) (hmeas j Nj)
 
+/-- **Giles (2.3) for the estimator (2.2)** (Giles 2015, §2.1): with independent inputs of law
+`ν` and `N_ℓ ≥ 1` samples on every level, the multilevel estimator `Y = ∑_{ℓ=0}^{L} Y_ℓ` has
+`E[Y] = E[P_L]` and `V[Y] = ∑_{ℓ=0}^{L} N_ℓ⁻¹ V_ℓ` with `V_ℓ = V[P_ℓ − P_{ℓ−1}]`, `P_{−1} ≡ 0`. -/
+theorem mlmcEstimator_mean_variance [IsProbabilityMeasure μ]
+    (hω : ∀ p, MeasurePreserving (ω p) μ ν) (hind : iIndepFun ω μ)
+    (hPlm : ∀ ℓ, Measurable (Pl ℓ)) (hPl : ∀ ℓ, MemLp (Pl ℓ) 2 ν) (L : ℕ) {N : ℕ → ℕ}
+    (hN : ∀ ℓ, 0 < N ℓ) :
+    μ[mlmcEstimator Pl ω L N] = ∫ y, Pl L y ∂ν ∧
+      variance (mlmcEstimator Pl ω L N) μ =
+        ∑ ℓ ∈ range (L + 1), variance (levelDiff Pl ℓ) ν / N ℓ := by
+  have hPl1 : ∀ ℓ, Integrable (Pl ℓ) ν := fun ℓ => (hPl ℓ).integrable one_le_two
+  constructor
+  · simp only [mlmcEstimator]
+    rw [integral_finsetSum _ fun ℓ _ =>
+      (memLp_levelEstimator hω hPl ℓ (N ℓ)).integrable one_le_two,
+      Finset.sum_congr rfl fun ℓ _ => integral_levelEstimator hω hPl1 ℓ (hN ℓ)]
+    exact sum_integral_levelDiff hPl1 L
+  · have hfun : mlmcEstimator Pl ω L N = ∑ ℓ ∈ range (L + 1), levelEstimator Pl ω ℓ (N ℓ) := by
+      funext x
+      simp only [mlmcEstimator, Finset.sum_apply]
+    rw [hfun, IndepFun.variance_sum (fun ℓ _ => memLp_levelEstimator hω hPl ℓ (N ℓ))
+      (fun i _ j _ hij => indepFun_levelEstimator (fun p => (hω p).measurable) hind hPlm hij _ _)]
+    exact Finset.sum_congr rfl fun ℓ _ => variance_levelEstimator hω hind hPlm hPl ℓ (hN ℓ)
+
 /-- **Giles' Theorem 1 for the standard estimator (2.2)** (Giles 2015, §2.1, Theorem 1).
 Let the inputs `ω (ℓ, n)` be mutually independent with law `ν`, and let `cost ℓ n` be the cost of
 the `n`-th level-`ℓ` sample, with mean `C ℓ`.  Assume the level approximations `Pl ℓ` are
@@ -183,7 +196,7 @@ theorem giles_theorem1_standard [IsProbabilityMeasure μ] [IsProbabilityMeasure 
   obtain ⟨c₄, hc₄, h⟩ := giles_theorem1 (μ := μ) (fun x => P (ω (0, 0) x))
     (fun ℓ x => Pl ℓ (ω (0, 0) x)) (fun ℓ n => levelEstimator Pl ω ℓ n)
     (fun ℓ n x => ∑ k ∈ range n, cost ℓ k x) (fun ℓ => variance (levelDiff Pl ℓ) ν) C
-    hα hβ hγ hc₁ hc₂ hc₃ hαβγ hPμ hPlμ (fun ℓ n => memLp_levelEstimator hω hPl ℓ n)
+    hα hβ hγ hc₁ hc₂ hc₃ hαβγ hPμ hPlμ (fun ℓ n _ => memLp_levelEstimator hω hPl ℓ n)
     (fun N _ i j hij => indepFun_levelEstimator (fun p => (hω p).measurable) hind hPlm hij _ _)
     (fun ℓ n _ => integrable_finsetSum _ fun k _ => hcost ℓ k)
     (fun ℓ n _ => by
@@ -194,10 +207,10 @@ theorem giles_theorem1_standard [IsProbabilityMeasure μ] [IsProbabilityMeasure 
       rw [tr (fun y => Pl ℓ y - P y) ((hPl1 ℓ).sub hP)]
       exact h_i ℓ)
     (fun n hn => by
-      rw [integral_levelEstimator hω hPlm hPl 0 hn, tr (Pl 0) (hPl1 0), levelDiff_zero])
+      rw [integral_levelEstimator hω hPl1 0 hn, tr (Pl 0) (hPl1 0), levelDiff_zero])
     (fun ℓ n hn => by
       dsimp only
-      rw [integral_levelEstimator hω hPlm hPl (ℓ + 1) hn,
+      rw [integral_levelEstimator hω hPl1 (ℓ + 1) hn,
         tr (fun y => Pl (ℓ + 1) y - Pl ℓ y) ((hPl1 (ℓ + 1)).sub (hPl1 ℓ)), levelDiff_succ])
     (fun ℓ n hn => variance_levelEstimator hω hind hPlm hPl ℓ hn) h_iii h_iv
   refine ⟨c₄, hc₄, fun ε hε hε1 => ?_⟩

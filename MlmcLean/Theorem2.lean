@@ -1,6 +1,8 @@
 import MlmcLean.Lattice
 import MlmcLean.Estimator
 import Mathlib.Algebra.Order.Group.DenselyOrdered
+import Mathlib.Analysis.Normed.Group.InfiniteSum
+import Mathlib.Topology.Algebra.InfiniteSum.Real
 
 /-!
 # Giles' Theorem 2: Multi-Index Monte Carlo
@@ -28,12 +30,18 @@ exponents is more complicated when `α_d = ½β_d` for some `d`".
 (Giles lists the conditions in the order i), iii), ii), iv), v); we keep his labels.)
 
 **Results.**
+* `giles_theorem2_full` — the theorem as the paper states it: for `α_d ≥ ½β_d` there are
+  exponents `e₁, e₂` (depending only on `α, β, γ`) for which the bound holds, and they are
+  `e₁ = 2D₂`, `e₂ = (D₂ − 1)(2 + η)` when every `α_d > ½β_d`;
 * `giles_theorem2` — the theorem for `α_d > ½β_d`, with the paper's `e₁ = 2D₂`,
   `e₂ = (D₂ − 1)(2 + η)`;
 * `giles_theorem2_boundary` — the theorem for `α_d ≥ ½β_d`; the paper leaves the exponents
   unspecified, and we prove `e₁ = 2D₂ + (D₃ − 3)⁺`, `e₂ = (D₂ − 1)(2 + η) + (D₃ − 1)⁺` with
   `D₃ = #{d : α_d = ½β_d}`, which are the paper's exponents when `D₃ = 0`;
-* `mimc_complexity`, `mimc_complexity_boundary` — the deterministic statements behind them.
+* `mimc_complexity`, `mimc_complexity_boundary` — the deterministic statements behind them;
+* `tendsto_sum_box_integral_crossDiff`, `hasSum_integral_crossDiff` — the telescoping sum
+  `E[P] = ∑_{ℓ≥0} E[ΔP_ℓ]` of p. 13, along boxes from condition i), and as an absolutely
+  convergent series under conditions i)–iii).
 
 **Proof.** The summation region is a simplex `𝓛 = {ℓ : θ·ℓ ≤ L}` ("of the form `ℓ·n ≤ L`",
 Giles p. 15), here with `θ_d = α_d + (γ_d − β_d)/2`, whose level sets are those of the ratio
@@ -41,8 +49,8 @@ Giles p. 15), here with `θ_d = α_d + (γ_d − β_d)/2`, whose level sets are 
 `α = aθ + δ` and `(γ − β)/2 = (1 − a)θ − δ` where `δ_d = α_d (η − (γ_d−β_d)/α_d)/(2 + η) ≥ 0`
 vanishes exactly in the `D₂` directions attaining `η`.  The lattice sums of
 `MlmcLean/Lattice.lean` then bound the bias by `(1+L)^{D₂−1} 2^{−aL}` and `∑_{𝓛} √(V_ℓ C_ℓ)` by
-`1`, `(1+L)^{D₂}`, `(1+L)^{D₂−1} 2^{(1−a)L}` in the three regimes.  `L` is the least level with
-bias `≤ ε/2`, and `N_ℓ` is the rounded-up optimal allocation of `MlmcLean/Allocation.lean`.
+`1`, `(1+L)^{D₂}`, `(1+L)^{D₂−1} 2^{(1−a)L}` in the three regimes.  `L` is the least level whose
+bias bound is `≤ ε/2`, and `N_ℓ` is the rounded-up optimal allocation of `MlmcLean/Allocation.lean`.
 Rounding up costs at most `∑_{𝓛} C_ℓ ≤ c₃ ∑_{θ·ℓ ≤ L} 2^{γ·ℓ}`.  With `c = max_d γ_d/θ_d ≤ 2`
 this is `O(|log ε|^{(D₃'−1)⁺ + (D₂−1)c(2+η)/2} ε^{−c(2+η)/2})`, `D₃' = #{d : γ_d = cθ_d}`: of lower
 order when every `α_d > ½β_d` (then `c < 2`), and the source of the extra powers `(D₃ − 1)⁺` of
@@ -61,10 +69,6 @@ lemma dot_linear {a b e : Fin D → ℝ} {u v : ℝ} (h : ∀ d, a d = u * b d +
     (ℓ : Fin D → ℕ) : dot a ℓ = u * dot b ℓ + v * dot e ℓ := by
   simp only [dot, Finset.mul_sum, ← Finset.sum_add_distrib]
   exact Finset.sum_congr rfl fun d _ => by rw [h d]; ring
-
-lemma dot_le_dot {a b : Fin D → ℝ} (h : ∀ d, a d ≤ b d) (ℓ : Fin D → ℕ) :
-    dot a ℓ ≤ dot b ℓ :=
-  Finset.sum_le_sum fun d _ => mul_le_mul_of_nonneg_right (h d) (Nat.cast_nonneg _)
 
 /-! ### The exponents of Theorem 2 -/
 
@@ -101,7 +105,8 @@ noncomputable def mimcD3 (α β : Fin D → ℝ) : ℕ :=
   (univ.filter fun d => α d = β d / 2).card
 
 /-- With `θ_d = α_d + (γ_d − β_d)/2`, the directions with `γ_d = 2θ_d` are exactly those with
-`α_d = ½β_d`. -/
+`α_d = ½β_d` (a step of this formalisation's proof of Giles 2015, §2.4, Theorem 2, for the case
+`α_d ≥ ½β_d`). -/
 lemma crit_two_theta_sub_gamma (α β γ : Fin D → ℝ) :
     crit (fun d => 2 * (α d + (γ d - β d) / 2) - γ d) = mimcD3 α β := by
   unfold crit mimcD3
@@ -111,8 +116,8 @@ lemma crit_two_theta_sub_gamma (α β γ : Fin D → ℝ) :
   show 2 * (α d + (γ d - β d) / 2) - γ d = 0 ↔ α d = β d / 2
   constructor <;> intro h <;> linarith
 
-/-- The three regimes of Theorem 2: `ε⁻²` if `η < 0`, `ε⁻² |log ε|^{e₁}` if `η = 0` and
-`ε^{−2−η} |log ε|^{e₂}` if `η > 0`. -/
+/-- The three regimes of Giles 2015, §2.4, Theorem 2: `ε⁻²` if `η < 0`, `ε⁻² |log ε|^{e₁}` if
+`η = 0` and `ε^{−2−η} |log ε|^{e₂}` if `η > 0`. -/
 noncomputable def mimcBound (η e₁ e₂ ε : ℝ) : ℝ :=
   if η < 0 then ε ^ (-2 : ℝ)
   else if η = 0 then ε ^ (-2 : ℝ) * |Real.log ε| ^ e₁
@@ -153,9 +158,12 @@ lemma mimcBound_mono {η e₁ e₂ e₁' e₂' ε : ℝ} (hε : 0 < ε) (hε1 : 
 
 /-! ### Step 1 — the level `L` -/
 
-/-- **Choice of the level `L`** (proof of Giles 2015, Theorem 2).  With the tail constant of
-`tail_bound`, take the least `L` for which the bias bound `c₁ K (1+L)^{m−1} 2^{−aL}` is at most
-`ε/2`.  Minimality gives `2^{aL} ≤ K_P (1+L)^{m−1}/ε`, and hence `1 + L ≤ K_L |log ε|`. -/
+/-- **Choice of the level `L`** (a step of this formalisation's proof of Giles 2015, §2.4,
+Theorem 2; the paper states the theorem without proof and refers to Haji-Ali, Nobile and Tempone
+2014a).  With the tail constant `K` of `tail_bound`, take the least `L` for which the bias bound
+`c₁ K (1+L)^{(m−1)⁺} 2^{−aL}` is at most `ε/2`, where `m = crit δ` and `(m−1)⁺ = max(m − 1, 0)` is
+natural-number subtraction.  Minimality gives `2^{aL} ≤ K_P (1+L)^{(m−1)⁺}/ε`, and hence
+`1 + L ≤ K_L |log ε|`. -/
 lemma mimc_exists_level {θ δ : Fin D → ℝ} (hθ : ∀ d, 0 < θ d) (hδ : ∀ d, 0 ≤ δ d) {a c₁ : ℝ}
     (ha : 0 < a) (hc₁ : 0 < c₁) :
     ∃ K_P K_L : ℝ, 0 < K_P ∧ 0 < K_L ∧ ∀ ε : ℝ, 0 < ε → ε < Real.exp (-1) → ∃ L : ℕ,
@@ -305,9 +313,10 @@ lemma mimc_exists_level {θ δ : Fin D → ℝ} (hθ : ∀ d, 0 < θ d) (hδ : �
 
 /-! ### Step 2 — the index set and the sample sizes -/
 
-/-- **Giles' construction for MIMC**: the index set `𝓛 = {θ·ℓ ≤ L}` with `L` from
-`mimc_exists_level`, and the rounded-up optimal sample sizes `N_ℓ` (Giles 2015, §1.3) for
-`V_ℓ = c₂ 2^{−β·ℓ}`, `C_ℓ = c₃ 2^{γ·ℓ}` and the variance target `ε²/2`. -/
+/-- **The construction used here for MIMC** (a step of this formalisation's proof of Giles 2015,
+§2.4, Theorem 2): an index set of the form `ℓ·n ≤ L` (Giles 2015, p. 15), here
+`𝓛 = {θ·ℓ ≤ L}` with `L` from `mimc_exists_level`, and the rounded-up optimal sample sizes `N_ℓ`
+(Giles 2015, §1.3) for `V_ℓ = c₂ 2^{−β·ℓ}`, `C_ℓ = c₃ 2^{γ·ℓ}` and the variance target `ε²/2`. -/
 lemma mimc_construction {α β γ θ δ g : Fin D → ℝ} {a c₁ c₂ c₃ : ℝ}
     (hθ : ∀ d, 0 < θ d) (hδ : ∀ d, 0 ≤ δ d) (ha : 0 < a)
     (hc₁ : 0 < c₁) (hc₂ : 0 < c₂) (hc₃ : 0 < c₃)
@@ -332,7 +341,7 @@ lemma mimc_construction {α β γ θ δ g : Fin D → ℝ} {a c₁ c₂ c₃ : �
   have hτ : 0 < ε ^ 2 / 2 := by positivity
   have hs : (indexSet θ L).Nonempty := ⟨0, (mem_indexSet hθ).2 (by simp [dot])⟩
   refine ⟨L, optimalN (indexSet θ L) V C (ε ^ 2 / 2), fun ℓ => optimalN_pos hs hVpos hCpos hτ ℓ,
-    ?_, optimalN_variance hs hVpos hCpos hτ, ?_, hP, hLlog⟩
+    ?_, optimalN_variance hs (fun ℓ _ => hVpos ℓ) (fun ℓ _ => hCpos ℓ) hτ, ?_, hP, hLlog⟩
   · -- bias: the levels outside `𝓛` are the tail `θ·ℓ > L`
     intro s
     obtain ⟨n, hn⟩ := exists_subset_box s
@@ -358,10 +367,9 @@ lemma mimc_construction {α β γ θ δ g : Fin D → ℝ} {a c₁ c₂ c₃ : �
           rw [Finset.sum_filter]
       _ ≤ ε / 2 := hbias n
   · -- cost: `∑ N_ℓ C_ℓ ≤ (ε²/2)⁻¹ (∑ √(V_ℓ C_ℓ))² + ∑ C_ℓ` and `√(V_ℓ C_ℓ) = √(c₂c₃) 2^{g·ℓ}`
-    have hc := optimalN_cost hs hVpos hCpos hτ
-    have hS : S (indexSet θ L) V C =
+    have hc := optimalN_cost hs (fun ℓ _ => hVpos ℓ) (fun ℓ _ => hCpos ℓ) hτ
+    have hS : ∑ ℓ ∈ indexSet θ L, Real.sqrt (V ℓ * C ℓ) =
         Real.sqrt (c₂ * c₃) * ∑ ℓ ∈ indexSet θ L, (2 : ℝ) ^ dot g ℓ := by
-      unfold S
       rw [Finset.mul_sum]
       refine Finset.sum_congr rfl fun ℓ _ => ?_
       have hg2 : dot γ ℓ - dot β ℓ = 2 * dot g ℓ := by
@@ -389,7 +397,8 @@ lemma mimc_construction {α β γ θ δ g : Fin D → ℝ} {a c₁ c₂ c₃ : �
 /-! ### Step 3 — powers of the level -/
 
 /-- From `2^{aL} ≤ K (1+L)^p / ε` and `1 + L ≤ K_L t`:
-`(1+L)^q 2^{bL} ≤ K^{b/a} K_L^{q + pb/a} t^{q + pb/a} ε^{−b/a}`. -/
+`(1+L)^q 2^{bL} ≤ K^{b/a} K_L^{q + pb/a} t^{q + pb/a} ε^{−b/a}` (a step of this formalisation's
+proof of Giles 2015, §2.4, Theorem 2). -/
 lemma mimc_level_power {a b K K_L ε t q : ℝ} {p L : ℕ} (ha : 0 < a) (hb : 0 ≤ b) (hK : 0 < K)
     (hK_L : 0 < K_L) (hε : 0 < ε) (ht : 0 ≤ t) (hq : 0 ≤ q)
     (hP : (2 : ℝ) ^ (a * L) ≤ K * (1 + (L : ℝ)) ^ p / ε) (hL : 1 + (L : ℝ) ≤ K_L * t) :
@@ -402,7 +411,8 @@ lemma mimc_level_power {a b K K_L ε t q : ℝ} {p L : ℕ} (ha : 0 < a) (hb : 0
     rw [Real.mul_rpow hK.le (pow_nonneg hu.le p), ← Real.rpow_natCast, ← Real.rpow_mul hu.le]
   have hexp : 0 ≤ q + p * (b / a) :=
     add_nonneg hq (mul_nonneg (Nat.cast_nonneg p) (div_nonneg hb ha.le))
-  have e2 : (1 + (L : ℝ)) ^ (q + p * (b / a)) ≤ K_L ^ (q + p * (b / a)) * t ^ (q + p * (b / a)) := by
+  have e2 :
+      (1 + (L : ℝ)) ^ (q + p * (b / a)) ≤ K_L ^ (q + p * (b / a)) * t ^ (q + p * (b / a)) := by
     rw [← Real.mul_rpow hK_L.le ht]
     exact Real.rpow_le_rpow hu.le hL hexp
   calc (1 + (L : ℝ)) ^ q * (2 : ℝ) ^ (b * L)
@@ -418,7 +428,8 @@ lemma mimc_level_power {a b K K_L ε t q : ℝ} {p L : ℕ} (ha : 0 < a) (hb : 0
         exact mul_le_mul_of_nonneg_left e2 (Real.rpow_nonneg hK.le _)
     _ = _ := by ring
 
-/-- The rounding-up overhead `c₃ ∑_{θ·ℓ ≤ L} 2^{γ·ℓ}` when `γ ≤ cθ` componentwise, `c > 0`: it is
+/-- The rounding-up overhead `c₃ ∑_{θ·ℓ ≤ L} 2^{γ·ℓ}` (a step of this formalisation's proof of
+Giles 2015, §2.4, Theorem 2) when `γ ≤ cθ` componentwise, `c > 0`: it is
 `O(|log ε|^{(m' − 1)⁺ + p c/a} ε^{−c/a})`, where `m' = #{d : γ_d = cθ_d}` counts the directions in
 which `γ ≤ cθ` is an equality (the lattice sum `inner_bound` with the defect `cθ − γ ≥ 0`). -/
 lemma mimc_extra_term {θ γ : Fin D → ℝ} {a c c₃ K_P K_L : ℝ} {p : ℕ}
@@ -443,10 +454,8 @@ lemma mimc_extra_term {θ γ : Fin D → ℝ} {a c c₃ K_P K_L : ℝ} {p : ℕ}
     fun ε L hε hP hL => ?_⟩
   have hL0 : (0 : ℝ) ≤ L := Nat.cast_nonneg L
   have hu : (0 : ℝ) < 1 + (L : ℝ) := by positivity
-  have ht : 0 ≤ -Real.log ε := by
-    by_contra h
-    push_neg at h
-    nlinarith
+  have ht : 0 ≤ -Real.log ε :=
+    (pos_of_mul_pos_right (show (0 : ℝ) < K_L * (-Real.log ε) by linarith) hK_L.le).le
   -- the index set as a box sum, with `2^{γ·ℓ} = 2^{cθ·ℓ − (cθ − γ)·ℓ}`
   have hsum : ∑ ℓ ∈ indexSet θ L, (2 : ℝ) ^ dot γ ℓ =
       ∑ ℓ ∈ box D (boxSize θ L), (if dot θ ℓ ≤ (L : ℝ) then
@@ -485,16 +494,17 @@ lemma mimc_extra_term {θ γ : Fin D → ℝ} {a c c₃ K_P K_L : ℝ} {p : ℕ}
 
 /-! ### The deterministic core -/
 
-/-- **Giles' Theorem 2 — deterministic core.**  Let `θ_d = α_d + (γ_d − β_d)/2`, let `c ≥ 0`
-with `γ_d ≤ c θ_d` for all `d`, and let `k + 1 ≥ #{d : γ_d = cθ_d}`.  With `V_ℓ = c₂ 2^{−β·ℓ}`
-and `C_ℓ = c₃ 2^{γ·ℓ}` there are, for every `0 < ε < e⁻¹`, a finite set of levels `𝓛` and
-`N_ℓ ≥ 1` such that the bias of every finite part of the complement of `𝓛` is at most `ε/2`,
-`∑_{𝓛} V_ℓ/N_ℓ ≤ ε²/2`, and the cost is at most the main term
+/-- **Giles' Theorem 2 — deterministic core** (a step of this formalisation's proof of Giles 2015,
+§2.4, Theorem 2; not stated in the paper).  Let `θ_d = α_d + (γ_d − β_d)/2`, let `c` satisfy
+`γ_d ≤ c θ_d` for all `d` (this forces `c > 0`), and let `k + 1 ≥ #{d : γ_d = cθ_d}`.  With
+`V_ℓ = c₂ 2^{−β·ℓ}` and `C_ℓ = c₃ 2^{γ·ℓ}` there are, for every `0 < ε < e⁻¹`, a finite set of
+levels `𝓛` and `N_ℓ ≥ 1` such that the bias bound `c₁ ∑ 2^{−α·ℓ}` over every finite part of the
+complement of `𝓛` is at most `ε/2`, `∑_{𝓛} V_ℓ/N_ℓ ≤ ε²/2`, and the cost is at most the main term
 `K_M · (ε⁻², ε⁻²|log ε|^{2D₂}, ε^{−2−η}|log ε|^{(D₂−1)(2+η)})` plus the rounding-up overhead
-`K_X |log ε|^{k + (D₂−1)s} ε^{−s}` with `s = c(2 + η)/2`. -/
+`K_X |log ε|^{k + (D₂−1)ς} ε^{−ς}` with `ς = c(2 + η)/2`. -/
 theorem mimc_complexity_core [NeZero D] {α β γ : Fin D → ℝ} {c₁ c₂ c₃ c : ℝ}
     (hα : ∀ d, 0 < α d) (hγ : ∀ d, 0 < γ d) (hαβ : ∀ d, β d / 2 ≤ α d)
-    (hc₁ : 0 < c₁) (hc₂ : 0 < c₂) (hc₃ : 0 < c₃) (hc : 0 ≤ c)
+    (hc₁ : 0 < c₁) (hc₂ : 0 < c₂) (hc₃ : 0 < c₃)
     (hcγ : ∀ d, γ d ≤ c * (α d + (γ d - β d) / 2)) (k : ℕ)
     (hk : crit (fun d => c * (α d + (γ d - β d) / 2) - γ d) ≤ k + 1) :
     ∃ K_M K_X : ℝ, 0 ≤ K_M ∧ 0 ≤ K_X ∧ ∀ ε : ℝ, 0 < ε → ε < Real.exp (-1) →
@@ -502,9 +512,10 @@ theorem mimc_complexity_core [NeZero D] {α β γ : Fin D → ℝ} {c₁ c₂ c�
         (∀ s : Finset (Fin D → ℕ), c₁ * ∑ ℓ ∈ s \ 𝓛, (2 : ℝ) ^ (-dot α ℓ) ≤ ε / 2) ∧
         ∑ ℓ ∈ 𝓛, c₂ * (2 : ℝ) ^ (-dot β ℓ) / N ℓ ≤ ε ^ 2 / 2 ∧
         ∑ ℓ ∈ 𝓛, (N ℓ : ℝ) * (c₃ * (2 : ℝ) ^ dot γ ℓ) ≤
-          K_M * mimcBound (mimcEta α β γ) (2 * mimcD2 α β γ)
-              ((mimcD2 α β γ - 1) * (2 + mimcEta α β γ)) ε +
-            K_X * (-Real.log ε) ^ ((k : ℝ) + (mimcD2 α β γ - 1) * (c * (2 + mimcEta α β γ) / 2)) *
+          K_M * mimcBound (mimcEta α β γ) (2 * (mimcD2 α β γ : ℝ))
+              (((mimcD2 α β γ : ℝ) - 1) * (2 + mimcEta α β γ)) ε +
+            K_X * (-Real.log ε) ^ ((k : ℝ) +
+              ((mimcD2 α β γ : ℝ) - 1) * (c * (2 + mimcEta α β γ) / 2)) *
               ε ^ (-(c * (2 + mimcEta α β γ) / 2)) := by
   have hr := le_mimcEta α β γ
   obtain ⟨d₀, hd₀⟩ := exists_eq_mimcEta α β γ
@@ -605,8 +616,7 @@ theorem mimc_complexity_core [NeZero D] {α β γ : Fin D → ℝ} {c₁ c₂ c�
       have h1 : (γ d - β d) / α d < 0 := lt_of_le_of_lt (hr d) hneg
       have h2 : γ d - β d < 0 := by
         by_contra h
-        push_neg at h
-        exact absurd h1 (not_lt.2 (div_nonneg h (hα d).le))
+        exact absurd h1 (not_lt.2 (div_nonneg (not_lt.1 h) (hα d).le))
       simp only [hg_def]
       linarith
     set Pg : ℝ := ∏ d, (1 - (2 : ℝ) ^ g d)⁻¹ with hPg
@@ -665,7 +675,8 @@ theorem mimc_complexity_core [NeZero D] {α β γ : Fin D → ℝ} {c₁ c₂ c�
             rw [mul_assoc, ← pow_succ, Nat.sub_add_cancel hm1]
     have hS0 : 0 ≤ ∑ ℓ ∈ indexSet θ L, (2 : ℝ) ^ dot g ℓ :=
       Finset.sum_nonneg fun ℓ _ => (Real.rpow_pos_of_pos two_pos _).le
-    have hu : (1 + (L : ℝ)) ^ (2 * (m : ℝ)) ≤ K_L ^ (2 * (m : ℝ)) * (-Real.log ε) ^ (2 * (m : ℝ)) := by
+    have hu : (1 + (L : ℝ)) ^ (2 * (m : ℝ)) ≤
+        K_L ^ (2 * (m : ℝ)) * (-Real.log ε) ^ (2 * (m : ℝ)) := by
       rw [← Real.mul_rpow hK_L.le (by linarith)]
       exact Real.rpow_le_rpow (by linarith) hL (by positivity)
     have hS2 : (∑ ℓ ∈ indexSet θ L, (2 : ℝ) ^ dot g ℓ) ^ 2 ≤
@@ -768,8 +779,9 @@ theorem mimc_complexity_core [NeZero D] {α β γ : Fin D → ℝ} {c₁ c₂ c�
 
 /-! ### Theorem 2, deterministic form -/
 
-/-- **Giles' Theorem 2, deterministic form, for `α_d > ½β_d`** (Giles 2015, Theorem 2, with the
-paper's exponents `e₁ = 2D₂`, `e₂ = (D₂ − 1)(2 + η)`). -/
+/-- **Giles' Theorem 2, deterministic form, for `α_d > ½β_d`** (a step of this formalisation's
+proof of Giles 2015, §2.4, Theorem 2, with the paper's exponents `e₁ = 2D₂`,
+`e₂ = (D₂ − 1)(2 + η)`; not stated in the paper). -/
 theorem mimc_complexity [NeZero D] {α β γ : Fin D → ℝ} {c₁ c₂ c₃ : ℝ}
     (hα : ∀ d, 0 < α d) (hγ : ∀ d, 0 < γ d) (hαβ : ∀ d, β d / 2 < α d)
     (hc₁ : 0 < c₁) (hc₂ : 0 < c₂) (hc₃ : 0 < c₃) :
@@ -778,8 +790,8 @@ theorem mimc_complexity [NeZero D] {α β γ : Fin D → ℝ} {c₁ c₂ c₃ : 
         (∀ s : Finset (Fin D → ℕ), c₁ * ∑ ℓ ∈ s \ 𝓛, (2 : ℝ) ^ (-dot α ℓ) ≤ ε / 2) ∧
         ∑ ℓ ∈ 𝓛, c₂ * (2 : ℝ) ^ (-dot β ℓ) / N ℓ ≤ ε ^ 2 / 2 ∧
         ∑ ℓ ∈ 𝓛, (N ℓ : ℝ) * (c₃ * (2 : ℝ) ^ dot γ ℓ) ≤
-          c₄ * mimcBound (mimcEta α β γ) (2 * mimcD2 α β γ)
-            ((mimcD2 α β γ - 1) * (2 + mimcEta α β γ)) ε := by
+          c₄ * mimcBound (mimcEta α β γ) (2 * (mimcD2 α β γ : ℝ))
+            (((mimcD2 α β γ : ℝ) - 1) * (2 + mimcEta α β γ)) ε := by
   -- `c = max_d γ_d/θ_d < 2`
   set θ : Fin D → ℝ := fun d => α d + (γ d - β d) / 2 with hθ_def
   have hθ : ∀ d, 0 < θ d := fun d => by
@@ -798,7 +810,7 @@ theorem mimc_complexity [NeZero D] {α β γ : Fin D → ℝ} {c₁ c₂ c₃ : 
   have hc0 : 0 ≤ c := le_trans (div_nonneg (hγ 0).le (hθ 0).le)
     (Finset.le_sup' (fun d => γ d / θ d) (Finset.mem_univ 0))
   obtain ⟨K_M, K_X, hK_M, hK_X, hcore⟩ := mimc_complexity_core hα hγ (fun d => (hαβ d).le)
-    hc₁ hc₂ hc₃ hc0 hcγ D ((crit_le _).trans (Nat.le_succ D))
+    hc₁ hc₂ hc₃ hcγ D ((crit_le _).trans (Nat.le_succ D))
   -- the rounding-up overhead is of lower order: `s = c(2+η)/2 < 2 + max η 0`
   have hr := le_mimcEta α β γ
   obtain ⟨d₀, hd₀⟩ := exists_eq_mimcEta α β γ
@@ -864,9 +876,10 @@ theorem mimc_complexity [NeZero D] {α β γ : Fin D → ℝ} {c₁ c₂ c₃ : 
     _ ≤ (K_M + K_X * K_abs + 1) * mimcBound η (2 * m) ((m - 1) * (2 + η)) ε := by
         nlinarith [hB0]
 
-/-- **Giles' Theorem 2, deterministic form, for `α_d ≥ ½β_d`** (Giles 2015, Theorem 2).  The paper
-does not specify the log exponents when some `α_d = ½β_d` ("the form of the exponents is more
-complicated"); here, with `D₃ = #{d : α_d = ½β_d}` (`mimcD3`), `e₁ = 2D₂ + (D₃ − 3)⁺` and
+/-- **Giles' Theorem 2, deterministic form, for `α_d ≥ ½β_d`** (a step of this formalisation's proof
+of Giles 2015, §2.4, Theorem 2; not stated in the paper).  The paper does not specify the log
+exponents when some `α_d = ½β_d` ("the form of the exponents is more complicated"); here, with
+`D₃ = #{d : α_d = ½β_d}` (`mimcD3`), `e₁ = 2D₂ + (D₃ − 3)⁺` and
 `e₂ = (D₂ − 1)(2 + η) + (D₃ − 1)⁺`.  When `D₃ = 0` these are the paper's `e₁ = 2D₂` and
 `e₂ = (D₂ − 1)(2 + η)`, so this statement contains `mimc_complexity`. -/
 theorem mimc_complexity_boundary [NeZero D] {α β γ : Fin D → ℝ} {c₁ c₂ c₃ : ℝ}
@@ -877,14 +890,14 @@ theorem mimc_complexity_boundary [NeZero D] {α β γ : Fin D → ℝ} {c₁ c�
         (∀ s : Finset (Fin D → ℕ), c₁ * ∑ ℓ ∈ s \ 𝓛, (2 : ℝ) ^ (-dot α ℓ) ≤ ε / 2) ∧
         ∑ ℓ ∈ 𝓛, c₂ * (2 : ℝ) ^ (-dot β ℓ) / N ℓ ≤ ε ^ 2 / 2 ∧
         ∑ ℓ ∈ 𝓛, (N ℓ : ℝ) * (c₃ * (2 : ℝ) ^ dot γ ℓ) ≤
-          c₄ * mimcBound (mimcEta α β γ) (2 * mimcD2 α β γ + ((mimcD3 α β - 3 : ℕ) : ℝ))
-            ((mimcD2 α β γ - 1) * (2 + mimcEta α β γ) + ((mimcD3 α β - 1 : ℕ) : ℝ)) ε := by
+          c₄ * mimcBound (mimcEta α β γ) (2 * (mimcD2 α β γ : ℝ) + ((mimcD3 α β - 3 : ℕ) : ℝ))
+            (((mimcD2 α β γ : ℝ) - 1) * (2 + mimcEta α β γ) + ((mimcD3 α β - 1 : ℕ) : ℝ)) ε := by
   -- with `c = 2`: `γ_d ≤ 2θ_d` is `β_d ≤ 2α_d`, an equality exactly when `α_d = ½β_d`
   have hcγ : ∀ d, γ d ≤ 2 * (α d + (γ d - β d) / 2) := fun d => by linarith [hαβ d]
   have hk : crit (fun d => 2 * (α d + (γ d - β d) / 2) - γ d) ≤ (mimcD3 α β - 1) + 1 :=
     (crit_two_theta_sub_gamma α β γ).le.trans (by omega)
   obtain ⟨K_M, K_X, hK_M, hK_X, hcore⟩ := mimc_complexity_core hα hγ hαβ hc₁ hc₂ hc₃
-    zero_le_two hcγ (mimcD3 α β - 1) hk
+    hcγ (mimcD3 α β - 1) hk
   have hr := le_mimcEta α β γ
   obtain ⟨d₀, hd₀⟩ := exists_eq_mimcEta α β γ
   have hm1 := one_le_mimcD2 α β γ
@@ -978,7 +991,8 @@ section Probability
 
 variable {Ω : Type*} [MeasurableSpace Ω] {μ : Measure Ω}
 
-/-- Linearity of expectation for cross-differences: `E[ΔP_ℓ] = Δ(E[P_·])_ℓ`. -/
+/-- Linearity of expectation for cross-differences (Giles 2015, §2.4): if every `P_ℓ` is
+integrable then so is `ΔP_ℓ`, and `E[ΔP_ℓ] = Δ(E[P_·])_ℓ`. -/
 theorem integrable_integral_crossDiff : ∀ {D : ℕ} (P : (Fin D → ℕ) → Ω → ℝ),
     (∀ ℓ, Integrable (P ℓ) μ) → ∀ ℓ : Fin D → ℕ,
       Integrable (fun ω => crossDiff (fun m => P m ω) ℓ) μ ∧
@@ -1011,12 +1025,78 @@ theorem integrable_integral_crossDiff : ∀ {D : ℕ} (P : (Fin D → ℕ) → �
       refine ⟨h1.1.sub h2.1, ?_⟩
       rw [integral_sub h1.1 h2.1, h1.2, h2.2]
 
+open Filter Topology in
+/-- **The MIMC telescoping sum, along boxes** (Giles 2015, §2.4, p. 13: "the telescoping sum
+becomes `E[P] = ∑_{ℓ≥0} E[ΔP_ℓ]`").  If `P` and every `P_ℓ` are integrable and condition i) of
+Theorem 2 holds, then the sums of `E[ΔP_ℓ]` over the boxes `{ℓ : ℓ_d ≤ k_d for all d}` converge
+to `E[P]` as `min_d k_d → ∞` (the filter `atTop` on `ℕ^D`). -/
+theorem tendsto_sum_box_integral_crossDiff (P : Ω → ℝ) (Pℓ : (Fin D → ℕ) → Ω → ℝ)
+    (hP : Integrable P μ) (hPℓ : ∀ ℓ, Integrable (Pℓ ℓ) μ)
+    (h_i : ∀ δ : ℝ, 0 < δ → ∃ n₀ : ℕ, ∀ ℓ : Fin D → ℕ, (∀ d, n₀ ≤ ℓ d) →
+      |μ[fun ω => Pℓ ℓ ω - P ω]| < δ) :
+    Tendsto (fun k : Fin D → ℕ => ∑ ℓ ∈ Fintype.piFinset (fun d => range (k d + 1)),
+      μ[fun ω => crossDiff (fun m => Pℓ m ω) ℓ]) atTop (𝓝 (μ[P])) := by
+  have hE : ∀ k : Fin D → ℕ, ∑ ℓ ∈ Fintype.piFinset (fun d => range (k d + 1)),
+      μ[fun ω => crossDiff (fun m => Pℓ m ω) ℓ] = μ[Pℓ k] := fun k => by
+    rw [Finset.sum_congr rfl fun ℓ _ => (integrable_integral_crossDiff Pℓ hPℓ ℓ).2]
+    exact sum_crossDiff (fun m => μ[Pℓ m]) k
+  simp only [hE]
+  rw [Metric.tendsto_atTop]
+  intro δ hδ
+  obtain ⟨n₀, hn₀⟩ := h_i δ hδ
+  refine ⟨fun _ => n₀, fun k hk => ?_⟩
+  have h := hn₀ k fun d => Pi.le_def.1 hk d
+  rwa [integral_sub (hPℓ k) hP, ← Real.dist_eq] at h
+
+open Filter Topology in
+/-- **The MIMC telescoping sum as a series** (Giles 2015, §2.4, p. 13:
+`E[P] = ∑_{ℓ≥0} E[ΔP_ℓ]`).  If `P` and every `P_ℓ` are integrable, condition i) of Theorem 2
+holds and `|E[ΔP_ℓ]| ≤ c₁ 2^{−α·ℓ}` with every `α_d > 0` (conditions ii) and iii) of Theorem 2),
+then the series `∑_{ℓ ∈ ℕ^D} E[ΔP_ℓ]` converges absolutely, hence unconditionally, to `E[P]`. -/
+theorem hasSum_integral_crossDiff (P : Ω → ℝ) (Pℓ : (Fin D → ℕ) → Ω → ℝ) {α : Fin D → ℝ}
+    {c₁ : ℝ} (hα : ∀ d, 0 < α d) (hP : Integrable P μ) (hPℓ : ∀ ℓ, Integrable (Pℓ ℓ) μ)
+    (h_i : ∀ δ : ℝ, 0 < δ → ∃ n₀ : ℕ, ∀ ℓ : Fin D → ℕ, (∀ d, n₀ ≤ ℓ d) →
+      |μ[fun ω => Pℓ ℓ ω - P ω]| < δ)
+    (h_ii : ∀ ℓ, |μ[fun ω => crossDiff (fun m => Pℓ m ω) ℓ]| ≤ c₁ * (2 : ℝ) ^ (-dot α ℓ)) :
+    HasSum (fun ℓ => μ[fun ω => crossDiff (fun m => Pℓ m ω) ℓ]) (μ[P]) := by
+  -- the bound is summable: its finite partial sums are at most `∏_d (1 − 2^{−α_d})⁻¹`
+  have hneg : ∀ d, -α d < 0 := fun d => neg_lt_zero.2 (hα d)
+  have hdot : ∀ ℓ, (2 : ℝ) ^ (-dot α ℓ) = (2 : ℝ) ^ dot (fun d => -α d) ℓ := fun ℓ => by
+    simp only [dot, neg_mul, Finset.sum_neg_distrib]
+  have hg : Summable fun ℓ : Fin D → ℕ => (2 : ℝ) ^ (-dot α ℓ) := by
+    refine summable_of_sum_le (c := ∏ d, (1 - (2 : ℝ) ^ (-α d))⁻¹)
+      (Pi.le_def.2 fun ℓ => (Real.rpow_pos_of_pos two_pos _).le) fun u => ?_
+    obtain ⟨n, hn⟩ := exists_subset_box u
+    calc ∑ ℓ ∈ u, (2 : ℝ) ^ (-dot α ℓ) ≤ ∑ ℓ ∈ box D n, (2 : ℝ) ^ (-dot α ℓ) :=
+          Finset.sum_le_sum_of_subset_of_nonneg hn fun ℓ _ _ =>
+            (Real.rpow_pos_of_pos two_pos _).le
+      _ = ∑ ℓ ∈ box D n, (2 : ℝ) ^ dot (fun d => -α d) ℓ :=
+          Finset.sum_congr rfl fun ℓ _ => hdot ℓ
+      _ ≤ ∏ d, (1 - (2 : ℝ) ^ (-α d))⁻¹ := sum_box_two_rpow_le_prod (g := fun d => -α d) hneg n
+  have hs : Summable fun ℓ => μ[fun ω => crossDiff (fun m => Pℓ m ω) ℓ] :=
+    (hg.mul_left c₁).of_norm_bounded fun ℓ => (Real.norm_eq_abs _).trans_le (h_ii ℓ)
+  -- the partial sums over the boxes converge both to the sum of the series and to `E[P]`
+  have hbox : Tendsto (fun n : ℕ => box D (n + 1)) atTop atTop :=
+    Monotone.tendsto_atTop_atTop (fun a b hab => Finset.le_iff_subset.2 (box_mono (by omega)))
+      fun u => by
+        obtain ⟨n, hn⟩ := exists_subset_box u
+        exact ⟨n, Finset.le_iff_subset.2 (hn.trans (box_mono (Nat.le_succ n)))⟩
+  have hconst : Tendsto (fun n : ℕ => fun _ : Fin D => n) atTop atTop :=
+    tendsto_atTop_atTop.2 fun k => ⟨univ.sup k, fun n hn =>
+      Pi.le_def.2 fun d => (Finset.le_sup (f := k) (mem_univ d)).trans hn⟩
+  have h1 := hs.hasSum.comp hbox
+  have h2 := (tendsto_sum_box_integral_crossDiff P Pℓ hP hPℓ h_i).comp hconst
+  have heq := tendsto_nhds_unique h1 h2
+  have h3 := hs.hasSum
+  rwa [heq] at h3
+
 variable [IsProbabilityMeasure μ]
 
-/-- From the deterministic form to the probability space (proof of Giles 2015, Theorem 2):
-condition i) and the box telescoping `sum_crossDiff` identify the bias with the tail
-`∑_{ℓ ∉ 𝓛} E[ΔP_ℓ]`, and `MSE = V[Y] + bias²` with `V[Y] = ∑ V_ℓ/N_ℓ`. -/
-theorem mimc_mse_cost [NeZero D] (P : Ω → ℝ) (Pℓ : (Fin D → ℕ) → Ω → ℝ)
+/-- From the deterministic form to the probability space (a step of this formalisation's proof of
+Giles 2015, §2.4, Theorem 2; the paper states the theorem without proof): condition i) and the box
+telescoping `sum_crossDiff` identify the bias with the tail `∑_{ℓ ∉ 𝓛} E[ΔP_ℓ]`, and
+`MSE = V[Y] + bias²` with `V[Y] = ∑ V_ℓ/N_ℓ`.  Here `B` is any bound function. -/
+theorem mimc_mse_cost (P : Ω → ℝ) (Pℓ : (Fin D → ℕ) → Ω → ℝ)
     (Y : (Fin D → ℕ) → ℕ → Ω → ℝ) (Cost : (Fin D → ℕ) → ℕ → Ω → ℝ) (V C : (Fin D → ℕ) → ℝ)
     {α β γ : Fin D → ℝ} {c₁ c₂ c₃ : ℝ} (B : ℝ → ℝ)
     (hdet : ∃ c₄ : ℝ, 0 < c₄ ∧ ∀ ε : ℝ, 0 < ε → ε < Real.exp (-1) →
@@ -1025,11 +1105,11 @@ theorem mimc_mse_cost [NeZero D] (P : Ω → ℝ) (Pℓ : (Fin D → ℕ) → Ω
         ∑ ℓ ∈ 𝓛, c₂ * (2 : ℝ) ^ (-dot β ℓ) / N ℓ ≤ ε ^ 2 / 2 ∧
         ∑ ℓ ∈ 𝓛, (N ℓ : ℝ) * (c₃ * (2 : ℝ) ^ dot γ ℓ) ≤ c₄ * B ε)
     (hP : Integrable P μ) (hPℓ : ∀ ℓ, Integrable (Pℓ ℓ) μ)
-    (hY : ∀ ℓ n, MemLp (Y ℓ n) 2 μ)
+    (hY : ∀ ℓ n, 0 < n → MemLp (Y ℓ n) 2 μ)
     (hind : ∀ N : (Fin D → ℕ) → ℕ, (∀ ℓ, 0 < N ℓ) →
       Pairwise fun i j => IndepFun (Y i (N i)) (Y j (N j)) μ)
-    (hCost : ∀ ℓ n, 0 < n → Integrable (Cost ℓ n) μ)
-    (h_cost : ∀ ℓ (n : ℕ), 0 < n → μ[Cost ℓ n] = n * C ℓ)
+    (hCost_int : ∀ ℓ n, 0 < n → Integrable (Cost ℓ n) μ)
+    (hCost_mean : ∀ ℓ (n : ℕ), 0 < n → μ[Cost ℓ n] = n * C ℓ)
     (h_var : ∀ ℓ n, 0 < n → variance (Y ℓ n) μ = V ℓ / n)
     (h_i : ∀ δ : ℝ, 0 < δ → ∃ n₀ : ℕ, ∀ ℓ : Fin D → ℕ, (∀ d, n₀ ≤ ℓ d) →
       |μ[fun ω => Pℓ ℓ ω - P ω]| < δ)
@@ -1053,7 +1133,7 @@ theorem mimc_mse_cost [NeZero D] (P : Ω → ℝ) (Pℓ : (Fin D → ℕ) → Ω
       rw [← hEΔ, ← h_iii ℓ 1 one_pos]
       exact h_ii ℓ 1 one_pos
     have hmean : μ[fun ω => ∑ ℓ ∈ 𝓛, Y ℓ (N ℓ) ω] = ∑ ℓ ∈ 𝓛, crossDiff p ℓ := by
-      rw [integral_finsetSum _ fun ℓ _ => (hY ℓ (N ℓ)).integrable one_le_two]
+      rw [integral_finsetSum _ fun ℓ _ => (hY ℓ (N ℓ) (hN ℓ)).integrable one_le_two]
       exact Finset.sum_congr rfl fun ℓ _ => by rw [h_iii ℓ (N ℓ) (hN ℓ), hEΔ]
     -- the bias: `|∑_{𝓛} ΔE[P] − E[P]| ≤ ε/2`, from condition i) and box telescoping
     have hbias' : |∑ ℓ ∈ 𝓛, crossDiff p ℓ - μ[P]| ≤ ε / 2 := by
@@ -1086,9 +1166,9 @@ theorem mimc_mse_cost [NeZero D] (P : Ω → ℝ) (Pℓ : (Fin D → ℕ) → Ω
     -- the variance
     have hind' : Set.Pairwise ↑𝓛 fun i j => IndepFun (Y i (N i)) (Y j (N j)) μ :=
       fun i _ j _ hij => hind N hN hij
-    have hsum : MemLp (∑ ℓ ∈ 𝓛, Y ℓ (N ℓ)) 2 μ := memLp_finsetSum' _ fun ℓ _ => hY ℓ (N ℓ)
+    have hsum : MemLp (∑ ℓ ∈ 𝓛, Y ℓ (N ℓ)) 2 μ := memLp_finsetSum' _ fun ℓ _ => hY ℓ (N ℓ) (hN ℓ)
     have hmse := mse_eq_variance_add_sq_bias hsum (μ[P])
-    rw [IndepFun.variance_sum (fun ℓ _ => hY ℓ (N ℓ)) hind'] at hmse
+    rw [IndepFun.variance_sum (fun ℓ _ => hY ℓ (N ℓ) (hN ℓ)) hind'] at hmse
     have hfun : (fun ω => (∑ ℓ ∈ 𝓛, Y ℓ (N ℓ) ω - μ[P]) ^ 2) =
         fun ω => ((∑ ℓ ∈ 𝓛, Y ℓ (N ℓ)) ω - μ[P]) ^ 2 := by
       ext ω
@@ -1111,43 +1191,45 @@ theorem mimc_mse_cost [NeZero D] (P : Ω → ℝ) (Pℓ : (Fin D → ℕ) → Ω
     linarith
   · -- the expected cost
     have hE : μ[fun ω => ∑ ℓ ∈ 𝓛, Cost ℓ (N ℓ) ω] = ∑ ℓ ∈ 𝓛, (N ℓ : ℝ) * C ℓ := by
-      rw [integral_finsetSum _ fun ℓ _ => hCost ℓ (N ℓ) (hN ℓ)]
-      exact Finset.sum_congr rfl fun ℓ _ => h_cost ℓ (N ℓ) (hN ℓ)
+      rw [integral_finsetSum _ fun ℓ _ => hCost_int ℓ (N ℓ) (hN ℓ)]
+      exact Finset.sum_congr rfl fun ℓ _ => hCost_mean ℓ (N ℓ) (hN ℓ)
     rw [hE]
     refine le_trans (Finset.sum_le_sum fun ℓ _ => ?_) hcost
     exact mul_le_mul_of_nonneg_left (h_v ℓ) (Nat.cast_nonneg _)
 
--- `hβ : ∀ d, 0 < β d` is one of Giles' hypotheses; the proof only uses `α_d > ½β_d`.
 set_option linter.unusedVariables false in
 /-- **Giles' Theorem 2** (Giles 2015, §2.4, Theorem 2; Haji-Ali, Nobile & Tempone 2014a), for
-`α_d > ½β_d`.  Let `P` be a random variable, `Pℓ ℓ` its approximation at the multi-index
-`ℓ ∈ ℕ^D`, and `ΔP_ℓ = crossDiff (P_·) ℓ` the cross-difference.  Suppose there are estimators
-`Y ℓ n` based on `n` Monte Carlo samples, independent across levels, whose samples at level `ℓ`
-have variance `V ℓ` and expected cost `C ℓ`, and positive vectors `α, β, γ` with `α_d > ½β_d`
-and constants `c₁, c₂, c₃ > 0` with
+`α_d > ½β_d`.  Let `D ≥ 1`, let `P` be an integrable random variable, `Pℓ ℓ` its integrable
+approximation at the multi-index `ℓ ∈ ℕ^D`, and `ΔP_ℓ = crossDiff (P_·) ℓ` the cross-difference.
+Suppose there are square-integrable estimators `Y ℓ n` based on `n ≥ 1` Monte Carlo samples,
+pairwise independent across multi-indices for every choice of sample sizes `N ≥ 1`, whose samples
+at `ℓ` have variance `V ℓ` (`V[Y ℓ n] = V ℓ / n` for `n ≥ 1`) and expected cost `C ℓ` (the
+integrable random cost `Cost ℓ n` of computing `Y ℓ n` has `E[Cost ℓ n] = n C ℓ` for `n ≥ 1`), and
+positive vectors `α, β, γ` with `α_d > ½β_d` and constants `c₁, c₂, c₃ > 0` with
 
   i)   `|E[P_ℓ − P]| → 0` as `min_d ℓ_d → ∞`,
-  iii) `E[Y_ℓ] = E[ΔP_ℓ]`,
-  ii)  `|E[Y_ℓ]| ≤ c₁ 2^{−α·ℓ}`,
+  iii) `E[Y ℓ n] = E[ΔP_ℓ]` for `n ≥ 1`,
+  ii)  `|E[Y ℓ n]| ≤ c₁ 2^{−α·ℓ}` for `n ≥ 1`,
   iv)  `V_ℓ ≤ c₂ 2^{−β·ℓ}`,
   v)   `C_ℓ ≤ c₃ 2^{γ·ℓ}`.
 
 Then there is `c₄ > 0` such that for every `0 < ε < e⁻¹` there are a finite set of levels `𝓛` and
-`N_ℓ ≥ 1` for which `Y = ∑_{ℓ∈𝓛} Y ℓ (N ℓ)` has `MSE < ε²` and the expected cost satisfies
-`E[C] ≤ c₄ ε⁻²` (`η < 0`), `c₄ ε⁻² |log ε|^{2D₂}` (`η = 0`),
+`N_ℓ ≥ 1` for which `Y = ∑_{ℓ∈𝓛} Y ℓ (N ℓ)` has `MSE < ε²` and the computational cost
+`C = ∑_{ℓ∈𝓛} Cost ℓ (N ℓ)` satisfies `E[C] ≤ c₄ ε⁻²` (`η < 0`), `c₄ ε⁻² |log ε|^{2D₂}` (`η = 0`),
 `c₄ ε^{−2−η} |log ε|^{(D₂−1)(2+η)}` (`η > 0`), where `η = max_d (γ_d − β_d)/α_d` and `D₂` is the
-number of directions attaining it. -/
+number of directions attaining it.  The hypothesis `β_d > 0` is Giles'; the proof does not use
+it. -/
 theorem giles_theorem2 [NeZero D] (P : Ω → ℝ) (Pℓ : (Fin D → ℕ) → Ω → ℝ)
     (Y : (Fin D → ℕ) → ℕ → Ω → ℝ) (Cost : (Fin D → ℕ) → ℕ → Ω → ℝ) (V C : (Fin D → ℕ) → ℝ)
     {α β γ : Fin D → ℝ} {c₁ c₂ c₃ : ℝ}
     (hα : ∀ d, 0 < α d) (hβ : ∀ d, 0 < β d) (hγ : ∀ d, 0 < γ d) (hαβ : ∀ d, β d / 2 < α d)
     (hc₁ : 0 < c₁) (hc₂ : 0 < c₂) (hc₃ : 0 < c₃)
     (hP : Integrable P μ) (hPℓ : ∀ ℓ, Integrable (Pℓ ℓ) μ)
-    (hY : ∀ ℓ n, MemLp (Y ℓ n) 2 μ)
+    (hY : ∀ ℓ n, 0 < n → MemLp (Y ℓ n) 2 μ)
     (hind : ∀ N : (Fin D → ℕ) → ℕ, (∀ ℓ, 0 < N ℓ) →
       Pairwise fun i j => IndepFun (Y i (N i)) (Y j (N j)) μ)
-    (hCost : ∀ ℓ n, 0 < n → Integrable (Cost ℓ n) μ)
-    (h_cost : ∀ ℓ (n : ℕ), 0 < n → μ[Cost ℓ n] = n * C ℓ)
+    (hCost_int : ∀ ℓ n, 0 < n → Integrable (Cost ℓ n) μ)
+    (hCost_mean : ∀ ℓ (n : ℕ), 0 < n → μ[Cost ℓ n] = n * C ℓ)
     (h_var : ∀ ℓ n, 0 < n → variance (Y ℓ n) μ = V ℓ / n)
     (h_i : ∀ δ : ℝ, 0 < δ → ∃ n₀ : ℕ, ∀ ℓ : Fin D → ℕ, (∀ d, n₀ ≤ ℓ d) →
       |μ[fun ω => Pℓ ℓ ω - P ω]| < δ)
@@ -1159,16 +1241,16 @@ theorem giles_theorem2 [NeZero D] (P : Ω → ℝ) (Pℓ : (Fin D → ℕ) → �
       ∃ (𝓛 : Finset (Fin D → ℕ)) (N : (Fin D → ℕ) → ℕ), (∀ ℓ, 0 < N ℓ) ∧
         μ[fun ω => (∑ ℓ ∈ 𝓛, Y ℓ (N ℓ) ω - μ[P]) ^ 2] < ε ^ 2 ∧
         μ[fun ω => ∑ ℓ ∈ 𝓛, Cost ℓ (N ℓ) ω] ≤
-          c₄ * mimcBound (mimcEta α β γ) (2 * mimcD2 α β γ)
-            ((mimcD2 α β γ - 1) * (2 + mimcEta α β γ)) ε :=
+          c₄ * mimcBound (mimcEta α β γ) (2 * (mimcD2 α β γ : ℝ))
+            (((mimcD2 α β γ : ℝ) - 1) * (2 + mimcEta α β γ)) ε :=
   mimc_mse_cost P Pℓ Y Cost V C _ (mimc_complexity hα hγ hαβ hc₁ hc₂ hc₃) hP hPℓ hY hind
-    hCost h_cost h_var h_i h_iii h_ii h_iv h_v
+    hCost_int hCost_mean h_var h_i h_iii h_ii h_iv h_v
 
--- `hβ : ∀ d, 0 < β d` is one of Giles' hypotheses; the proof only uses `α_d ≥ ½β_d`.
 set_option linter.unusedVariables false in
 /-- **Giles' Theorem 2 when some `α_d = ½β_d`** (Giles 2015, §2.4, Theorem 2, for `α_d ≥ ½β_d`).
-Hypotheses as in `giles_theorem2` but with `α_d ≥ ½β_d`.  The paper notes that "the form of the
-exponents is more complicated" in this case and does not state them; with
+Hypotheses as in `giles_theorem2` but with `α_d ≥ ½β_d`; `β_d > 0` is Giles' and is not used.
+The paper notes that "the form of the exponents is more complicated" in this case and does not
+state them; with
 `D₃ = #{d : α_d = ½β_d}` (`mimcD3`) we prove the bound with `e₁ = 2D₂ + (D₃ − 3)⁺` and
 `e₂ = (D₂ − 1)(2 + η) + (D₃ − 1)⁺`.  For `D₃ = 0` these are the paper's exponents, so this
 theorem contains `giles_theorem2`. -/
@@ -1178,11 +1260,11 @@ theorem giles_theorem2_boundary [NeZero D] (P : Ω → ℝ) (Pℓ : (Fin D → �
     (hα : ∀ d, 0 < α d) (hβ : ∀ d, 0 < β d) (hγ : ∀ d, 0 < γ d) (hαβ : ∀ d, β d / 2 ≤ α d)
     (hc₁ : 0 < c₁) (hc₂ : 0 < c₂) (hc₃ : 0 < c₃)
     (hP : Integrable P μ) (hPℓ : ∀ ℓ, Integrable (Pℓ ℓ) μ)
-    (hY : ∀ ℓ n, MemLp (Y ℓ n) 2 μ)
+    (hY : ∀ ℓ n, 0 < n → MemLp (Y ℓ n) 2 μ)
     (hind : ∀ N : (Fin D → ℕ) → ℕ, (∀ ℓ, 0 < N ℓ) →
       Pairwise fun i j => IndepFun (Y i (N i)) (Y j (N j)) μ)
-    (hCost : ∀ ℓ n, 0 < n → Integrable (Cost ℓ n) μ)
-    (h_cost : ∀ ℓ (n : ℕ), 0 < n → μ[Cost ℓ n] = n * C ℓ)
+    (hCost_int : ∀ ℓ n, 0 < n → Integrable (Cost ℓ n) μ)
+    (hCost_mean : ∀ ℓ (n : ℕ), 0 < n → μ[Cost ℓ n] = n * C ℓ)
     (h_var : ∀ ℓ n, 0 < n → variance (Y ℓ n) μ = V ℓ / n)
     (h_i : ∀ δ : ℝ, 0 < δ → ∃ n₀ : ℕ, ∀ ℓ : Fin D → ℕ, (∀ d, n₀ ≤ ℓ d) →
       |μ[fun ω => Pℓ ℓ ω - P ω]| < δ)
@@ -1194,11 +1276,82 @@ theorem giles_theorem2_boundary [NeZero D] (P : Ω → ℝ) (Pℓ : (Fin D → �
       ∃ (𝓛 : Finset (Fin D → ℕ)) (N : (Fin D → ℕ) → ℕ), (∀ ℓ, 0 < N ℓ) ∧
         μ[fun ω => (∑ ℓ ∈ 𝓛, Y ℓ (N ℓ) ω - μ[P]) ^ 2] < ε ^ 2 ∧
         μ[fun ω => ∑ ℓ ∈ 𝓛, Cost ℓ (N ℓ) ω] ≤
-          c₄ * mimcBound (mimcEta α β γ) (2 * mimcD2 α β γ + ((mimcD3 α β - 3 : ℕ) : ℝ))
-            ((mimcD2 α β γ - 1) * (2 + mimcEta α β γ) + ((mimcD3 α β - 1 : ℕ) : ℝ)) ε :=
+          c₄ * mimcBound (mimcEta α β γ) (2 * (mimcD2 α β γ : ℝ) + ((mimcD3 α β - 3 : ℕ) : ℝ))
+            (((mimcD2 α β γ : ℝ) - 1) * (2 + mimcEta α β γ) + ((mimcD3 α β - 1 : ℕ) : ℝ)) ε :=
   mimc_mse_cost P Pℓ Y Cost V C _ (mimc_complexity_boundary hα hγ hαβ hc₁ hc₂ hc₃) hP hPℓ hY
-    hind hCost h_cost h_var h_i h_iii h_ii h_iv h_v
+    hind hCost_int hCost_mean h_var h_i h_iii h_ii h_iv h_v
 
 end Probability
+
+/-- If every `α_d > ½β_d` then no direction is on the boundary: `D₃ = 0` (Giles 2015, §2.4,
+Theorem 2: the case in which the paper states the exponents `e₁, e₂`). -/
+lemma mimcD3_eq_zero {α β : Fin D → ℝ} (h : ∀ d, β d / 2 < α d) : mimcD3 α β = 0 := by
+  unfold mimcD3
+  rw [Finset.card_eq_zero, Finset.filter_eq_empty_iff]
+  intro d _ hd
+  exact (h d).ne' hd
+
+universe u
+
+/-- **Giles' Theorem 2, in the form stated in the paper** (Giles 2015, §2.4, Theorem 2, p. 13–14;
+Haji-Ali, Nobile & Tempone 2014a).  Let `D ≥ 1` and let `α, β, γ` be positive vectors with
+`α_d ≥ ½β_d`.  Then there are exponents `e₁, e₂`, depending only on `α, β, γ`, with
+`e₁ = 2D₂` and `e₂ = (D₂ − 1)(2 + η)` when every `α_d > ½β_d` ("the form of the exponents is
+more complicated when `α_d = ½β_d` for some `d`"), such that the following holds on every
+probability space.  Let `P` be integrable, `Pℓ ℓ` its integrable approximation at `ℓ ∈ ℕ^D`, and
+`ΔP_ℓ = crossDiff (P_·) ℓ`.  Let `Y ℓ n ∈ L²` be estimators based on `n ≥ 1` samples, pairwise
+independent across multi-indices for every choice of sample sizes `N ≥ 1`, with `V[Y ℓ n] = V ℓ / n`
+and an integrable random cost `Cost ℓ n` with `E[Cost ℓ n] = n C ℓ` (`n ≥ 1`), and let
+`c₁, c₂, c₃ > 0` be constants with
+
+  i)   `|E[P_ℓ − P]| → 0` as `min_d ℓ_d → ∞`,
+  iii) `E[Y ℓ n] = E[ΔP_ℓ]` for `n ≥ 1`,
+  ii)  `|E[Y ℓ n]| ≤ c₁ 2^{−α·ℓ}` for `n ≥ 1`,
+  iv)  `V_ℓ ≤ c₂ 2^{−β·ℓ}`,
+  v)   `C_ℓ ≤ c₃ 2^{γ·ℓ}`.
+
+Then there is `c₄ > 0` such that for every `0 < ε < e⁻¹` there are a finite set of levels `𝓛` and
+`N_ℓ ≥ 1` for which `Y = ∑_{ℓ∈𝓛} Y ℓ (N ℓ)` has `MSE < ε²` and the cost
+`C = ∑_{ℓ∈𝓛} Cost ℓ (N ℓ)` satisfies `E[C] ≤ c₄ ε⁻²` (`η < 0`), `c₄ ε⁻² |log ε|^{e₁}` (`η = 0`),
+`c₄ ε^{−2−η} |log ε|^{e₂}` (`η > 0`), with `η = max_d (γ_d − β_d)/α_d` and `D₂` the number of
+directions attaining it.  The witnesses are the exponents of `giles_theorem2_boundary`,
+`e₁ = 2D₂ + (D₃ − 3)⁺` and `e₂ = (D₂ − 1)(2 + η) + (D₃ − 1)⁺` with `D₃ = #{d : α_d = ½β_d}`.
+The hypothesis `β_d > 0` is Giles'; the proof does not use it. -/
+theorem giles_theorem2_full [NeZero D] {α β γ : Fin D → ℝ}
+    (hα : ∀ d, 0 < α d) (hβ : ∀ d, 0 < β d) (hγ : ∀ d, 0 < γ d) (hαβ : ∀ d, β d / 2 ≤ α d) :
+    ∃ e₁ e₂ : ℝ,
+      ((∀ d, β d / 2 < α d) →
+        e₁ = 2 * (mimcD2 α β γ : ℝ) ∧ e₂ = ((mimcD2 α β γ : ℝ) - 1) * (2 + mimcEta α β γ)) ∧
+      ∀ {Ω : Type u} [MeasurableSpace Ω] (μ : Measure Ω) [IsProbabilityMeasure μ]
+        (P : Ω → ℝ) (Pℓ : (Fin D → ℕ) → Ω → ℝ) (Y : (Fin D → ℕ) → ℕ → Ω → ℝ)
+        (Cost : (Fin D → ℕ) → ℕ → Ω → ℝ) (V C : (Fin D → ℕ) → ℝ) (c₁ c₂ c₃ : ℝ),
+        0 < c₁ → 0 < c₂ → 0 < c₃ →
+        Integrable P μ → (∀ ℓ, Integrable (Pℓ ℓ) μ) →
+        (∀ ℓ n, 0 < n → MemLp (Y ℓ n) 2 μ) →
+        (∀ N : (Fin D → ℕ) → ℕ, (∀ ℓ, 0 < N ℓ) →
+          Pairwise fun i j => IndepFun (Y i (N i)) (Y j (N j)) μ) →
+        (∀ ℓ n, 0 < n → Integrable (Cost ℓ n) μ) →
+        (∀ ℓ (n : ℕ), 0 < n → μ[Cost ℓ n] = n * C ℓ) →
+        (∀ ℓ n, 0 < n → variance (Y ℓ n) μ = V ℓ / n) →
+        (∀ δ : ℝ, 0 < δ → ∃ n₀ : ℕ, ∀ ℓ : Fin D → ℕ, (∀ d, n₀ ≤ ℓ d) →
+          |μ[fun ω => Pℓ ℓ ω - P ω]| < δ) →
+        (∀ ℓ n, 0 < n → μ[Y ℓ n] = μ[fun ω => crossDiff (fun m => Pℓ m ω) ℓ]) →
+        (∀ ℓ n, 0 < n → |μ[Y ℓ n]| ≤ c₁ * (2 : ℝ) ^ (-dot α ℓ)) →
+        (∀ ℓ, V ℓ ≤ c₂ * (2 : ℝ) ^ (-dot β ℓ)) →
+        (∀ ℓ, C ℓ ≤ c₃ * (2 : ℝ) ^ dot γ ℓ) →
+        ∃ c₄ : ℝ, 0 < c₄ ∧ ∀ ε : ℝ, 0 < ε → ε < Real.exp (-1) →
+          ∃ (𝓛 : Finset (Fin D → ℕ)) (N : (Fin D → ℕ) → ℕ), (∀ ℓ, 0 < N ℓ) ∧
+            μ[fun ω => (∑ ℓ ∈ 𝓛, Y ℓ (N ℓ) ω - μ[P]) ^ 2] < ε ^ 2 ∧
+            μ[fun ω => ∑ ℓ ∈ 𝓛, Cost ℓ (N ℓ) ω] ≤
+              c₄ * mimcBound (mimcEta α β γ) e₁ e₂ ε := by
+  refine ⟨2 * (mimcD2 α β γ : ℝ) + ((mimcD3 α β - 3 : ℕ) : ℝ),
+    ((mimcD2 α β γ : ℝ) - 1) * (2 + mimcEta α β γ) + ((mimcD3 α β - 1 : ℕ) : ℝ), ?_, ?_⟩
+  · intro h
+    rw [mimcD3_eq_zero h]
+    simp
+  · intro Ω _ μ _ P Pℓ Y Cost V C c₁ c₂ c₃ hc₁ hc₂ hc₃ hP hPℓ hY hind hCost_int hCost_mean
+      h_var h_i h_iii h_ii h_iv h_v
+    exact giles_theorem2_boundary P Pℓ Y Cost V C hα hβ hγ hαβ hc₁ hc₂ hc₃ hP hPℓ hY hind
+      hCost_int hCost_mean h_var h_i h_iii h_ii h_iv h_v
 
 end MLMC

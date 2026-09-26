@@ -20,8 +20,9 @@ and states the telescoping sum `E[P] = ∑_{ℓ ≥ 0} E[ΔP_ℓ]`.  As in the o
 
 This file defines the cross-difference (`crossDiff`) and proves the finite form of the telescoping
 sum behind that identity: summing `ΔP` over the box `{ℓ : ℓ_d ≤ k_d for all d}` gives `P_k`
-(`sum_crossDiff`).  The infinite form is derived in `MlmcLean/Theorem2.lean` from condition i) of
-Theorem 2.
+(`sum_crossDiff`).  The infinite form is proved in `MlmcLean/Theorem2.lean`: along boxes from
+condition i) of Theorem 2 (`tendsto_sum_box_integral_crossDiff`), and as an absolutely convergent
+series under conditions i)–iii) (`hasSum_integral_crossDiff`).
 -/
 
 open Finset

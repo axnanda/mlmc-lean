@@ -9,32 +9,39 @@ import Mathlib.Analysis.SpecificLimits.Basic
 Reference: M.B. Giles, *Multilevel Monte Carlo methods*, Acta Numerica 24 (2015), §2.2 (p. 9–11),
 presenting the estimator of C.-H. Rhee and P.W. Glynn (2012, 2013).
 
-The single-term estimator draws a random level `ℓ'` with `P(ℓ' = ℓ) = p_ℓ`, independently of the
-path simulation, and returns `Y = p_{ℓ'}⁻¹ (P_{ℓ'} − P_{ℓ'−1})` (with `P_{−1} ≡ 0`).  Writing
+The single-term estimator uses `N` samples in total; for each sample it draws a random level `ℓ'`
+with `P(ℓ' = ℓ) = p_ℓ`, independently of the path simulation, and averages
+`p_{ℓ'}⁻¹ (P_{ℓ'} − P_{ℓ'−1})` (with `P_{−1} ≡ 0`) over the `N` samples (p. 9).  `singleTerm` is one
+sample (`N = 1`); `singleTermN` is the average of `N` independent samples.  Writing
 `E_ℓ = E[P_ℓ − P_{ℓ−1}]` and `V_ℓ = V[P_ℓ − P_{ℓ−1}]`, Giles states on p. 10:
 
-* `E[Y] = ∑_ℓ E[P_ℓ − P_{ℓ−1}] = E[P]` — `singleTerm_unbiased`;
+* `E[Y] = ∑_ℓ E[P_ℓ − P_{ℓ−1}] = E[P]` — `singleTerm_unbiased` (one sample) and
+  `singleTermN_mean_variance` (`N` samples, `V[Y_N] = V[Y]/N`);
 * `V[Y] = ∑_ℓ p_ℓ⁻¹ (V_ℓ + E_ℓ²) − (∑_ℓ E_ℓ)² ≥ ∑_ℓ p_ℓ⁻¹ V_ℓ` "due to Jensen's inequality" —
   `singleTerm_variance`, `singleTerm_variance_ge`;
 * "for both the variance and the expected cost to be finite, it is necessary that
-  `∑ p_ℓ⁻¹ V_ℓ < ∞` and `∑ p_ℓ C_ℓ < ∞`" — `summable_of_memLp_singleTerm` (the expected cost of
-  one sample is `∑ p_ℓ C_ℓ` by definition);
+  `∑ p_ℓ⁻¹ V_ℓ < ∞` and `∑ p_ℓ C_ℓ < ∞`" — `randomised_necessary`, built on
+  `summable_of_memLp_singleTerm` (variance) and `integral_cost_level` (the expected cost of one
+  sample is `∑ p_ℓ C_ℓ` when the cost of a level-`ℓ` sample is independent of the level);
 * under the conditions of Theorem 1 "this is possible when `β > γ` by choosing
   `p_ℓ ∝ 2^{−(γ+β)ℓ/2}`, so that `p_ℓ⁻¹ V_ℓ ∝ 2^{−(β−γ)ℓ/2}` and `p_ℓ C_ℓ ∝ 2^{−(β−γ)ℓ/2}`" —
-  `randomised_summable`; "it is not possible when `β ≤ γ`" — `randomised_not_summable`;
-* "the optimal choice for `p_ℓ` is `p_ℓ = √(V_ℓ/C_ℓ) (∑ √(V_ℓ'/C_ℓ'))⁻¹`": it minimises
-  `(∑ p_ℓ⁻¹ V_ℓ)(∑ p_ℓ C_ℓ)`, the product that fixes the cost for a given variance, with minimum
-  `(∑ √(V_ℓ C_ℓ))²` — `randomised_optimal_p`, `randomised_optimal_p_eq`.
+  `randomised_summable`; "it is not possible when `β ≤ γ`" — `randomised_not_summable`, when the
+  rates are attained;
+* "the optimal choice for `p_ℓ` is `p_ℓ = √(V_ℓ/C_ℓ) (∑ √(V_ℓ'/C_ℓ'))⁻¹`": it minimises the product
+  `(∑ p_ℓ⁻¹ V_ℓ)(∑ p_ℓ C_ℓ)`, which, when `E_ℓ² ≪ V_ℓ`, is approximately `ε²` times the cost of
+  reaching variance `ε²` (p. 10), with minimum `(∑ √(V_ℓ C_ℓ))²` — `randomised_optimal_p_isLeast`
+  (built on the Cauchy–Schwarz inequality `randomised_optimal_p`, which the paper does not state,
+  and on `randomised_optimal_p_eq`).
 
 **Standing assumptions made explicit.**  The paper leaves the integrability behind these
 identities implicit.  We assume the level approximations are measurable and the level `K` is
 independent of each `P_ℓ − P_{ℓ−1}`; unbiasedness needs `∑_ℓ E|P_ℓ − P_{ℓ−1}| < ∞` (exactly
-`E|Y| < ∞`) and `E[P_L] → E[P]` (condition (i) of Theorem 1); the variance formula needs
+`E|Y| < ∞`) and `E[P_L] → E[P]` (implied by condition (i) of Theorem 1); the variance formula needs
 `∑_ℓ p_ℓ⁻¹ E[(P_ℓ − P_{ℓ−1})²] < ∞` (exactly `E[Y²] < ∞`).  The two summability conditions in
-the paper are *necessary* for finite variance; they are not sufficient, because the variance also
-contains `∑ p_ℓ⁻¹ E_ℓ²`.  With the second-moment form of condition (iii) that Giles mentions on
-p. 7, the estimator has finite variance and finite expected cost
-(`randomised_mlmc_finite`).
+the paper are *necessary* for finite variance and finite expected cost respectively; they are not
+sufficient for finite variance, because the variance also contains `∑ p_ℓ⁻¹ E_ℓ²`.  With the
+second-moment form of condition (iii) that Giles mentions on p. 7, the estimator has finite
+variance and finite expected cost (`randomised_mlmc_finite`).
 -/
 
 open MeasureTheory ProbabilityTheory Finset Filter Topology
@@ -43,25 +50,11 @@ namespace MLMC
 
 variable {Ω : Type*} [MeasurableSpace Ω] {μ : Measure Ω}
 
-/-- The single-term estimator of Rhee and Glynn (Giles 2015, §2.2):
+omit [MeasurableSpace Ω] in
+/-- One sample (`N = 1`) of the single-term estimator of Rhee and Glynn (Giles 2015, §2.2, p. 9):
 `Y = p_K⁻¹ (P_K − P_{K−1})` for the random level `K`, with `P_{−1} ≡ 0`. -/
 noncomputable def singleTerm (Pl : ℕ → Ω → ℝ) (K : Ω → ℕ) (p : ℕ → ℝ) (ω : Ω) : ℝ :=
   (p (K ω))⁻¹ * levelDiff Pl (K ω) ω
-
-lemma integrable_levelDiff {Pl : ℕ → Ω → ℝ} (hPl : ∀ ℓ, Integrable (Pl ℓ) μ) :
-    ∀ ℓ, Integrable (levelDiff Pl ℓ) μ
-  | 0 => hPl 0
-  | ℓ + 1 => (hPl (ℓ + 1)).sub (hPl ℓ)
-
-/-- Telescoping: `∑_{ℓ=0}^{L} E[P_ℓ − P_{ℓ−1}] = E[P_L]` (Giles 2015, §1.3, p. 4). -/
-lemma sum_integral_levelDiff {Pl : ℕ → Ω → ℝ} (hPl : ∀ ℓ, Integrable (Pl ℓ) μ) (L : ℕ) :
-    ∑ ℓ ∈ range (L + 1), ∫ ω, levelDiff Pl ℓ ω ∂μ = ∫ ω, Pl L ω ∂μ := by
-  induction L with
-  | zero => simp
-  | succ L ih =>
-    simp only [Finset.sum_range_succ, ih, levelDiff_succ]
-    rw [integral_sub (hPl _) (hPl _)]
-    ring
 
 lemma measurable_comp_level {K : Ω → ℕ} (hK : Measurable K) {g : ℕ → Ω → ℝ}
     (hgm : ∀ ℓ, Measurable (g ℓ)) : Measurable fun ω => g (K ω) ω := by
@@ -155,7 +148,42 @@ theorem integral_comp_level (hK : Measurable K) (g : ℕ → Ω → ℝ) (hgm : 
 variable {Pl : ℕ → Ω → ℝ} {p : ℕ → ℝ}
 
 omit [IsProbabilityMeasure μ] in
-/-- `E|Y| < ∞` and `E[Y] = ∑_ℓ E[P_ℓ − P_{ℓ−1}]` for the single-term estimator. -/
+/-- **Expected cost of one sample of the single-term estimator** (Giles 2015, §2.2, p. 10, where the
+expected cost per sample is `∑_ℓ p_ℓ C_ℓ`).  Let `κ ℓ ≥ 0` be the random cost of a level-`ℓ` sample,
+measurable, integrable and independent of the level `K`, where `P(K = ℓ) = p_ℓ`.  Then the cost
+`κ_K` of one sample is integrable if and only if `∑_ℓ p_ℓ E[κ_ℓ] < ∞`, and then
+`E[κ_K] = ∑_ℓ p_ℓ E[κ_ℓ]`. -/
+theorem integral_cost_level (hK : Measurable K) {κ : ℕ → Ω → ℝ} (hκm : ∀ ℓ, Measurable (κ ℓ))
+    (hκ0 : ∀ ℓ ω, 0 ≤ κ ℓ ω) (hκi : ∀ ℓ, Integrable (κ ℓ) μ) (hind : ∀ ℓ, IndepFun K (κ ℓ) μ)
+    (hp : ∀ ℓ, μ.real {ω | K ω = ℓ} = p ℓ) :
+    (Integrable (fun ω => κ (K ω) ω) μ ↔ Summable fun ℓ => p ℓ * ∫ ω, κ ℓ ω ∂μ) ∧
+      (Summable (fun ℓ => p ℓ * ∫ ω, κ ℓ ω ∂μ) →
+        ∫ ω, κ (K ω) ω ∂μ = ∑' ℓ, p ℓ * ∫ ω, κ ℓ ω ∂μ) := by
+  have habs : ∀ ℓ, ∫ ω, |κ ℓ ω| ∂μ = ∫ ω, κ ℓ ω ∂μ := fun ℓ =>
+    integral_congr_ae (Eventually.of_forall fun ω => abs_of_nonneg (hκ0 ℓ ω))
+  have hsum_iff : (Summable fun ℓ => μ.real {ω | K ω = ℓ} * ∫ ω, |κ ℓ ω| ∂μ) ↔
+      Summable fun ℓ => p ℓ * ∫ ω, κ ℓ ω ∂μ := by
+    simp only [hp, habs]
+  have hfwd : Summable (fun ℓ => p ℓ * ∫ ω, κ ℓ ω ∂μ) →
+      Integrable (fun ω => κ (K ω) ω) μ ∧
+        ∫ ω, κ (K ω) ω ∂μ = ∑' ℓ, p ℓ * ∫ ω, κ ℓ ω ∂μ := by
+    intro hs
+    obtain ⟨h1, h2⟩ := integral_comp_level hK κ hκm hκi hind (hsum_iff.2 hs)
+    exact ⟨h1, h2.trans (tsum_congr fun ℓ => by rw [hp ℓ])⟩
+  refine ⟨⟨fun hint => ?_, fun hs => (hfwd hs).1⟩, fun hs => (hfwd hs).2⟩
+  -- only if: the integrals of `κ_K` over the level sets `{K = ℓ}` sum to `E[κ_K]`
+  have hs : ∀ ℓ, MeasurableSet {ω | K ω = ℓ} := fun ℓ => hK (measurableSet_singleton ℓ)
+  have hsum := hasSum_integral_iUnion (f := fun ω => κ (K ω) ω) hs (pairwise_disjoint_level K)
+    (by rw [iUnion_level_eq_univ K]; exact hint.integrableOn)
+  have hterm : ∀ ℓ, ∫ ω in {ω | K ω = ℓ}, κ (K ω) ω ∂μ = p ℓ * ∫ ω, κ ℓ ω ∂μ := fun ℓ => by
+    rw [setIntegral_congr_fun (hs ℓ) (f := fun ω => κ (K ω) ω) (g := κ ℓ)
+      (fun ω (hω : K ω = ℓ) => by simp only [hω]), setIntegral_level hK (hκm ℓ) (hind ℓ) ℓ,
+      hp ℓ]
+  exact hsum.summable.congr hterm
+
+omit [IsProbabilityMeasure μ] in
+/-- `E|Y| < ∞` and `E[Y] = ∑_ℓ E[P_ℓ − P_{ℓ−1}]` for one sample of the single-term estimator
+(Giles 2015, §2.2, p. 10, the middle step of the unbiasedness computation). -/
 theorem integral_singleTerm (hK : Measurable K) (hPlm : ∀ ℓ, Measurable (Pl ℓ))
     (hPl : ∀ ℓ, Integrable (Pl ℓ) μ) (hp : ∀ ℓ, μ.real {ω | K ω = ℓ} = p ℓ)
     (hp0 : ∀ ℓ, 0 < p ℓ) (hind : ∀ ℓ, IndepFun K (levelDiff Pl ℓ) μ)
@@ -184,8 +212,10 @@ theorem integral_singleTerm (hK : Measurable K) (hPlm : ∀ ℓ, Measurable (Pl 
 -- the proof does not use it (without it, `E[P]` would be read as the junk value `0`).
 omit [IsProbabilityMeasure μ] in
 set_option linter.unusedVariables false in
-/-- **Unbiasedness of the single-term estimator** (Giles 2015, §2.2, p. 10):
-`E[Y] = ∑_ℓ E[P_ℓ − P_{ℓ−1}] = E[P]`. -/
+/-- **Unbiasedness of the single-term estimator** (Giles 2015, §2.2, p. 10): one sample `Y` is
+integrable and `E[Y] = E[P]` (the paper's middle step `E[Y] = ∑_ℓ E[P_ℓ − P_{ℓ−1}]` is
+`integral_singleTerm`).  The measure `μ` is not assumed to be a probability measure: the
+hypotheses `hp`, `hp0` and `hind` force `μ(Ω) = 1`. -/
 theorem singleTerm_unbiased (P : Ω → ℝ) (hP : Integrable P μ) (hK : Measurable K)
     (hPlm : ∀ ℓ, Measurable (Pl ℓ))
     (hPl : ∀ ℓ, Integrable (Pl ℓ) μ) (hp : ∀ ℓ, μ.real {ω | K ω = ℓ} = p ℓ)
@@ -311,7 +341,8 @@ theorem singleTerm_variance (hK : Measurable K) (hPlm : ∀ ℓ, Measurable (Pl 
   rw [h2, hmean]
 
 /-- The variance bound `V[Y] ≥ ∑_ℓ p_ℓ⁻¹ V_ℓ` (Giles 2015, §2.2, p. 10, "due to Jensen's
-inequality"). -/
+inequality"), for one sample with finite second moment (`hsum2`; without it `V[Y] = ∞` and the
+bound is trivial in `[0, ∞]`). -/
 theorem singleTerm_variance_ge (hK : Measurable K) (hPlm : ∀ ℓ, Measurable (Pl ℓ))
     (hPl : ∀ ℓ, MemLp (Pl ℓ) 2 μ) (hp : ∀ ℓ, μ.real {ω | K ω = ℓ} = p ℓ) (hp0 : ∀ ℓ, 0 < p ℓ)
     (hind : ∀ ℓ, IndepFun K (levelDiff Pl ℓ) μ)
@@ -346,8 +377,8 @@ theorem singleTerm_variance_ge (hK : Measurable K) (hPlm : ∀ ℓ, Measurable (
   rw [hsplit]
   linarith
 
-/-- **Necessity** (Giles 2015, §2.2, p. 10): if the single-term estimator has finite variance, then
-`∑_ℓ p_ℓ⁻¹ V_ℓ < ∞`. -/
+/-- **Necessity, variance half** (Giles 2015, §2.2, p. 10): if one sample of the single-term
+estimator has finite variance, then `∑_ℓ p_ℓ⁻¹ V_ℓ < ∞`. -/
 theorem summable_of_memLp_singleTerm (hK : Measurable K) (hPlm : ∀ ℓ, Measurable (Pl ℓ))
     (hPl : ∀ ℓ, MemLp (Pl ℓ) 2 μ) (hp : ∀ ℓ, μ.real {ω | K ω = ℓ} = p ℓ) (hp0 : ∀ ℓ, 0 < p ℓ)
     (hind : ∀ ℓ, IndepFun K (levelDiff Pl ℓ) μ) (hY : MemLp (singleTerm Pl K p) 2 μ) :
@@ -374,12 +405,83 @@ theorem summable_of_memLp_singleTerm (hK : Measurable K) (hPlm : ∀ ℓ, Measur
     (fun ℓ => div_le_div_of_nonneg_right ?_ (hp0 ℓ).le) h2
   exact variance_le_expectation_sq (hΔ ℓ).aestronglyMeasurable
 
+/-- **Necessity** (Giles 2015, §2.2, p. 10): "For both the variance and the expected cost to be
+finite, it is necessary that `∑_ℓ p_ℓ⁻¹ V_ℓ < ∞` and `∑_ℓ p_ℓ C_ℓ < ∞`".  If one sample of the
+single-term estimator has finite variance and its cost `κ_K` has finite expectation, where the cost
+`κ_ℓ ≥ 0` of a level-`ℓ` sample is measurable and integrable with mean `C_ℓ` and independent of the
+level `K`, then both series converge. -/
+theorem randomised_necessary (hK : Measurable K) (hPlm : ∀ ℓ, Measurable (Pl ℓ))
+    (hPl : ∀ ℓ, MemLp (Pl ℓ) 2 μ) (hp : ∀ ℓ, μ.real {ω | K ω = ℓ} = p ℓ) (hp0 : ∀ ℓ, 0 < p ℓ)
+    (hind : ∀ ℓ, IndepFun K (levelDiff Pl ℓ) μ) {κ : ℕ → Ω → ℝ} {C : ℕ → ℝ}
+    (hκm : ∀ ℓ, Measurable (κ ℓ)) (hκ0 : ∀ ℓ ω, 0 ≤ κ ℓ ω) (hκi : ∀ ℓ, Integrable (κ ℓ) μ)
+    (hκind : ∀ ℓ, IndepFun K (κ ℓ) μ) (hC : ∀ ℓ, ∫ ω, κ ℓ ω ∂μ = C ℓ)
+    (hY : MemLp (singleTerm Pl K p) 2 μ) (hcost : Integrable (fun ω => κ (K ω) ω) μ) :
+    Summable (fun ℓ => variance (levelDiff Pl ℓ) μ / p ℓ) ∧ Summable (fun ℓ => p ℓ * C ℓ) := by
+  refine ⟨summable_of_memLp_singleTerm hK hPlm hPl hp hp0 hind hY, ?_⟩
+  have h := (integral_cost_level hK hκm hκ0 hκi hκind hp).1.1 hcost
+  exact h.congr fun ℓ => by rw [hC ℓ]
+
 end levelSelection
+
+/-! ### The single-term estimator with `N` samples -/
+
+section Nsamples
+
+variable {Ω' : Type*} [MeasurableSpace Ω'] {μ' : Measure Ω'}
+
+omit [MeasurableSpace Ω] [MeasurableSpace Ω'] in
+/-- The single-term estimator with `N` samples (Giles 2015, §2.2, p. 9):
+`Y_N = N⁻¹ ∑_{n<N} p_{K_n}⁻¹ (P_{K_n} − P_{K_n−1})`, where the `n`-th sample — a path together with
+its random level — is the input `ξ n` (the paper's `n = 1, …, N` shifted to `0, …, N−1`). -/
+noncomputable def singleTermN (Pl : ℕ → Ω → ℝ) (K : Ω → ℕ) (p : ℕ → ℝ) (ξ : ℕ → Ω' → Ω)
+    (N : ℕ) (x : Ω') : ℝ :=
+  (N : ℝ)⁻¹ * ∑ n ∈ range N, singleTerm Pl K p (ξ n x)
+
+/-- **The single-term estimator with `N` samples** (Giles 2015, §2.2, pp. 9–10): with `N ≥ 1`
+independent samples `ξ n` of law `μ`, each a path together with its random level `K`, and under the
+hypotheses of `singleTerm_unbiased` and `singleTerm_variance` for one sample, the estimator `Y_N` is
+unbiased, `E[Y_N] = E[P]`, and has variance `V[Y_N] = V[Y]/N`, where `V[Y]` is the variance of one
+sample given by `singleTerm_variance`. -/
+theorem singleTermN_mean_variance [IsProbabilityMeasure μ] [IsProbabilityMeasure μ']
+    {K : Ω → ℕ} {Pl : ℕ → Ω → ℝ} {p : ℕ → ℝ} (P : Ω → ℝ) (hP : Integrable P μ)
+    (hK : Measurable K) (hPlm : ∀ ℓ, Measurable (Pl ℓ)) (hPl : ∀ ℓ, MemLp (Pl ℓ) 2 μ)
+    (hp : ∀ ℓ, μ.real {ω | K ω = ℓ} = p ℓ) (hp0 : ∀ ℓ, 0 < p ℓ)
+    (hind : ∀ ℓ, IndepFun K (levelDiff Pl ℓ) μ)
+    (hsum2 : Summable fun ℓ => (∫ ω, levelDiff Pl ℓ ω ^ 2 ∂μ) / p ℓ)
+    (hconv : Tendsto (fun L => ∫ ω, Pl L ω ∂μ) atTop (𝓝 (∫ ω, P ω ∂μ)))
+    {ξ : ℕ → Ω' → Ω} (hξ : ∀ n, MeasurePreserving (ξ n) μ' μ) (hξind : iIndepFun ξ μ')
+    {N : ℕ} (hN : 0 < N) :
+    ∫ x, singleTermN Pl K p ξ N x ∂μ' = ∫ ω, P ω ∂μ ∧
+      variance (singleTermN Pl K p ξ N) μ' = variance (singleTerm Pl K p) μ / N := by
+  have hsum := summable_abs_of_summable_sq hK hPl hp hp0 hsum2
+  obtain ⟨hint, hmean⟩ := singleTerm_unbiased P hP hK hPlm
+    (fun ℓ => (hPl ℓ).integrable one_le_two) hp hp0 hind hsum hconv
+  have hY2 : MemLp (singleTerm Pl K p) 2 μ := (singleTerm_variance hK hPlm hPl hp hp0 hind hsum2).1
+  have hYm : Measurable (singleTerm Pl K p) :=
+    measurable_comp_level hK fun ℓ => (measurable_levelDiff hPlm ℓ).const_mul (p ℓ)⁻¹
+  have hXint : ∀ n, Integrable (fun x => singleTerm Pl K p (ξ n x)) μ' := fun n =>
+    ((hξ n).integrable_comp hint.aestronglyMeasurable).2 hint
+  constructor
+  · simp only [singleTermN]
+    rw [integral_const_mul, integral_finsetSum _ fun n _ => hXint n]
+    have hterm : ∀ n, ∫ x, singleTerm Pl K p (ξ n x) ∂μ' = ∫ ω, P ω ∂μ := fun n => by
+      rw [integral_comp_of_measurePreserving (hξ n) hint.aestronglyMeasurable, hmean]
+    simp only [hterm, Finset.sum_const, Finset.card_range, nsmul_eq_mul]
+    have hN' : (N : ℝ) ≠ 0 := Nat.cast_ne_zero.2 hN.ne'
+    rw [← mul_assoc, inv_mul_cancel₀ hN', one_mul]
+  · have hX : iIndepFun (fun n => singleTerm Pl K p ∘ ξ n) μ' :=
+      hξind.comp (fun _ => singleTerm Pl K p) (fun _ => hYm)
+    exact variance_sample_mean (fun n x => singleTerm Pl K p (ξ n x)) N hN _
+      (fun n => hY2.comp_measurePreserving (hξ n))
+      (fun n => (hξ n).variance_fun_comp hYm.aemeasurable)
+      (fun a _ b _ hab => hX.indepFun hab)
+
+end Nsamples
 
 /-! ### The choice of level probabilities (pure real analysis) -/
 
 /-- The level distribution `p_ℓ = (1 − r) r^ℓ` with `r = 2^{−(β+γ)/2}`, i.e.
-`p_ℓ ∝ 2^{−(β+γ)ℓ/2}` (Giles 2015, §2.2, p. 10). -/
+`p_ℓ ∝ 2^{−(β+γ)ℓ/2}` (Giles 2015, §2.2, p. 10); a probability distribution when `β + γ > 0`. -/
 noncomputable def geomLevelProb (β γ : ℝ) (ℓ : ℕ) : ℝ :=
   (1 - (2 : ℝ) ^ (-(β + γ) / 2)) * ((2 : ℝ) ^ (-(β + γ) / 2)) ^ ℓ
 
@@ -480,8 +582,9 @@ theorem randomised_not_summable {β γ c₂ c₃ : ℝ} (hβγ : β ≤ γ) (hc�
   have hpos : 0 < c₂ * c₃ := mul_pos hc₂ hc₃
   linarith
 
-/-- Cauchy–Schwarz for the level distribution (Giles 2015, §2.2, p. 10): for any positive `p_ℓ`,
-`(∑_ℓ √(V_ℓ C_ℓ))² ≤ (∑_ℓ p_ℓ⁻¹ V_ℓ)(∑_ℓ p_ℓ C_ℓ)`. -/
+/-- Cauchy–Schwarz for the level distribution: for any positive `p_ℓ`,
+`(∑_ℓ √(V_ℓ C_ℓ))² ≤ (∑_ℓ p_ℓ⁻¹ V_ℓ)(∑_ℓ p_ℓ C_ℓ)`.  Not stated in the paper: it is the exact
+inequality behind the optimal choice of `p_ℓ` on p. 10 of Giles 2015, §2.2. -/
 theorem randomised_optimal_p {V C p : ℕ → ℝ} (hV : ∀ ℓ, 0 ≤ V ℓ) (hC : ∀ ℓ, 0 ≤ C ℓ)
     (hp : ∀ ℓ, 0 < p ℓ) (h1 : Summable fun ℓ => V ℓ / p ℓ) (h2 : Summable fun ℓ => p ℓ * C ℓ) :
     Summable (fun ℓ => Real.sqrt (V ℓ * C ℓ)) ∧
@@ -549,28 +652,51 @@ theorem randomised_optimal_p_eq {V C : ℕ → ℝ} (hV : ∀ ℓ, 0 < V ℓ) (h
     rw [tsum_mul_left, tsum_div_const]
     field_simp [hZ0.ne']
 
-/-- **Finite variance and finite expected cost with the tightened condition (iii)**
-(Giles 2015, §2.2 with the second-moment form of (iii) from p. 7).  Suppose `K` has the level
-distribution `p_ℓ ∝ 2^{−(β+γ)ℓ/2}` and is independent of each `P_ℓ − P_{ℓ−1}`, that
-`E[(P_ℓ − P_{ℓ−1})²] ≤ c₂ 2^{−βℓ}`, `|E[P_ℓ − P]| ≤ c₁ 2^{−αℓ}`, and `0 ≤ C_ℓ ≤ c₃ 2^{γℓ}` with
-`0 < γ < β` and `α > 0`.  Then the single-term estimator is unbiased, `E[Y] = E[P]`, has finite
-variance, and one sample has finite expected cost `∑_ℓ p_ℓ C_ℓ`. -/
+/-- **The optimal level distribution** (Giles 2015, §2.2, p. 10: "the optimal choice for `p_ℓ` is
+`p_ℓ = √(V_ℓ/C_ℓ) (∑ √(V_ℓ'/C_ℓ'))⁻¹`").  For positive `V_ℓ, C_ℓ` with `∑ √(V_ℓ C_ℓ) < ∞` and
+`∑ √(V_ℓ/C_ℓ) < ∞` (the paper's proviso is `β > γ`), the least value of the product
+`(∑ p_ℓ⁻¹ V_ℓ)(∑ p_ℓ C_ℓ)` over all probability distributions `p_ℓ > 0` for which both series
+converge is `(∑ √(V_ℓ C_ℓ))²`, and it is attained by `optimalLevelProb`. -/
+theorem randomised_optimal_p_isLeast {V C : ℕ → ℝ} (hV : ∀ ℓ, 0 < V ℓ) (hC : ∀ ℓ, 0 < C ℓ)
+    (hS : Summable fun ℓ => Real.sqrt (V ℓ * C ℓ))
+    (hZ : Summable fun ℓ => Real.sqrt (V ℓ / C ℓ)) :
+    IsLeast {x | ∃ p : ℕ → ℝ, (∀ ℓ, 0 < p ℓ) ∧ HasSum p 1 ∧ Summable (fun ℓ => V ℓ / p ℓ) ∧
+        Summable (fun ℓ => p ℓ * C ℓ) ∧ x = (∑' ℓ, V ℓ / p ℓ) * ∑' ℓ, p ℓ * C ℓ}
+      ((∑' ℓ, Real.sqrt (V ℓ * C ℓ)) ^ 2) := by
+  obtain ⟨hpos, h1, hVs, hCs, heq⟩ := randomised_optimal_p_eq hV hC hS hZ
+  refine ⟨⟨optimalLevelProb V C, hpos, h1, hVs, hCs, heq.symm⟩, ?_⟩
+  rintro x ⟨p, hp, -, h1, h2, rfl⟩
+  exact (randomised_optimal_p (fun ℓ => (hV ℓ).le) (fun ℓ => (hC ℓ).le) hp h1 h2).2
+
+/-- **Finite variance and finite expected cost with the tightened condition (iii)** (derived from
+Giles 2015, §2.2, p. 10, with the second-moment form of (iii) from p. 7; the combined statement is
+not stated in the paper).  Suppose the level `K` has the distribution `p_ℓ ∝ 2^{−(β+γ)ℓ/2}` and is
+independent of each `P_ℓ − P_{ℓ−1}` and of each level cost `κ_ℓ`; that the `P_ℓ` are measurable
+and square-integrable, `P` is integrable, `E[(P_ℓ − P_{ℓ−1})²] ≤ c₂ 2^{−βℓ}`,
+`|E[P_ℓ − P]| ≤ c₁ 2^{−αℓ}`, and the cost `κ_ℓ ≥ 0` of a level-`ℓ` sample is measurable and
+integrable with `E[κ_ℓ] ≤ c₃ 2^{γℓ}`, with `0 < γ < β` and `α > 0`.  Then one sample of the
+single-term estimator is unbiased, `E[Y] = E[P]`, has finite variance, and its cost `κ_K` has
+finite expectation `E[κ_K] = ∑_ℓ p_ℓ E[κ_ℓ]`. -/
 theorem randomised_mlmc_finite [IsProbabilityMeasure μ] {K : Ω → ℕ} {Pl : ℕ → Ω → ℝ}
-    (P : Ω → ℝ) {C : ℕ → ℝ} {α β γ c₁ c₂ c₃ : ℝ} (hα : 0 < α) (hγ : 0 < γ) (hγβ : γ < β)
+    (P : Ω → ℝ) {κ : ℕ → Ω → ℝ} {α β γ c₁ c₂ c₃ : ℝ} (hα : 0 < α) (hγ : 0 < γ) (hγβ : γ < β)
     (hK : Measurable K) (hPlm : ∀ ℓ, Measurable (Pl ℓ)) (hPl : ∀ ℓ, MemLp (Pl ℓ) 2 μ)
     (hP : Integrable P μ) (hp : ∀ ℓ, μ.real {ω | K ω = ℓ} = geomLevelProb β γ ℓ)
     (hind : ∀ ℓ, IndepFun K (levelDiff Pl ℓ) μ)
     (h_i : ∀ ℓ : ℕ, |∫ ω, Pl ℓ ω - P ω ∂μ| ≤ c₁ * (2 : ℝ) ^ (-(α * (ℓ : ℝ))))
     (h_iii : ∀ ℓ, ∫ ω, levelDiff Pl ℓ ω ^ 2 ∂μ ≤ c₂ * (2 : ℝ) ^ (-(β * (ℓ : ℝ))))
-    (hC : ∀ ℓ, 0 ≤ C ℓ) (h_iv : ∀ ℓ, C ℓ ≤ c₃ * (2 : ℝ) ^ (γ * (ℓ : ℝ))) :
+    (hκm : ∀ ℓ, Measurable (κ ℓ)) (hκ0 : ∀ ℓ ω, 0 ≤ κ ℓ ω) (hκi : ∀ ℓ, Integrable (κ ℓ) μ)
+    (hκind : ∀ ℓ, IndepFun K (κ ℓ) μ)
+    (h_iv : ∀ ℓ, ∫ ω, κ ℓ ω ∂μ ≤ c₃ * (2 : ℝ) ^ (γ * (ℓ : ℝ))) :
     Integrable (singleTerm Pl K (geomLevelProb β γ)) μ ∧
       ∫ ω, singleTerm Pl K (geomLevelProb β γ) ω ∂μ = ∫ ω, P ω ∂μ ∧
       MemLp (singleTerm Pl K (geomLevelProb β γ)) 2 μ ∧
-      Summable (fun ℓ => geomLevelProb β γ ℓ * C ℓ) := by
+      Integrable (fun ω => κ (K ω) ω) μ ∧
+      ∫ ω, κ (K ω) ω ∂μ = ∑' ℓ, geomLevelProb β γ ℓ * ∫ ω, κ ℓ ω ∂μ := by
   have hβγ : 0 < β + γ := by linarith
   have hp0 := geomLevelProb_pos hβγ
   obtain ⟨-, -, hVs, hCs⟩ := randomised_summable (c₂ := c₂) hγ hγβ
-    (fun ℓ => integral_nonneg fun ω => sq_nonneg (levelDiff Pl ℓ ω)) hC h_iii h_iv
+    (fun ℓ => integral_nonneg fun ω => sq_nonneg (levelDiff Pl ℓ ω))
+    (fun ℓ => integral_nonneg fun ω => hκ0 ℓ ω) h_iii h_iv
   have hsum := summable_abs_of_summable_sq hK hPl hp hp0 hVs
   -- `E[P_L] → E[P]` from condition (i)
   have hconv : Tendsto (fun L => ∫ ω, Pl L ω ∂μ) atTop (𝓝 (∫ ω, P ω ∂μ)) := by
@@ -585,6 +711,8 @@ theorem randomised_mlmc_finite [IsProbabilityMeasure μ] {K : Ω → ℕ} {Pl : 
     exact h_i L
   obtain ⟨hint, hmean⟩ := singleTerm_unbiased P hP hK hPlm (fun ℓ => (hPl ℓ).integrable one_le_two)
     hp hp0 hind hsum hconv
-  exact ⟨hint, hmean, (singleTerm_variance hK hPlm hPl hp hp0 hind hVs).1, hCs⟩
+  obtain ⟨hcostiff, hcosteq⟩ := integral_cost_level hK hκm hκ0 hκi hκind hp
+  exact ⟨hint, hmean, (singleTerm_variance hK hPlm hPl hp hp0 hind hVs).1, hcostiff.2 hCs,
+    hcosteq hCs⟩
 
 end MLMC

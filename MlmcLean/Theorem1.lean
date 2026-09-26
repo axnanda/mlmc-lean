@@ -7,7 +7,7 @@ import Mathlib.Topology.Order.LeftRightNhds
 # Giles' Theorem 1 on a probability space
 
 Reference: M.B. Giles, *Multilevel Monte Carlo methods*, Acta Numerica 24 (2015), §2.1,
-Theorem 1 (p. 6–7).
+Theorem 1 (pp. 6–7 of the author's version).
 
 This file states Theorem 1 as Giles states it — for random variables on a probability space
 `(Ω, μ)` — and proves it from
@@ -22,9 +22,11 @@ This file states Theorem 1 as Giles states it — for random variables on a prob
 * `C ℓ` — the expected cost of one sample at level `ℓ`;
 * `Cost ℓ n : Ω → ℝ` — the (random) cost of computing `Y ℓ n`, with `E[Cost ℓ n] = n C_ℓ`.
 
-**Hypotheses (i)–(iv)** are stated verbatim from the paper.  The theorem *chooses* the sample
-sizes, so the estimators are given for every sample size `n ≥ 1`, and independence across levels
-is assumed for every choice of sample sizes.
+**Hypotheses.** (i), (iii) and (iv) are the paper's.  The theorem *chooses* the sample sizes, so
+the estimators are given for every sample size `n ≥ 1`; condition (ii), the variance identity
+`V[Y ℓ n] = V ℓ / n`, square-integrability and the cost identity are required for every `n ≥ 1`,
+and (pairwise) independence across levels for every choice of sample sizes `N ≥ 1`.  `P` and the
+`Pℓ ℓ` are integrable (implicit in the paper).
 
 * `giles_theorem1` — the theorem, with the paper's conclusion `E[C] ≤ c₄ · (…)` for the random
   total cost `C = ∑_ℓ Cost ℓ (N ℓ)`;
@@ -38,9 +40,9 @@ namespace MLMC
 
 variable {Ω : Type*} [MeasurableSpace Ω] {μ : Measure Ω} [IsProbabilityMeasure μ]
 
-omit [IsProbabilityMeasure μ] in
-/-- Giles (2.2)/(2.3): the variance of a Monte Carlo average of `N` pairwise independent samples
-of common variance `v` is `v / N`.  This is how `V[Y_ℓ] = V_ℓ / N_ℓ` arises. -/
+/-- The variance of a Monte Carlo average of `N` pairwise independent samples of common variance
+`v` is `v / N` (Giles 2015, §1.1, p. 2: "The variance of this estimate is `N⁻¹V[P]`"; this is how
+`V[Y_ℓ] = N_ℓ⁻¹ V_ℓ` in (2.3) arises). -/
 theorem variance_sample_mean (X : ℕ → Ω → ℝ) (N : ℕ) (hN : 0 < N) (v : ℝ)
     (hX : ∀ n, MemLp (X n) 2 μ) (hvar : ∀ n, variance (X n) μ = v)
     (hind : Set.Pairwise ↑(range N) fun i j => IndepFun (X i) (X j) μ) :
@@ -54,15 +56,16 @@ theorem variance_sample_mean (X : ℕ → Ω → ℝ) (N : ℕ) (hN : 0 < N) (v 
   have hN' : (N : ℝ) ≠ 0 := Nat.cast_ne_zero.2 hN.ne'
   field_simp
 
-/-- **Giles' Theorem 1, with the cost written as `∑_ℓ N_ℓ C_ℓ`.**
-Hypotheses as in `giles_theorem1`; the conclusion bounds `∑_{ℓ=0}^{L} N_ℓ C_ℓ`, which is the
-expected total cost `E[C]` when each level-`ℓ` sample has expected cost `C_ℓ`. -/
+/-- **Giles' Theorem 1, with the cost written as `∑_ℓ N_ℓ C_ℓ`** (Giles 2015, §2.1, Theorem 1).
+Hypotheses as in `giles_theorem1` without the random costs; the conclusion bounds
+`∑_{ℓ=0}^{L} N_ℓ C_ℓ`, which is the expected total cost `E[C]` when each level-`ℓ` sample has
+expected cost `C_ℓ`. -/
 theorem giles_theorem1_cost_sum
     (P : Ω → ℝ) (Pℓ : ℕ → Ω → ℝ) (Y : ℕ → ℕ → Ω → ℝ) (V C : ℕ → ℝ)
     {α β γ c₁ c₂ c₃ : ℝ} (hα : 0 < α) (hβ : 0 < β) (hγ : 0 < γ)
     (hc₁ : 0 < c₁) (hc₂ : 0 < c₂) (hc₃ : 0 < c₃) (hαβγ : min β γ / 2 ≤ α)
     (hP : Integrable P μ) (hPℓ : ∀ ℓ, Integrable (Pℓ ℓ) μ)
-    (hY : ∀ ℓ n, MemLp (Y ℓ n) 2 μ)
+    (hY : ∀ ℓ n, 0 < n → MemLp (Y ℓ n) 2 μ)
     (hind : ∀ N : ℕ → ℕ, (∀ ℓ, 0 < N ℓ) →
       Pairwise fun i j => IndepFun (Y i (N i)) (Y j (N j)) μ)
     (h_i : ∀ ℓ : ℕ, |μ[fun ω => Pℓ ℓ ω - P ω]| ≤ c₁ * (2 : ℝ) ^ (-(α * (ℓ : ℝ))))
@@ -83,7 +86,7 @@ theorem giles_theorem1_cost_sum
   · -- mean-square error
     have hind' : Set.Pairwise ↑(range (L + 1)) fun i j => IndepFun (Y i (N i)) (Y j (N j)) μ :=
       fun i _ j _ hij => hind N hN hij
-    rw [mlmc_mse Pℓ (fun ℓ => Y ℓ (N ℓ)) L (μ[P]) (fun ℓ => hY ℓ (N ℓ)) hPℓ hind'
+    rw [mlmc_mse Pℓ (fun ℓ => Y ℓ (N ℓ)) L (μ[P]) (fun ℓ => hY ℓ (N ℓ) (hN ℓ)) hPℓ hind'
       (h_ii₀ (N 0) (hN 0)) (fun ℓ => h_ii ℓ (N (ℓ + 1)) (hN (ℓ + 1)))]
     have hb : (μ[Pℓ L] - μ[P]) ^ 2 ≤ (c₁ * (2 : ℝ) ^ (-(α * (L : ℝ)))) ^ 2 := by
       have h := h_i L
@@ -105,14 +108,15 @@ theorem giles_theorem1_cost_sum
       _ ≤ c₄ * complexityBound α β γ ε := hcost
 
 /-- **Giles' Theorem 1** (Giles 2015, §2.1, Theorem 1).
-Let `P` be a random variable and `Pℓ ℓ` its level-`ℓ` approximation.  Suppose there are
-estimators `Y ℓ n` based on `n` Monte Carlo samples, independent across levels, whose samples at
-level `ℓ` have variance `V ℓ` (so `V[Y ℓ n] = V ℓ / n`) and expected cost `C ℓ` (so the random
-cost `Cost ℓ n` of computing `Y ℓ n` has `E[Cost ℓ n] = n C ℓ`), and positive constants
-`α, β, γ, c₁, c₂, c₃` with `α ≥ ½ min(β,γ)` and
+Let `P` be an integrable random variable and `Pℓ ℓ` its integrable level-`ℓ` approximation.
+Suppose there are square-integrable estimators `Y ℓ n` based on `n ≥ 1` Monte Carlo samples,
+pairwise independent across levels for every choice of sample sizes `N ≥ 1`, whose samples at
+level `ℓ` have variance `V ℓ` (so `V[Y ℓ n] = V ℓ / n` for `n ≥ 1`) and expected cost `C ℓ` (so
+the integrable random cost `Cost ℓ n` of computing `Y ℓ n` has `E[Cost ℓ n] = n C ℓ` for
+`n ≥ 1`), and positive constants `α, β, γ, c₁, c₂, c₃` with `α ≥ ½ min(β,γ)` and
 
   (i)   `|E[Pℓ ℓ − P]| ≤ c₁ 2^{−αℓ}`,
-  (ii)  `E[Y 0 n] = E[Pℓ 0]`, `E[Y (ℓ+1) n] = E[Pℓ (ℓ+1) − Pℓ ℓ]`,
+  (ii)  `E[Y 0 n] = E[Pℓ 0]`, `E[Y (ℓ+1) n] = E[Pℓ (ℓ+1) − Pℓ ℓ]` for `n ≥ 1`,
   (iii) `V ℓ ≤ c₂ 2^{−βℓ}`,
   (iv)  `C ℓ ≤ c₃ 2^{γℓ}`.
 
@@ -125,11 +129,11 @@ theorem giles_theorem1
     {α β γ c₁ c₂ c₃ : ℝ} (hα : 0 < α) (hβ : 0 < β) (hγ : 0 < γ)
     (hc₁ : 0 < c₁) (hc₂ : 0 < c₂) (hc₃ : 0 < c₃) (hαβγ : min β γ / 2 ≤ α)
     (hP : Integrable P μ) (hPℓ : ∀ ℓ, Integrable (Pℓ ℓ) μ)
-    (hY : ∀ ℓ n, MemLp (Y ℓ n) 2 μ)
+    (hY : ∀ ℓ n, 0 < n → MemLp (Y ℓ n) 2 μ)
     (hind : ∀ N : ℕ → ℕ, (∀ ℓ, 0 < N ℓ) →
       Pairwise fun i j => IndepFun (Y i (N i)) (Y j (N j)) μ)
-    (hCost : ∀ ℓ n, 0 < n → Integrable (Cost ℓ n) μ)
-    (h_cost : ∀ ℓ (n : ℕ), 0 < n → μ[Cost ℓ n] = n * C ℓ)
+    (hCost_int : ∀ ℓ n, 0 < n → Integrable (Cost ℓ n) μ)
+    (hCost_mean : ∀ ℓ (n : ℕ), 0 < n → μ[Cost ℓ n] = n * C ℓ)
     (h_i : ∀ ℓ : ℕ, |μ[fun ω => Pℓ ℓ ω - P ω]| ≤ c₁ * (2 : ℝ) ^ (-(α * (ℓ : ℝ))))
     (h_ii₀ : ∀ n, 0 < n → μ[Y 0 n] = μ[Pℓ 0])
     (h_ii : ∀ ℓ n, 0 < n → μ[Y (ℓ + 1) n] = μ[fun ω => Pℓ (ℓ + 1) ω - Pℓ ℓ ω])
@@ -147,13 +151,14 @@ theorem giles_theorem1
   refine ⟨L, N, hN, hmse, ?_⟩
   have hE : μ[fun ω => ∑ ℓ ∈ range (L + 1), Cost ℓ (N ℓ) ω] =
       ∑ ℓ ∈ range (L + 1), (N ℓ : ℝ) * C ℓ := by
-    rw [integral_finsetSum _ fun ℓ _ => hCost ℓ (N ℓ) (hN ℓ)]
-    exact Finset.sum_congr rfl fun ℓ _ => h_cost ℓ (N ℓ) (hN ℓ)
+    rw [integral_finsetSum _ fun ℓ _ => hCost_int ℓ (N ℓ) (hN ℓ)]
+    exact Finset.sum_congr rfl fun ℓ _ => hCost_mean ℓ (N ℓ) (hN ℓ)
   rw [hE]
   exact hcost
 
-/-- **Giles' Theorem 1, asymptotic form** (Giles 2015, §2.1, Theorem 1, read as `ε → 0⁺`).
-Under the hypotheses of `giles_theorem1_cost_sum` and nonnegative costs `C ℓ ≥ 0`, one can choose
+/-- **Corollary of Giles' Theorem 1: a weaker big-O form as `ε → 0⁺`** (Giles 2015, §2.1,
+Theorem 1).  Under the hypotheses of `giles_theorem1_cost_sum` and nonnegative costs `C ℓ ≥ 0`
+(`IsBigO` compares absolute values), one can choose
 `L(ε)` and `N_ℓ(ε) ≥ 1` for all `0 < ε < e⁻¹` so that `MSE < ε²`, and the cost
 `ε ↦ ∑_{ℓ ≤ L(ε)} N_ℓ(ε) C_ℓ` is, as `ε → 0⁺`,
 `O(ε⁻²)` if `β > γ`, `O(ε⁻² (log ε)²)` if `β = γ`, and `O(ε^{−2−(γ−β)/α})` if `β < γ`. -/
@@ -162,7 +167,7 @@ theorem giles_theorem1_isBigO
     {α β γ c₁ c₂ c₃ : ℝ} (hα : 0 < α) (hβ : 0 < β) (hγ : 0 < γ)
     (hc₁ : 0 < c₁) (hc₂ : 0 < c₂) (hc₃ : 0 < c₃) (hαβγ : min β γ / 2 ≤ α)
     (hP : Integrable P μ) (hPℓ : ∀ ℓ, Integrable (Pℓ ℓ) μ)
-    (hY : ∀ ℓ n, MemLp (Y ℓ n) 2 μ)
+    (hY : ∀ ℓ n, 0 < n → MemLp (Y ℓ n) 2 μ)
     (hind : ∀ N : ℕ → ℕ, (∀ ℓ, 0 < N ℓ) →
       Pairwise fun i j => IndepFun (Y i (N i)) (Y j (N j)) μ)
     (h_i : ∀ ℓ : ℕ, |μ[fun ω => Pℓ ℓ ω - P ω]| ≤ c₁ * (2 : ℝ) ^ (-(α * (ℓ : ℝ))))

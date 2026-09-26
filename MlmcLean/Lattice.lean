@@ -14,16 +14,20 @@ particular choice of direction vector `n` with strictly positive components".  G
 "the proof of the theorem is significantly harder than for the MLMC theorem"; the extra work is
 the lattice-point counting in this file.
 
-For `θ_d > 0`, `δ_d ≥ 0` let `m = crit δ` be the number of directions with `δ_d = 0`.  Directions
+The paper states Theorem 2 without proof; every result in this file is a step of this
+formalisation's proof of it.
+
+For `θ_d > 0`, `δ_d ≥ 0` let `m = crit δ` be the number of directions with `δ_d = 0`, and write
+`(m−1)⁺ = max(m − 1, 0)` (the exponent `crit δ - 1` is truncated subtraction in `ℕ`).  Directions
 with `δ_d > 0` contribute a convergent geometric factor, and each further direction with
 `δ_d = 0` contributes one power of the level:
 
-* `slab_bound` — `∑_{x ≤ θ·ℓ ≤ x+1} 2^{−δ·ℓ} ≤ K (1 + x)^{m−1}` (and the full sum is finite if
-  `m = 0`);
-* `tail_bound` — `∑_{θ·ℓ > L} 2^{−aθ·ℓ − δ·ℓ} ≤ K (1+L)^{m−1} 2^{−aL}` (the bias);
-* `inner_bound` — `∑_{θ·ℓ ≤ L} 2^{cθ·ℓ − δ·ℓ} ≤ K (1+L)^{m−1} ∑_{j ≤ L} 2^{c(L−j)}` (the cost);
-* `sum_box_two_rpow_le_prod` — `∑_ℓ 2^{g·ℓ} ≤ ∏_d (1 − 2^{g_d})⁻¹` for `g < 0`;
-* `card_indexSet_le` — `#{θ·ℓ ≤ L} ≤ (1+L)^D ∏_d (1/θ_d + 1)`.
+* `slab_bound` — `∑_{x ≤ θ·ℓ ≤ x+1} 2^{−δ·ℓ} ≤ K (1 + max x 0)^{(m−1)⁺}` (and the full sum is
+  at most `K` if `m = 0`);
+* `tail_bound` — `∑_{θ·ℓ > L} 2^{−aθ·ℓ − δ·ℓ} ≤ K (1+L)^{(m−1)⁺} 2^{−aL}` for `L ≥ 0` (the bias);
+* `inner_bound` — `∑_{θ·ℓ ≤ L} 2^{cθ·ℓ − δ·ℓ} ≤ K (1+L)^{(m−1)⁺} ∑_{j ≤ L} 2^{c(L−j)}` for
+  `L ≥ 0` (the cost);
+* `sum_box_two_rpow_le_prod` — `∑_ℓ 2^{g·ℓ} ≤ ∏_d (1 − 2^{g_d})⁻¹` for `g < 0`.
 
 All sums are finite sums over boxes `{0, …, n−1}^D`, with bounds uniform in `n`.
 -/
@@ -36,13 +40,16 @@ variable {D : ℕ}
 
 /-! ### Multi-indices -/
 
-/-- The pairing `a·ℓ = ∑_d a_d ℓ_d` of a real vector with a multi-index. -/
+/-- The pairing `a·ℓ = ∑_d a_d ℓ_d` of a real vector with a multi-index, as in the rates
+`2^{−α·ℓ}`, `2^{−β·ℓ}`, `2^{γ·ℓ}` of Giles 2015, §2.4, Theorem 2. -/
 noncomputable def dot (a : Fin D → ℝ) (ℓ : Fin D → ℕ) : ℝ := ∑ d, a d * (ℓ d : ℝ)
 
-/-- The box `{0, …, n − 1}^D` of multi-indices. -/
+/-- The box `{0, …, n − 1}^D` of multi-indices (a finite part of the index range `ℓ ≥ 0` of
+Giles 2015, §2.4). -/
 def box (D n : ℕ) : Finset (Fin D → ℕ) := Fintype.piFinset fun _ => range n
 
-/-- The number of directions `d` with `δ_d = 0`. -/
+/-- The number of directions `d` with `δ_d = 0`; each contributes one power of the level to the
+lattice sums (a step of this formalisation's proof of Giles 2015, §2.4, Theorem 2). -/
 noncomputable def crit (δ : Fin D → ℝ) : ℕ := (univ.filter fun d => δ d = 0).card
 
 lemma mem_box {n : ℕ} {ℓ : Fin D → ℕ} : ℓ ∈ box D n ↔ ∀ d, ℓ d < n := by
@@ -69,11 +76,14 @@ lemma crit_succ (δ : Fin (D + 1) → ℝ) :
   rw [Finset.card_filter, Finset.card_filter, Fin.sum_univ_succ]
   rfl
 
+/-- There are at most `D` critical directions (used for the exponent bound in the proof of
+Giles 2015, §2.4, Theorem 2). -/
 lemma crit_le (δ : Fin D → ℝ) : crit δ ≤ D := by
   unfold crit
   exact (Finset.card_filter_le _ _).trans_eq (by simp)
 
-/-- Every finite set of multi-indices lies in a box. -/
+/-- Every finite set of multi-indices lies in a box (used to pass from finite level sets to the
+telescoping sum of Giles 2015, §2.4). -/
 lemma exists_subset_box (s : Finset (Fin D → ℕ)) : ∃ n, s ⊆ box D n := by
   refine ⟨s.sup (fun ℓ => univ.sup ℓ) + 1, fun ℓ hℓ => mem_box.2 fun d => ?_⟩
   have h1 : ℓ d ≤ univ.sup ℓ := Finset.le_sup (f := ℓ) (Finset.mem_univ d)
@@ -83,7 +93,8 @@ lemma exists_subset_box (s : Finset (Fin D → ℕ)) : ∃ n, s ⊆ box D n := b
 
 /-! ### One-dimensional counting -/
 
-/-- At most `1/θ₀ + 1` multiples `θ₀ k` lie in an interval `[y, y + 1]`. -/
+/-- At most `1/θ₀ + 1` multiples `θ₀ k` lie in an interval `[y, y + 1]` (lattice counting for
+the proof of Giles 2015, §2.4, Theorem 2). -/
 lemma card_filter_slab_le {θ₀ : ℝ} (hθ : 0 < θ₀) (y : ℝ) (n : ℕ) :
     (((range n).filter fun k : ℕ => y ≤ θ₀ * k ∧ θ₀ * k ≤ y + 1).card : ℝ) ≤ 1 / θ₀ + 1 := by
   set s := (range n).filter fun k : ℕ => y ≤ θ₀ * k ∧ θ₀ * k ≤ y + 1 with hs
@@ -113,7 +124,8 @@ lemma card_filter_slab_le {θ₀ : ℝ} (hθ : 0 < θ₀) (y : ℝ) (n : ℕ) :
           have := Nat.floor_le (div_nonneg zero_le_one hθ.le)
           linarith
 
-/-- At most `max z 0 / θ₀ + 1` multiples `θ₀ k` (`k ∈ ℕ`) are `≤ z`. -/
+/-- At most `max z 0 / θ₀ + 1` multiples `θ₀ k` (`k ∈ ℕ`) are `≤ z` (lattice counting for the
+proof of Giles 2015, §2.4, Theorem 2). -/
 lemma card_filter_mul_le {θ₀ : ℝ} (hθ : 0 < θ₀) (z : ℝ) (n : ℕ) :
     (((range n).filter fun k : ℕ => θ₀ * k ≤ z).card : ℝ) ≤ max z 0 / θ₀ + 1 := by
   have hz : 0 ≤ max z 0 / θ₀ := div_nonneg (le_max_right _ _) hθ.le
@@ -132,7 +144,8 @@ lemma card_filter_mul_le {θ₀ : ℝ} (hθ : 0 < θ₀) (z : ℝ) (n : ℕ) :
 
 /-! ### Polynomials against exponentials -/
 
-/-- For `p ≥ 0` and `κ > 0` there is `K` with `(1 + x)^p ≤ K e^{κx}` for all `x ≥ 0`. -/
+/-- For `p ≥ 0` and `κ > 0` there is `K` with `(1 + x)^p ≤ K e^{κx}` for all `x ≥ 0`
+(polynomial against exponential growth, for the proof of Giles 2015, §2.4, Theorem 2). -/
 lemma one_add_rpow_le_exp {p κ : ℝ} (hp : 0 ≤ p) (hκ : 0 < κ) :
     ∃ K : ℝ, 0 < K ∧ ∀ x : ℝ, 0 ≤ x → (1 + x) ^ p ≤ K * Real.exp (κ * x) := by
   rcases hp.eq_or_lt with h0 | hpos
@@ -170,7 +183,8 @@ lemma one_add_rpow_le_exp {p κ : ℝ} (hp : 0 ≤ p) (hκ : 0 < κ) :
       _ ≤ M ^ p * Real.exp (κ * x) :=
           mul_le_mul_of_nonneg_left h2 (Real.rpow_nonneg (by linarith) _)
 
-/-- For `p ≥ 0` and `κ > 0`, `|log ε|^p ε^κ` is bounded on `0 < ε < 1`. -/
+/-- For `p ≥ 0` and `κ > 0`, `|log ε|^p ε^κ` is bounded on `0 < ε < 1` (so that lower-order
+terms are absorbed into the bounds of Giles 2015, §2.4, Theorem 2). -/
 lemma neg_log_rpow_mul_rpow_le {p κ : ℝ} (hp : 0 ≤ p) (hκ : 0 < κ) :
     ∃ K : ℝ, 0 < K ∧ ∀ ε : ℝ, 0 < ε → ε < 1 → (-Real.log ε) ^ p * ε ^ κ ≤ K := by
   obtain ⟨K, hK, h⟩ := one_add_rpow_le_exp hp hκ
@@ -190,7 +204,8 @@ lemma neg_log_rpow_mul_rpow_le {p κ : ℝ} (hp : 0 ≤ p) (hκ : 0 < κ) :
         rw [mul_assoc, ← Real.exp_add]
         simp
 
-/-- For `p ≥ 0` and `κ > 0` there is `K` with `(1 + x)^p ≤ K 2^{κx}` for all `x ≥ 0`. -/
+/-- For `p ≥ 0` and `κ > 0` there is `K` with `(1 + x)^p ≤ K 2^{κx}` for all `x ≥ 0`
+(for the proof of Giles 2015, §2.4, Theorem 2). -/
 lemma one_add_rpow_le_two_rpow {p κ : ℝ} (hp : 0 ≤ p) (hκ : 0 < κ) :
     ∃ K : ℝ, 0 < K ∧ ∀ x : ℝ, 0 ≤ x → (1 + x) ^ p ≤ K * (2 : ℝ) ^ (κ * x) := by
   obtain ⟨K, hK, h⟩ := one_add_rpow_le_exp hp (mul_pos (Real.log_pos one_lt_two) hκ)
@@ -200,10 +215,11 @@ lemma one_add_rpow_le_two_rpow {p κ : ℝ} (hp : 0 ≤ p) (hκ : 0 < κ) :
 
 /-! ### Slab sums -/
 
-/-- **Slab sums.**  Let `θ_d > 0`, `δ_d ≥ 0`, and let `m = crit δ` be the number of directions
-with `δ_d = 0`.  Uniformly in the box size `n` and the level `x`,
-`∑_{ℓ : x ≤ θ·ℓ ≤ x + 1} 2^{−δ·ℓ} ≤ K (1 + max x 0)^{m − 1}`; and if `m = 0`, the full sum
-`∑_ℓ 2^{−δ·ℓ}` is at most `K`. -/
+/-- **Slab sums** (a step of this formalisation's proof of Giles 2015, §2.4, Theorem 2).  Let
+`θ_d > 0`, `δ_d ≥ 0`, and let `m = crit δ` be the number of directions with `δ_d = 0`.  Uniformly
+in the box size `n` and the level `x`,
+`∑_{ℓ : x ≤ θ·ℓ ≤ x + 1} 2^{−δ·ℓ} ≤ K (1 + max x 0)^{(m − 1)⁺}` (exponent `0` when `m = 0`); and
+if `m = 0`, the full sum `∑_ℓ 2^{−δ·ℓ}` is at most `K`. -/
 theorem slab_bound : ∀ {D : ℕ} (θ δ : Fin D → ℝ), (∀ d, 0 < θ d) → (∀ d, 0 ≤ δ d) →
     ∃ K : ℝ, 0 ≤ K ∧ ∀ (n : ℕ) (x : ℝ),
       (crit δ = 0 → ∑ ℓ ∈ box D n, (2 : ℝ) ^ (-dot δ ℓ) ≤ K) ∧
@@ -391,8 +407,10 @@ theorem slab_bound : ∀ {D : ℕ} (θ δ : Fin D → ℝ), (∀ d, 0 < θ d) �
 
 /-! ### Tail and inner sums -/
 
-/-- **Tail sums** (the MIMC bias).  With `θ, δ, m` as in `slab_bound` and `a > 0`, uniformly in
-the box size `n` and in `L ≥ 0`: `∑_{θ·ℓ > L} 2^{−aθ·ℓ − δ·ℓ} ≤ K (1 + L)^{m−1} 2^{−aL}`. -/
+/-- **Tail sums** (the MIMC bias; a step of this formalisation's proof of Giles 2015, §2.4,
+Theorem 2).  With `θ, δ, m` as in `slab_bound` and `a > 0`, uniformly in the box size `n` and in
+`L ≥ 0`: `∑_{θ·ℓ > L} 2^{−aθ·ℓ − δ·ℓ} ≤ K (1 + L)^{(m−1)⁺} 2^{−aL}` (exponent `0` when
+`m = 0`). -/
 theorem tail_bound {θ δ : Fin D → ℝ} (hθ : ∀ d, 0 < θ d) (hδ : ∀ d, 0 ≤ δ d) {a : ℝ}
     (ha : 0 < a) :
     ∃ K : ℝ, 0 ≤ K ∧ ∀ (n : ℕ) (L : ℝ), 0 ≤ L →
@@ -515,9 +533,10 @@ theorem tail_bound {θ δ : Fin D → ℝ} (hθ : ∀ d, 0 < θ d) (hδ : ∀ d,
           (mul_nonneg hKs (pow_nonneg (by linarith) _)))
     _ = Ks * G * (1 + L) ^ (crit δ - 1) * (2 : ℝ) ^ (-(a * L)) := by ring
 
-/-- **Inner sums** (the MIMC cost).  With `θ, δ, m` as in `slab_bound` and `c ≥ 0`, uniformly in
-the box size `n` and in `L ≥ 0`:
-`∑_{θ·ℓ ≤ L} 2^{cθ·ℓ − δ·ℓ} ≤ K (1 + L)^{m−1} ∑_{j=0}^{⌊L⌋} 2^{c(L − j)}`. -/
+/-- **Inner sums** (the MIMC cost; a step of this formalisation's proof of Giles 2015, §2.4,
+Theorem 2).  With `θ, δ, m` as in `slab_bound` and `c ≥ 0`, uniformly in the box size `n` and in
+`L ≥ 0`: `∑_{θ·ℓ ≤ L} 2^{cθ·ℓ − δ·ℓ} ≤ K (1 + L)^{(m−1)⁺} ∑_{j=0}^{⌊L⌋} 2^{c(L − j)}` (exponent `0`
+when `m = 0`). -/
 theorem inner_bound {θ δ : Fin D → ℝ} (hθ : ∀ d, 0 < θ d) (hδ : ∀ d, 0 ≤ δ d) {c : ℝ}
     (hc : 0 ≤ c) :
     ∃ K : ℝ, 0 ≤ K ∧ ∀ (n : ℕ) (L : ℝ), 0 ≤ L →
@@ -588,7 +607,8 @@ theorem inner_bound {θ δ : Fin D → ℝ} (hθ : ∀ d, 0 < θ d) (hδ : ∀ d
         rw [Finset.mul_sum]
         exact Finset.sum_congr rfl fun j _ => by ring
 
-/-- For `c > 0`: `∑_{j=0}^{⌊L⌋} 2^{c(L−j)} ≤ 2^{cL} / (1 − 2^{−c})`. -/
+/-- For `c > 0`: `∑_{j=0}^{⌊L⌋} 2^{c(L−j)} ≤ 2^{cL} / (1 − 2^{−c})` (the cost sum in the regime
+`η > 0` of Giles 2015, §2.4, Theorem 2). -/
 lemma sum_two_rpow_sub_le {c : ℝ} (hc : 0 < c) (L : ℝ) :
     ∑ j ∈ range (⌊L⌋₊ + 1), (2 : ℝ) ^ (c * (L - j)) ≤
       (2 : ℝ) ^ (c * L) * (1 - (2 : ℝ) ^ (-c))⁻¹ := by
@@ -603,7 +623,8 @@ lemma sum_two_rpow_sub_le {c : ℝ} (hc : 0 < c) (L : ℝ) :
   exact mul_le_mul_of_nonneg_left (geom_sum_le_of_lt_one hq0 hq1 _)
     (Real.rpow_pos_of_pos two_pos _).le
 
-/-- For `c = 0`: `∑_{j=0}^{⌊L⌋} 2^{0} ≤ 1 + L`. -/
+/-- For `c = 0` and `L ≥ 0`: `∑_{j=0}^{⌊L⌋} 2^{0} ≤ 1 + L` (the cost sum in the regime `η = 0` of
+Giles 2015, §2.4, Theorem 2). -/
 lemma sum_two_rpow_zero_le {L : ℝ} (hL : 0 ≤ L) :
     ∑ j ∈ range (⌊L⌋₊ + 1), (2 : ℝ) ^ ((0 : ℝ) * (L - j)) ≤ 1 + L := by
   simp only [zero_mul, Real.rpow_zero, Finset.sum_const, Finset.card_range, nsmul_eq_mul,
@@ -612,7 +633,8 @@ lemma sum_two_rpow_zero_le {L : ℝ} (hL : 0 ≤ L) :
 
 /-! ### Products and cardinalities -/
 
-/-- For `g_d < 0`: `∑_{ℓ ∈ box n} 2^{g·ℓ} ≤ ∏_d (1 − 2^{g_d})⁻¹`. -/
+/-- For `g_d < 0`: `∑_{ℓ ∈ box n} 2^{g·ℓ} ≤ ∏_d (1 − 2^{g_d})⁻¹` (the cost sum in the regime
+`η < 0` of Giles 2015, §2.4, Theorem 2, and the summability of the bound in condition ii)). -/
 lemma sum_box_two_rpow_le_prod {g : Fin D → ℝ} (hg : ∀ d, g d < 0) (n : ℕ) :
     ∑ ℓ ∈ box D n, (2 : ℝ) ^ dot g ℓ ≤ ∏ d, (1 - (2 : ℝ) ^ g d)⁻¹ := by
   have h : ∀ ℓ : Fin D → ℕ, (2 : ℝ) ^ dot g ℓ = ∏ d, ((2 : ℝ) ^ g d) ^ ℓ d := by
@@ -627,7 +649,9 @@ lemma sum_box_two_rpow_le_prod {g : Fin D → ℝ} (hg : ∀ d, g d < 0) (n : �
     exact geom_sum_le_of_lt_one (Real.rpow_pos_of_pos two_pos _).le
       (Real.rpow_lt_one_of_one_lt_of_neg one_lt_two (hg d)) n
 
-/-- The MIMC index set `{ℓ ∈ ℕ^D : θ·ℓ ≤ L}` (Giles 2015, p. 15), as a finite set. -/
+/-- The MIMC index set `{ℓ ∈ ℕ^D : θ·ℓ ≤ L}` (Giles 2015, §2.4, p. 15: a region "of the form
+`ℓ·n ≤ L`"), as a finite set.  For `θ_d > 0` it is exactly `{θ·ℓ ≤ L}` (`mem_indexSet`); the box
+`ℓ_d ≤ L/θ_d` used to make it finite is otherwise a truncation. -/
 noncomputable def indexSet (θ : Fin D → ℝ) (L : ℝ) : Finset (Fin D → ℕ) :=
   (Fintype.piFinset fun d => range (⌊L / θ d⌋₊ + 1)).filter fun ℓ => dot θ ℓ ≤ L
 
@@ -644,7 +668,8 @@ lemma mem_indexSet {θ : Fin D → ℝ} (hθ : ∀ d, 0 < θ d) {L : ℝ} {ℓ :
       (fun d _ => mul_nonneg (hθ d).le (Nat.cast_nonneg _)) (Finset.mem_univ d)
   linarith
 
-/-- For a large enough box, the index set is the part of the box below the level `L`. -/
+/-- For `θ_d > 0` and a large enough box, the index set is the part of the box below the level
+`L` (Giles 2015, §2.4, p. 15). -/
 lemma indexSet_eq_filter_box {θ : Fin D → ℝ} (hθ : ∀ d, 0 < θ d) {L : ℝ} {n : ℕ}
     (hn : ∀ d, ⌊L / θ d⌋₊ + 1 ≤ n) :
     indexSet θ L = (box D n).filter fun ℓ => dot θ ℓ ≤ L := by
@@ -658,36 +683,17 @@ lemma indexSet_eq_filter_box {θ : Fin D → ℝ} (hθ : ∀ d, 0 < θ d) {L : �
     exact lt_of_lt_of_le h1 (hn d)
   · exact fun h => (mem_indexSet hθ).2 h.2
 
-/-- A box size containing the index set. -/
+/-- A box size containing the index set of Giles 2015, §2.4, p. 15. -/
 noncomputable def boxSize (θ : Fin D → ℝ) (L : ℝ) : ℕ := ∑ d, (⌊L / θ d⌋₊ + 1)
 
 lemma le_boxSize (θ : Fin D → ℝ) (L : ℝ) (d : Fin D) : ⌊L / θ d⌋₊ + 1 ≤ boxSize θ L :=
   Finset.single_le_sum (f := fun d => ⌊L / θ d⌋₊ + 1) (fun _ _ => Nat.zero_le _)
     (Finset.mem_univ d)
 
-/-- Sums over the index set as box sums. -/
+/-- For `θ_d > 0`, sums over the index set of Giles 2015, §2.4, p. 15 as box sums. -/
 lemma sum_indexSet_eq {θ : Fin D → ℝ} (hθ : ∀ d, 0 < θ d) (L : ℝ) (f : (Fin D → ℕ) → ℝ) :
     ∑ ℓ ∈ indexSet θ L, f ℓ =
       ∑ ℓ ∈ box D (boxSize θ L), (if dot θ ℓ ≤ L then f ℓ else 0) := by
   rw [indexSet_eq_filter_box hθ (le_boxSize θ L), Finset.sum_filter]
-
-/-- `#{ℓ : θ·ℓ ≤ L} ≤ (1 + L)^D ∏_d (1/θ_d + 1)`. -/
-lemma card_indexSet_le {θ : Fin D → ℝ} (hθ : ∀ d, 0 < θ d) {L : ℝ} (hL : 0 ≤ L) :
-    ((indexSet θ L).card : ℝ) ≤ (1 + L) ^ D * ∏ d, (1 / θ d + 1) := by
-  calc ((indexSet θ L).card : ℝ)
-      ≤ ((Fintype.piFinset fun d => range (⌊L / θ d⌋₊ + 1)).card : ℝ) := by
-        exact_mod_cast Finset.card_filter_le _ _
-    _ = ∏ d, ((⌊L / θ d⌋₊ : ℝ) + 1) := by
-        rw [Fintype.card_piFinset]
-        simp only [Finset.card_range, Nat.cast_prod, Nat.cast_add, Nat.cast_one]
-    _ ≤ ∏ d, ((1 + L) * (1 / θ d + 1)) := by
-        apply Finset.prod_le_prod (fun d _ => by positivity)
-        intro d _
-        have h1 : (⌊L / θ d⌋₊ : ℝ) ≤ L / θ d := Nat.floor_le (div_nonneg hL (hθ d).le)
-        have h2 : L / θ d = L * (1 / θ d) := by ring
-        have h3 : 0 ≤ 1 / θ d := div_nonneg zero_le_one (hθ d).le
-        nlinarith
-    _ = (1 + L) ^ D * ∏ d, (1 / θ d + 1) := by
-        rw [Finset.prod_mul_distrib, Finset.prod_const, Finset.card_univ, Fintype.card_fin]
 
 end MLMC
