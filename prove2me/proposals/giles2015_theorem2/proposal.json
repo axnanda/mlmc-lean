@@ -13,17 +13,27 @@
   "MLMC_MultiIndex",
   "MLMC_Theorem2"
  ],
- "goal": "MLMC.giles_theorem2",
+ "goal": "MLMC.giles_theorem2_full",
  "milestones": [
   {
    "theorem": "MLMC.sum_crossDiff",
-   "title": "§2.4 — the telescoping sum of cross-differences",
-   "description": "With $\\Delta_d P_{\\boldsymbol\\ell}\\equiv P_{\\boldsymbol\\ell}-P_{\\boldsymbol\\ell-\\mathbf e_d}$ and the cross-difference $\\boldsymbol\\Delta P_{\\boldsymbol\\ell}\\equiv\\big(\\prod_{d=1}^D\\Delta_d\\big)P_{\\boldsymbol\\ell}$, the cross-differences telescope: $\\sum_{\\boldsymbol\\ell\\le\\mathbf k}\\boldsymbol\\Delta P_{\\boldsymbol\\ell}=P_{\\mathbf k}$ for every $\\mathbf k\\in\\mathbb N^D$, the finite form of $\\mathbb{E}[P]=\\sum_{\\boldsymbol\\ell\\ge\\mathbf 0}\\mathbb{E}[\\boldsymbol\\Delta P_{\\boldsymbol\\ell}]$ (Giles 2015, §2.4, p. 13)."
+   "title": "§2.4 — cross-differences telescope over boxes",
+   "description": "With $\\Delta_d P_{\\boldsymbol\\ell}\\equiv P_{\\boldsymbol\\ell}-P_{\\boldsymbol\\ell-\\mathbf e_d}$ and the cross-difference $\\boldsymbol\\Delta P_{\\boldsymbol\\ell}\\equiv\\big(\\prod_{d=1}^D\\Delta_d\\big)P_{\\boldsymbol\\ell}$ (with $P\\equiv0$ at indices with a negative entry), the cross-differences telescope: $\\sum_{\\boldsymbol\\ell\\le\\mathbf k}\\boldsymbol\\Delta P_{\\boldsymbol\\ell}=P_{\\mathbf k}$ for every $\\mathbf k\\in\\mathbb N^D$ (Giles 2015, §2.4, p. 13; the finite form of the telescoping sum)."
+  },
+  {
+   "theorem": "MLMC.hasSum_integral_crossDiff",
+   "title": "§2.4 — the telescoping sum $\\mathbb{E}[P]=\\sum_{\\boldsymbol\\ell\\ge\\mathbf 0}\\mathbb{E}[\\boldsymbol\\Delta P_{\\boldsymbol\\ell}]$",
+   "description": "Under condition i) and $|\\mathbb{E}[\\boldsymbol\\Delta P_{\\boldsymbol\\ell}]|\\le c_1 2^{-\\boldsymbol\\alpha\\cdot\\boldsymbol\\ell}$ with $\\alpha_d>0$ (conditions ii) and iii) of Theorem 2), the series $\\sum_{\\boldsymbol\\ell\\in\\mathbb N^D}\\mathbb{E}[\\boldsymbol\\Delta P_{\\boldsymbol\\ell}]$ converges absolutely and its sum is $\\mathbb{E}[P]$ (Giles 2015, §2.4, p. 13: \"the telescoping sum becomes $\\mathbb{E}[P]=\\sum_{\\boldsymbol\\ell\\ge0}\\mathbb{E}[\\boldsymbol\\Delta P_{\\boldsymbol\\ell}]$\")."
+  },
+  {
+   "theorem": "MLMC.giles_theorem2",
+   "title": "Theorem 2 — the case $\\alpha_d>\\tfrac12\\beta_d$, with the paper's exponents",
+   "description": "When $\\alpha_d>\\tfrac12\\beta_d$ for every $d$, the bound of Theorem 2 holds with the exponents stated in the paper, $e_1=2D_2$ and $e_2=(D_2-1)(2+\\eta)$ (Giles 2015, §2.4, Theorem 2, pp. 13–14)."
   },
   {
    "theorem": "MLMC.giles_theorem2_boundary",
-   "title": "Theorem 2 — the case $\\alpha_d \\ge \\tfrac12\\beta_d$",
-   "description": "Theorem 2 under the weaker condition $\\alpha_d\\ge\\tfrac12\\beta_d$ (equality allowed), where \\\"the form of the exponents is more complicated\\\" and the paper states none: the same three regimes with some exponents $e_1,e_2$ (Giles 2015, §2.4, Theorem 2, p. 14). The linked formal version has $e_1=2D_2+D$ and $e_2=(D_2-1)(2+\\eta)+D$."
+   "title": "Theorem 2 — explicit exponents when some $\\alpha_d=\\tfrac12\\beta_d$",
+   "description": "For $\\alpha_d\\ge\\tfrac12\\beta_d$, where the paper notes that \"the form of the exponents is more complicated when $\\alpha_d=\\tfrac12\\beta_d$ for some $d$\" and states none, the bound holds with $e_1=2D_2+(D_3-3)^+$ and $e_2=(D_2-1)(2+\\eta)+(D_3-1)^+$, where $D_3=\\#\\{d:\\alpha_d=\\tfrac12\\beta_d\\}$ and $x^+=\\max(x,0)$. These exponents are this formalization's (they reduce to the paper's when $D_3=0$) and are not claimed to be sharp."
   }
  ]
 }

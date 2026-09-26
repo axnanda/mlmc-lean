@@ -76,3 +76,13 @@ import MlmcLean
 #print axioms MLMC.setIntegral_level
 #print axioms MLMC.hasSum_measureReal_level
 #print axioms MLMC.sq_tsum_le_tsum_sq_div
+#print axioms MLMC.card_filter_slab_le
+#print axioms MLMC.card_filter_mul_le
+#print axioms MLMC.one_add_rpow_le_exp
+#print axioms MLMC.neg_log_rpow_mul_rpow_le
+#print axioms MLMC.sum_box_two_rpow_le_prod
+#print axioms MLMC.sum_piFinset_succ
+#print axioms MLMC.mimc_exists_level
+#print axioms MLMC.mimc_construction
+#print axioms MLMC.mimc_level_power
+#print axioms MLMC.mimc_extra_term

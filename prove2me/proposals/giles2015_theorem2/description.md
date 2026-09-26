@@ -33,28 +33,31 @@ $$
 
 ## Formalization targets
 
-### Goal: Theorem 2 with $\alpha_d > \tfrac12 \beta_d$
+### Goal: Theorem 2, as stated in the paper
 
-If $\alpha_d > \tfrac12 \beta_d$ for every $d$, there is $c_4 > 0$ such that for every $0 < \varepsilon < e^{-1}$ there are a finite index set $\mathcal{L}$ and integers $N_{\boldsymbol{\ell}} \ge 1$ with $\mathbb{E}\big[(Y - \mathbb{E}[P])^2\big] < \varepsilon^2$ and
+For $\alpha_d \ge \tfrac12 \beta_d$ there are exponents $e_1, e_2$, depending only on $\boldsymbol{\alpha}, \boldsymbol{\beta}, \boldsymbol{\gamma}$, with $e_1 = 2D_2$ and $e_2 = (D_2 - 1)(2 + \eta)$ when $\alpha_d > \tfrac12 \beta_d$ for every $d$, such that under the conditions above there is $c_4 > 0$ for which, for every $0 < \varepsilon < e^{-1}$, there are a finite index set $\mathcal{L}$ and integers $N_{\boldsymbol{\ell}} \ge 1$ with $\mathbb{E}\big[(Y - \mathbb{E}[P])^2\big] < \varepsilon^2$ and
 $$
 \mathbb{E}[C] \le
 \begin{cases}
 c_4\, \varepsilon^{-2}, & \eta < 0,\\
-c_4\, \varepsilon^{-2} |\log \varepsilon|^{2 D_2}, & \eta = 0,\\
-c_4\, \varepsilon^{-2-\eta} |\log \varepsilon|^{(D_2 - 1)(2 + \eta)}, & \eta > 0.
+c_4\, \varepsilon^{-2} |\log \varepsilon|^{e_1}, & \eta = 0,\\
+c_4\, \varepsilon^{-2-\eta} |\log \varepsilon|^{e_2}, & \eta > 0.
 \end{cases}
 $$
+The paper gives the exponents only when every $\alpha_d > \tfrac12 \beta_d$ and notes that "the form of the exponents is more complicated when $\alpha_d = \tfrac12 \beta_d$ for some $d$"; the goal states exactly this.
 
 ### Further targets (milestones)
 
-- §2.4, the telescoping identity: $\sum_{\boldsymbol{\ell} \le \mathbf{k}} \boldsymbol{\Delta} P_{\boldsymbol{\ell}} = P_{\mathbf{k}}$ for every $\mathbf{k} \in \mathbb{N}^D$.
-- Theorem 2 when $\alpha_d = \tfrac12 \beta_d$ for some $d$, where the paper states that "the form of the exponents is more complicated" and gives none: a bound of the same shape with some exponents $e_1, e_2$. The linked formal version proves it with $e_1 = 2D_2 + (D_3 - 3)^+$ and $e_2 = (D_2 - 1)(2 + \eta) + (D_3 - 1)^+$, where $D_3 = \#\{d : \alpha_d = \tfrac12 \beta_d\}$ and $x^+ = \max(x, 0)$; for $D_3 = 0$ these are the exponents above; they are not claimed to be sharp.
+- §2.4, the telescoping identity over boxes: $\sum_{\boldsymbol{\ell} \le \mathbf{k}} \boldsymbol{\Delta} P_{\boldsymbol{\ell}} = P_{\mathbf{k}}$ for every $\mathbf{k} \in \mathbb{N}^D$.
+- §2.4, the telescoping sum $\mathbb{E}[P] = \sum_{\boldsymbol{\ell} \ge \mathbf{0}} \mathbb{E}[\boldsymbol{\Delta} P_{\boldsymbol{\ell}}]$, as an absolutely convergent series under conditions i)–iii).
+- Theorem 2 when $\alpha_d > \tfrac12 \beta_d$ for every $d$, with the paper's exponents $e_1 = 2D_2$, $e_2 = (D_2 - 1)(2 + \eta)$.
+- Theorem 2 when $\alpha_d = \tfrac12 \beta_d$ for some $d$, with explicit exponents: the linked formal version proves the bound with $e_1 = 2D_2 + (D_3 - 3)^+$ and $e_2 = (D_2 - 1)(2 + \eta) + (D_3 - 1)^+$, where $D_3 = \#\{d : \alpha_d = \tfrac12 \beta_d\}$ and $x^+ = \max(x, 0)$; for $D_3 = 0$ these are the paper's exponents. They are this formalization's and are not claimed to be sharp. This case matters in practice: Giles' own MIMC example (§9.2, p. 60) has $\boldsymbol{\alpha} = (1,1)$ and $\boldsymbol{\beta} = (2,2)$, so $\alpha_d = \tfrac12\beta_d$ in both directions.
 
 ## Significance
 
 *The result.* Theorem 2 gives the cost of MIMC in terms of per-direction rates. When $\beta_d > \gamma_d$ in every direction, $\eta < 0$ and the cost is $O(\varepsilon^{-2})$, the optimal complexity that standard MLMC loses in high dimension; Giles describes this as the possibility of dimension-independent complexity for SPDEs and other high-dimensional stochastic applications, in the same way as sparse grids for deterministic PDEs (pp. 15–16).
 
-*Formalizing it.* The statements in this mission already have machine-checked proofs on this platform (the linked theorems are Proved), from a Lean 4 development against Mathlib `0df444a` with no `sorry`. The formal version covers every $D \ge 1$ and all three regimes, with the paper's exponents $e_1 = 2D_2$, $e_2 = (D_2 - 1)(2+\eta)$. The case $\alpha_d = \tfrac12 \beta_d$ is covered with explicit exponents that reduce to the paper's when no direction is on the boundary; sharp exponents in that case are open for formalization, as are shorter proofs and the rate conditions for concrete PDE discretisations.
+*Formalizing it.* The statements in this mission already have machine-checked proofs on this platform (the linked theorems are Proved), from a Lean 4 development against Mathlib `0df444a` with no `sorry`. The formal version covers every $D \ge 1$, all three regimes and the full hypothesis $\alpha_d \ge \tfrac12 \beta_d$, with the paper's exponents $e_1 = 2D_2$, $e_2 = (D_2 - 1)(2+\eta)$ when every $\alpha_d > \tfrac12 \beta_d$. The case $\alpha_d = \tfrac12 \beta_d$ is covered with explicit exponents that reduce to the paper's when no direction is on the boundary; sharp exponents in that case are open for formalization, as are shorter proofs and the rate conditions for concrete PDE discretisations.
 
 ## Difficulty
 
@@ -63,7 +66,7 @@ The obvious generalisation of the MLMC argument, with a rectangular index set, g
 ## Formalization scope
 
 - Indices are functions $\mathrm{Fin}\,D \to \mathbb{N}$ with $D \ge 1$; the cross-difference is defined by recursion on $D$, with the difference in direction $d$ taken as $P_{\boldsymbol{\ell}}$ alone when $\ell_d = 0$.
-- The probabilistic setting is that of Theorem 1: $\mu$ a probability measure, integrable $P$ and $P_{\boldsymbol{\ell}}$, estimators $Y_{\boldsymbol{\ell},n}$ in $L^2$ for every $n$, conditions for $n \ge 1$, pairwise independence across indices for every choice of sample sizes $N \ge 1$, random costs with expectation $n\,C_{\boldsymbol{\ell}}$, and the strict bound $\mathrm{MSE} < \varepsilon^2$ for $0 < \varepsilon < e^{-1}$.
+- The probabilistic setting is that of Theorem 1: $\mu$ a probability measure, integrable $P$ and $P_{\boldsymbol{\ell}}$, estimators $Y_{\boldsymbol{\ell},n}$ in $L^2$ and all conditions for $n \ge 1$, pairwise independence across indices for every choice of sample sizes $N \ge 1$, random costs with expectation $n\,C_{\boldsymbol{\ell}}$, and the strict bound $\mathrm{MSE} < \varepsilon^2$ for $0 < \varepsilon < e^{-1}$.
 - Condition i) is the limit along $\min_d \ell_d \to \infty$: for every $\delta > 0$ there is $n_0$ with $|\mathbb{E}[P_{\boldsymbol{\ell}} - P]| < \delta$ whenever all $\ell_d \ge n_0$.
 - No trivial reading: $c_4$ is fixed before $\varepsilon$, the index set is finite, and every $N_{\boldsymbol{\ell}} \ge 1$.
 - Reusable parts: the cross-difference and its telescoping over boxes, and bounds for exponential sums over lattice simplices $\{\boldsymbol{\theta} \cdot \boldsymbol{\ell} \le L\}$ and their complements.

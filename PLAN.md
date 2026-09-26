@@ -14,19 +14,27 @@ bounds, stated as in the papers and with zero `sorry`, building on what is alrea
 - **Treat everything else as unverified:** the Status section below, README claims and `notes/`
   are leads to check, not facts. `notes/` is optional background and isn't needed for M0–M3.
 
-## Status (2026-09-25, re-verified in M0; CI builds and audits every push)
+## Status (2026-09-26; re-verified in M0; CI builds and audits every push)
 
 Proved with zero `sorry` and only `propext`, `Classical.choice`, `Quot.sound` (see the README
 table and `notes/statement-audit.md`, which compares every statement with the papers):
 - **Giles (2015) Theorem 1** on a probability space with random costs (`giles_theorem1`), its
   deterministic core (`mlmc_complexity_core`), big-O forms, and the theorem for the estimator
   (2.2) built from independent samples (`giles_theorem1_standard`, `giles_theorem1_iid`).
-- **Eq. (1.1), (2.1)–(2.3)** and the optimal sample allocation (`MlmcLean/Allocation.lean`,
-  `MlmcLean/Estimator.lean`).
-- **Randomised MLMC**, Giles §2.2 (`MlmcLean/Randomised.lean`).
-- **Giles (2015) Theorem 2 (MIMC)** for every dimension and all three regimes
-  (`giles_theorem2`, `giles_theorem2_boundary`).
-- **Haas–Giles (2025) nested estimator, eq. (9)–(12)** (`MlmcLean/Nested.lean`).
+- **Eq. (1.1), (2.1)–(2.3)** and the optimal sample allocation, with its unique minimiser, the
+  dual (fixed-cost) problem and the two-level ratio of §1.2 (`MlmcLean/Allocation.lean`,
+  `MlmcLean/Estimator.lean`); (2.3) for the estimator (2.2) itself
+  (`mlmcEstimator_mean_variance`).
+- **Randomised MLMC**, Giles §2.2 (`MlmcLean/Randomised.lean`), including the expected cost per
+  sample, the necessity of both series, the estimator with `N` samples and the optimal level
+  distribution as a minimiser.
+- **Giles (2015) Theorem 2 (MIMC)** in the paper's form (`giles_theorem2_full`: exponents exist
+  for `α_d ≥ ½β_d` and are the paper's when every `α_d > ½β_d`), for every dimension and all
+  three regimes (`giles_theorem2`, `giles_theorem2_boundary`), and the telescoping sum
+  `E[P] = ∑_{ℓ≥0} E[ΔP_ℓ]` (`hasSum_integral_crossDiff`).
+- **Haas–Giles (2025) nested estimator, eq. (9)–(12)** (`MlmcLean/Nested.lean`): (12) as the
+  least nested cost, the claimed saving factor as an inequality, and the estimator built from
+  independent inputs with its mean, variance and expected cost.
 
 ## Setup and verification (Linux / cloud session)
 
@@ -98,6 +106,18 @@ leaves the exponents open, with `e₁ = 2D₂ + (D₃−3)⁺`, `e₂ = (D₂−
 - The hard part is summing over index sets `{ℓ : δ·ℓ ≤ L}` (lattice-point counting).
 - Done when: Theorem 2 is proved as stated, or a clearly documented subset is (e.g. D = 2 first).
 
+**M5: Every formal claim of the papers, and a full review (in progress, 2026-09-26).**
+- ✅ Independent review of all modules; every finding fixed (docstrings, citations, truncated
+  exponents, hypotheses for `n ≥ 1`, unused hypotheses and deprecated tactics removed).
+- ✅ Theorem 2 in the paper's form (`giles_theorem2_full`) and the MIMC telescoping sum.
+- ✅ §1.2–1.3: unique optimal allocation, the fixed-cost dual, the two-level ratio.
+- ✅ §2.2: expected cost per sample, necessity of both series, `N`-sample estimator, optimal
+  level probabilities as a minimiser.
+- ✅ Haas–Giles §2.2: (12) as the least cost, the saving factor, the estimator from samples.
+- Remaining claims (see the coverage inventory): §1.2 control variates, §2.1 remarks, §2.3
+  Richardson extrapolation and ML2R, §2.5 multiple outputs, §2.6 non-geometric MLMC, §3
+  implementation facts, Haas–Giles §4–6.
+
 **M4: Research, needs Alex's sign-off before formalising: nested MLMC with level-dependent
 precision.**
 - Write the theorem on paper in `notes/` first: the cost model `C̃_ℓ(d)` and correction-variance
@@ -119,13 +139,13 @@ The platform's upload standard (prove2me_workspace `upload_full_project.md`) is 
 `scripts/prove2me/`: Lean extractors for the declaration graph and per-file facts, a generator
 that builds the `Definitions/Theorems/Solutions` tree by skeleton subtraction, a validator (stub
 types equal the source types; every solution has exactly its stub's type; no `sorry`), and an
-idempotent, private-by-default uploader. CI runs all of it on every push: the tree has 62
-theorem nodes (the 44 audited main theorems and 18 long or shared lemmas), 8 definition bundles
-and 70 inlined helpers, and validates with 0 failures. `prove2me/metadata.json` holds the
-titles, natural-language statements, sources and proof explanations; `prove2me/proposals/` the
-mission proposals for Theorems 1 and 2 (`propose.py`). Uploading needs an account API key (CI's
-opt-in `upload` job, or `upload.py` locally); making the tree public is irreversible and waits
-for Alex.
+idempotent, private-by-default uploader. CI runs all of it on every push: the tree has 82
+theorem nodes (the 66 main theorems and 16 long or shared lemmas, all 82 in the axiom audit),
+10 definition bundles and 74 inlined helpers, and validates with 0 failures.
+`prove2me/metadata.json` holds the titles, natural-language statements, sources and proof
+explanations; `prove2me/proposals/` the mission proposals for Theorems 1 and 2 (`propose.py`).
+Uploading needs an account API key (CI's opt-in `upload` job, or `upload.py` locally); making the
+tree public is irreversible and waits for Alex.
 
 ## Open questions for Alex
 

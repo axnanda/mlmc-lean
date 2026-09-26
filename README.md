@@ -27,16 +27,18 @@ The statement-by-statement comparison with the papers, including every deviation
 
 | File | Content | Paper |
 |---|---|---|
-| `MlmcLean/Allocation.lean` | Optimal sample allocation. `cost_lower_bound` / `optimal_cost_isLeast`: over **all** real allocations with total variance `≤ τ`, the least cost is `τ⁻¹(Σ√(V_iC_i))²` (Cauchy–Schwarz), attained by the Lagrange allocation, so the stationary point of the paper is the global minimum. `optimalN_variance` / `optimalN_cost`: the rounded-up `N_i = ⌈τ⁻¹√(V_i/C_i)Σ√(V_jC_j)⌉` meets the variance target with cost `≤ τ⁻¹(Σ√(V_iC_i))² + ΣC_i`. | [G15] (1.1), §1.3 p. 4; [HG25] (8) |
+| `MlmcLean/Allocation.lean` | Optimal sample allocation. `cost_lower_bound` / `optimal_cost_isLeast`: over **all** real allocations with total variance `≤ τ`, the least cost is `τ⁻¹(Σ√(V_iC_i))²` (Cauchy–Schwarz), attained by the Lagrange allocation `lagrangeN` (variance exactly `τ`, `lagrangeN_variance_cost`) and by no other allocation (`lagrangeN_unique`), so the stationary point of the paper is the unique global minimum. `optimal_variance_isLeast`: the dual problem (least variance `B⁻¹(Σ√(V_iC_i))²` for cost `≤ B`); `twoLevel_optimal_ratio`: for two levels, minimal variance at fixed cost **iff** `N₁/N₀ = √(V₁/C₁)/√(V₀/C₀)`. `optimalN_variance` / `optimalN_cost`: the rounded-up `N_i = ⌈lagrangeN⌉` meets the variance target with cost `≤ τ⁻¹(Σ√(V_iC_i))² + ΣC_i`. | [G15] (1.1), §1.2 p. 3, §1.3 p. 4; [HG25] (8) |
+| `MlmcLean/LevelDiff.lean` | The correction `ΔP_ℓ = P_ℓ − P_{ℓ−1}`, `P_{−1} ≡ 0` (`levelDiff`) and the telescoping identity `Σ_{ℓ≤L} E[ΔP_ℓ] = E[P_L]` (`sum_integral_levelDiff`). | [G15] §1.3, (2.2) |
 | `MlmcLean/Estimator.lean` | `mse_eq_variance_add_sq_bias`: `E[(Y−m)²] = V[Y] + (E[Y]−m)²`. `mlmc_mean`: `E[ΣY_ℓ] = E[P_L]` (telescoping). `mlmc_variance`: `V[ΣY_ℓ] = ΣV[Y_ℓ]` for pairwise independent `Y_ℓ`. `mlmc_mse`: their combination. | [G15] (2.1), (2.3) |
 | `MlmcLean/Complexity.lean` | `mlmc_complexity_core`: the deterministic core of Theorem 1 in all three regimes `β > γ`, `β = γ`, `β < γ`, with `c₄` depending only on `α, β, γ, c₁, c₂, c₃`. | [G15] Thm 1 (proof, p. 7) |
 | `MlmcLean/Theorem1.lean` | `giles_theorem1`: **Theorem 1 as stated**, on an arbitrary probability space, with random per-sample costs: `MSE < ε²` and `E[C] ≤ c₄·(ε⁻², ε⁻²(log ε)², ε^{−2−(γ−β)/α})`. `giles_theorem1_cost_sum` (the same for `Σ N_ℓC_ℓ`), `giles_theorem1_isBigO` (each regime as `IsBigO` as `ε → 0⁺`), `variance_sample_mean` (`V[N⁻¹ΣX_n] = v/N`). | [G15] Thm 1 |
-| `MlmcLean/StandardEstimator.lean` | Theorem 1 for the actual estimator (2.2) `Y_ℓ = N_ℓ⁻¹Σ_n(P_ℓ − P_{ℓ−1})(ω^{(ℓ,n)})` built from independent inputs: unbiasedness, `V[Y_ℓ] = V_ℓ/N_ℓ` and independence across levels are **proved** (`integral_levelEstimator`, `variance_levelEstimator`, `indepFun_levelEstimator`); `giles_theorem1_standard`; `giles_theorem1_iid` on the product space `(Ω₀^{ℕ×ℕ}, ν^{⊗ℕ×ℕ})`, where no independence assumption remains (`exists_iid_inputs`). | [G15] (2.2), (2.3), Thm 1 |
-| `MlmcLean/Randomised.lean` | Randomised single-term MLMC: `singleTerm_unbiased` (`E[Y] = E[P]`), `singleTerm_variance` (`V[Y] = Σp_ℓ⁻¹(V_ℓ + E_ℓ²) − (ΣE_ℓ)²` with `E_ℓ = E[P_ℓ − P_{ℓ−1}]`), `singleTerm_variance_ge` (`V[Y] ≥ Σp_ℓ⁻¹V_ℓ`), `summable_of_memLp_singleTerm` (finite variance forces `Σp_ℓ⁻¹V_ℓ < ∞`), `randomised_summable` / `randomised_not_summable` (possible iff `β > γ`), `randomised_optimal_p` / `_eq` (optimal `p_ℓ ∝ √(V_ℓ/C_ℓ)`), `randomised_mlmc_finite`. | [G15] §2.2 (Rhee–Glynn) |
+| `MlmcLean/StandardEstimator.lean` | Theorem 1 for the actual estimator (2.2) `Y_ℓ = N_ℓ⁻¹Σ_n(P_ℓ − P_{ℓ−1})(ω^{(ℓ,n)})` built from independent inputs: unbiasedness, `V[Y_ℓ] = V_ℓ/N_ℓ` and independence across levels are **proved** (`integral_levelEstimator`, `variance_levelEstimator`, `indepFun_levelEstimator`), and so is (2.3) for the whole estimator (`mlmcEstimator_mean_variance`); `giles_theorem1_standard`; `giles_theorem1_iid` on the product space `(Ω₀^{ℕ×ℕ}, ν^{⊗ℕ×ℕ})`, where no independence assumption remains (`exists_iid_inputs`). | [G15] (2.2), (2.3), Thm 1 |
+| `MlmcLean/SampleMean.lean` | Monte Carlo averages over blocks of independent inputs (`blockMean`): unbiased, variance `V/N`, and independent across blocks (`integral_blockMean`, `variance_blockMean`, `indepFun_blockMean`). | [G15] §1.1 p. 2, §1.3 |
+| `MlmcLean/Randomised.lean` | Randomised single-term MLMC: `singleTerm_unbiased` (`E[Y] = E[P]`), `singleTerm_variance` (`V[Y] = Σp_ℓ⁻¹(V_ℓ + E_ℓ²) − (ΣE_ℓ)²` with `E_ℓ = E[P_ℓ − P_{ℓ−1}]`), `singleTerm_variance_ge` (`V[Y] ≥ Σp_ℓ⁻¹V_ℓ`), `integral_cost_level` (the expected cost of one sample is `Σp_ℓC_ℓ`, finite iff the series converges), `randomised_necessary` (finite variance and finite expected cost force `Σp_ℓ⁻¹V_ℓ < ∞` and `Σp_ℓC_ℓ < ∞`), `singleTermN_mean_variance` (the estimator with `N` samples: unbiased, variance `V[Y]/N`), `randomised_summable` / `randomised_not_summable` (possible iff `β > γ`), `randomised_optimal_p_isLeast` (optimal `p_ℓ ∝ √(V_ℓ/C_ℓ)` minimises `(Σp_ℓ⁻¹V_ℓ)(Σp_ℓC_ℓ)`), `randomised_mlmc_finite`. | [G15] §2.2 (Rhee–Glynn) |
 | `MlmcLean/MultiIndex.lean` | Multi-indices `ℓ ∈ ℕ^D`, the cross-difference `ΔP_ℓ = (∏_dΔ_d)P_ℓ` (`crossDiff`, with Figure 2.1's `ΔP_{(5,4)}` as a check) and telescoping over boxes, `sum_crossDiff`. | [G15] §2.4 |
-| `MlmcLean/Lattice.lean` | Lattice sums over the MIMC index sets `{θ·ℓ ≤ L}`: `slab_bound`, `tail_bound`, `inner_bound` (with the polynomial factor `(1+L)^{#critical directions − 1}`), `card_indexSet_le`. | [G15] §2.4 (proof) |
-| `MlmcLean/Theorem2.lean` | `giles_theorem2`: **Theorem 2 (MIMC) as stated**, for all `D ≥ 1` and all three regimes `η < 0`, `η = 0`, `η > 0`, with the paper's exponents `e₁ = 2D₂`, `e₂ = (D₂−1)(2+η)` when `α_d > ½β_d`. `giles_theorem2_boundary`: the case `α_d ≥ ½β_d`, whose exponents the paper leaves open, with `e₁ = 2D₂ + (D₃−3)⁺`, `e₂ = (D₂−1)(2+η) + (D₃−1)⁺`, `D₃ = #{d : α_d = ½β_d}` (the paper's exponents when `D₃ = 0`). Deterministic forms `mimc_complexity`, `mimc_complexity_boundary`, `mimc_complexity_core`. | [G15] Thm 2 |
-| `MlmcLean/Nested.lean` | Haas–Giles nested estimator. `nested_cost_lower_bound` and `nested_optimal_allocation`: eq. (12) as a two-sided statement (a lower bound for all allocations, and an integer allocation attaining it up to the rounding overhead `Σ(C̃_ℓ + C^Δ_ℓ)`). `nested_mlmc_mse`: (9)–(11). | [HG25] (9)–(12) |
+| `MlmcLean/Lattice.lean` | Lattice sums over the MIMC index sets `{θ·ℓ ≤ L}`: `slab_bound`, `tail_bound`, `inner_bound` (with the polynomial factor `(1+L)^{(#critical directions − 1)⁺}`). | [G15] §2.4 (proof) |
+| `MlmcLean/Theorem2.lean` | `giles_theorem2_full`: **Theorem 2 (MIMC) in the paper's form**: for `α_d ≥ ½β_d` there are exponents `e₁, e₂` (depending only on `α, β, γ`), equal to `2D₂` and `(D₂−1)(2+η)` when every `α_d > ½β_d`, for which the bound holds on every probability space, for all `D ≥ 1` and all three regimes. `giles_theorem2`: the case `α_d > ½β_d` with the paper's exponents. `giles_theorem2_boundary`: the case `α_d ≥ ½β_d`, whose exponents the paper leaves open, with `e₁ = 2D₂ + (D₃−3)⁺`, `e₂ = (D₂−1)(2+η) + (D₃−1)⁺`, `D₃ = #{d : α_d = ½β_d}` (the paper's exponents when `D₃ = 0`). Deterministic forms `mimc_complexity`, `mimc_complexity_boundary`, `mimc_complexity_core`. The telescoping sum `E[P] = Σ_{ℓ≥0} E[ΔP_ℓ]` of p. 13: along boxes from condition i) (`tendsto_sum_box_integral_crossDiff`) and as an absolutely convergent series under i)–iii) (`hasSum_integral_crossDiff`). | [G15] §2.4, Thm 2 |
+| `MlmcLean/Nested.lean` | Haas–Giles nested estimator. `nested_cost_isLeast`: eq. (12) is the least nested cost over all real allocations, attained by the paper's Lagrange allocation `λ_M√(Ṽ/C̃)`, `λ_M√(V^Δ/C^Δ)`; `nested_cost_lower_bound` and `nested_optimal_allocation` (integer sample numbers, up to the rounding overhead `Σ(C̃_ℓ + C^Δ_ℓ)`). `nested_saving`: the claimed saving factor `≈ max_ℓ C̃_ℓ/C^Δ_ℓ` as an inequality between the optimal costs (12) and (8). The nested estimator built from independent inputs has mean `E[P_L]` (9) and variance (11) (`nestedEstimator_mean_variance`) and expected cost (10) (`nestedCost_mean`); `nested_mlmc_mse`: mean, variance and MSE for abstract component estimators. | [HG25] (9)–(12), §2.2 |
 
 No `sorry` and no extra axioms (see Verification below).
 
@@ -51,8 +53,14 @@ No `sorry` and no extra axioms (see Verification below).
   theorems bound `E[C]`, as Giles does ("the simulation cost of individual samples is itself
   random", p. 7).
 * **Conditions for `n ≥ 1` only.** The estimator (2.2) with zero samples is `0`, which is not
-  unbiased, so the conditions are required for sample sizes `n ≥ 1`, the only ones the theorems
-  use.
+  unbiased, so the conditions (including square-integrability) are required for sample sizes
+  `n ≥ 1`, the only ones the theorems use.
+* **Pairwise independence.** Across levels (and across multi-indices, and across the `2(L+1)`
+  nested components) only pairwise independence is assumed, which is weaker than the papers'
+  independence and is all the variance formulas need.
+* **Real sample numbers in the allocation results.** As in the papers, the optimisation treats
+  `N_ℓ` as real numbers; the variance constraint is `≤ τ` (the minimiser meets it with equality).
+  The integer allocations are the rounded-up Lagrange values.
 * **Strict `MSE < ε²`.** This comes from bias `≤ ε/2` and variance `≤ ε²/2`. Giles uses `ε/√2`
   and `ε²/2`; the constant `c₄` absorbs the difference.
 * **MIMC summation region.** `𝓛 = {ℓ : θ·ℓ ≤ L}` with `θ_d = α_d + (γ_d − β_d)/2`, a region "of
@@ -65,7 +73,13 @@ No `sorry` and no extra axioms (see Verification below).
 * **Randomised MLMC finiteness.** The paper only claims that the two series `Σp_ℓ⁻¹V_ℓ` and
   `Σp_ℓC_ℓ` can be made finite for `β > γ`; the full variance also contains `Σp_ℓ⁻¹E_ℓ²`, which
   can diverge under (i)–(iv) alone. `randomised_mlmc_finite` uses the second-moment form of (iii)
-  that Giles mentions on p. 7.
+  that Giles mentions on p. 7. The cost of a sample on level `ℓ` is a random variable `κ_ℓ`
+  independent of the random level, so the expected cost of one sample is `Σp_ℓ E[κ_ℓ]`
+  (`integral_cost_level`).
+* **Theorem 2's exponents.** The paper states Theorem 2 under `α_d ≥ ½β_d` but gives the
+  exponents only when `α_d > ½β_d`; `giles_theorem2_full` states exactly that (the exponents
+  exist, and are the paper's in the strict case). The explicit boundary exponents of
+  `giles_theorem2_boundary` are this formalisation's.
 
 ### Build
 

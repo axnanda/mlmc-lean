@@ -46,10 +46,12 @@ The constant $c_4$ is fixed before $\varepsilon$; the goal asserts the shape of 
 
 ### The numbered equations behind it (milestones)
 
+- §1.1: an average of $N$ independent samples has variance $N^{-1}\mathbb{V}[P]$.
+- §1.2: for two levels and a fixed cost, the variance is minimal exactly when $N_1/N_0 = \sqrt{V_1/C_1}/\sqrt{V_0/C_0}$.
 - (2.1): $\mathrm{MSE} = \mathbb{V}[Y] + \big(\mathbb{E}[Y] - \mathbb{E}[P]\big)^2$.
 - (2.3): $\mathbb{E}[Y] = \mathbb{E}[P_L]$ and $\mathbb{V}[Y] = \sum_{\ell=0}^{L} N_\ell^{-1} V_\ell$.
-- (1.1): for a variance target $\varepsilon^2$, the least total cost $\sum_\ell N_\ell C_\ell$ over real $N_\ell > 0$ is $\varepsilon^{-2}\big(\sum_\ell \sqrt{V_\ell C_\ell}\big)^2$.
-- (2.2): the sample-mean estimator satisfies (ii), $\mathbb{V}[Y_{\ell,N}] = V_\ell/N$ and independence across levels, so Theorem 1 applies to it.
+- (1.1): for a variance target $\varepsilon^2$, the least total cost $\sum_\ell N_\ell C_\ell$ over real $N_\ell > 0$ is $\varepsilon^{-2}\big(\sum_\ell \sqrt{V_\ell C_\ell}\big)^2$, attained only at $N_\ell = \mu\sqrt{V_\ell/C_\ell}$.
+- (2.2)–(2.3): the sample-mean estimator (2.2) has $\mathbb{E}[Y] = \mathbb{E}[P_L]$ and $\mathbb{V}[Y] = \sum_\ell N_\ell^{-1} V_\ell$; it satisfies (ii), $\mathbb{V}[Y_{\ell,N}] = V_\ell/N$ and independence across levels, so Theorem 1 applies to it.
 
 ## Significance
 
@@ -65,7 +67,7 @@ On the probabilistic side, conditions (ii) and $\mathbb{V}[Y_{\ell,N}] = V_\ell/
 
 ## Formalization scope
 
-- $\Omega$ carries a probability measure; $P$ and the $P_\ell$ are integrable real random variables; each $Y_{\ell,n}$ is in $L^2$; expectations are Bochner integrals. The estimators $Y_{\ell,n}$ are given for every $n$, and conditions (ii), the variance identity and the cost identity are required for $n \ge 1$ (the sample mean with no samples is $0$ and is not unbiased).
+- $\Omega$ carries a probability measure; $P$ and the $P_\ell$ are integrable real random variables; expectations are Bochner integrals. The estimators $Y_{\ell,n}$ are given for every $n$, and square-integrability, condition (ii), the variance identity and the cost identity are required for $n \ge 1$ (the sample mean with no samples is $0$ and is not unbiased).
 - Independence across levels is pairwise independence of $Y_{i,N_i}$ and $Y_{j,N_j}$ for $i \ne j$ and every choice of sample sizes $N \ge 1$.
 - The error target is the strict inequality $\mathrm{MSE} < \varepsilon^2$ and $\varepsilon$ ranges over $(0, e^{-1})$; powers with real exponents are real powers of positive reals.
 - No trivial reading: $c_4$ is quantified before $\varepsilon$, every $N_\ell \ge 1$, and the cost is the expectation of the sum of the random level costs, so neither a zero estimator nor an $\varepsilon$-dependent constant satisfies the goal.
