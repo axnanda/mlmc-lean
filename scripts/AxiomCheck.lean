@@ -77,6 +77,19 @@ import MlmcLean
 #print axioms MLMC.optimal_cost_const_product
 #print axioms MLMC.optimal_cost_increasing
 #print axioms MLMC.optimal_cost_decreasing
+#print axioms MLMC.mse_lt_of_half
+#print axioms MLMC.weak_rate_of_second_moment
+#print axioms MLMC.allocation_eq_3_1
+#print axioms MLMC.remaining_error
+#print axioms MLMC.convergence_test_mse
+#print axioms MLMC.consistency_mean
+#print axioms MLMC.covariance_sq_le
+#print axioms MLMC.sqrt_variance_add_le
+#print axioms MLMC.sqrt_variance_sub_le
+#print axioms MLMC.consistency_sd
+#print axioms MLMC.sampleVariance_sd
+#print axioms MLMC.kurtosis_of_ternary
+#print axioms MLMC.tendsto_kurtosis_atTop
 -- helper lemmas that the prove2.me generator promotes to nodes
 #print axioms MLMC.sqrt_Vb_mul_Cb
 #print axioms MLMC.two_rpow_levelL_le

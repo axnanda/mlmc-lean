@@ -56,7 +56,7 @@ theorem mc_estimate [IsProbabilityMeasure μ] (ω : ℕ → Ω → Ω₀)
         (Real.sqrt (μ[fun x => ((N : ℝ)⁻¹ * ∑ n ∈ range N, P (ω n x) - ∫ y, P y ∂ν) ^ 2]) ≤ ε ↔
           variance P ν / ε ^ 2 ≤ N) := by
   -- the law `ν` of the inputs is a probability measure, as the image of `μ`
-  haveI : IsProbabilityMeasure ν := by
+  have : IsProbabilityMeasure ν := by
     rw [← (hω 0).map_eq]
     exact Measure.isProbabilityMeasure_map (hω 0).measurable.aemeasurable
   have hNpos : (0 : ℝ) < N := Nat.cast_pos.2 hN
@@ -199,7 +199,7 @@ theorem controlVariate_estimator [IsProbabilityMeasure μ] (ω : ℕ → Ω → 
             ∑ n ∈ range N, (f (ω n x) - lam * (g (ω n x) - ∫ z, g z ∂ν))) μ =
           (1 - correlation f g ν ^ 2) *
             variance (fun x => (N : ℝ)⁻¹ * ∑ n ∈ range N, f (ω n x)) μ) := by
-  haveI : IsProbabilityMeasure ν := by
+  have : IsProbabilityMeasure ν := by
     rw [← (hω 0).map_eq]
     exact Measure.isProbabilityMeasure_map (hω 0).measurable.aemeasurable
   -- the control-variate sample `h = f − λ (g − E[g])` as a single random variable
@@ -233,8 +233,8 @@ theorem optimal_cost_const_product {V C : ℕ → ℝ} (L : ℕ) (τ : ℝ) (hV0
   push_cast
   ring
 
--- a sum dominated by its last term: `(r − 1) ∑_{ℓ ≤ L} s_ℓ ≤ r s_L` if `s_{ℓ+1} ≥ r s_ℓ ≥ 0`
-lemma sum_range_le_of_growth {s : ℕ → ℝ} {r : ℝ} (hr : 1 < r) (hs : ∀ ℓ, 0 ≤ s ℓ)
+-- a sum dominated by its last term: `(r − 1) ∑_{ℓ ≤ L} s_ℓ ≤ r s_L` if `r s_ℓ ≤ s_{ℓ+1}`, `s ≥ 0`
+lemma sum_range_le_of_growth {s : ℕ → ℝ} {r : ℝ} (hs : ∀ ℓ, 0 ≤ s ℓ)
     (hgrow : ∀ ℓ, r * s ℓ ≤ s (ℓ + 1)) (L : ℕ) :
     (r - 1) * ∑ ℓ ∈ range (L + 1), s ℓ ≤ r * s L := by
   induction L with
@@ -269,8 +269,8 @@ lemma sum_range_le_of_decay {s : ℕ → ℝ} {r : ℝ} (hr0 : 0 ≤ r) (hr : r 
 
 /-- Giles 2015, §1.3, p. 4: "If the product increases with level, so that the dominant
 contribution to the cost comes from `V_L C_L` then we have `C ≈ ε⁻² V_L C_L`."  Rigorous form: if
-`√(V_ℓ C_ℓ)` grows at least geometrically, `√(V_{ℓ+1} C_{ℓ+1}) ≥ r √(V_ℓ C_ℓ)` with `r > 1`, then the
-cost (1.1), `τ⁻¹ (∑_{ℓ=0}^{L} √(V_ℓ C_ℓ))²` (`τ = ε²`), lies between `τ⁻¹ V_L C_L` and
+`√(V_ℓ C_ℓ)` grows at least geometrically, `√(V_{ℓ+1} C_{ℓ+1}) ≥ r √(V_ℓ C_ℓ)` with `r > 1`, then
+the cost (1.1), `τ⁻¹ (∑_{ℓ=0}^{L} √(V_ℓ C_ℓ))²` (`τ = ε²`), lies between `τ⁻¹ V_L C_L` and
 `(r/(r−1))² τ⁻¹ V_L C_L`. -/
 theorem optimal_cost_increasing {V C : ℕ → ℝ} {r τ : ℝ} (hr : 1 < r) (hτ : 0 < τ)
     (hV : ∀ ℓ, 0 ≤ V ℓ) (hC : ∀ ℓ, 0 ≤ C ℓ)
@@ -287,7 +287,7 @@ theorem optimal_cost_increasing {V C : ℕ → ℝ} {r τ : ℝ} (hr : 1 < r) (h
     Finset.single_le_sum (fun ℓ _ => hs ℓ) (Finset.self_mem_range_succ L)
   have hup : ∑ ℓ ∈ range (L + 1), Real.sqrt (V ℓ * C ℓ) ≤ r / (r - 1) * Real.sqrt (V L * C L) := by
     rw [div_mul_eq_mul_div, le_div_iff₀ hr1, mul_comm]
-    exact sum_range_le_of_growth hr hs hgrow L
+    exact sum_range_le_of_growth hs hgrow L
   constructor
   · rw [← hsq]
     exact mul_le_mul_of_nonneg_left (pow_le_pow_left₀ (hs L) hlow 2) hτi

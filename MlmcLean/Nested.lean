@@ -162,7 +162,7 @@ the full-precision `V_ℓ, C_ℓ` as `Ṽ_ℓ ≤ θ V_ℓ`, `C^Δ_ℓ ≤ (1 + 
 cost (12) is at most `(1 + δ)² θ (1 + κ) r` times the optimal MLMC cost (8)
 `ε⁻² (∑ √(V_ℓ C_ℓ))²`; with `δ, κ` small and `θ ≈ 1` the factor is `≈ r = max_ℓ C̃_ℓ/C^Δ_ℓ`. -/
 theorem nested_saving (V C : ℕ → ℝ) {ε δ θ κ r : ℝ}
-    (hVt : ∀ ℓ, 0 ≤ Vt ℓ) (hCt : ∀ ℓ, 0 ≤ Ct ℓ) (hCΔ : ∀ ℓ, 0 < CΔ ℓ)
+    (hCt : ∀ ℓ, 0 ≤ Ct ℓ) (hCΔ : ∀ ℓ, 0 < CΔ ℓ)
     (hV : ∀ ℓ, 0 ≤ V ℓ) (hC : ∀ ℓ, 0 ≤ C ℓ) (hδ : 0 ≤ δ) (hθ : 0 ≤ θ) (hκ : 0 ≤ 1 + κ)
     (hr : ∀ ℓ ∈ range (L + 1), Ct ℓ / CΔ ℓ ≤ r)
     (hsmall : ∀ ℓ ∈ range (L + 1), VΔ ℓ ≤ δ ^ 2 * (Ct ℓ / CΔ ℓ) * Vt ℓ)
@@ -286,7 +286,7 @@ theorem nestedEstimator_mean_variance [IsProbabilityMeasure μ]
         ∑ ℓ ∈ range (L + 1), (variance (Dt ℓ) ν / Nt ℓ +
           variance (fun y => levelDiff Pl ℓ y - Dt ℓ y) ν / NΔ ℓ) := by
   -- the law `ν` of the inputs is a probability measure, as the image of `μ`
-  haveI : IsProbabilityMeasure ν := by
+  have : IsProbabilityMeasure ν := by
     rw [← (hω ((0, true), 0)).map_eq]
     exact Measure.isProbabilityMeasure_map (hω ((0, true), 0)).measurable.aemeasurable
   have hTm : ∀ q, Measurable (nestedTerm Pl Dt q) := by
