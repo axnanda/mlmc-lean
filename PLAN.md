@@ -92,7 +92,8 @@ for `β > γ`; the full variance can diverge under (i)–(iv) alone (counterexam
 **M3: Multi-Index Monte Carlo (Giles 2015 §2.4, Theorem 2; Haji-Ali, Nobile & Tempone).**
 ✅ Done: `giles_theorem2` (all `D`, all three regimes, the paper's `e₁ = 2D₂`,
 `e₂ = (D₂−1)(2+η)` for `α_d > ½β_d`) and `giles_theorem2_boundary` (`α_d ≥ ½β_d`, where the paper
-leaves the exponents open, with `e₁ = 2D₂ + D`, `e₂ = (D₂−1)(2+η) + D`).
+leaves the exponents open, with `e₁ = 2D₂ + (D₃−3)⁺`, `e₂ = (D₂−1)(2+η) + (D₃−1)⁺` where
+`D₃ = #{d : α_d = ½β_d}`; these are the paper's exponents when `D₃ = 0`).
 - Start with the η < 0 case, then η = 0 and η > 0 with the `|log ε|` exponents `e₁`, `e₂`.
 - The hard part is summing over index sets `{ℓ : δ·ℓ ≤ L}` (lattice-point counting).
 - Done when: Theorem 2 is proved as stated, or a clearly documented subset is (e.g. D = 2 first).

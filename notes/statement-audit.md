@@ -182,7 +182,7 @@ e₁ = 2D₂, e₂ = (D₂ − 1)(2 + η), where D₂ is the number of dimension
 | `∃ c₄ > 0 ∀ ε < e⁻¹ ∃ 𝓛, N_ℓ` | `∃ c₄, 0 < c₄ ∧ ∀ ε, 0 < ε → ε < exp(−1) → ∃ (𝓛 : Finset _) N, (∀ ℓ, 0 < N ℓ) ∧ …` | ✓ (`𝓛` finite, `N_ℓ ≥ 1`) |
 | `MSE < ε²` | `μ[(∑_{ℓ∈𝓛} Y ℓ (N ℓ) − μ[P])²] < ε²` | ✓ |
 | `E[C] ≤ c₄ · (three regimes)`, `e₁ = 2D₂`, `e₂ = (D₂−1)(2+η)` for `α_d > ½β_d` | `μ[∑_{ℓ∈𝓛} Cost ℓ (N ℓ)] ≤ c₄ · mimcBound η (2D₂) ((D₂−1)(2+η)) ε` with `mimcBound η e₁ e₂ ε = ε⁻²`, `ε⁻²|log ε|^{e₁}`, `ε^{−2−η}|log ε|^{e₂}` for `η < 0`, `= 0`, `> 0`; `η = mimcEta`, `D₂ = mimcD2` | ✓ |
-| exponents when some `α_d = ½β_d`: "more complicated", not stated | `giles_theorem2_boundary`: `e₁ = 2D₂ + D`, `e₂ = (D₂−1)(2+η) + D` | not a paper statement: a valid (not necessarily sharp) bound for the case the paper leaves open |
+| exponents when some `α_d = ½β_d`: "more complicated", not stated | `giles_theorem2_boundary` (hypothesis `α_d ≥ ½β_d`): `e₁ = 2D₂ + (D₃−3)⁺`, `e₂ = (D₂−1)(2+η) + (D₃−1)⁺` with `D₃ = mimcD3 = #{d : α_d = ½β_d}` (natural-number subtraction) | not a paper statement: a valid bound for the case the paper leaves open, not claimed sharp; for `D₃ = 0` (every `α_d > ½β_d`) it is the paper's `e₁ = 2D₂`, `e₂ = (D₂−1)(2+η)` |
 
 **Label typo in the paper.** The statement lists the conditions as i), iii), ii), iv), v): "iii)"
 is the unbiasedness `E[Y_ℓ] = E[ΔP_ℓ]` and "ii)" is the decay `|E[Y_ℓ]| ≤ c₁2^{−α·ℓ}`, while the

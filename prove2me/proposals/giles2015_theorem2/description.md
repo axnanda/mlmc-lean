@@ -48,13 +48,13 @@ $$
 ### Further targets (milestones)
 
 - §2.4, the telescoping identity: $\sum_{\boldsymbol{\ell} \le \mathbf{k}} \boldsymbol{\Delta} P_{\boldsymbol{\ell}} = P_{\mathbf{k}}$ for every $\mathbf{k} \in \mathbb{N}^D$.
-- Theorem 2 when $\alpha_d = \tfrac12 \beta_d$ for some $d$, where the paper states that "the form of the exponents is more complicated" and gives none: a bound of the same shape with some exponents $e_1, e_2$. The linked formal version proves it with $e_1 = 2D_2 + D$ and $e_2 = (D_2 - 1)(2 + \eta) + D$, which are not claimed to be sharp.
+- Theorem 2 when $\alpha_d = \tfrac12 \beta_d$ for some $d$, where the paper states that "the form of the exponents is more complicated" and gives none: a bound of the same shape with some exponents $e_1, e_2$. The linked formal version proves it with $e_1 = 2D_2 + (D_3 - 3)^+$ and $e_2 = (D_2 - 1)(2 + \eta) + (D_3 - 1)^+$, where $D_3 = \#\{d : \alpha_d = \tfrac12 \beta_d\}$ and $x^+ = \max(x, 0)$; for $D_3 = 0$ these are the exponents above; they are not claimed to be sharp.
 
 ## Significance
 
 *The result.* Theorem 2 gives the cost of MIMC in terms of per-direction rates. When $\beta_d > \gamma_d$ in every direction, $\eta < 0$ and the cost is $O(\varepsilon^{-2})$, the optimal complexity that standard MLMC loses in high dimension; Giles describes this as the possibility of dimension-independent complexity for SPDEs and other high-dimensional stochastic applications, in the same way as sparse grids for deterministic PDEs (pp. 15–16).
 
-*Formalizing it.* The statements in this mission already have machine-checked proofs on this platform (the linked theorems are Proved), from a Lean 4 development against Mathlib `0df444a` with no `sorry`. The formal version covers every $D \ge 1$ and all three regimes, with the paper's exponents $e_1 = 2D_2$, $e_2 = (D_2 - 1)(2+\eta)$. The case $\alpha_d = \tfrac12 \beta_d$ is covered with explicit but not sharp exponents; the sharp exponents in that case are open for formalization, as are shorter proofs and the rate conditions for concrete PDE discretisations.
+*Formalizing it.* The statements in this mission already have machine-checked proofs on this platform (the linked theorems are Proved), from a Lean 4 development against Mathlib `0df444a` with no `sorry`. The formal version covers every $D \ge 1$ and all three regimes, with the paper's exponents $e_1 = 2D_2$, $e_2 = (D_2 - 1)(2+\eta)$. The case $\alpha_d = \tfrac12 \beta_d$ is covered with explicit exponents that reduce to the paper's when no direction is on the boundary; sharp exponents in that case are open for formalization, as are shorter proofs and the rate conditions for concrete PDE discretisations.
 
 ## Difficulty
 
