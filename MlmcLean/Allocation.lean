@@ -329,11 +329,14 @@ variances `V₀, V₁` and costs `C₀, C₁`, and `n₀, n₁ > 0` with cost `n
 `(n₀, n₁)` has the least variance `V₀/n₀ + V₁/n₁` among all pairs of cost `B` if and only if
 `n₁/n₀ = √(V₁/C₁)/√(V₀/C₀)`. -/
 theorem twoLevel_optimal_ratio {V₀ V₁ C₀ C₁ B : ℝ} (hV₀ : 0 < V₀) (hV₁ : 0 < V₁)
-    (hC₀ : 0 < C₀) (hC₁ : 0 < C₁) (hB : 0 < B) {n₀ n₁ : ℝ} (hn₀ : 0 < n₀) (hn₁ : 0 < n₁)
+    (hC₀ : 0 < C₀) (hC₁ : 0 < C₁) {n₀ n₁ : ℝ} (hn₀ : 0 < n₀) (hn₁ : 0 < n₁)
     (hcost : n₀ * C₀ + n₁ * C₁ = B) :
     (∀ m₀ m₁ : ℝ, 0 < m₀ → 0 < m₁ → m₀ * C₀ + m₁ * C₁ = B →
         V₀ / n₀ + V₁ / n₁ ≤ V₀ / m₀ + V₁ / m₁) ↔
       n₁ / n₀ = Real.sqrt (V₁ / C₁) / Real.sqrt (V₀ / C₀) := by
+  have hB : 0 < B := by
+    rw [← hcost]
+    exact add_pos (mul_pos hn₀ hC₀) (mul_pos hn₁ hC₁)
   -- the two levels as the index set `Fin 2`
   have two : ∀ a b : ℝ, 0 < a → 0 < b → ∀ i, 0 < (![a, b] : Fin 2 → ℝ) i := fun a b ha hb =>
     (Fin.forall_fin_two (p := fun j => 0 < (![a, b] : Fin 2 → ℝ) j)).2 ⟨ha, hb⟩

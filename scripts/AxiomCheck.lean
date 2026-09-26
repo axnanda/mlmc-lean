@@ -69,6 +69,14 @@ import MlmcLean
 #print axioms MLMC.nestedEstimator_mean_variance
 #print axioms MLMC.nestedCost_mean
 #print axioms MLMC.nested_mlmc_mse
+#print axioms MLMC.mc_estimate
+#print axioms MLMC.controlVariate_mean
+#print axioms MLMC.controlVariate_variance
+#print axioms MLMC.controlVariate_optimal
+#print axioms MLMC.controlVariate_estimator
+#print axioms MLMC.optimal_cost_const_product
+#print axioms MLMC.optimal_cost_increasing
+#print axioms MLMC.optimal_cost_decreasing
 -- helper lemmas that the prove2.me generator promotes to nodes
 #print axioms MLMC.sqrt_Vb_mul_Cb
 #print axioms MLMC.two_rpow_levelL_le

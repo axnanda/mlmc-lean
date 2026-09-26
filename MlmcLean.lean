@@ -12,6 +12,7 @@
 -- * `MlmcLean.Lattice`     — lattice sums over the MIMC index sets `{θ·ℓ ≤ L}`
 -- * `MlmcLean.Theorem2`    — Giles' Theorem 2 (Multi-Index Monte Carlo)
 -- * `MlmcLean.Nested`      — Haas–Giles nested MLMC estimator (9)–(12)
+-- * `MlmcLean.ControlVariate` — Giles §1.1–§1.3: plain Monte Carlo, control variates, the cost (1.1)
 import MlmcLean.Allocation
 import MlmcLean.Estimator
 import MlmcLean.LevelDiff
@@ -24,3 +25,4 @@ import MlmcLean.MultiIndex
 import MlmcLean.Lattice
 import MlmcLean.Theorem2
 import MlmcLean.Nested
+import MlmcLean.ControlVariate

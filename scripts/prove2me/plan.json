@@ -66,7 +66,15 @@
     "MLMC.nested_saving",
     "MLMC.nestedEstimator_mean_variance",
     "MLMC.nestedCost_mean",
-    "MLMC.nested_mlmc_mse"
+    "MLMC.nested_mlmc_mse",
+    "MLMC.mc_estimate",
+    "MLMC.controlVariate_mean",
+    "MLMC.controlVariate_variance",
+    "MLMC.controlVariate_optimal",
+    "MLMC.controlVariate_estimator",
+    "MLMC.optimal_cost_const_product",
+    "MLMC.optimal_cost_increasing",
+    "MLMC.optimal_cost_decreasing"
   ],
   "bundlePrefix": "MLMC_",
   "paperNamed": [],

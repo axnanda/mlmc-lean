@@ -662,9 +662,12 @@ theorem randomised_optimal_p_isLeast {V C : ℕ → ℝ} (hV : ∀ ℓ, 0 < V �
     (hZ : Summable fun ℓ => Real.sqrt (V ℓ / C ℓ)) :
     IsLeast {x | ∃ p : ℕ → ℝ, (∀ ℓ, 0 < p ℓ) ∧ HasSum p 1 ∧ Summable (fun ℓ => V ℓ / p ℓ) ∧
         Summable (fun ℓ => p ℓ * C ℓ) ∧ x = (∑' ℓ, V ℓ / p ℓ) * ∑' ℓ, p ℓ * C ℓ}
-      ((∑' ℓ, Real.sqrt (V ℓ * C ℓ)) ^ 2) := by
+      ((∑' ℓ, Real.sqrt (V ℓ * C ℓ)) ^ 2) ∧
+    (∀ ℓ, 0 < optimalLevelProb V C ℓ) ∧ HasSum (optimalLevelProb V C) 1 ∧
+      (∑' ℓ, V ℓ / optimalLevelProb V C ℓ) * (∑' ℓ, optimalLevelProb V C ℓ * C ℓ) =
+        (∑' ℓ, Real.sqrt (V ℓ * C ℓ)) ^ 2 := by
   obtain ⟨hpos, h1, hVs, hCs, heq⟩ := randomised_optimal_p_eq hV hC hS hZ
-  refine ⟨⟨optimalLevelProb V C, hpos, h1, hVs, hCs, heq.symm⟩, ?_⟩
+  refine ⟨⟨⟨optimalLevelProb V C, hpos, h1, hVs, hCs, heq.symm⟩, ?_⟩, hpos, h1, heq⟩
   rintro x ⟨p, hp, -, h1, h2, rfl⟩
   exact (randomised_optimal_p (fun ℓ => (hV ℓ).le) (fun ℓ => (hC ℓ).le) hp h1 h2).2
 

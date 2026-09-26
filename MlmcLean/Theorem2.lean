@@ -1313,12 +1313,15 @@ Then there is `c₄ > 0` such that for every `0 < ε < e⁻¹` there are a finit
 `N_ℓ ≥ 1` for which `Y = ∑_{ℓ∈𝓛} Y ℓ (N ℓ)` has `MSE < ε²` and the cost
 `C = ∑_{ℓ∈𝓛} Cost ℓ (N ℓ)` satisfies `E[C] ≤ c₄ ε⁻²` (`η < 0`), `c₄ ε⁻² |log ε|^{e₁}` (`η = 0`),
 `c₄ ε^{−2−η} |log ε|^{e₂}` (`η > 0`), with `η = max_d (γ_d − β_d)/α_d` and `D₂` the number of
-directions attaining it.  The witnesses are the exponents of `giles_theorem2_boundary`,
-`e₁ = 2D₂ + (D₃ − 3)⁺` and `e₂ = (D₂ − 1)(2 + η) + (D₃ − 1)⁺` with `D₃ = #{d : α_d = ½β_d}`.
-The hypothesis `β_d > 0` is Giles'; the proof does not use it. -/
+directions attaining it.  In general the exponents are those of `giles_theorem2_boundary`,
+`e₁ = 2D₂ + (D₃ − 3)⁺` and `e₂ = (D₂ − 1)(2 + η) + (D₃ − 1)⁺` with `D₃ = #{d : α_d = ½β_d}`,
+which reduce to the paper's when `D₃ = 0`.  The hypothesis `β_d > 0` is Giles'; the proof does
+not use it. -/
 theorem giles_theorem2_full [NeZero D] {α β γ : Fin D → ℝ}
     (hα : ∀ d, 0 < α d) (hβ : ∀ d, 0 < β d) (hγ : ∀ d, 0 < γ d) (hαβ : ∀ d, β d / 2 ≤ α d) :
     ∃ e₁ e₂ : ℝ,
+      e₁ = 2 * (mimcD2 α β γ : ℝ) + ((mimcD3 α β - 3 : ℕ) : ℝ) ∧
+      e₂ = ((mimcD2 α β γ : ℝ) - 1) * (2 + mimcEta α β γ) + ((mimcD3 α β - 1 : ℕ) : ℝ) ∧
       ((∀ d, β d / 2 < α d) →
         e₁ = 2 * (mimcD2 α β γ : ℝ) ∧ e₂ = ((mimcD2 α β γ : ℝ) - 1) * (2 + mimcEta α β γ)) ∧
       ∀ {Ω : Type u} [MeasurableSpace Ω] (μ : Measure Ω) [IsProbabilityMeasure μ]
@@ -1344,7 +1347,8 @@ theorem giles_theorem2_full [NeZero D] {α β γ : Fin D → ℝ}
             μ[fun ω => ∑ ℓ ∈ 𝓛, Cost ℓ (N ℓ) ω] ≤
               c₄ * mimcBound (mimcEta α β γ) e₁ e₂ ε := by
   refine ⟨2 * (mimcD2 α β γ : ℝ) + ((mimcD3 α β - 3 : ℕ) : ℝ),
-    ((mimcD2 α β γ : ℝ) - 1) * (2 + mimcEta α β γ) + ((mimcD3 α β - 1 : ℕ) : ℝ), ?_, ?_⟩
+    ((mimcD2 α β γ : ℝ) - 1) * (2 + mimcEta α β γ) + ((mimcD3 α β - 1 : ℕ) : ℝ), rfl, rfl, ?_,
+    ?_⟩
   · intro h
     rw [mimcD3_eq_zero h]
     simp
