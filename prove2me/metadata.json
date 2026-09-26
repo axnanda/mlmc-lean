@@ -1239,6 +1239,80 @@
     "complexity",
     "probability"
    ]
+  },
+  "MLMC.richardson_extrapolation": {
+   "theorem_title": "Giles (2015), §2.3: Richardson extrapolation — $P_h-P=ah^\\alpha+O(h^{2\\alpha})$ implies $\\frac{2^\\alpha P_h-P_{2h}}{2^\\alpha-1}-P=O(h^{2\\alpha})$",
+   "natural_language_statement": "Giles (2015), §2.3: \"Given a numerical approximation $P_h$ based on a discretisation parameter $h$ which leads to an error $P_h-P=a\\,h^\\alpha+O(h^{2\\alpha})$, it follows that $P_{2h}-P=a\\,(2h)^\\alpha+O(h^{2\\alpha})$, and hence the extrapolated value $\\tilde P=\\frac{2^\\alpha}{2^\\alpha-1}P_h-\\frac{1}{2^\\alpha-1}P_{2h}$ satisfies $\\tilde P-P=O(h^{2\\alpha})$.\"\n\nLet $\\alpha>0$, $P,a\\in\\mathbb R$ and $F:\\mathbb R\\to\\mathbb R$ ($F(h)=P_h$). If\n\n$$\nF(h)-P-a\\,h^\\alpha=O\\big(h^{2\\alpha}\\big)\\qquad(h\\to0^+),\n$$\n\nthen\n\n$$\n\\frac{2^\\alpha F(h)-F(2h)}{2^\\alpha-1}-P=O\\big(h^{2\\alpha}\\big)\\qquad(h\\to0^+).\n$$\n\n**Formalization Note** $O(\\cdot)$ is Mathlib's `IsBigO` along the filter `𝓝[>] 0` of right neighbourhoods of $0$, and $h^\\alpha$ is the real power (`Real.rpow`). No regularity of $F$ is assumed.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §2.3, p. 11 of the author's version.",
+   "explanation": "Write $R(h)=F(h)-P-a h^\\alpha$. For $h>0$, $(2h)^\\alpha=2^\\alpha h^\\alpha$, so the $a$-terms cancel and $\\tilde P-P=\\big(2^\\alpha R(h)-R(2h)\\big)/(2^\\alpha-1)$. The map $h\\mapsto2h$ sends right neighbourhoods of $0$ to right neighbourhoods of $0$, so $R(2h)=O((2h)^{2\\alpha})=O(h^{2\\alpha})$; a linear combination of $O(h^{2\\alpha})$ functions is $O(h^{2\\alpha})$.",
+   "tags": [
+    "numerical-analysis",
+    "asymptotics",
+    "multilevel-monte-carlo"
+   ]
+  },
+  "MLMC.ml2r_weights": {
+   "theorem_title": "Giles (2015), §2.3: the ML2R weights are the unique $w_0,\\dots,w_L$ with $\\sum_\\ell w_\\ell=1$ and $\\sum_\\ell w_\\ell2^{-n\\alpha\\ell}=0$, $n=1,\\dots,L$",
+   "natural_language_statement": "Giles (2015), §2.3: Lemaire and Pagès \"first determine the unique set of weights $w_\\ell$, $\\ell=0,1,\\dots,L$ such that $\\sum_{\\ell=0}^{L}w_\\ell=1$, $\\sum_{\\ell=0}^{L}w_\\ell2^{-n\\alpha\\ell}=1$, $n=1,\\dots,L$\". The right-hand side of the second condition must be $0$: with $1$ the unique solution is $w=(1,0,\\dots,0)$, which does not extrapolate. This result is the corrected statement.\n\nLet $\\alpha>0$ and $L\\in\\mathbb N$. For $\\alpha>0$ the nodes are $x_\\ell=2^{-\\alpha\\ell}$ (`ml2rNode α ℓ`), so $x_\\ell^n=2^{-n\\alpha\\ell}$, and the ML2R weights are $w_\\ell=\\prod_{k\\le L,\\,k\\ne\\ell}\\frac{x_k}{x_k-x_\\ell}$ (`ml2rWeight α L ℓ`). Then\n\n1. for every $0\\le n\\le L$,\n\n$$\n\\sum_{\\ell=0}^{L}w_\\ell\\,x_\\ell^{\\,n}=\\begin{cases}1,&n=0,\\\\0,&1\\le n\\le L;\\end{cases}\n$$\n\n2. these are the only such weights: if $w':\\mathbb N\\to\\mathbb R$ satisfies $\\sum_{\\ell=0}^{L}w'_\\ell x_\\ell^{\\,n}=[n=0]$ for every $0\\le n\\le L$, then $w'_\\ell=w_\\ell$ for $\\ell=0,\\dots,L$.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §2.3, p. 11 of the author's version.",
+   "explanation": "The nodes $x_0>x_1>\\dots>x_L$ are distinct because $\\alpha>0$, and $w_\\ell$ is the value at $0$ of the Lagrange basis polynomial of $x_\\ell$. Lagrange interpolation is exact on polynomials $p$ of degree $\\le L$, so $\\sum_\\ell w_\\ell\\,p(x_\\ell)=p(0)$; with $p=X^n$ this is part 1. For part 2, expand the basis polynomial $p_k$ of $x_k$ in monomials: the moment conditions give $\\sum_\\ell w'_\\ell\\,p_k(x_\\ell)=p_k(0)=w_k$, while $p_k(x_\\ell)=[\\ell=k]$ gives $\\sum_\\ell w'_\\ell\\,p_k(x_\\ell)=w'_k$.",
+   "tags": [
+    "multilevel-monte-carlo",
+    "numerical-analysis",
+    "polynomial-interpolation"
+   ]
+  },
+  "MLMC.ml2r_moment_succ": {
+   "theorem_title": "Giles (2015), §2.3: the first moment the ML2R weights do not cancel, $\\sum_{\\ell=0}^{L}w_\\ell x_\\ell^{L+1}=(-1)^L\\prod_{k=0}^{L}x_k$ with $x_\\ell=2^{-\\alpha\\ell}$",
+   "natural_language_statement": "Giles (2015), §2.3, states that the ML2R bias is \"$O(2^{-\\alpha L^2})$\". The size of the bias is governed by the first power of the nodes that the weights do not annihilate, which this result computes.\n\nLet $\\alpha>0$ and $L\\in\\mathbb N$. For $\\alpha>0$ the nodes are $x_\\ell=2^{-\\alpha\\ell}$ (`ml2rNode α ℓ`), so $x_\\ell^n=2^{-n\\alpha\\ell}$, and the ML2R weights are $w_\\ell=\\prod_{k\\le L,\\,k\\ne\\ell}\\frac{x_k}{x_k-x_\\ell}$ (`ml2rWeight α L ℓ`). Then\n\n$$\n\\sum_{\\ell=0}^{L}w_\\ell\\,x_\\ell^{\\,L+1}=(-1)^L\\prod_{k=0}^{L}x_k.\n$$",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §2.3, p. 12 of the author's version (the bias of the extrapolated mean).",
+   "explanation": "The polynomial $q(X)=X^{L+1}-\\prod_{k=0}^{L}(X-x_k)$ has degree $\\le L$, since both terms are monic of degree $L+1$. Exactness of the weights on such polynomials gives $\\sum_\\ell w_\\ell\\,q(x_\\ell)=q(0)$. At the nodes $q(x_\\ell)=x_\\ell^{L+1}$, and $q(0)=-\\prod_k(-x_k)=(-1)^L\\prod_k x_k$.",
+   "tags": [
+    "multilevel-monte-carlo",
+    "numerical-analysis",
+    "polynomial-interpolation"
+   ]
+  },
+  "MLMC.ml2r_bias_eq": {
+   "theorem_title": "Giles (2015), §2.3: the ML2R weights cancel the weak-error expansion — if $\\mathbb E[P_\\ell]-\\mathbb E[P]=\\sum_{n=1}^{L}a_n2^{-n\\alpha\\ell}+R_\\ell$ the bias is $\\sum_\\ell w_\\ell R_\\ell$",
+   "natural_language_statement": "Giles (2015), §2.3: \"Assuming that the weak error has a regular expansion $\\mathbb E[P_\\ell]-\\mathbb E[P]=\\sum_{n=1}^{L}a_n2^{-n\\alpha\\ell}+O(2^{-\\alpha\\ell L})$, they first determine the unique set of weights … so that $\\big(\\sum_{\\ell=0}^{L}w_\\ell\\mathbb E[P_\\ell]\\big)-\\mathbb E[P]=\\sum_{\\ell=0}^{L}w_\\ell\\big(\\mathbb E[P_\\ell]-\\mathbb E[P]\\big)$\". This result makes the cancellation exact.\n\nLet $\\alpha>0$ and $L\\in\\mathbb N$. For $\\alpha>0$ the nodes are $x_\\ell=2^{-\\alpha\\ell}$ (`ml2rNode α ℓ`), so $x_\\ell^n=2^{-n\\alpha\\ell}$, and the ML2R weights are $w_\\ell=\\prod_{k\\le L,\\,k\\ne\\ell}\\frac{x_k}{x_k-x_\\ell}$ (`ml2rWeight α L ℓ`). Let $E_\\ell\\in\\mathbb R$ ($\\ell\\in\\mathbb N$, standing for $\\mathbb E[P_\\ell]$), $E\\in\\mathbb R$ (standing for $\\mathbb E[P]$) and $a_n,R_\\ell\\in\\mathbb R$ with\n\n$$\nE_\\ell-E=\\sum_{n=1}^{L}a_n\\,2^{-n\\alpha\\ell}+R_\\ell\\qquad(\\ell=0,\\dots,L).\n$$\n\nThen\n\n$$\n\\sum_{\\ell=0}^{L}w_\\ell E_\\ell-E=\\sum_{\\ell=0}^{L}w_\\ell R_\\ell.\n$$\n\n**Formalization Note** The expansion is written with $x_\\ell^n=2^{-n\\alpha\\ell}$; the remainders $R_\\ell$ are arbitrary real numbers.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §2.3, pp. 11–12 of the author's version.",
+   "explanation": "Since $\\sum_\\ell w_\\ell=1$ (`ml2r_weights`, $n=0$), $\\sum_\\ell w_\\ell E_\\ell-E=\\sum_\\ell w_\\ell(E_\\ell-E)$. Substituting the expansion and exchanging the sums gives $\\sum_{n=1}^{L}a_n\\sum_\\ell w_\\ell x_\\ell^{\\,n}+\\sum_\\ell w_\\ell R_\\ell$, and every inner sum vanishes by `ml2r_weights`.",
+   "tags": [
+    "multilevel-monte-carlo",
+    "numerical-analysis"
+   ]
+  },
+  "MLMC.ml2r_bias": {
+   "theorem_title": "Giles (2015), §2.3: for a weak-error expansion with $L+1$ terms the ML2R bias is exactly $(-1)^La_{L+1}2^{-\\alpha L(L+1)/2}$ (the paper states $O(2^{-\\alpha L^2})$)",
+   "natural_language_statement": "Giles (2015), §2.3: with the ML2R weights, \"$\\big(\\sum_{\\ell=0}^{L}w_\\ell\\mathbb E[P_\\ell]\\big)-\\mathbb E[P]=\\sum_{\\ell=0}^{L}w_\\ell(\\mathbb E[P_\\ell]-\\mathbb E[P])=O(2^{-\\alpha L^2})$\". This result computes the bias exactly when the expansion has one term more than the weights cancel.\n\nLet $\\alpha>0$ and $L\\in\\mathbb N$. For $\\alpha>0$ the nodes are $x_\\ell=2^{-\\alpha\\ell}$ (`ml2rNode α ℓ`), so $x_\\ell^n=2^{-n\\alpha\\ell}$, and the ML2R weights are $w_\\ell=\\prod_{k\\le L,\\,k\\ne\\ell}\\frac{x_k}{x_k-x_\\ell}$ (`ml2rWeight α L ℓ`). Let $E_\\ell\\in\\mathbb R$ ($\\ell\\in\\mathbb N$, standing for $\\mathbb E[P_\\ell]$), $E\\in\\mathbb R$ (standing for $\\mathbb E[P]$) and $a_n\\in\\mathbb R$ with\n\n$$\nE_\\ell-E=\\sum_{n=1}^{L+1}a_n\\,2^{-n\\alpha\\ell}\\qquad(\\ell=0,\\dots,L).\n$$\n\nThen\n\n$$\n\\sum_{\\ell=0}^{L}w_\\ell E_\\ell-E=(-1)^L\\,a_{L+1}\\,2^{-\\alpha L(L+1)/2}.\n$$\n\nSo the first term the weights leave is of order $2^{-\\alpha L(L+1)/2}$: for $L\\ge2$ and $a_{L+1}\\ne0$ this is larger than the $2^{-\\alpha L^2}$ printed in the paper.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §2.3, p. 12 of the author's version.",
+   "explanation": "Split off the last term, $E_\\ell-E=\\sum_{n=1}^{L}a_n x_\\ell^{\\,n}+a_{L+1}x_\\ell^{\\,L+1}$, and apply `ml2r_bias_eq` with $R_\\ell=a_{L+1}x_\\ell^{\\,L+1}$. Then `ml2r_moment_succ` gives $\\sum_\\ell w_\\ell x_\\ell^{\\,L+1}=(-1)^L\\prod_{k=0}^{L}x_k$, and $\\prod_{k=0}^{L}2^{-\\alpha k}=2^{-\\alpha L(L+1)/2}$.",
+   "tags": [
+    "multilevel-monte-carlo",
+    "numerical-analysis"
+   ]
+  },
+  "MLMC.ml2r_rearrange": {
+   "theorem_title": "Giles (2015), §2.3: $\\sum_{\\ell=0}^{L}w_\\ell\\mathbb E[P_\\ell]=\\sum_{\\ell=0}^{L}v_\\ell\\,\\mathbb E[P_\\ell-P_{\\ell-1}]$ with $v_\\ell=\\sum_{\\ell'=\\ell}^{L}w_{\\ell'}$",
+   "natural_language_statement": "Giles (2015), §2.3: \"Next, they re-arrange terms to give $\\sum_{\\ell=0}^{L}w_\\ell\\mathbb E[P_\\ell]=\\sum_{\\ell=0}^{L}v_\\ell\\mathbb E[P_\\ell-P_{\\ell-1}]$ where as usual $P_{-1}\\equiv0$, and the coefficients $v_\\ell$ are defined by $w_\\ell=v_\\ell-v_{\\ell+1}$, with $v_{L+1}\\equiv0$, and hence $v_\\ell=\\sum_{\\ell'=\\ell}^{L}w_{\\ell'}$.\"\n\nLet $\\nu$ be a measure on a measurable space $\\Omega_0$ and $P_\\ell:\\Omega_0\\to\\mathbb R$ ($\\ell\\in\\mathbb N$) integrable, with $\\Delta P_0=P_0$ and $\\Delta P_\\ell=P_\\ell-P_{\\ell-1}$ for $\\ell\\ge1$. For all weights $w:\\mathbb N\\to\\mathbb R$ and every $L\\in\\mathbb N$,\n\n$$\n\\sum_{\\ell=0}^{L}w_\\ell\\int P_\\ell\\,d\\nu=\\sum_{\\ell=0}^{L}v_\\ell\\int\\Delta P_\\ell\\,d\\nu,\\qquad v_\\ell=\\sum_{\\ell'=\\ell}^{L}w_{\\ell'}.\n$$\n\n**Formalization Note** The identity holds for any weights, not only the ML2R weights; $\\Delta P_\\ell$ is `levelDiff Pl ℓ`.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §2.3, p. 12 of the author's version.",
+   "explanation": "Telescoping gives $\\int P_\\ell\\,d\\nu=\\sum_{j=0}^{\\ell}\\int\\Delta P_j\\,d\\nu$ (`sum_integral_levelDiff`). Substituting, the left side is the sum of $w_\\ell\\int\\Delta P_j\\,d\\nu$ over $0\\le j\\le\\ell\\le L$; summing over $\\ell$ first (`Finset.sum_Ico_Ico_comm`) collects the coefficient $\\sum_{\\ell=j}^{L}w_\\ell=v_j$ of $\\int\\Delta P_j\\,d\\nu$.",
+   "tags": [
+    "multilevel-monte-carlo",
+    "probability"
+   ]
+  },
+  "MLMC.ml2r_estimator_mean_variance": {
+   "theorem_title": "Giles (2015), §2.3: the ML2R estimator $Y=\\sum_\\ell N_\\ell^{-1}v_\\ell\\sum_n\\Delta P_\\ell(\\omega^{(\\ell,n)})$ has mean $\\sum_\\ell w_\\ell\\mathbb E[P_\\ell]$ and variance $\\sum_\\ell v_\\ell^2V_\\ell/N_\\ell$",
+   "natural_language_statement": "Giles (2015), §2.3: \"This leads to their Multilevel Richardson–Romberg extrapolation estimator, $Y=\\sum_{\\ell=0}^{L}Y_\\ell$, $Y_\\ell=N_\\ell^{-1}v_\\ell\\sum_n\\big(P^{(\\ell,n)}_\\ell-P^{(\\ell,n)}_{\\ell-1}\\big)$.\" This result gives its mean and variance.\n\nLet $\\nu$ be a measure on a measurable space $\\Omega_0$ (the law of one random input) and let $(\\Omega,\\mathcal F,\\mu)$ be a probability space. Let $\\omega^{(\\ell,n)}:\\Omega\\to\\Omega_0$, $(\\ell,n)\\in\\mathbb N\\times\\mathbb N$, be the random inputs and $P_\\ell:\\Omega_0\\to\\mathbb R$ ($\\ell\\in\\mathbb N$) the level approximations, with $\\Delta P_0=P_0$ and $\\Delta P_\\ell=P_\\ell-P_{\\ell-1}$ for $\\ell\\ge1$. Let $w:\\mathbb N\\to\\mathbb R$ be any weights, $L\\in\\mathbb N$, $v_\\ell=\\sum_{\\ell'=\\ell}^{L}w_{\\ell'}$, $N:\\mathbb N\\to\\mathbb N$, and\n\n$$\nY=\\sum_{\\ell=0}^{L}\\frac{1}{N_\\ell}\\sum_{n=0}^{N_\\ell-1}v_\\ell\\,\\Delta P_\\ell\\big(\\omega^{(\\ell,n)}\\big).\n$$\n\nAssume\n\n1. every input $\\omega^{(\\ell,n)}$ is measurable with law $\\nu$;\n2. the inputs are mutually independent;\n3. every $P_\\ell$ is measurable and square-integrable with respect to $\\nu$;\n4. $N_\\ell\\ge1$ for every $\\ell$.\n\nThen\n\n$$\n\\mathbb E_\\mu[Y]=\\sum_{\\ell=0}^{L}w_\\ell\\int P_\\ell\\,d\\nu\\qquad\\text{and}\\qquad\\mathbb V_\\mu[Y]=\\sum_{\\ell=0}^{L}\\frac{v_\\ell^2\\,V_\\ell}{N_\\ell},\\qquad V_\\ell=\\mathbb V_\\nu[\\Delta P_\\ell].\n$$\n\nWith the ML2R weights the mean is the extrapolated value whose bias `ml2r_bias` computes.\n\n**Formalization Note** $Y$ is written with `blockMean`, the average of $v_\\ell\\,\\Delta P_\\ell$ over the block of inputs $\\omega^{(\\ell,0)},\\dots,\\omega^{(\\ell,N_\\ell-1)}$. \"Law $\\nu$\" means that each input is measure preserving from $\\mu$ to $\\nu$, independence is Mathlib's `iIndepFun`, and $\\mathbb V$ is Mathlib's `variance`. The samples are numbered $0,\\dots,N_\\ell-1$.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §2.3, p. 12 of the author's version.",
+   "explanation": "Each block average is unbiased for $\\int v_\\ell\\Delta P_\\ell\\,d\\nu$ (`integral_blockMean`), so the mean is $\\sum_\\ell v_\\ell\\int\\Delta P_\\ell\\,d\\nu=\\sum_\\ell w_\\ell\\int P_\\ell\\,d\\nu$ by `ml2r_rearrange`. Averages over different blocks of independent inputs are independent (`indepFun_blockMean`), so the variance of the sum is the sum of the variances, and each is $\\mathbb V_\\nu[v_\\ell\\Delta P_\\ell]/N_\\ell=v_\\ell^2V_\\ell/N_\\ell$ (`variance_blockMean`, `variance_const_mul`).",
+   "tags": [
+    "multilevel-monte-carlo",
+    "monte-carlo",
+    "probability"
+   ]
   }
  },
  "definitions": {
@@ -1363,6 +1437,16 @@
    "tags": [
     "multilevel-monte-carlo",
     "monte-carlo"
+   ]
+  },
+  "MLMC_Richardson": {
+   "definition_title": "Giles (2015), §2.3: the nodes $x_\\ell=2^{-\\alpha\\ell}$ and the weights $w_\\ell=\\prod_{k\\ne\\ell}x_k/(x_k-x_\\ell)$ of multilevel Richardson–Romberg extrapolation",
+   "natural_language_statement": "Giles (2015), §2.3, presents the multilevel Richardson–Romberg (ML2R) extrapolation of Lemaire and Pagès (2013), which combines the level means $\\mathbb E[P_\\ell]$, $\\ell=0,\\dots,L$, with weights $w_\\ell$ that cancel the terms $2^{-n\\alpha\\ell}$, $n=1,\\dots,L$, of the weak-error expansion.\n\n**`ml2rNode`.** For $\\alpha\\in\\mathbb R$ and $\\ell\\in\\mathbb N$,\n\n$$\nx_\\ell=2^{-\\alpha\\ell}\\qquad(\\text{real power}).\n$$\n\n**`ml2rWeight`.** For $\\alpha\\in\\mathbb R$ and $L,\\ell\\in\\mathbb N$,\n\n$$\nw_\\ell=\\prod_{k\\in\\{0,\\dots,L\\}\\setminus\\{\\ell\\}}\\frac{x_k}{x_k-x_\\ell},\n$$\n\nthe value at $0$ of the Lagrange basis polynomial of the node $x_\\ell$ among $x_0,\\dots,x_L$. For $\\alpha>0$ the nodes are distinct and these are the weights of the paper (see `ml2r_weights`).\n\n**Formalization Note** Both are total functions: division is Lean's field division (with $t/0=0$), which only matters when $\\alpha=0$; for $\\ell>L$ the product runs over all $k\\le L$. The theorems assume $\\alpha>0$ and use $\\ell\\le L$.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §2.3, pp. 11–12 of the author's version (the weights of Lemaire and Pagès 2013).",
+   "tags": [
+    "multilevel-monte-carlo",
+    "numerical-analysis",
+    "polynomial-interpolation"
    ]
   }
  }

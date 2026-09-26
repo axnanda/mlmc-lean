@@ -12,10 +12,11 @@
 -- * `MlmcLean.Lattice`     — lattice sums over the MIMC index sets `{θ·ℓ ≤ L}`
 -- * `MlmcLean.Theorem2`    — Giles' Theorem 2 (Multi-Index Monte Carlo)
 -- * `MlmcLean.Nested`      — Haas–Giles nested MLMC estimator (9)–(12)
--- * `MlmcLean.ControlVariate` — Giles §1.1–§1.3: plain Monte Carlo, control variates, the cost (1.1)
--- * `MlmcLean.ErrorAnalysis` — Giles §2.1, §3.1, §3.3: MSE budget, weak rate, (3.1), convergence test
+-- * `MlmcLean.ControlVariate` — Giles §1.1–§1.3: plain MC, control variates, the cost (1.1)
+-- * `MlmcLean.ErrorAnalysis` — Giles §2.1, §3.1, §3.3: MSE budget, weak rate, convergence test
 -- * `MlmcLean.LevelDropping` — Giles §2.6: non-geometric MLMC, the level-dropping test (2.5)
 -- * `MlmcLean.Corrections` — Giles §2.1: (2.4) and antithetic estimators, Theorem 1 for them
+-- * `MlmcLean.Richardson` — Giles §2.3: Richardson extrapolation, ML2R weights, bias, estimator
 import MlmcLean.Allocation
 import MlmcLean.Estimator
 import MlmcLean.LevelDiff
@@ -32,3 +33,4 @@ import MlmcLean.ControlVariate
 import MlmcLean.ErrorAnalysis
 import MlmcLean.LevelDropping
 import MlmcLean.Corrections
+import MlmcLean.Richardson

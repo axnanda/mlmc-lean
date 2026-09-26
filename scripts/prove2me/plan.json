@@ -97,7 +97,14 @@
     "MLMC.integral_antitheticDiff",
     "MLMC.giles_theorem1_corrections",
     "MLMC.giles_theorem1_fineCoarse",
-    "MLMC.giles_theorem1_antithetic"
+    "MLMC.giles_theorem1_antithetic",
+    "MLMC.richardson_extrapolation",
+    "MLMC.ml2r_weights",
+    "MLMC.ml2r_moment_succ",
+    "MLMC.ml2r_bias_eq",
+    "MLMC.ml2r_bias",
+    "MLMC.ml2r_rearrange",
+    "MLMC.ml2r_estimator_mean_variance"
   ],
   "bundlePrefix": "MLMC_",
   "paperNamed": [],

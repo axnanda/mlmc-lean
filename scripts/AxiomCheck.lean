@@ -100,6 +100,13 @@ import MlmcLean
 #print axioms MLMC.giles_theorem1_corrections
 #print axioms MLMC.giles_theorem1_fineCoarse
 #print axioms MLMC.giles_theorem1_antithetic
+#print axioms MLMC.richardson_extrapolation
+#print axioms MLMC.ml2r_weights
+#print axioms MLMC.ml2r_moment_succ
+#print axioms MLMC.ml2r_bias_eq
+#print axioms MLMC.ml2r_bias
+#print axioms MLMC.ml2r_rearrange
+#print axioms MLMC.ml2r_estimator_mean_variance
 -- helper lemmas that the prove2.me generator promotes to nodes
 #print axioms MLMC.sqrt_Vb_mul_Cb
 #print axioms MLMC.two_rpow_levelL_le
