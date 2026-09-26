@@ -285,6 +285,10 @@ theorem nestedEstimator_mean_variance [IsProbabilityMeasure μ]
       variance (nestedEstimator Pl Dt ω L Nt NΔ) μ =
         ∑ ℓ ∈ range (L + 1), (variance (Dt ℓ) ν / Nt ℓ +
           variance (fun y => levelDiff Pl ℓ y - Dt ℓ y) ν / NΔ ℓ) := by
+  -- the law `ν` of the inputs is a probability measure, as the image of `μ`
+  haveI : IsProbabilityMeasure ν := by
+    rw [← (hω ((0, true), 0)).map_eq]
+    exact Measure.isProbabilityMeasure_map (hω ((0, true), 0)).measurable.aemeasurable
   have hTm : ∀ q, Measurable (nestedTerm Pl Dt q) := by
     rintro ⟨ℓ, b⟩
     cases b

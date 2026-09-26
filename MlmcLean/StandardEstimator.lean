@@ -145,6 +145,10 @@ theorem mlmcEstimator_mean_variance [IsProbabilityMeasure μ]
     μ[mlmcEstimator Pl ω L N] = ∫ y, Pl L y ∂ν ∧
       variance (mlmcEstimator Pl ω L N) μ =
         ∑ ℓ ∈ range (L + 1), variance (levelDiff Pl ℓ) ν / N ℓ := by
+  -- the law `ν` of the inputs is a probability measure, as the image of `μ`
+  haveI : IsProbabilityMeasure ν := by
+    rw [← (hω (0, 0)).map_eq]
+    exact Measure.isProbabilityMeasure_map (hω (0, 0)).measurable.aemeasurable
   have hPl1 : ∀ ℓ, Integrable (Pl ℓ) ν := fun ℓ => (hPl ℓ).integrable one_le_two
   constructor
   · simp only [mlmcEstimator]

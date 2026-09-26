@@ -1077,10 +1077,9 @@ theorem hasSum_integral_crossDiff (P : Ω → ℝ) (Pℓ : (Fin D → ℕ) → �
     (hg.mul_left c₁).of_norm_bounded fun ℓ => (Real.norm_eq_abs _).trans_le (h_ii ℓ)
   -- the partial sums over the boxes converge both to the sum of the series and to `E[P]`
   have hbox : Tendsto (fun n : ℕ => box D (n + 1)) atTop atTop :=
-    Monotone.tendsto_atTop_atTop (fun a b hab => Finset.le_iff_subset.2 (box_mono (by omega)))
-      fun u => by
-        obtain ⟨n, hn⟩ := exists_subset_box u
-        exact ⟨n, Finset.le_iff_subset.2 (hn.trans (box_mono (Nat.le_succ n)))⟩
+    Monotone.tendsto_atTop_atTop (fun a b hab => box_mono (by omega)) fun u => by
+      obtain ⟨n, hn⟩ := exists_subset_box u
+      exact ⟨n, hn.trans (box_mono (Nat.le_succ n))⟩
   have hconst : Tendsto (fun n : ℕ => fun _ : Fin D => n) atTop atTop :=
     tendsto_atTop_atTop.2 fun k => ⟨univ.sup k, fun n hn =>
       Pi.le_def.2 fun d => (Finset.le_sup (f := k) (mem_univ d)).trans hn⟩
