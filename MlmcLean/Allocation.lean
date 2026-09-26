@@ -1,5 +1,6 @@
 import Mathlib.Analysis.Real.Sqrt
 import Mathlib.Algebra.BigOperators.Field
+import Mathlib.Algebra.BigOperators.Fin
 import Mathlib.Algebra.Order.Floor.Semiring
 import Mathlib.Algebra.Order.BigOperators.Ring.Finset
 import Mathlib.Tactic.LinearCombination

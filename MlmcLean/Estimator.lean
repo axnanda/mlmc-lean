@@ -50,7 +50,8 @@ omit [IsProbabilityMeasure μ] in
 /-- Giles (2.3), the **mean** of the multilevel estimator.  Condition (ii) of Theorem 1 is
 `E[Y_0] = E[P_0]` and `E[Y_ℓ] = E[P_ℓ − P_{ℓ−1}]` for `ℓ > 0`; the telescoping sum
 `E[P_L] = E[P_0] + ∑_{ℓ=1}^{L} E[P_ℓ − P_{ℓ−1}]` (§1.3, p. 4) then gives
-`E[∑_{ℓ=0}^{L} Y_ℓ] = E[P_L]`.  Here `Pℓ ℓ` are the level approximations. -/
+`E[∑_{ℓ=0}^{L} Y_ℓ] = E[P_L]`.  Here `Pℓ ℓ` are the level approximations; the identity holds for
+any measure `μ`, in particular on a probability space. -/
 theorem mlmc_mean (Pℓ : ℕ → Ω → ℝ) (Y : ℕ → Ω → ℝ) (L : ℕ)
     (hY : ∀ ℓ, Integrable (Y ℓ) μ) (hPℓ : ∀ ℓ, Integrable (Pℓ ℓ) μ)
     (h_ii₀ : μ[Y 0] = μ[Pℓ 0])
@@ -75,7 +76,8 @@ theorem mlmc_mean (Pℓ : ℕ → Ω → ℝ) (Y : ℕ → Ω → ℝ) (L : ℕ)
 omit [IsProbabilityMeasure μ] in
 /-- The first step of Giles (2.3), the **variance** of the multilevel estimator: for pairwise
 independent square-integrable level estimators, `V[∑ Y_ℓ] = ∑ V[Y_ℓ]` (with `V[Y_ℓ] = N_ℓ⁻¹V_ℓ`
-this is (2.3), see `variance_sample_mean`). -/
+this is (2.3), see `variance_sample_mean`).  It holds for any measure `μ`, in particular on a
+probability space. -/
 theorem mlmc_variance (Y : ℕ → Ω → ℝ) (L : ℕ) (hY : ∀ ℓ, MemLp (Y ℓ) 2 μ)
     (hind : Set.Pairwise ↑(range (L + 1)) fun i j => IndepFun (Y i) (Y j) μ) :
     variance (∑ ℓ ∈ range (L + 1), Y ℓ) μ = ∑ ℓ ∈ range (L + 1), variance (Y ℓ) μ :=

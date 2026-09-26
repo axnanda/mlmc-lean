@@ -40,9 +40,11 @@ namespace MLMC
 
 variable {Ω : Type*} [MeasurableSpace Ω] {μ : Measure Ω} [IsProbabilityMeasure μ]
 
+omit [IsProbabilityMeasure μ] in
 /-- The variance of a Monte Carlo average of `N` pairwise independent samples of common variance
 `v` is `v / N` (Giles 2015, §1.1, p. 2: "The variance of this estimate is `N⁻¹V[P]`"; this is how
-`V[Y_ℓ] = N_ℓ⁻¹ V_ℓ` in (2.3) arises). -/
+`V[Y_ℓ] = N_ℓ⁻¹ V_ℓ` in (2.2)–(2.3) arises).  It holds for any measure `μ`, in particular on a
+probability space. -/
 theorem variance_sample_mean (X : ℕ → Ω → ℝ) (N : ℕ) (hN : 0 < N) (v : ℝ)
     (hX : ∀ n, MemLp (X n) 2 μ) (hvar : ∀ n, variance (X n) μ = v)
     (hind : Set.Pairwise ↑(range N) fun i j => IndepFun (X i) (X j) μ) :
