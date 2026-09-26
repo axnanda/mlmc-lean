@@ -1313,6 +1313,97 @@
     "monte-carlo",
     "probability"
    ]
+  },
+  "MLMC.multiOutput_variance": {
+   "theorem_title": "Giles (2015), §2.5: with $V_\\ell=\\max_{m\\in M}V_{\\ell,m}/\\varepsilon_m^2$, $\\sum_\\ell V_\\ell/N_\\ell\\le\\tfrac12$ implies $\\sum_\\ell V_{\\ell,m}/N_\\ell\\le\\tfrac12\\varepsilon_m^2$ for every output $m$",
+   "natural_language_statement": "Giles (2015), §2.5: \"If there is a desired accuracy $\\varepsilon_m$ for the $m$th output, then a simple approach … is to define $V_\\ell\\equiv\\max_m V_{\\ell,m}/\\varepsilon_m^2$, where $V_{\\ell,m}$ is the variance of the multilevel estimator on level $\\ell$ for the $m$th output. Enforcing the constraint $\\sum_{\\ell=0}^{L}N_\\ell^{-1}V_\\ell\\le\\tfrac12$ is then sufficient to ensure that all of the individual variance constraints are satisfied.\"\n\nLet $M$ be a nonempty finite set of outputs, $V_{\\ell,m}\\in\\mathbb R$ ($\\ell\\in\\mathbb N$, $m\\in M$), $\\varepsilon_m>0$ ($m\\in M$), $L\\in\\mathbb N$ and $N_\\ell>0$ real ($\\ell=0,\\dots,L$). With $V_\\ell=\\max_{m\\in M}V_{\\ell,m}/\\varepsilon_m^2$, if\n\n$$\n\\sum_{\\ell=0}^{L}\\frac{V_\\ell}{N_\\ell}\\le\\frac12,\n$$\n\nthen for every $m\\in M$\n\n$$\n\\sum_{\\ell=0}^{L}\\frac{V_{\\ell,m}}{N_\\ell}\\le\\frac{\\varepsilon_m^2}{2}.\n$$\n\n**Formalization Note** The maximum is `Finset.sup'`. The sample numbers are real; integer sample numbers are a special case.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §2.5, pp. 16–17 of the author's version.",
+   "explanation": "For each $m$, $V_{\\ell,m}/N_\\ell=\\varepsilon_m^2\\,(V_{\\ell,m}/\\varepsilon_m^2)/N_\\ell\\le\\varepsilon_m^2\\,V_\\ell/N_\\ell$ because $V_{\\ell,m}/\\varepsilon_m^2\\le V_\\ell$ and $N_\\ell>0$. Summing over $\\ell$ gives at most $\\varepsilon_m^2\\cdot\\tfrac12$.",
+   "tags": [
+    "multilevel-monte-carlo",
+    "optimization"
+   ]
+  },
+  "MLMC.multiOutput_optimal": {
+   "theorem_title": "Giles (2015), §2.5: several outputs — least cost $2(\\sum_\\ell\\sqrt{V_\\ell C_\\ell})^2$ for $V_\\ell=\\max_m V_{\\ell,m}/\\varepsilon_m^2$; its allocation meets each output's constraint",
+   "natural_language_statement": "Giles (2015), §2.5: with $V_\\ell\\equiv\\max_m V_{\\ell,m}/\\varepsilon_m^2$, enforcing $\\sum_{\\ell=0}^{L}N_\\ell^{-1}V_\\ell\\le\\tfrac12$ \"is then sufficient to ensure that all of the individual variance constraints are satisfied, and the standard Lagrange multiplier approach outlined in Section 1.3 can be used to determine the optimal number of samples to use on each level.\"\n\nLet $M$ be a nonempty finite set of outputs, $V_{\\ell,m}>0$, $\\varepsilon_m>0$, costs $C_\\ell>0$ and $L\\in\\mathbb N$, and let $V_\\ell=\\max_{m\\in M}V_{\\ell,m}/\\varepsilon_m^2$. Then\n\n1. among all real allocations $N_\\ell>0$ ($\\ell=0,\\dots,L$) with $\\sum_{\\ell=0}^{L}V_\\ell/N_\\ell\\le\\tfrac12$, the least cost $\\sum_{\\ell=0}^{L}N_\\ell C_\\ell$ is\n\n$$\n2\\Big(\\sum_{\\ell=0}^{L}\\sqrt{V_\\ell C_\\ell}\\Big)^2\n$$\n\n(attained);\n2. the Lagrange allocation for this problem, $N_\\ell=2\\sqrt{V_\\ell/C_\\ell}\\,\\sum_{j=0}^{L}\\sqrt{V_jC_j}$, satisfies $\\sum_{\\ell=0}^{L}V_{\\ell,m}/N_\\ell\\le\\tfrac12\\varepsilon_m^2$ for every output $m\\in M$.\n\n**Formalization Note** The allocation in part 2 is `lagrangeN (range (L + 1)) V C (1 / 2)` with $V_\\ell=\\max_m V_{\\ell,m}/\\varepsilon_m^2$ (`Finset.sup'`). Part 1 is stated with `IsLeast`.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §2.5, p. 17 of the author's version, with (1.1) and the Lagrange multiplier argument of §1.3 (p. 4).",
+   "explanation": "The reduced variances $V_\\ell$ are positive, so `optimal_cost_isLeast` with variance target $\\tau=\\tfrac12$ gives the least cost $\\tau^{-1}(\\sum_\\ell\\sqrt{V_\\ell C_\\ell})^2=2(\\sum_\\ell\\sqrt{V_\\ell C_\\ell})^2$ and shows that the Lagrange allocation is positive and meets $\\sum_\\ell V_\\ell/N_\\ell=\\tfrac12$. `multiOutput_variance` then gives every individual constraint.",
+   "tags": [
+    "multilevel-monte-carlo",
+    "optimization"
+   ]
+  },
+  "MLMC.integral_norm_add_sq_of_indepFun": {
+   "theorem_title": "Giles (2015), §2.5: for independent zero-mean random vectors in a Hilbert space, $\\mathbb E\\|a+b\\|^2=\\mathbb E\\|a\\|^2+\\mathbb E\\|b\\|^2$",
+   "natural_language_statement": "Giles (2015), §2.5: \"When using the 2-norm, this extends to independent random vectors $a$ and $b$, each with zero mean, since $\\mathbb E[\\|a+b\\|^2]=\\mathbb E[\\|a\\|^2]+\\mathbb E[\\|b\\|^2]$, and similarly to random functions with a 2-norm based on an inner product.\"\n\nLet $(\\Omega,\\mathcal F,\\mu)$ be a probability space and $E$ a real Hilbert space (a complete real inner product space) with its Borel $\\sigma$-algebra. Let $a,b:\\Omega\\to E$ be independent and square-integrable with $\\mathbb E[a]=\\mathbb E[b]=0$ (Bochner integrals). Then\n\n$$\n\\mathbb E\\big[\\|a+b\\|^2\\big]=\\mathbb E\\big[\\|a\\|^2\\big]+\\mathbb E\\big[\\|b\\|^2\\big].\n$$\n\n**Formalization Note** $E$ is any `InnerProductSpace ℝ E` that is complete, with `BorelSpace E`; this covers $\\mathbb R^n$ with the 2-norm and $L^2$ function spaces. Independence is Mathlib's `IndepFun`.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §2.5, p. 17 of the author's version.",
+   "explanation": "Expand $\\|a+b\\|^2=\\|a\\|^2+2\\langle a,b\\rangle+\\|b\\|^2$. The inner product is integrable (it is bounded by $\\tfrac12(\\|a\\|^2+\\|b\\|^2)$), and for independent integrable $a$, $b$ Mathlib's `IndepFun.integral_bilin` with the continuous bilinear map $\\langle\\cdot,\\cdot\\rangle$ gives $\\mathbb E\\langle a,b\\rangle=\\langle\\mathbb E a,\\mathbb E b\\rangle=0$.",
+   "tags": [
+    "multilevel-monte-carlo",
+    "probability"
+   ]
+  },
+  "MLMC.integral_add_sq_of_indepFun": {
+   "theorem_title": "Giles (2015), §2.5: for independent zero-mean real random variables, $\\mathbb E[(a+b)^2]=\\mathbb E[a^2]+\\mathbb E[b^2]$",
+   "natural_language_statement": "Giles (2015), §2.5: \"One slight complication is that if $a$ and $b$ are two independent scalar random variables with zero mean then $\\mathbb E[(a+b)^2]=\\mathbb E[a^2]+\\mathbb E[b^2]$.\"\n\nLet $(\\Omega,\\mathcal F,\\mu)$ be a probability space and $a,b:\\Omega\\to\\mathbb R$ independent and square-integrable with $\\mathbb E[a]=\\mathbb E[b]=0$. Then\n\n$$\n\\mathbb E\\big[(a+b)^2\\big]=\\mathbb E\\big[a^2\\big]+\\mathbb E\\big[b^2\\big].\n$$",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §2.5, p. 17 of the author's version.",
+   "explanation": "This is the case $E=\\mathbb R$ of `integral_norm_add_sq_of_indepFun`, since $\\|x\\|^2=|x|^2=x^2$ for real $x$.",
+   "tags": [
+    "multilevel-monte-carlo",
+    "probability"
+   ]
+  },
+  "MLMC.integral_norm_sum_sq_of_indepFun": {
+   "theorem_title": "Giles (2015), §2.5: for pairwise independent zero-mean random vectors in a Hilbert space, $\\mathbb E\\|\\sum_i X_i\\|^2=\\sum_i\\mathbb E\\|X_i\\|^2$",
+   "natural_language_statement": "Giles (2015), §2.5, extends $\\mathbb E[\\|a+b\\|^2]=\\mathbb E[\\|a\\|^2]+\\mathbb E[\\|b\\|^2]$ from scalars to the 2-norm of random vectors and functions; this is what lets the variance of the combined multilevel estimator be written \"in the usual form as $\\sum_\\ell N_\\ell^{-1}V_\\ell$\". This result is the identity for any finite number of terms.\n\nLet $(\\Omega,\\mathcal F,\\mu)$ be a probability space and $E$ a real Hilbert space (a complete real inner product space) with its Borel $\\sigma$-algebra. Let $s$ be a finite index set and $X_i:\\Omega\\to E$ ($i\\in s$) square-integrable, pairwise independent, with $\\mathbb E[X_i]=0$. Then\n\n$$\n\\mathbb E\\Big[\\Big\\|\\sum_{i\\in s}X_i\\Big\\|^2\\Big]=\\sum_{i\\in s}\\mathbb E\\big[\\|X_i\\|^2\\big].\n$$\n\n**Formalization Note** Pairwise independence (`Set.Pairwise` of `IndepFun`) is weaker than mutual independence.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §2.5, p. 17 of the author's version.",
+   "explanation": "Write $\\|\\sum_i X_i\\|^2=\\sum_i\\sum_j\\langle X_i,X_j\\rangle$; every term is integrable because the $X_i$ are square-integrable. For $i\\ne j$, independence gives $\\mathbb E\\langle X_i,X_j\\rangle=\\langle\\mathbb E X_i,\\mathbb E X_j\\rangle=0$, and the diagonal terms are $\\mathbb E\\|X_i\\|^2$.",
+   "tags": [
+    "multilevel-monte-carlo",
+    "probability"
+   ]
+  },
+  "MLMC.integral_norm_sub_sq_eq": {
+   "theorem_title": "Giles (2015), §2.5 with (2.1): in a Hilbert space, $\\mathbb E\\|Z-m\\|^2=\\mathbb E\\|Z-\\mathbb E Z\\|^2+\\|\\mathbb E Z-m\\|^2$",
+   "natural_language_statement": "Giles (2015), §2.5: for infinite-dimensional outputs \"the theory carries over by making the substitutions $|\\mathbb E[P_\\ell]-\\mathbb E[P]|\\to\\|\\mathbb E[P_\\ell]-\\mathbb E[P]\\|$, $\\mathbb V[P_\\ell-P_{\\ell-1}]\\to\\mathbb E[\\|P_\\ell-P_{\\ell-1}-\\mathbb E[P_\\ell-P_{\\ell-1}]\\|^2]$\". With these substitutions the mean-square-error decomposition (2.1), $\\mathrm{MSE}=\\mathbb V[Y]+(\\mathbb E[Y]-\\mathbb E[P])^2$, becomes this result.\n\nLet $(\\Omega,\\mathcal F,\\mu)$ be a probability space and $E$ a real Hilbert space (a complete real inner product space) with its Borel $\\sigma$-algebra. Let $Z:\\Omega\\to E$ be square-integrable and $m\\in E$. Then\n\n$$\n\\mathbb E\\big[\\|Z-m\\|^2\\big]=\\mathbb E\\big[\\|Z-\\mathbb E[Z]\\|^2\\big]+\\big\\|\\mathbb E[Z]-m\\big\\|^2.\n$$",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §2.5, p. 17 of the author's version, and eq. (2.1), p. 6.",
+   "explanation": "Write $Z-m=(Z-\\mathbb E Z)+(\\mathbb E Z-m)$ and expand the square. The cross term has expectation $2\\langle\\mathbb E Z-m,\\mathbb E[Z-\\mathbb E Z]\\rangle=0$, since the integral commutes with the continuous linear functional $\\langle\\mathbb E Z-m,\\cdot\\rangle$ (`integral_inner`); the last term is constant.",
+   "tags": [
+    "multilevel-monte-carlo",
+    "probability"
+   ]
+  },
+  "MLMC.mlmc_mse_hilbert": {
+   "theorem_title": "Giles (2015), §2.5 with (2.1), (2.3): in a Hilbert space the multilevel MSE is $\\sum_\\ell\\mathbb E\\|Y_\\ell-\\mathbb E Y_\\ell\\|^2+\\|\\mathbb E[P_L]-m\\|^2$",
+   "natural_language_statement": "Giles (2015), §2.5: the MLMC theory carries over to outputs in a normed space \"by making the substitutions\" $|\\cdot|\\to\\|\\cdot\\|$ and $\\mathbb V[\\cdot]\\to\\mathbb E[\\|\\cdot-\\mathbb E[\\cdot]\\|^2]$; with the 2-norm of an inner product the variance of the combined estimator keeps \"the usual form\". This result is (2.1) with (2.3) in that setting.\n\nLet $(\\Omega,\\mathcal F,\\mu)$ be a probability space and $E$ a real Hilbert space (a complete real inner product space) with its Borel $\\sigma$-algebra. Let $P_\\ell:\\Omega\\to E$ ($\\ell\\in\\mathbb N$) be integrable and $Y_\\ell:\\Omega\\to E$ square-integrable, with $Y_0,\\dots,Y_L$ pairwise independent and condition ii): $\\mathbb E[Y_0]=\\mathbb E[P_0]$ and $\\mathbb E[Y_{\\ell+1}]=\\mathbb E[P_{\\ell+1}-P_\\ell]$ for all $\\ell$. Then for every $m\\in E$\n\n$$\n\\mathbb E\\Big[\\Big\\|\\sum_{\\ell=0}^{L}Y_\\ell-m\\Big\\|^2\\Big]=\\sum_{\\ell=0}^{L}\\mathbb E\\big[\\|Y_\\ell-\\mathbb E[Y_\\ell]\\|^2\\big]+\\big\\|\\mathbb E[P_L]-m\\big\\|^2.\n$$\n\nWith $m=\\mathbb E[P]$ the left side is the mean-square error of the multilevel estimator.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §2.5, p. 17 of the author's version, with (2.1)–(2.3), p. 6.",
+   "explanation": "Condition ii) telescopes to $\\sum_\\ell\\mathbb E[Y_\\ell]=\\mathbb E[P_L]$. `integral_norm_sub_sq_eq` splits the MSE into $\\mathbb E\\|\\sum_\\ell(Y_\\ell-\\mathbb E Y_\\ell)\\|^2+\\|\\mathbb E[P_L]-m\\|^2$, and `integral_norm_sum_sq_of_indepFun` applied to the centred, pairwise independent $Y_\\ell-\\mathbb E Y_\\ell$ gives the sum of their mean squares.",
+   "tags": [
+    "multilevel-monte-carlo",
+    "probability"
+   ]
+  },
+  "MLMC.giles_theorem1_hilbert": {
+   "theorem_title": "Giles (2015), §2.5: Theorem 1 for outputs in a Hilbert space, with $|\\cdot|\\to\\|\\cdot\\|$ and $\\mathbb V[\\cdot]\\to\\mathbb E\\|\\cdot-\\mathbb E[\\cdot]\\|^2$",
+   "natural_language_statement": "Giles (2015), §2.5: \"The extension of the theory to infinite-dimensional outputs requires the definition of an appropriate norm $\\|\\cdot\\|$, and then to a large extent the theory carries over by making the substitutions $|\\mathbb E[P_\\ell]-\\mathbb E[P]|\\to\\|\\mathbb E[P_\\ell]-\\mathbb E[P]\\|$, $\\mathbb V[P_\\ell-P_{\\ell-1}]\\to\\mathbb E[\\|P_\\ell-P_{\\ell-1}-\\mathbb E[P_\\ell-P_{\\ell-1}]\\|^2]$.\" This result is Theorem 1 (§2.1) with these substitutions, for the 2-norm of a real Hilbert space.\n\nLet $(\\Omega,\\mathcal F,\\mu)$ be a probability space and $E$ a real Hilbert space (a complete real inner product space) with its Borel $\\sigma$-algebra. Let $P:\\Omega\\to E$ and its approximations $P_\\ell:\\Omega\\to E$ be integrable. For every level $\\ell$ and sample size $n\\ge1$ let $Y_{\\ell,n}:\\Omega\\to E$ be a square-integrable estimator and $\\mathrm{Cost}_{\\ell,n}:\\Omega\\to\\mathbb R$ its integrable cost, and let $V_\\ell,C_\\ell\\in\\mathbb R$. Let $\\alpha,\\beta,\\gamma,c_1,c_2,c_3>0$ with $\\alpha\\ge\\tfrac12\\min(\\beta,\\gamma)$. Assume\n\n1. for every $N:\\mathbb N\\to\\mathbb N$ with all $N_\\ell\\ge1$, the estimators $Y_{\\ell,N_\\ell}$ ($\\ell\\in\\mathbb N$) are pairwise independent;\n2. $\\mathbb E[\\mathrm{Cost}_{\\ell,n}]=n\\,C_\\ell$ for $n\\ge1$;\n3. (i) $\\big\\|\\mathbb E[P_\\ell-P]\\big\\|\\le c_1 2^{-\\alpha\\ell}$;\n4. (ii) $\\mathbb E[Y_{0,n}]=\\mathbb E[P_0]$ and $\\mathbb E[Y_{\\ell+1,n}]=\\mathbb E[P_{\\ell+1}-P_\\ell]$ for $n\\ge1$;\n5. $\\mathbb E\\big[\\|Y_{\\ell,n}-\\mathbb E[Y_{\\ell,n}]\\|^2\\big]=V_\\ell/n$ for $n\\ge1$, and (iii) $V_\\ell\\le c_2 2^{-\\beta\\ell}$;\n6. (iv) $C_\\ell\\le c_3 2^{\\gamma\\ell}$.\n\nThen there is $c_4>0$ such that for every $0<\\varepsilon<e^{-1}$ there exist $L\\in\\mathbb N$ and $N:\\mathbb N\\to\\mathbb N$ with all $N_\\ell\\ge1$ for which $Y=\\sum_{\\ell=0}^{L}Y_{\\ell,N_\\ell}$ satisfies $\\mathbb E\\big[\\|Y-\\mathbb E[P]\\|^2\\big]<\\varepsilon^2$ and\n\n$$\n\\mathbb E\\Big[\\sum_{\\ell=0}^{L}\\mathrm{Cost}_{\\ell,N_\\ell}\\Big]\\le\\begin{cases}c_4\\,\\varepsilon^{-2},&\\beta>\\gamma,\\\\c_4\\,\\varepsilon^{-2}(\\log\\varepsilon)^2,&\\beta=\\gamma,\\\\c_4\\,\\varepsilon^{-2-(\\gamma-\\beta)/\\alpha},&\\beta<\\gamma.\\end{cases}\n$$\n\n**Formalization Note** Expectations of $E$-valued maps are Bochner integrals. The cost bound is `c₄ * complexityBound α β γ ε`, as in `giles_theorem1`.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §2.5, p. 17 of the author's version, and Theorem 1 (§2.1, pp. 6–7).",
+   "explanation": "The deterministic core of Theorem 1 (`mlmc_complexity_core`) chooses $L$ and $N_\\ell$ with $(c_1 2^{-\\alpha L})^2+\\sum_\\ell c_2 2^{-\\beta\\ell}/N_\\ell<\\varepsilon^2$ and cost within the bound. By `mlmc_mse_hilbert` the mean-square error equals $\\sum_\\ell V_\\ell/N_\\ell+\\|\\mathbb E[P_L]-\\mathbb E[P]\\|^2$, which (i) and (iii) bound by the same quantity; the expected cost is $\\sum_\\ell N_\\ell C_\\ell$ by linearity, bounded using (iv).",
+   "tags": [
+    "multilevel-monte-carlo",
+    "complexity",
+    "probability"
+   ]
+  },
+  "MLMC.sq_norm_add_of_indepFun_fails_sup": {
+   "theorem_title": "Giles (2015), §2.5: for the sup norm on $\\mathbb R^2$ there are independent zero-mean $a,b$ with $\\mathbb E\\|a+b\\|^2\\ne\\mathbb E\\|a\\|^2+\\mathbb E\\|b\\|^2$",
+   "natural_language_statement": "Giles (2015), §2.5: after $\\mathbb E[\\|a+b\\|^2]=\\mathbb E[\\|a\\|^2]+\\mathbb E[\\|b\\|^2]$ for the 2-norm: \"However this does not necessarily apply for other norms, and so the variance for the combined multilevel estimator can not necessarily be expressed in the usual form as $\\sum_\\ell N_\\ell^{-1}V_\\ell$.\"\n\nThere exist a probability space $(\\Omega,\\mathcal F,\\mu)$ and random vectors $a,b:\\Omega\\to\\mathbb R^2$ such that, for the sup norm $\\|(x,y)\\|_\\infty=\\max(|x|,|y|)$,\n\n1. $a$ and $b$ are independent and square-integrable, with $\\mathbb E[a]=\\mathbb E[b]=0$;\n2. $\\mathbb E\\big[\\|a+b\\|_\\infty^2\\big]=1$;\n3. $\\mathbb E\\big[\\|a\\|_\\infty^2\\big]+\\mathbb E\\big[\\|b\\|_\\infty^2\\big]=2$.\n\nSo the identity of the 2-norm fails for the sup norm.\n\n**Formalization Note** $\\mathbb R^2$ is Lean's `ℝ × ℝ`, whose norm in Mathlib is the sup norm. The space $\\Omega$ is existentially quantified in the universe `Type`.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §2.5, p. 17 of the author's version.",
+   "explanation": "Take two independent fair signs $s_1,s_2=\\pm1$ (the product of two fair Bernoulli measures on $\\{\\text{true},\\text{false}\\}$) and $a=(s_1,0)$, $b=(0,s_2)$. They are independent because they depend on different coordinates (`indepFun_prod`), and have mean zero. Always $\\|a\\|_\\infty=\\|b\\|_\\infty=1$ and $\\|a+b\\|_\\infty=\\max(|s_1|,|s_2|)=1$, so the two sides are $1$ and $2$.",
+   "tags": [
+    "multilevel-monte-carlo",
+    "probability"
+   ]
   }
  },
  "definitions": {
