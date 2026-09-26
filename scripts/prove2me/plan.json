@@ -92,7 +92,12 @@
     "MLMC.levelDrop_test",
     "MLMC.levelDrop_variance",
     "MLMC.levelDrop_perfect_correlation",
-    "MLMC.levelDrop_uncorrelated"
+    "MLMC.levelDrop_uncorrelated",
+    "MLMC.integral_fineCoarseDiff",
+    "MLMC.integral_antitheticDiff",
+    "MLMC.giles_theorem1_corrections",
+    "MLMC.giles_theorem1_fineCoarse",
+    "MLMC.giles_theorem1_antithetic"
   ],
   "bundlePrefix": "MLMC_",
   "paperNamed": [],

@@ -95,6 +95,11 @@ import MlmcLean
 #print axioms MLMC.levelDrop_variance
 #print axioms MLMC.levelDrop_perfect_correlation
 #print axioms MLMC.levelDrop_uncorrelated
+#print axioms MLMC.integral_fineCoarseDiff
+#print axioms MLMC.integral_antitheticDiff
+#print axioms MLMC.giles_theorem1_corrections
+#print axioms MLMC.giles_theorem1_fineCoarse
+#print axioms MLMC.giles_theorem1_antithetic
 -- helper lemmas that the prove2.me generator promotes to nodes
 #print axioms MLMC.sqrt_Vb_mul_Cb
 #print axioms MLMC.two_rpow_levelL_le

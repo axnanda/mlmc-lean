@@ -15,6 +15,7 @@
 -- * `MlmcLean.ControlVariate` — Giles §1.1–§1.3: plain Monte Carlo, control variates, the cost (1.1)
 -- * `MlmcLean.ErrorAnalysis` — Giles §2.1, §3.1, §3.3: MSE budget, weak rate, (3.1), convergence test
 -- * `MlmcLean.LevelDropping` — Giles §2.6: non-geometric MLMC, the level-dropping test (2.5)
+-- * `MlmcLean.Corrections` — Giles §2.1: (2.4) and antithetic estimators, Theorem 1 for them
 import MlmcLean.Allocation
 import MlmcLean.Estimator
 import MlmcLean.LevelDiff
@@ -30,3 +31,4 @@ import MlmcLean.Nested
 import MlmcLean.ControlVariate
 import MlmcLean.ErrorAnalysis
 import MlmcLean.LevelDropping
+import MlmcLean.Corrections
