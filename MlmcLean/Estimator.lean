@@ -46,6 +46,7 @@ theorem mse_eq_variance_add_sq_bias {Y : Ω → ℝ} (hY : MemLp Y 2 μ) (m : �
   rw [h5] at h2
   linarith
 
+omit [IsProbabilityMeasure μ] in
 /-- Giles (2.3), the **mean** of the multilevel estimator.  Condition (ii) of Theorem 1 is
 `E[Y_0] = E[P_0]` and `E[Y_ℓ] = E[P_ℓ − P_{ℓ−1}]` for `ℓ > 0`; the telescoping sum
 `E[P_L] = E[P_0] + ∑_{ℓ=1}^{L} E[P_ℓ − P_{ℓ−1}]` (§1.3, p. 4) then gives
@@ -71,6 +72,7 @@ theorem mlmc_mean (Pℓ : ℕ → Ω → ℝ) (Y : ℕ → Ω → ℝ) (L : ℕ)
   rw [Finset.sum_congr rfl htel, htele L]
   ring
 
+omit [IsProbabilityMeasure μ] in
 /-- The first step of Giles (2.3), the **variance** of the multilevel estimator: for pairwise
 independent square-integrable level estimators, `V[∑ Y_ℓ] = ∑ V[Y_ℓ]` (with `V[Y_ℓ] = N_ℓ⁻¹V_ℓ`
 this is (2.3), see `variance_sample_mean`). -/
