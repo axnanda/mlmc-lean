@@ -297,17 +297,19 @@ theorem nestedEstimator_mean_variance [IsProbabilityMeasure μ]
     · exact hDt ℓ
   have hT1 : ∀ q, Integrable (nestedTerm Pl Dt q) ν := fun q => (hT q).integrable one_le_two
   have hPl1 : ∀ ℓ, Integrable (Pl ℓ) ν := fun ℓ => (hPl ℓ).integrable one_le_two
+  have hB : ∀ q N, Integrable (blockMean (nestedTerm Pl Dt) ω q N) μ := fun q N =>
+    (memLp_blockMean hω hT q N).integrable one_le_two
   constructor
   · -- (9): the expectations telescope
+    have hint : ∀ ℓ, Integrable (fun x => blockMean (nestedTerm Pl Dt) ω (ℓ, true) (Nt ℓ) x +
+        blockMean (nestedTerm Pl Dt) ω (ℓ, false) (NΔ ℓ) x) μ := fun ℓ =>
+      (hB (ℓ, true) (Nt ℓ)).add (hB (ℓ, false) (NΔ ℓ))
     simp only [nestedEstimator]
-    rw [integral_finsetSum _ fun ℓ _ =>
-      ((memLp_blockMean hω hT (ℓ, true) (Nt ℓ)).integrable one_le_two).add
-        ((memLp_blockMean hω hT (ℓ, false) (NΔ ℓ)).integrable one_le_two)]
+    rw [integral_finsetSum _ fun ℓ _ => hint ℓ]
     have hterm : ∀ ℓ, ∫ x, (blockMean (nestedTerm Pl Dt) ω (ℓ, true) (Nt ℓ) x +
         blockMean (nestedTerm Pl Dt) ω (ℓ, false) (NΔ ℓ) x) ∂μ = ∫ y, levelDiff Pl ℓ y ∂ν := by
       intro ℓ
-      rw [integral_add ((memLp_blockMean hω hT (ℓ, true) (Nt ℓ)).integrable one_le_two)
-          ((memLp_blockMean hω hT (ℓ, false) (NΔ ℓ)).integrable one_le_two),
+      rw [integral_add (hB (ℓ, true) (Nt ℓ)) (hB (ℓ, false) (NΔ ℓ)),
         integral_blockMean hω hT1 (ℓ, true) (hNt ℓ), integral_blockMean hω hT1 (ℓ, false) (hNΔ ℓ)]
       simp only [nestedTerm_true, nestedTerm_false]
       rw [integral_sub (integrable_levelDiff hPl1 ℓ) ((hDt ℓ).integrable one_le_two)]
@@ -338,13 +340,17 @@ theorem nestedCost_mean (costT costΔ : ℕ → ℕ → Ω → ℝ) (Ct CΔ : �
     (L : ℕ) (Nt NΔ : ℕ → ℕ) :
     μ[nestedCost costT costΔ L Nt NΔ] =
       ∑ ℓ ∈ range (L + 1), ((Nt ℓ : ℝ) * Ct ℓ + (NΔ ℓ : ℝ) * CΔ ℓ) := by
+  have hTs : ∀ ℓ, Integrable (fun x => ∑ n ∈ range (Nt ℓ), costT ℓ n x) μ := fun ℓ =>
+    integrable_finsetSum _ fun n _ => hT ℓ n
+  have hΔs : ∀ ℓ, Integrable (fun x => ∑ n ∈ range (NΔ ℓ), costΔ ℓ n x) μ := fun ℓ =>
+    integrable_finsetSum _ fun n _ => hΔ ℓ n
+  have hint : ∀ ℓ, Integrable (fun x => ∑ n ∈ range (Nt ℓ), costT ℓ n x +
+      ∑ n ∈ range (NΔ ℓ), costΔ ℓ n x) μ := fun ℓ => (hTs ℓ).add (hΔs ℓ)
   simp only [nestedCost]
-  rw [integral_finsetSum _ fun ℓ _ =>
-    (integrable_finsetSum _ fun n _ => hT ℓ n).add (integrable_finsetSum _ fun n _ => hΔ ℓ n)]
+  rw [integral_finsetSum _ fun ℓ _ => hint ℓ]
   refine Finset.sum_congr rfl fun ℓ _ => ?_
-  rw [integral_add (integrable_finsetSum _ fun n _ => hT ℓ n)
-      (integrable_finsetSum _ fun n _ => hΔ ℓ n),
-    integral_finsetSum _ fun n _ => hT ℓ n, integral_finsetSum _ fun n _ => hΔ ℓ n]
+  rw [integral_add (hTs ℓ) (hΔs ℓ), integral_finsetSum _ fun n _ => hT ℓ n,
+    integral_finsetSum _ fun n _ => hΔ ℓ n]
   simp only [hTm, hΔm, Finset.sum_const, Finset.card_range, nsmul_eq_mul]
 
 end estimator
@@ -373,7 +379,9 @@ theorem nested_mlmc_mse (Pℓ Dt : ℕ → Ω → ℝ) (Yt YΔ : ℕ → Ω → 
         ∑ ℓ ∈ range (L + 1), (variance (Yt ℓ) μ + variance (YΔ ℓ) μ) + (μ[Pℓ L] - m) ^ 2 := by
   -- mean via the telescoping sum (9)
   have hmean : μ[fun ω => ∑ ℓ ∈ range (L + 1), (Yt ℓ ω + YΔ ℓ ω)] = μ[Pℓ L] := by
-    rw [integral_finsetSum _ fun ℓ _ => ((hYt ℓ).add (hYΔ ℓ)).integrable one_le_two]
+    have hint : ∀ ℓ, Integrable (fun ω => Yt ℓ ω + YΔ ℓ ω) μ := fun ℓ =>
+      ((hYt ℓ).add (hYΔ ℓ)).integrable one_le_two
+    rw [integral_finsetSum _ fun ℓ _ => hint ℓ]
     have hterm : ∀ ℓ, ∫ ω, (Yt ℓ ω + YΔ ℓ ω) ∂μ = ∫ ω, levelDiff Pℓ ℓ ω ∂μ := fun ℓ => by
       rw [integral_add ((hYt ℓ).integrable one_le_two) ((hYΔ ℓ).integrable one_le_two), ht, hΔ,
         integral_sub (integrable_levelDiff hPℓ ℓ) (hDt ℓ)]

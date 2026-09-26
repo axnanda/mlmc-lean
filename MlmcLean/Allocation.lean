@@ -334,10 +334,12 @@ theorem twoLevel_optimal_ratio {V₀ V₁ C₀ C₁ B : ℝ} (hV₀ : 0 < V₀) 
         V₀ / n₀ + V₁ / n₁ ≤ V₀ / m₀ + V₁ / m₁) ↔
       n₁ / n₀ = Real.sqrt (V₁ / C₁) / Real.sqrt (V₀ / C₀) := by
   -- the two levels as the index set `Fin 2`
+  have two : ∀ a b : ℝ, 0 < a → 0 < b → ∀ i, 0 < (![a, b] : Fin 2 → ℝ) i := fun a b ha hb =>
+    (Fin.forall_fin_two (p := fun j => 0 < (![a, b] : Fin 2 → ℝ) j)).2 ⟨ha, hb⟩
   have hV : ∀ i ∈ (Finset.univ : Finset (Fin 2)), 0 < (![V₀, V₁] : Fin 2 → ℝ) i :=
-    fun i _ => Fin.forall_fin_two.2 ⟨hV₀, hV₁⟩ i
+    fun i _ => two V₀ V₁ hV₀ hV₁ i
   have hC : ∀ i ∈ (Finset.univ : Finset (Fin 2)), 0 < (![C₀, C₁] : Fin 2 → ℝ) i :=
-    fun i _ => Fin.forall_fin_two.2 ⟨hC₀, hC₁⟩ i
+    fun i _ => two C₀ C₁ hC₀ hC₁ i
   obtain ⟨⟨-, hleast⟩, -, huniq⟩ :=
     optimal_variance_isLeast Finset.univ ![V₀, V₁] ![C₀, C₁] hB Finset.univ_nonempty hV hC
   have hr₀ : 0 < Real.sqrt (V₀ / C₀) := Real.sqrt_pos.2 (div_pos hV₀ hC₀)
@@ -354,8 +356,7 @@ theorem twoLevel_optimal_ratio {V₀ V₁ C₀ C₁ B : ℝ} (hV₀ : 0 < V₀) 
     intro m₀ m₁ hm₀ hm₁ hmc
     have h := (mem_lowerBounds.1 hleast)
       (∑ i : Fin 2, (![V₀, V₁] : Fin 2 → ℝ) i / (![m₀, m₁] : Fin 2 → ℝ) i)
-      ⟨![m₀, m₁], fun i _ => Fin.forall_fin_two.2 ⟨hm₀, hm₁⟩ i,
-        by rw [Fin.sum_univ_two]; exact hmc, rfl⟩
+      ⟨![m₀, m₁], fun i _ => two m₀ m₁ hm₀ hm₁ i, by rw [Fin.sum_univ_two]; exact hmc, rfl⟩
     rw [Fin.sum_univ_two, Fin.sum_univ_two] at h
     exact h
   have hopt : ∀ m₀ m₁ : ℝ, 0 < m₀ → 0 < m₁ → m₀ * C₀ + m₁ * C₁ ≤ B →
@@ -364,7 +365,7 @@ theorem twoLevel_optimal_ratio {V₀ V₁ C₀ C₁ B : ℝ} (hV₀ : 0 < V₀) 
         m₁ = B * Real.sqrt (V₁ / C₁) / (Real.sqrt (V₀ * C₀) + Real.sqrt (V₁ * C₁)) := by
     intro m₀ m₁ hm₀ hm₁ hmc hmv
     have hpos : ∀ i ∈ (Finset.univ : Finset (Fin 2)), 0 < (![m₀, m₁] : Fin 2 → ℝ) i :=
-      fun i _ => Fin.forall_fin_two.2 ⟨hm₀, hm₁⟩ i
+      fun i _ => two m₀ m₁ hm₀ hm₁ i
     have hc' : ∑ i : Fin 2, (![m₀, m₁] : Fin 2 → ℝ) i * (![C₀, C₁] : Fin 2 → ℝ) i ≤ B := by
       rw [Fin.sum_univ_two]
       exact hmc
@@ -393,7 +394,9 @@ theorem twoLevel_optimal_ratio {V₀ V₁ C₀ C₁ B : ℝ} (hV₀ : 0 < V₀) 
       rw [div_eq_iff hr₁.ne']
       linear_combination -hv1
     calc _ = (Real.sqrt (V₀ * C₀) + Real.sqrt (V₁ * C₁)) / B *
-          (V₀ / Real.sqrt (V₀ / C₀) + V₁ / Real.sqrt (V₁ / C₁)) := by ring
+          (V₀ / Real.sqrt (V₀ / C₀) + V₁ / Real.sqrt (V₁ / C₁)) := by
+          rw [div_div_eq_mul_div, div_div_eq_mul_div]
+          ring
       _ = B⁻¹ * (Real.sqrt (V₀ * C₀) + Real.sqrt (V₁ * C₁)) ^ 2 := by
           rw [e0, e1]
           ring
