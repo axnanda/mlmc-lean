@@ -31,7 +31,8 @@ exponents is more complicated when `α_d = ½β_d` for some `d`".
 * `giles_theorem2` — the theorem for `α_d > ½β_d`, with the paper's `e₁ = 2D₂`,
   `e₂ = (D₂ − 1)(2 + η)`;
 * `giles_theorem2_boundary` — the theorem for `α_d ≥ ½β_d`; the paper leaves the exponents
-  unspecified, and we prove `e₁ = 2D₂ + D`, `e₂ = (D₂ − 1)(2 + η) + D`;
+  unspecified, and we prove `e₁ = 2D₂ + (D₃ − 3)⁺`, `e₂ = (D₂ − 1)(2 + η) + (D₃ − 1)⁺` with
+  `D₃ = #{d : α_d = ½β_d}`, which are the paper's exponents when `D₃ = 0`;
 * `mimc_complexity`, `mimc_complexity_boundary` — the deterministic statements behind them.
 
 **Proof.** The summation region is a simplex `𝓛 = {ℓ : θ·ℓ ≤ L}` ("of the form `ℓ·n ≤ L`",
@@ -42,6 +43,10 @@ vanishes exactly in the `D₂` directions attaining `η`.  The lattice sums of
 `MlmcLean/Lattice.lean` then bound the bias by `(1+L)^{D₂−1} 2^{−aL}` and `∑_{𝓛} √(V_ℓ C_ℓ)` by
 `1`, `(1+L)^{D₂}`, `(1+L)^{D₂−1} 2^{(1−a)L}` in the three regimes.  `L` is the least level with
 bias `≤ ε/2`, and `N_ℓ` is the rounded-up optimal allocation of `MlmcLean/Allocation.lean`.
+Rounding up costs at most `∑_{𝓛} C_ℓ ≤ c₃ ∑_{θ·ℓ ≤ L} 2^{γ·ℓ}`.  With `c = max_d γ_d/θ_d ≤ 2`
+this is `O(|log ε|^{(D₃'−1)⁺ + (D₂−1)c(2+η)/2} ε^{−c(2+η)/2})`, `D₃' = #{d : γ_d = cθ_d}`: of lower
+order when every `α_d > ½β_d` (then `c < 2`), and the source of the extra powers `(D₃ − 1)⁺` of
+`|log ε|` when `c = 2`, where `D₃' = D₃ = #{d : α_d = ½β_d}`.
 -/
 
 open MeasureTheory ProbabilityTheory Finset Real
@@ -88,6 +93,23 @@ lemma one_le_mimcD2 (α β γ : Fin D → ℝ) : 1 ≤ mimcD2 α β γ := by
   exact Finset.card_pos.2 ⟨d, Finset.mem_filter.2 ⟨Finset.mem_univ d, hd⟩⟩
 
 end Exponents
+
+/-- `D₃ = #{d : α_d = ½β_d}`, the number of directions on the boundary of the condition
+`α_d ≥ ½β_d` of Giles 2015, Theorem 2 ("the form of the exponents is more complicated when
+`α_d = ½β_d` for some `d`"). -/
+noncomputable def mimcD3 (α β : Fin D → ℝ) : ℕ :=
+  (univ.filter fun d => α d = β d / 2).card
+
+/-- With `θ_d = α_d + (γ_d − β_d)/2`, the directions with `γ_d = 2θ_d` are exactly those with
+`α_d = ½β_d`. -/
+lemma crit_two_theta_sub_gamma (α β γ : Fin D → ℝ) :
+    crit (fun d => 2 * (α d + (γ d - β d) / 2) - γ d) = mimcD3 α β := by
+  unfold crit mimcD3
+  congr 1
+  apply Finset.filter_congr
+  intro d _
+  show 2 * (α d + (γ d - β d) / 2) - γ d = 0 ↔ α d = β d / 2
+  constructor <;> intro h <;> linarith
 
 /-- The three regimes of Theorem 2: `ε⁻²` if `η < 0`, `ε⁻² |log ε|^{e₁}` if `η = 0` and
 `ε^{−2−η} |log ε|^{e₂}` if `η > 0`. -/
@@ -396,59 +418,85 @@ lemma mimc_level_power {a b K K_L ε t q : ℝ} {p L : ℕ} (ha : 0 < a) (hb : 0
         exact mul_le_mul_of_nonneg_left e2 (Real.rpow_nonneg hK.le _)
     _ = _ := by ring
 
-/-- The rounding-up overhead `c₃ ∑_{θ·ℓ ≤ L} 2^{γ·ℓ}` when `γ ≤ cθ` componentwise. -/
-lemma mimc_extra_term {θ γ : Fin D → ℝ} {a c c₃ K_P K_L ε : ℝ} {p L : ℕ}
-    (hθ : ∀ d, 0 < θ d) (ha : 0 < a) (hc : 0 ≤ c) (hc₃ : 0 < c₃) (hK_P : 0 < K_P)
-    (hK_L : 0 < K_L) (hε : 0 < ε) (hγ : ∀ d, γ d ≤ c * θ d)
-    (hP : (2 : ℝ) ^ (a * L) ≤ K_P * (1 + (L : ℝ)) ^ p / ε)
-    (hL : 1 + (L : ℝ) ≤ K_L * (-Real.log ε)) :
-    c₃ * ∑ ℓ ∈ indexSet θ L, (2 : ℝ) ^ dot γ ℓ ≤
-      c₃ * (∏ d, (1 / θ d + 1)) * (K_P ^ (c / a) * K_L ^ ((D : ℝ) + p * (c / a))) *
-        (-Real.log ε) ^ ((D : ℝ) + p * (c / a)) * ε ^ (-(c / a)) := by
+/-- The rounding-up overhead `c₃ ∑_{θ·ℓ ≤ L} 2^{γ·ℓ}` when `γ ≤ cθ` componentwise, `c > 0`: it is
+`O(|log ε|^{(m' − 1)⁺ + p c/a} ε^{−c/a})`, where `m' = #{d : γ_d = cθ_d}` counts the directions in
+which `γ ≤ cθ` is an equality (the lattice sum `inner_bound` with the defect `cθ − γ ≥ 0`). -/
+lemma mimc_extra_term {θ γ : Fin D → ℝ} {a c c₃ K_P K_L : ℝ} {p : ℕ}
+    (hθ : ∀ d, 0 < θ d) (ha : 0 < a) (hc : 0 < c) (hc₃ : 0 < c₃) (hK_P : 0 < K_P)
+    (hK_L : 0 < K_L) (hγ : ∀ d, γ d ≤ c * θ d) :
+    ∃ K_E : ℝ, 0 ≤ K_E ∧ ∀ (ε : ℝ) (L : ℕ), 0 < ε →
+      (2 : ℝ) ^ (a * L) ≤ K_P * (1 + (L : ℝ)) ^ p / ε →
+      1 + (L : ℝ) ≤ K_L * (-Real.log ε) →
+      c₃ * ∑ ℓ ∈ indexSet θ L, (2 : ℝ) ^ dot γ ℓ ≤
+        K_E * (-Real.log ε) ^ (((crit (fun d => c * θ d - γ d) - 1 : ℕ) : ℝ) + p * (c / a)) *
+          ε ^ (-(c / a)) := by
+  have hδ : ∀ d, 0 ≤ c * θ d - γ d := fun d => by linarith [hγ d]
+  obtain ⟨K_I, hK_I, hinner⟩ := inner_bound (δ := fun d => c * θ d - γ d) hθ hδ hc.le
+  have hq1 : (0 : ℝ) < 1 - (2 : ℝ) ^ (-c) := by
+    have := Real.rpow_lt_one_of_one_lt_of_neg one_lt_two (neg_lt_zero.2 hc)
+    linarith
+  have hC0 : 0 ≤ c₃ * (K_I * (1 - (2 : ℝ) ^ (-c))⁻¹) :=
+    mul_nonneg hc₃.le (mul_nonneg hK_I (inv_pos.2 hq1).le)
+  refine ⟨c₃ * (K_I * (1 - (2 : ℝ) ^ (-c))⁻¹) *
+      (K_P ^ (c / a) * K_L ^ (((crit (fun d => c * θ d - γ d) - 1 : ℕ) : ℝ) + p * (c / a))),
+    mul_nonneg hC0 (mul_nonneg (Real.rpow_nonneg hK_P.le _) (Real.rpow_nonneg hK_L.le _)),
+    fun ε L hε hP hL => ?_⟩
   have hL0 : (0 : ℝ) ≤ L := Nat.cast_nonneg L
+  have hu : (0 : ℝ) < 1 + (L : ℝ) := by positivity
   have ht : 0 ≤ -Real.log ε := by
     by_contra h
     push_neg at h
     nlinarith
-  have hK0 : 0 ≤ ∏ d, (1 / θ d + 1) := Finset.prod_nonneg fun d _ => by
-    have := div_nonneg zero_le_one (hθ d).le
-    linarith
-  -- every term is at most `2^{cL}`
-  have h1 : ∑ ℓ ∈ indexSet θ L, (2 : ℝ) ^ dot γ ℓ ≤
-      (indexSet θ L).card * (2 : ℝ) ^ (c * L) := by
-    rw [← nsmul_eq_mul, ← Finset.sum_const]
-    refine Finset.sum_le_sum fun ℓ hℓ => Real.rpow_le_rpow_of_exponent_le one_le_two ?_
-    have h2 := (mem_indexSet hθ).1 hℓ
-    calc dot γ ℓ ≤ dot (fun d => c * θ d) ℓ := dot_le_dot hγ ℓ
-      _ = c * dot θ ℓ := by simp only [dot, Finset.mul_sum, mul_assoc]
-      _ ≤ c * L := mul_le_mul_of_nonneg_left h2 hc
-  have hcard : ((indexSet θ L).card : ℝ) ≤ (1 + (L : ℝ)) ^ (D : ℝ) * ∏ d, (1 / θ d + 1) := by
-    rw [Real.rpow_natCast]
-    exact card_indexSet_le hθ hL0
-  have hpow := mimc_level_power (q := (D : ℝ)) ha hc hK_P hK_L hε ht (Nat.cast_nonneg D) hP hL
+  -- the index set as a box sum, with `2^{γ·ℓ} = 2^{cθ·ℓ − (cθ − γ)·ℓ}`
+  have hsum : ∑ ℓ ∈ indexSet θ L, (2 : ℝ) ^ dot γ ℓ =
+      ∑ ℓ ∈ box D (boxSize θ L), (if dot θ ℓ ≤ (L : ℝ) then
+        (2 : ℝ) ^ (c * dot θ ℓ - dot (fun d => c * θ d - γ d) ℓ) else 0) := by
+    rw [sum_indexSet_eq hθ]
+    refine Finset.sum_congr rfl fun ℓ _ => ?_
+    have e : c * dot θ ℓ - dot (fun d => c * θ d - γ d) ℓ = dot γ ℓ := by
+      rw [dot_linear (u := c) (v := -1) (b := θ) (e := γ)
+        (fun d => show c * θ d - γ d = c * θ d + -1 * γ d by ring) ℓ]
+      ring
+    rw [e]
+  have h1 := hinner (boxSize θ L) L hL0
+  have h2 := sum_two_rpow_sub_le hc (L : ℝ)
+  have hpow := mimc_level_power (q := ((crit (fun d => c * θ d - γ d) - 1 : ℕ) : ℝ)) ha hc.le
+    hK_P hK_L hε ht (Nat.cast_nonneg _) hP hL
+  have e2 : (1 + (L : ℝ)) ^ (crit (fun d => c * θ d - γ d) - 1) =
+      (1 + (L : ℝ)) ^ (((crit (fun d => c * θ d - γ d) - 1 : ℕ) : ℝ)) :=
+    (Real.rpow_natCast _ _).symm
   calc c₃ * ∑ ℓ ∈ indexSet θ L, (2 : ℝ) ^ dot γ ℓ
-      ≤ c₃ * ((indexSet θ L).card * (2 : ℝ) ^ (c * L)) := mul_le_mul_of_nonneg_left h1 hc₃.le
-    _ ≤ c₃ * (((1 + (L : ℝ)) ^ (D : ℝ) * ∏ d, (1 / θ d + 1)) * (2 : ℝ) ^ (c * L)) :=
-        mul_le_mul_of_nonneg_left
-          (mul_le_mul_of_nonneg_right hcard (Real.rpow_pos_of_pos two_pos _).le) hc₃.le
-    _ = c₃ * (∏ d, (1 / θ d + 1)) * ((1 + (L : ℝ)) ^ (D : ℝ) * (2 : ℝ) ^ (c * L)) := by ring
-    _ ≤ c₃ * (∏ d, (1 / θ d + 1)) * (K_P ^ (c / a) * K_L ^ ((D : ℝ) + p * (c / a)) *
-          (-Real.log ε) ^ ((D : ℝ) + p * (c / a)) * ε ^ (-(c / a))) :=
-        mul_le_mul_of_nonneg_left hpow (mul_nonneg hc₃.le hK0)
+      ≤ c₃ * (K_I * (1 + (L : ℝ)) ^ (crit (fun d => c * θ d - γ d) - 1) *
+          ((2 : ℝ) ^ (c * L) * (1 - (2 : ℝ) ^ (-c))⁻¹)) := by
+        rw [hsum]
+        refine mul_le_mul_of_nonneg_left (h1.trans ?_) hc₃.le
+        exact mul_le_mul_of_nonneg_left h2 (mul_nonneg hK_I (pow_nonneg hu.le _))
+    _ = c₃ * (K_I * (1 - (2 : ℝ) ^ (-c))⁻¹) *
+          ((1 + (L : ℝ)) ^ (((crit (fun d => c * θ d - γ d) - 1 : ℕ) : ℝ)) *
+            (2 : ℝ) ^ (c * L)) := by
+        rw [← e2]
+        ring
+    _ ≤ c₃ * (K_I * (1 - (2 : ℝ) ^ (-c))⁻¹) *
+          (K_P ^ (c / a) * K_L ^ (((crit (fun d => c * θ d - γ d) - 1 : ℕ) : ℝ) + p * (c / a)) *
+            (-Real.log ε) ^ (((crit (fun d => c * θ d - γ d) - 1 : ℕ) : ℝ) + p * (c / a)) *
+              ε ^ (-(c / a))) :=
+        mul_le_mul_of_nonneg_left hpow hC0
     _ = _ := by ring
 
 /-! ### The deterministic core -/
 
-/-- **Giles' Theorem 2 — deterministic core.**  Let `θ_d = α_d + (γ_d − β_d)/2` and let `c ≥ 0`
-with `γ_d ≤ c θ_d` for all `d`.  With `V_ℓ = c₂ 2^{−β·ℓ}` and `C_ℓ = c₃ 2^{γ·ℓ}` there are, for
-every `0 < ε < e⁻¹`, a finite set of levels `𝓛` and `N_ℓ ≥ 1` such that the bias of every finite
-part of the complement of `𝓛` is at most `ε/2`, `∑_{𝓛} V_ℓ/N_ℓ ≤ ε²/2`, and the cost is at most
-the main term `K_M · (ε⁻², ε⁻²|log ε|^{2D₂}, ε^{−2−η}|log ε|^{(D₂−1)(2+η)})` plus the
-rounding-up overhead `K_X |log ε|^{D + (D₂−1)s} ε^{−s}` with `s = c(2 + η)/2`. -/
+/-- **Giles' Theorem 2 — deterministic core.**  Let `θ_d = α_d + (γ_d − β_d)/2`, let `c ≥ 0`
+with `γ_d ≤ c θ_d` for all `d`, and let `k + 1 ≥ #{d : γ_d = cθ_d}`.  With `V_ℓ = c₂ 2^{−β·ℓ}`
+and `C_ℓ = c₃ 2^{γ·ℓ}` there are, for every `0 < ε < e⁻¹`, a finite set of levels `𝓛` and
+`N_ℓ ≥ 1` such that the bias of every finite part of the complement of `𝓛` is at most `ε/2`,
+`∑_{𝓛} V_ℓ/N_ℓ ≤ ε²/2`, and the cost is at most the main term
+`K_M · (ε⁻², ε⁻²|log ε|^{2D₂}, ε^{−2−η}|log ε|^{(D₂−1)(2+η)})` plus the rounding-up overhead
+`K_X |log ε|^{k + (D₂−1)s} ε^{−s}` with `s = c(2 + η)/2`. -/
 theorem mimc_complexity_core [NeZero D] {α β γ : Fin D → ℝ} {c₁ c₂ c₃ c : ℝ}
     (hα : ∀ d, 0 < α d) (hγ : ∀ d, 0 < γ d) (hαβ : ∀ d, β d / 2 ≤ α d)
     (hc₁ : 0 < c₁) (hc₂ : 0 < c₂) (hc₃ : 0 < c₃) (hc : 0 ≤ c)
-    (hcγ : ∀ d, γ d ≤ c * (α d + (γ d - β d) / 2)) :
+    (hcγ : ∀ d, γ d ≤ c * (α d + (γ d - β d) / 2)) (k : ℕ)
+    (hk : crit (fun d => c * (α d + (γ d - β d) / 2) - γ d) ≤ k + 1) :
     ∃ K_M K_X : ℝ, 0 ≤ K_M ∧ 0 ≤ K_X ∧ ∀ ε : ℝ, 0 < ε → ε < Real.exp (-1) →
       ∃ (𝓛 : Finset (Fin D → ℕ)) (N : (Fin D → ℕ) → ℕ), (∀ ℓ, 0 < N ℓ) ∧
         (∀ s : Finset (Fin D → ℕ), c₁ * ∑ ℓ ∈ s \ 𝓛, (2 : ℝ) ^ (-dot α ℓ) ≤ ε / 2) ∧
@@ -456,7 +504,7 @@ theorem mimc_complexity_core [NeZero D] {α β γ : Fin D → ℝ} {c₁ c₂ c�
         ∑ ℓ ∈ 𝓛, (N ℓ : ℝ) * (c₃ * (2 : ℝ) ^ dot γ ℓ) ≤
           K_M * mimcBound (mimcEta α β γ) (2 * mimcD2 α β γ)
               ((mimcD2 α β γ - 1) * (2 + mimcEta α β γ)) ε +
-            K_X * (-Real.log ε) ^ ((D : ℝ) + (mimcD2 α β γ - 1) * (c * (2 + mimcEta α β γ) / 2)) *
+            K_X * (-Real.log ε) ^ ((k : ℝ) + (mimcD2 α β γ - 1) * (c * (2 + mimcEta α β γ) / 2)) *
               ε ^ (-(c * (2 + mimcEta α β γ) / 2)) := by
   have hr := le_mimcEta α β γ
   obtain ⟨d₀, hd₀⟩ := exists_eq_mimcEta α β γ
@@ -528,25 +576,28 @@ theorem mimc_complexity_core [NeZero D] {α β γ : Fin D → ℝ} {c₁ c₂ c�
   obtain ⟨K_P, K_L, hK_P, hK_L, hcons⟩ :=
     mimc_construction (α := α) (β := β) (γ := γ) (g := g) hθ hδ ha hc₁ hc₂ hc₃ hαθ hg
   rw [hcrit] at hcons
-  set K_X : ℝ := c₃ * (∏ d, (1 / θ d + 1)) * (K_P ^ (c / a) *
-    K_L ^ ((D : ℝ) + ((m - 1 : ℕ) : ℝ) * (c / a))) with hK_X_def
-  have hK_X : 0 ≤ K_X := by
-    have hK0 : 0 ≤ ∏ d, (1 / θ d + 1) := Finset.prod_nonneg fun d _ => by
-      have := div_nonneg zero_le_one (hθ d).le
-      linarith
-    exact mul_nonneg (mul_nonneg hc₃.le hK0)
-      (mul_nonneg (Real.rpow_nonneg hK_P.le _) (Real.rpow_nonneg hK_L.le _))
-  have hX : ∀ ε : ℝ, 0 < ε → ∀ L : ℕ,
+  -- `c > 0`, since `0 < γ_d ≤ c θ_d`
+  have hcpos : 0 < c := by
+    by_contra hcn
+    have h1 : c * θ 0 ≤ 0 := mul_nonpos_of_nonpos_of_nonneg (not_lt.1 hcn) (hθ 0).le
+    linarith [hγθ 0, hγ 0]
+  have hk2 : crit (fun d => c * θ d - γ d) ≤ k + 1 := hk
+  obtain ⟨K_X, hK_X, hX'⟩ := mimc_extra_term (p := m - 1) hθ ha hcpos hc₃ hK_P hK_L hγθ
+  have hX : ∀ ε : ℝ, 0 < ε → ε < Real.exp (-1) → ∀ L : ℕ,
       (2 : ℝ) ^ (a * L) ≤ K_P * (1 + (L : ℝ)) ^ (m - 1) / ε →
       1 + (L : ℝ) ≤ K_L * (-Real.log ε) →
       c₃ * ∑ ℓ ∈ indexSet θ L, (2 : ℝ) ^ dot γ ℓ ≤
-        K_X * (-Real.log ε) ^ ((D : ℝ) + (m - 1) * (c * (2 + η) / 2)) *
+        K_X * (-Real.log ε) ^ ((k : ℝ) + (m - 1) * (c * (2 + η) / 2)) *
           ε ^ (-(c * (2 + η) / 2)) := by
-    intro ε hε L hP hL
-    have h := mimc_extra_term hθ ha hc hc₃ hK_P hK_L hε hγθ hP hL
+    intro ε hε hε1 L hP hL
+    have h := hX' ε L hε hP hL
     rw [hmR, hca] at h
-    rw [hK_X_def, hmR, hca]
-    exact h
+    refine h.trans (mul_le_mul_of_nonneg_right (mul_le_mul_of_nonneg_left ?_ hK_X)
+      (Real.rpow_pos_of_pos hε _).le)
+    -- `(#{d : γ_d = cθ_d} − 1)⁺ ≤ k` and `|log ε| ≥ 1`
+    have hk' : ((crit (fun d => c * θ d - γ d) - 1 : ℕ) : ℝ) ≤ k := by
+      exact_mod_cast (by omega : crit (fun d => c * θ d - γ d) - 1 ≤ k)
+    exact Real.rpow_le_rpow_of_exponent_le (one_le_neg_log hε hε1) (by linarith)
   -- the three regimes of the main term
   rcases lt_trichotomy η 0 with hneg | hzero | hpos
   · -- `η < 0`: `∑ √(V_ℓ C_ℓ)` is bounded by a product of geometric series
@@ -575,7 +626,7 @@ theorem mimc_complexity_core [NeZero D] {α β γ : Fin D → ℝ} {c₁ c₂ c�
     have hS0 : 0 ≤ ∑ ℓ ∈ indexSet θ L, (2 : ℝ) ^ dot g ℓ :=
       Finset.sum_nonneg fun ℓ _ => (Real.rpow_pos_of_pos two_pos _).le
     rw [mimcBound_of_neg hneg, ← eps_inv_sq_eq hε]
-    refine hcost.trans (add_le_add ?_ (hX ε hε L hP hL))
+    refine hcost.trans (add_le_add ?_ (hX ε hε hε1 L hP hL))
     calc 2 * (c₂ * c₃) * ε⁻¹ ^ 2 * (∑ ℓ ∈ indexSet θ L, (2 : ℝ) ^ dot g ℓ) ^ 2
         ≤ 2 * (c₂ * c₃) * ε⁻¹ ^ 2 * Pg ^ 2 := by
           exact mul_le_mul_of_nonneg_left (pow_le_pow_left₀ hS0 hS 2)
@@ -627,7 +678,7 @@ theorem mimc_complexity_core [NeZero D] {α β γ : Fin D → ℝ} {c₁ c₂ c�
         _ ≤ K_I ^ 2 * (K_L ^ (2 * (m : ℝ)) * (-Real.log ε) ^ (2 * (m : ℝ))) :=
             mul_le_mul_of_nonneg_left hu (by positivity)
     rw [mimcBound_of_eq hzero, abs_log_eq_neg_log hε hε1, ← eps_inv_sq_eq hε]
-    refine hcost.trans (add_le_add ?_ (hX ε hε L hP hL))
+    refine hcost.trans (add_le_add ?_ (hX ε hε hε1 L hP hL))
     calc 2 * (c₂ * c₃) * ε⁻¹ ^ 2 * (∑ ℓ ∈ indexSet θ L, (2 : ℝ) ^ dot g ℓ) ^ 2
         ≤ 2 * (c₂ * c₃) * ε⁻¹ ^ 2 *
             (K_I ^ 2 * (K_L ^ (2 * (m : ℝ)) * (-Real.log ε) ^ (2 * (m : ℝ)))) :=
@@ -702,7 +753,7 @@ theorem mimc_complexity_core [NeZero D] {α β γ : Fin D → ℝ} {c₁ c₂ c�
       ring
     rw [hexp] at hS2
     rw [mimcBound_of_pos hpos, abs_log_eq_neg_log hε hε1]
-    refine hcost.trans (add_le_add ?_ (hX ε hε L hP hL))
+    refine hcost.trans (add_le_add ?_ (hX ε hε hε1 L hP hL))
     have hε2 : ε⁻¹ ^ 2 * ε ^ (-η) = ε ^ (-2 - η) := by
       rw [eps_inv_sq_eq hε, ← Real.rpow_add hε]
       congr 1
@@ -747,7 +798,7 @@ theorem mimc_complexity [NeZero D] {α β γ : Fin D → ℝ} {c₁ c₂ c₃ : 
   have hc0 : 0 ≤ c := le_trans (div_nonneg (hγ 0).le (hθ 0).le)
     (Finset.le_sup' (fun d => γ d / θ d) (Finset.mem_univ 0))
   obtain ⟨K_M, K_X, hK_M, hK_X, hcore⟩ := mimc_complexity_core hα hγ (fun d => (hαβ d).le)
-    hc₁ hc₂ hc₃ hc0 hcγ
+    hc₁ hc₂ hc₃ hc0 hcγ D ((crit_le _).trans (Nat.le_succ D))
   -- the rounding-up overhead is of lower order: `s = c(2+η)/2 < 2 + max η 0`
   have hr := le_mimcEta α β γ
   obtain ⟨d₀, hd₀⟩ := exists_eq_mimcEta α β γ
@@ -814,8 +865,10 @@ theorem mimc_complexity [NeZero D] {α β γ : Fin D → ℝ} {c₁ c₂ c₃ : 
         nlinarith [hB0]
 
 /-- **Giles' Theorem 2, deterministic form, for `α_d ≥ ½β_d`** (Giles 2015, Theorem 2).  The paper
-does not specify the log exponents when some `α_d = ½β_d`; here `e₁ = 2D₂ + D` and
-`e₂ = (D₂ − 1)(2 + η) + D`. -/
+does not specify the log exponents when some `α_d = ½β_d` ("the form of the exponents is more
+complicated"); here, with `D₃ = #{d : α_d = ½β_d}` (`mimcD3`), `e₁ = 2D₂ + (D₃ − 3)⁺` and
+`e₂ = (D₂ − 1)(2 + η) + (D₃ − 1)⁺`.  When `D₃ = 0` these are the paper's `e₁ = 2D₂` and
+`e₂ = (D₂ − 1)(2 + η)`, so this statement contains `mimc_complexity`. -/
 theorem mimc_complexity_boundary [NeZero D] {α β γ : Fin D → ℝ} {c₁ c₂ c₃ : ℝ}
     (hα : ∀ d, 0 < α d) (hγ : ∀ d, 0 < γ d) (hαβ : ∀ d, β d / 2 ≤ α d)
     (hc₁ : 0 < c₁) (hc₂ : 0 < c₂) (hc₃ : 0 < c₃) :
@@ -824,17 +877,20 @@ theorem mimc_complexity_boundary [NeZero D] {α β γ : Fin D → ℝ} {c₁ c�
         (∀ s : Finset (Fin D → ℕ), c₁ * ∑ ℓ ∈ s \ 𝓛, (2 : ℝ) ^ (-dot α ℓ) ≤ ε / 2) ∧
         ∑ ℓ ∈ 𝓛, c₂ * (2 : ℝ) ^ (-dot β ℓ) / N ℓ ≤ ε ^ 2 / 2 ∧
         ∑ ℓ ∈ 𝓛, (N ℓ : ℝ) * (c₃ * (2 : ℝ) ^ dot γ ℓ) ≤
-          c₄ * mimcBound (mimcEta α β γ) (2 * mimcD2 α β γ + D)
-            ((mimcD2 α β γ - 1) * (2 + mimcEta α β γ) + D) ε := by
-  -- with `c = 2`: `γ_d ≤ 2θ_d` is `β_d ≤ 2α_d`
+          c₄ * mimcBound (mimcEta α β γ) (2 * mimcD2 α β γ + ((mimcD3 α β - 3 : ℕ) : ℝ))
+            ((mimcD2 α β γ - 1) * (2 + mimcEta α β γ) + ((mimcD3 α β - 1 : ℕ) : ℝ)) ε := by
+  -- with `c = 2`: `γ_d ≤ 2θ_d` is `β_d ≤ 2α_d`, an equality exactly when `α_d = ½β_d`
   have hcγ : ∀ d, γ d ≤ 2 * (α d + (γ d - β d) / 2) := fun d => by linarith [hαβ d]
+  have hk : crit (fun d => 2 * (α d + (γ d - β d) / 2) - γ d) ≤ (mimcD3 α β - 1) + 1 :=
+    (crit_two_theta_sub_gamma α β γ).le.trans (by omega)
   obtain ⟨K_M, K_X, hK_M, hK_X, hcore⟩ := mimc_complexity_core hα hγ hαβ hc₁ hc₂ hc₃
-    zero_le_two hcγ
+    zero_le_two hcγ (mimcD3 α β - 1) hk
   have hr := le_mimcEta α β γ
   obtain ⟨d₀, hd₀⟩ := exists_eq_mimcEta α β γ
   have hm1 := one_le_mimcD2 α β γ
   generalize hm_def : mimcD2 α β γ = m at hm1 hcore ⊢
   generalize hη_def : mimcEta α β γ = η at hr hd₀ hcore ⊢
+  generalize hn_def : mimcD3 α β = n at hcore ⊢
   have hη2 : 0 < 2 + η := by
     have h1 : -2 < (γ d₀ - β d₀) / α d₀ := by
       rw [lt_div_iff₀ (hα d₀)]
@@ -843,9 +899,14 @@ theorem mimc_complexity_boundary [NeZero D] {α β γ : Fin D → ℝ} {c₁ c�
   have hm1' : (1 : ℝ) ≤ m := by exact_mod_cast hm1
   have hs : (2 : ℝ) * (2 + η) / 2 = 2 + η := by ring
   simp only [hs] at hcore
+  -- the extra log power `(D₃ − 1)⁺` of the overhead, and `(D₃ − 1)⁺ ≤ (D₃ − 3)⁺ + 2`
+  have hk0 : (0 : ℝ) ≤ ((n - 1 : ℕ) : ℝ) := Nat.cast_nonneg _
+  have hk3 : ((n - 1 : ℕ) : ℝ) ≤ ((n - 3 : ℕ) : ℝ) + 2 := by
+    have h : n - 1 ≤ n - 3 + 2 := by omega
+    exact_mod_cast h
   -- for `η < 0` the overhead `|log ε|^p ε^{−(2+η)}` is `O(ε⁻²)`
-  have hp : 0 ≤ (D : ℝ) + ((m : ℝ) - 1) * (2 + η) :=
-    add_nonneg (Nat.cast_nonneg D) (mul_nonneg (sub_nonneg.2 hm1') hη2.le)
+  have hp : 0 ≤ ((n - 1 : ℕ) : ℝ) + ((m : ℝ) - 1) * (2 + η) :=
+    add_nonneg hk0 (mul_nonneg (sub_nonneg.2 hm1') hη2.le)
   obtain ⟨K_abs, hK_abs, habs⟩ := neg_log_rpow_mul_rpow_le (κ := if η < 0 then -η else 1) hp
     (by split_ifs with h <;> linarith)
   have hKX0 : 0 ≤ K_X * K_abs := mul_nonneg hK_X hK_abs.le
@@ -855,12 +916,14 @@ theorem mimc_complexity_boundary [NeZero D] {α β γ : Fin D → ℝ} {c₁ c�
   have hε1' : ε < 1 := eps_lt_one hε1
   have ht : 1 ≤ -Real.log ε := one_le_neg_log hε hε1
   have hlog : |Real.log ε| = -Real.log ε := abs_log_eq_neg_log hε hε1
-  have hBmono := mimcBound_mono (η := η) hε hε1 (le_add_of_nonneg_right (Nat.cast_nonneg D))
-    (le_add_of_nonneg_right (Nat.cast_nonneg D)) (e₁ := 2 * m) (e₂ := (m - 1) * (2 + η))
-  set B := mimcBound η (2 * m + D) ((m - 1) * (2 + η) + D) ε with hB_def
+  have hBmono := mimcBound_mono (η := η) hε hε1
+    (le_add_of_nonneg_right (Nat.cast_nonneg (n - 3))) (le_add_of_nonneg_right hk0)
+    (e₁ := 2 * m) (e₂ := (m - 1) * (2 + η))
+  set B := mimcBound η (2 * m + ((n - 3 : ℕ) : ℝ)) ((m - 1) * (2 + η) + ((n - 1 : ℕ) : ℝ)) ε
+    with hB_def
   have hB0 : 0 ≤ B := mimcBound_nonneg hε
   -- the overhead is at most `(K_abs + 1) B`
-  have hX : (-Real.log ε) ^ ((D : ℝ) + ((m : ℝ) - 1) * (2 + η)) * ε ^ (-(2 + η)) ≤
+  have hX : (-Real.log ε) ^ (((n - 1 : ℕ) : ℝ) + ((m : ℝ) - 1) * (2 + η)) * ε ^ (-(2 + η)) ≤
       (K_abs + 1) * B := by
     rcases lt_trichotomy η 0 with hneg | hzero | hpos
     · have h := habs ε hε hε1'
@@ -870,21 +933,22 @@ theorem mimc_complexity_boundary [NeZero D] {α β γ : Fin D → ℝ} {c₁ c�
         congr 1
         ring
       rw [hB_def, mimcBound_of_neg hneg, e, ← mul_assoc]
-      calc (-Real.log ε) ^ ((D : ℝ) + ((m : ℝ) - 1) * (2 + η)) * ε ^ (-η) * ε ^ (-2 : ℝ)
+      calc (-Real.log ε) ^ (((n - 1 : ℕ) : ℝ) + ((m : ℝ) - 1) * (2 + η)) * ε ^ (-η) *
+            ε ^ (-2 : ℝ)
           ≤ K_abs * ε ^ (-2 : ℝ) := mul_le_mul_of_nonneg_right h (Real.rpow_pos_of_pos hε _).le
         _ ≤ (K_abs + 1) * ε ^ (-2 : ℝ) :=
             mul_le_mul_of_nonneg_right (by linarith) (Real.rpow_pos_of_pos hε _).le
     · rw [hB_def, mimcBound_of_eq hzero, hlog, hzero]
-      have h1 : (-Real.log ε) ^ ((D : ℝ) + ((m : ℝ) - 1) * (2 + 0)) ≤
-          (-Real.log ε) ^ (2 * (m : ℝ) + D) :=
-        Real.rpow_le_rpow_of_exponent_le ht (by linarith)
+      have h1 : (-Real.log ε) ^ (((n - 1 : ℕ) : ℝ) + ((m : ℝ) - 1) * (2 + 0)) ≤
+          (-Real.log ε) ^ (2 * (m : ℝ) + ((n - 3 : ℕ) : ℝ)) :=
+        Real.rpow_le_rpow_of_exponent_le ht (by linarith [hk3])
       have e : ε ^ (-(2 + (0 : ℝ))) = ε ^ (-2 : ℝ) := by norm_num
       rw [e]
-      calc (-Real.log ε) ^ ((D : ℝ) + ((m : ℝ) - 1) * (2 + 0)) * ε ^ (-2 : ℝ)
-          ≤ (-Real.log ε) ^ (2 * (m : ℝ) + D) * ε ^ (-2 : ℝ) :=
+      calc (-Real.log ε) ^ (((n - 1 : ℕ) : ℝ) + ((m : ℝ) - 1) * (2 + 0)) * ε ^ (-2 : ℝ)
+          ≤ (-Real.log ε) ^ (2 * (m : ℝ) + ((n - 3 : ℕ) : ℝ)) * ε ^ (-2 : ℝ) :=
             mul_le_mul_of_nonneg_right h1 (Real.rpow_pos_of_pos hε _).le
-        _ = 1 * (ε ^ (-2 : ℝ) * (-Real.log ε) ^ (2 * (m : ℝ) + D)) := by ring
-        _ ≤ (K_abs + 1) * (ε ^ (-2 : ℝ) * (-Real.log ε) ^ (2 * (m : ℝ) + D)) :=
+        _ = 1 * (ε ^ (-2 : ℝ) * (-Real.log ε) ^ (2 * (m : ℝ) + ((n - 3 : ℕ) : ℝ))) := by ring
+        _ ≤ (K_abs + 1) * (ε ^ (-2 : ℝ) * (-Real.log ε) ^ (2 * (m : ℝ) + ((n - 3 : ℕ) : ℝ))) :=
             mul_le_mul_of_nonneg_right (by linarith)
               (mul_nonneg (Real.rpow_pos_of_pos hε _).le (Real.rpow_nonneg (by linarith) _))
     · rw [hB_def, mimcBound_of_pos hpos, hlog]
@@ -892,15 +956,16 @@ theorem mimc_complexity_boundary [NeZero D] {α β γ : Fin D → ℝ} {c₁ c�
         congr 1
         ring
       rw [e]
-      calc (-Real.log ε) ^ ((D : ℝ) + ((m : ℝ) - 1) * (2 + η)) * ε ^ (-2 - η)
-          = 1 * (ε ^ (-2 - η) * (-Real.log ε) ^ (((m : ℝ) - 1) * (2 + η) + D)) := by
-            rw [add_comm (D : ℝ)]
+      calc (-Real.log ε) ^ (((n - 1 : ℕ) : ℝ) + ((m : ℝ) - 1) * (2 + η)) * ε ^ (-2 - η)
+          = 1 * (ε ^ (-2 - η) * (-Real.log ε) ^ (((m : ℝ) - 1) * (2 + η) + ((n - 1 : ℕ) : ℝ))) := by
+            rw [add_comm ((n - 1 : ℕ) : ℝ)]
             ring
-        _ ≤ (K_abs + 1) * (ε ^ (-2 - η) * (-Real.log ε) ^ (((m : ℝ) - 1) * (2 + η) + D)) :=
+        _ ≤ (K_abs + 1) *
+              (ε ^ (-2 - η) * (-Real.log ε) ^ (((m : ℝ) - 1) * (2 + η) + ((n - 1 : ℕ) : ℝ))) :=
             mul_le_mul_of_nonneg_right (by linarith)
               (mul_nonneg (Real.rpow_pos_of_pos hε _).le (Real.rpow_nonneg (by linarith) _))
   calc K_M * mimcBound η (2 * m) ((m - 1) * (2 + η)) ε +
-        K_X * (-Real.log ε) ^ ((D : ℝ) + ((m : ℝ) - 1) * (2 + η)) * ε ^ (-(2 + η))
+        K_X * (-Real.log ε) ^ (((n - 1 : ℕ) : ℝ) + ((m : ℝ) - 1) * (2 + η)) * ε ^ (-(2 + η))
       ≤ K_M * B + K_X * ((K_abs + 1) * B) := by
         rw [mul_assoc K_X]
         exact add_le_add (mul_le_mul_of_nonneg_left hBmono hK_M)
@@ -1103,8 +1168,10 @@ theorem giles_theorem2 [NeZero D] (P : Ω → ℝ) (Pℓ : (Fin D → ℕ) → �
 set_option linter.unusedVariables false in
 /-- **Giles' Theorem 2 when some `α_d = ½β_d`** (Giles 2015, §2.4, Theorem 2, for `α_d ≥ ½β_d`).
 Hypotheses as in `giles_theorem2` but with `α_d ≥ ½β_d`.  The paper notes that "the form of the
-exponents is more complicated" in this case and does not state them; we prove the bound with
-`e₁ = 2D₂ + D` and `e₂ = (D₂ − 1)(2 + η) + D`. -/
+exponents is more complicated" in this case and does not state them; with
+`D₃ = #{d : α_d = ½β_d}` (`mimcD3`) we prove the bound with `e₁ = 2D₂ + (D₃ − 3)⁺` and
+`e₂ = (D₂ − 1)(2 + η) + (D₃ − 1)⁺`.  For `D₃ = 0` these are the paper's exponents, so this
+theorem contains `giles_theorem2`. -/
 theorem giles_theorem2_boundary [NeZero D] (P : Ω → ℝ) (Pℓ : (Fin D → ℕ) → Ω → ℝ)
     (Y : (Fin D → ℕ) → ℕ → Ω → ℝ) (Cost : (Fin D → ℕ) → ℕ → Ω → ℝ) (V C : (Fin D → ℕ) → ℝ)
     {α β γ : Fin D → ℝ} {c₁ c₂ c₃ : ℝ}
@@ -1127,8 +1194,8 @@ theorem giles_theorem2_boundary [NeZero D] (P : Ω → ℝ) (Pℓ : (Fin D → �
       ∃ (𝓛 : Finset (Fin D → ℕ)) (N : (Fin D → ℕ) → ℕ), (∀ ℓ, 0 < N ℓ) ∧
         μ[fun ω => (∑ ℓ ∈ 𝓛, Y ℓ (N ℓ) ω - μ[P]) ^ 2] < ε ^ 2 ∧
         μ[fun ω => ∑ ℓ ∈ 𝓛, Cost ℓ (N ℓ) ω] ≤
-          c₄ * mimcBound (mimcEta α β γ) (2 * mimcD2 α β γ + D)
-            ((mimcD2 α β γ - 1) * (2 + mimcEta α β γ) + D) ε :=
+          c₄ * mimcBound (mimcEta α β γ) (2 * mimcD2 α β γ + ((mimcD3 α β - 3 : ℕ) : ℝ))
+            ((mimcD2 α β γ - 1) * (2 + mimcEta α β γ) + ((mimcD3 α β - 1 : ℕ) : ℝ)) ε :=
   mimc_mse_cost P Pℓ Y Cost V C _ (mimc_complexity_boundary hα hγ hαβ hc₁ hc₂ hc₃) hP hPℓ hY
     hind hCost h_cost h_var h_i h_iii h_ii h_iv h_v
 

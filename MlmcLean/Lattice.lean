@@ -69,6 +69,10 @@ lemma crit_succ (δ : Fin (D + 1) → ℝ) :
   rw [Finset.card_filter, Finset.card_filter, Fin.sum_univ_succ]
   rfl
 
+lemma crit_le (δ : Fin D → ℝ) : crit δ ≤ D := by
+  unfold crit
+  exact (Finset.card_filter_le _ _).trans_eq (by simp)
+
 /-- Every finite set of multi-indices lies in a box. -/
 lemma exists_subset_box (s : Finset (Fin D → ℕ)) : ∃ n, s ⊆ box D n := by
   refine ⟨s.sup (fun ℓ => univ.sup ℓ) + 1, fun ℓ hℓ => mem_box.2 fun d => ?_⟩
