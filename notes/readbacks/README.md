@@ -15,6 +15,10 @@ in `docs/` and with `notes/statement-audit.md`.
 | `allocation_theorem2_full.md` (2026-09-26) | `sumSqrtVC`, `lagrangeN`, `lagrangeN_variance_cost`, `lagrangeN_unique`, `optimal_cost_isLeast`, `optimal_variance_isLeast`, `twoLevel_optimal_ratio`; `dot`, `crossDiff`, `mimcEta`, `mimcD2`, `mimcD3`, `mimcBound`, `tendsto_sum_box_integral_crossDiff`, `hasSum_integral_crossDiff`, `giles_theorem2_full` |
 | `estimators_randomised.md` (2026-09-26) | `levelDiff`, `sum_integral_levelDiff`, `blockMean`, `integral_blockMean`, `variance_blockMean`, `indepFun_blockMean`, the estimator (2.2) and `mlmcEstimator_mean_variance`, `integral_cost_level`, `randomised_necessary`, `singleTermN_mean_variance`, `randomised_optimal_p_isLeast`, `randomised_mlmc_finite` |
 | `nested_estimator.md` (2026-09-26) | `nIdx`, `pairFam`, `nestedTerm`, `nestedEstimator`, `nestedCost`, `nested_cost_isLeast`, `nested_saving`, `nestedEstimator_mean_variance`, `nestedCost_mean`, `nested_mlmc_mse` |
+| `controlvariate_leveldropping.md` (round 3) | `blockMean`, `mc_estimate`, `correlation`, `controlVariate_mean`, `controlVariate_variance`, `controlVariate_optimal`, `controlVariate_estimator`, `optimal_cost_const_product`, `optimal_cost_increasing`, `optimal_cost_decreasing`, `levelKeep_product`, `levelDrop_test`, `levelDrop_variance`, `levelDrop_perfect_correlation`, `levelDrop_uncorrelated` |
+| `erroranalysis.md` (round 3) | `mse_lt_of_half`, `weak_rate_of_second_moment`, `allocation_eq_3_1`, `remaining_error`, `convergence_test_mse`, `consistency_mean`, `covariance_sq_le`, `sqrt_variance_add_le`, `sqrt_variance_sub_le`, `consistency_sd`, `kurtosis`, `sampleVariance_sd`, `kurtosis_of_ternary`, `tendsto_kurtosis_atTop` |
+| `corrections_richardson.md` (round 3) | `levelDiff`, `blockMean`, `totalCost`, `complexityBound`, `fineCoarseDiff`, `antitheticDiff`, `integral_fineCoarseDiff`, `integral_antitheticDiff`, `giles_theorem1_corrections`, `giles_theorem1_fineCoarse`, `giles_theorem1_antithetic`, `ml2rNode`, `ml2rWeight`, `richardson_extrapolation`, `ml2r_weights`, `ml2r_moment_succ`, `ml2r_bias_eq`, `ml2r_bias`, `ml2r_rearrange`, `ml2r_estimator_mean_variance` |
+| `multioutput.md` (round 3) | `sumSqrtVC`, `lagrangeN`, `complexityBound`, `multiOutput_variance`, `multiOutput_optimal`, `integral_norm_add_sq_of_indepFun`, `integral_add_sq_of_indepFun`, `integral_norm_sum_sq_of_indepFun`, `integral_norm_sub_sq_eq`, `mlmc_mse_hilbert`, `giles_theorem1_hilbert`, `sq_norm_add_of_indepFun_fails_sup` |
 
 Outcome of the comparison with the papers: every statement matches, with one exception, which was
 fixed — `singleTerm_unbiased` did not assume `P` integrable, so for a non-integrable `P` it read
@@ -42,4 +46,50 @@ hypothesis set was shown satisfiable. Findings and what was done:
   `nested_saving` compares closed-form costs (the paper's claim is an approximation, and the
   formal version is an inequality); `integral_cost_level` holds for any measure;
   `randomised_mlmc_finite` is qualitative, as is the paper's claim.
+
+**Third round (2026-09-26/27).** Four read-backs cover the modules added for Giles §1.2–1.3,
+§2.1 (corrections), §2.3, §2.5, §2.6 and §3 (`ControlVariate`, `LevelDropping`, `ErrorAnalysis`,
+`Corrections`, `Richardson`, `MultiOutput`), in four packets read by two auditors (packets 10–11
+and 12–13); `levelDiff` is defined in packet 12 and was missing from packet 11.  No statement was
+found vacuous, and no conclusion holds only because of a junk value under the stated hypotheses.
+Findings and what was done:
+
+- `weak_rate_of_second_moment`, `remaining_error`, `convergence_test_mse`: the packet with these
+  statements did not define `levelDiff`, and they are true only for a backward difference.  It is
+  one: `levelDiff Pl 0 = Pl 0`, `levelDiff Pl (ℓ + 1) = Pl (ℓ + 1) − Pl ℓ` (`LevelDiff.lean`, and
+  the read-back of `levelDiff` in `corrections_richardson.md`).
+- `giles_theorem1_corrections`, `giles_theorem1_fineCoarse`, `giles_theorem1_antithetic`,
+  `giles_theorem1_hilbert`: the constant `c₄` is chosen after the data, as in the paper's
+  statement of Theorem 1, so these statements do not say that it depends only on
+  `α, β, γ, c₁, c₂, c₃`.  The paper's proof gives that, and it is now a theorem:
+  `giles_theorem1_uniform` chooses one `c₄` before the probability space and the data (its
+  probabilistic step is `giles_theorem1_of_core`, which keeps the constant of
+  `mlmc_complexity_core`).
+- `multiOutput_optimal`: the docstring said that the Lagrange allocation attains the least cost;
+  the statement now says so (positivity and the exact cost), not only that it meets the
+  individual constraints.
+- `integral_norm_add_sq_of_indepFun`, `integral_add_sq_of_indepFun`: the hypothesis `E[b] = 0`
+  was unused (`E[a] = 0` alone kills the cross term) and was removed, which strengthens both.
+  `tendsto_kurtosis_atTop` now holds for any measure (the probability instance was unused).
+- Kept as they are, with the reason:
+  - `remaining_error`, `convergence_test_mse` assume `E[P_ℓ − P_{ℓ−1}] = a·2^{−αℓ}` exactly for
+    `ℓ ≥ L`: the paper's hypothesis is "`E[P_ℓ − P_{ℓ−1}] ∝ 2^{−αℓ}`" (§3.1, p. 21).
+  - `kurtosis` is `E[X⁴]/(E[X²])²` with raw moments: this is the paper's definition, for `X` with
+    zero mean (§3.3, p. 23).
+  - `sampleVariance_sd` is about `N⁻¹ ∑ X_n²`, the sample variance of a zero-mean `X` when the
+    mean is known, whose standard deviation is exactly `√((κ − 1)/N) E[X²]`; the paper's
+    "approximately" also covers the usual estimator with the sample mean subtracted.
+  - `levelKeep_product` and the allocation theorems use real sample sizes (the papers'
+    relaxation).
+  - `consistency_mean` takes `E[P^f_ℓ] = E[P^c_ℓ]` as a hypothesis: that identity is the
+    assumption (2.4) behind the consistency check, not a consequence of it.
+  - `ml2r_bias_eq` is the identity for an arbitrary remainder `R_ℓ`; `ml2r_bias` is the statement
+    with content (the exact bias for an expansion of order `L + 1`).
+  - Redundant hypotheses that mirror the paper's assumptions or keep a statement from relying on
+    Lean's conventions for `x / 0` or non-integrable functions (for example `hf` in
+    `controlVariate_mean`, `hVX, hVY` in the level-dropping theorems, `hp` in
+    `kurtosis_of_ternary`, `hα` in `richardson_extrapolation`).  `hΔm` in
+    `giles_theorem1_corrections` and `hPlm` in `ml2r_estimator_mean_variance` (measurability of
+    the corrections) are used by the proofs: independence is preserved by composition with
+    measurable maps, and square-integrability alone gives only a.e.-strong measurability.
 
