@@ -190,8 +190,9 @@ theorem measurePreserving_pairAvg : MeasurePreserving pairAvg stdNormalSeq stdNo
       (Measure.infinitePi fun _ : ℕ => Measure.infinitePi fun _ : Fin 2 => gaussianReal 0 1)
       stdNormalSeq := by
     refine ⟨measurable_pi_lambda _ fun k => ?_, ?_⟩
-    · exact (((measurable_pi_apply 0).comp (measurable_pi_apply k)).add
-        ((measurable_pi_apply 1).comp (measurable_pi_apply k))).div_const _
+    · have h0 : Measurable fun x : ℕ → Fin 2 → ℝ => x k 0 := (measurable_pi_apply k).eval
+      have h1 : Measurable fun x : ℕ → Fin 2 → ℝ => x k 1 := (measurable_pi_apply k).eval
+      exact (h0.add h1).div_const _
     · refine (Measure.infinitePi_map_pi _
         (f := fun _ (y : Fin 2 → ℝ) => (y 0 + y 1) / Real.sqrt 2)
         (fun _ => ((measurable_pi_apply 0).add (measurable_pi_apply 1)).div_const _)).trans ?_
