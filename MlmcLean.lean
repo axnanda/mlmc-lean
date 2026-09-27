@@ -28,6 +28,8 @@
 --   split, the randomised estimator's half cost
 -- * `MlmcLean.NestedSimulation` — Giles §9: nested simulation, the antithetic difference, moment
 --   bounds, the exponents of §9.1–§9.2
+-- * `MlmcLean.NestedMLMC` — Giles §9.1: the nested MLMC estimator, its expectation, the moments of
+--   the inner means
 import MlmcLean.Allocation
 import MlmcLean.Estimator
 import MlmcLean.LevelDiff
@@ -54,3 +56,4 @@ import MlmcLean.Algorithm
 import MlmcLean.ApproxNormal
 import MlmcLean.CostComparison
 import MlmcLean.NestedSimulation
+import MlmcLean.NestedMLMC

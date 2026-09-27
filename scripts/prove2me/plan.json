@@ -221,7 +221,15 @@
     "MLMC.nested_mimc_complexity",
     "MLMC.integrable_pow_of_pow_four",
     "MLMC.moments_add_indep",
-    "MLMC.moments_sum_indep"
+    "MLMC.moments_sum_indep",
+    "MLMC.centred_moments_le",
+    "MLMC.innerMean_two_mul",
+    "MLMC.signed_sum_eq",
+    "MLMC.centred_sum_eq",
+    "MLMC.measurePreserving_shiftSeq",
+    "MLMC.integral_nestedDelta",
+    "MLMC.fiber_sum_moments",
+    "MLMC.fiber_nested_moments"
   ],
   "bundlePrefix": "MLMC_",
   "paperNamed": [],

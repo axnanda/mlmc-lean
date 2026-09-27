@@ -224,6 +224,14 @@ import MlmcLean
 #print axioms MLMC.integrable_pow_of_pow_four
 #print axioms MLMC.moments_add_indep
 #print axioms MLMC.moments_sum_indep
+#print axioms MLMC.centred_moments_le
+#print axioms MLMC.innerMean_two_mul
+#print axioms MLMC.signed_sum_eq
+#print axioms MLMC.centred_sum_eq
+#print axioms MLMC.measurePreserving_shiftSeq
+#print axioms MLMC.integral_nestedDelta
+#print axioms MLMC.fiber_sum_moments
+#print axioms MLMC.fiber_nested_moments
 -- helper lemmas that the prove2.me generator promotes to nodes
 #print axioms MLMC.sqrt_Vb_mul_Cb
 #print axioms MLMC.two_rpow_levelL_le

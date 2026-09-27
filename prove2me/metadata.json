@@ -2530,6 +2530,80 @@
    "tags": [
     "probability"
    ]
+  },
+  "MLMC.centred_moments_le": {
+   "theorem_title": "Giles (2015), §9.1: if $\\mathbb E[Y^4]<\\infty$, $a=\\mathbb E[Y]$: $\\mathbb E[(Y-a)^4]\\le16\\mathbb E[Y^4]$, $\\mathbb E[(Y-a)^2]^2\\le\\mathbb E[(Y-a)^4]$, $\\mathbb E[(Y-a)^2]\\le1+16\\mathbb E[Y^4]$",
+   "natural_language_statement": "Giles (2015), §9.1, p. 58: \"By the Central Limit Theorem, $\\Delta g^{(n)}_1,\\Delta g^{(n)}_2=O(M_\\ell^{-1/2})$ and therefore $f''(\\mathbb E[g(Z^{(n)},W)])(\\Delta g^{(n)}_1-\\Delta g^{(n)}_2)^2=O(M_\\ell^{-1})$. It follows that $\\mathbb E[Y_\\ell]=O(M_\\ell^{-1})$ and $V_\\ell=O(M_\\ell^{-2})$.\" The deviations $\\Delta g$ are built from centred inner samples $g(Z,W)-\\mathbb E_W[g(Z,W)]$, and this lemma bounds their moments by the fourth moment of $g$.\n\nLet $(\\Omega,\\mathcal F,\\mu)$ be a probability space and $Y:\\Omega\\to\\mathbb R$ measurable with $Y^4$ integrable, and let $a=\\mathbb E[Y]$. Then $(Y-a)^4$ is integrable and\n$$\n\\mathbb E[(Y-a)^4]\\le16\\,\\mathbb E[Y^4],\\qquad\\big(\\mathbb E[(Y-a)^2]\\big)^2\\le\\mathbb E[(Y-a)^4],\\qquad\\mathbb E[(Y-a)^2]\\le1+16\\,\\mathbb E[Y^4].\n$$",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §9.1, p. 58 of the author's version (the moments behind Δg = O(M_ℓ^(−1/2))).",
+   "explanation": "Pointwise $(x-y)^4\\le8(x^4+y^4)$, because $8x^4+8y^4-(x-y)^4=(x+y)^4+6(x^2-y^2)^2$. So $(Y-a)^4\\le8(Y^4+a^4)$, and $(Y-a)^4$ is integrable.\n\nThe inequality $\\mathbb E[X]^2\\le\\mathbb E[X^2]$ (from $\\mathbb V[X]\\ge0$) gives $a^2\\le\\mathbb E[Y^2]$ and $\\mathbb E[Y^2]^2\\le\\mathbb E[Y^4]$, hence $a^4\\le\\mathbb E[Y^4]$ and $\\mathbb E[(Y-a)^4]\\le8\\,\\mathbb E[Y^4]+8a^4\\le16\\,\\mathbb E[Y^4]$. Applied to $X=(Y-a)^2$ it gives $\\mathbb E[(Y-a)^2]^2\\le\\mathbb E[(Y-a)^4]$. Finally $s\\le1+s^2$ for $s=\\mathbb E[(Y-a)^2]$, so $s\\le1+16\\,\\mathbb E[Y^4]$.",
+   "tags": [
+    "probability"
+   ]
+  },
+  "MLMC.innerMean_two_mul": {
+   "theorem_title": "Giles (2015), §9.1: the fine inner mean is the average of the two coarse inner means, $A_{2M}=\\frac12(A_M+A'_M)$",
+   "natural_language_statement": "Giles (2015), §9.1, p. 57: \"we use an antithetic approach and split the $M_\\ell$ samples of $W$ for the “fine” value into two subsets of size $M_{\\ell-1}$ for the “coarse” value\".\n\nFor $g:\\mathcal Z\\to\\mathcal W\\to\\mathbb R$, $M\\in\\mathbb N$, $z\\in\\mathcal Z$ and a sequence $w$ in $\\mathcal W$,\n$$\nA_{2M}(z,w)=\\frac{A_M(z,w)+A_M(z,\\mathrm{shift}_Mw)}2,\n$$\nwhere $A_M(z,w)=\\frac1M\\sum_{m<M}g(z,w_m)$ and $\\mathrm{shift}_Mw=(w_{M+m})_m$.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §9.1, p. 57 of the author's version (the split of the M_ℓ inner samples into two subsets).",
+   "explanation": "Split $\\sum_{m<2M}g(z,w_m)=\\sum_{m<M}g(z,w_m)+\\sum_{m<M}g(z,w_{M+m})$ and use $(2M)^{-1}=\\frac12M^{-1}$ (both sides are $0$ when $M=0$).",
+   "tags": [
+    "multilevel-monte-carlo"
+   ]
+  },
+  "MLMC.signed_sum_eq": {
+   "theorem_title": "Giles (2015), §9.1: the difference of the two coarse inner means is a signed sum, $A_M-A'_M=M^{-1}\\sum_{m<2M}s_m\\,(g(z,w_m)-a)$",
+   "natural_language_statement": "Giles (2015), §9.1, p. 58: with $A_M=\\mathbb E[g(Z,W)]+\\Delta g_1$ and $A'_M=\\mathbb E[g(Z,W)]+\\Delta g_2$ the antithetic correction depends on $\\Delta g_1-\\Delta g_2=A_M-A'_M$. This identity writes this difference as a signed sum of centred inner samples.\n\nFor $g:\\mathcal Z\\to\\mathcal W\\to\\mathbb R$, $M\\in\\mathbb N$, $z\\in\\mathcal Z$, a sequence $w$ in $\\mathcal W$ and any $a\\in\\mathbb R$,\n$$\nA_M(z,w)-A_M(z,\\mathrm{shift}_Mw)=\\frac1M\\sum_{m=0}^{2M-1}s_m\\,\\big(g(z,w_m)-a\\big),\n$$\nwhere $s_m=1$ for $m<M$ and $s_m=-1$ for $m\\ge M$ (`nestedSign`).",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §9.1, p. 58 of the author's version (Δg₁ − Δg₂).",
+   "explanation": "Split the sum over $m<2M$ into $m<M$ (sign $+1$) and $M\\le m<2M$ (sign $-1$). The constants $a$ cancel, and what remains is $\\frac1M\\big(\\sum_{m<M}g(z,w_m)-\\sum_{m<M}g(z,w_{M+m})\\big)$.",
+   "tags": [
+    "multilevel-monte-carlo"
+   ]
+  },
+  "MLMC.centred_sum_eq": {
+   "theorem_title": "Giles (2015), §9.1: for $M\\ge1$ the inner mean minus a constant is a sum, $A_M-a=M^{-1}\\sum_{m<M}(g(z,w_m)-a)$",
+   "natural_language_statement": "Giles (2015), §9.1, p. 58, writes the inner means as $A=\\mathbb E[g(Z,W)]+\\Delta g$. This identity expresses $\\Delta g$ as a mean of centred inner samples.\n\nFor $g:\\mathcal Z\\to\\mathcal W\\to\\mathbb R$, $M\\ge1$, $z\\in\\mathcal Z$, a sequence $w$ in $\\mathcal W$ and any $a\\in\\mathbb R$,\n$$\nA_M(z,w)-a=\\frac1M\\sum_{m=0}^{M-1}s_m\\,\\big(g(z,w_m)-a\\big),\n$$\nwhere $s_m=1$ for $m<M$ (`nestedSign`), so every sign in the sum is $+1$.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §9.1, p. 58 of the author's version (A = E[g(Z,W)] + Δg).",
+   "explanation": "All signs are $+1$, and $\\sum_{m<M}(g(z,w_m)-a)=\\sum_{m<M}g(z,w_m)-Ma$. Multiplying by $M^{-1}$ gives $A_M-a$ because $M^{-1}M=1$.",
+   "tags": [
+    "multilevel-monte-carlo"
+   ]
+  },
+  "MLMC.measurePreserving_shiftSeq": {
+   "theorem_title": "Giles (2015), §9.1: the second half of the inner samples has the law of the first: $w\\mapsto(w_{M+m})_m$ preserves $\\rho^{\\otimes\\mathbb N}$",
+   "natural_language_statement": "Giles (2015), §9.1, p. 57: the two coarse inner means use two disjoint subsets of the inner samples. Since the inner samples are independent with the same law, the second subset has the same joint law as the first.\n\nLet $\\rho$ be a probability measure on a measurable space $\\mathcal W$ and $M\\in\\mathbb N$. Then the shift $w\\mapsto(w_{M+m})_{m\\in\\mathbb N}$ is measurable and maps the product measure $\\rho^{\\otimes\\mathbb N}$ on $\\mathcal W^{\\mathbb N}$ to itself.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §9.1, p. 57 of the author's version (the two subsets of size M_{ℓ−1}).",
+   "explanation": "The shift is a composition of coordinate maps, so it is measurable. Composing with the injection $m\\mapsto M+m$ maps $\\rho^{\\otimes\\mathbb N}$ to the product of the laws of the coordinates $M+m$, which are all $\\rho$ (`Measure.map_infinitePi_infinitePi_of_inj`).",
+   "tags": [
+    "probability"
+   ]
+  },
+  "MLMC.integral_nestedDelta": {
+   "theorem_title": "Giles (2015), §9.1: the antithetic nested correction has the correct expectation, $\\mathbb E[Y_\\ell]=\\mathbb E[P_\\ell-P_{\\ell-1}]$",
+   "natural_language_statement": "Giles (2015), §9.1: the level-$\\ell$ correction of nested simulation is the antithetic difference $Y_\\ell=f(A_{2M})-\\frac12f(A_M)-\\frac12f(A'_M)$ with $M=M_{\\ell-1}$, where $A_M$ and $A'_M$ are the means of the first and of the second $M$ inner samples (see the definitions `innerMean`, `shiftSeq`, `nestedP`, `nestedDelta`). The paper states (p. 57): \"Note that this has the correct expectation, i.e. $\\mathbb E[Y_\\ell]=\\mathbb E[P_\\ell-P_{\\ell-1}]$.\"\n\nLet $\\nu,\\rho$ be probability measures on measurable spaces $\\mathcal Z,\\mathcal W$, and let $f:\\mathbb R\\to\\mathbb R$ and $g:\\mathcal Z\\to\\mathcal W\\to\\mathbb R$. Assume that every level approximation $P_\\ell(z,w)=f(A_{2^\\ell}(z,w))$ is integrable with respect to $\\nu\\otimes\\rho^{\\otimes\\mathbb N}$. Then for every $\\ell\\in\\mathbb N$\n$$\n\\mathbb E[Y_\\ell]=\\mathbb E[P_\\ell-P_{\\ell-1}]\\qquad(P_{-1}\\equiv0),\n$$\nwith expectations under $\\nu\\otimes\\rho^{\\otimes\\mathbb N}$.\n\n**Formalization Note** $P_\\ell-P_{\\ell-1}$ is `levelDiff (nestedP f g) ℓ`.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §9.1, p. 57 of the author's version (\"Note that this has the correct expectation\").",
+   "explanation": "For $\\ell=0$ both sides are $\\mathbb E[P_0]$. For $\\ell+1$ with $M=2^\\ell$, $\\mathbb E[Y_{\\ell+1}]=\\mathbb E[P_{\\ell+1}]-\\frac12\\mathbb E[f(A_M)]-\\frac12\\mathbb E[f(A'_M)]$ by linearity. The map $(z,w)\\mapsto(z,\\mathrm{shift}_Mw)$ preserves $\\nu\\otimes\\rho^{\\otimes\\mathbb N}$ (`measurePreserving_shiftSeq`), so $\\mathbb E[f(A'_M)]=\\mathbb E[f(A_M)]=\\mathbb E[P_\\ell]$. Hence $\\mathbb E[Y_{\\ell+1}]=\\mathbb E[P_{\\ell+1}]-\\mathbb E[P_\\ell]$.",
+   "tags": [
+    "multilevel-monte-carlo",
+    "probability"
+   ]
+  },
+  "MLMC.fiber_sum_moments": {
+   "theorem_title": "Giles (2015), §9.1: a signed sum $S_n$ of $n$ independent centred inner samples has $\\mathbb E S_n=0$, $\\mathbb E S_n^2=n\\sigma^2$ and $\\mathbb E S_n^4\\le n\\kappa+3n^2\\sigma^4$",
+   "natural_language_statement": "Giles (2015), §9.1, p. 58: \"By the Central Limit Theorem, $\\Delta g^{(n)}_1,\\Delta g^{(n)}_2=O(M_\\ell^{-1/2})$ and therefore $f''(\\mathbb E[g(Z^{(n)},W)])(\\Delta g^{(n)}_1-\\Delta g^{(n)}_2)^2=O(M_\\ell^{-1})$. It follows that $\\mathbb E[Y_\\ell]=O(M_\\ell^{-1})$ and $V_\\ell=O(M_\\ell^{-2})$.\" This result gives the moments of the sums that make up the deviations $\\Delta g$ for a fixed outer sample.\n\nLet $\\rho$ be a probability measure on a measurable space $\\mathcal W$, $h:\\mathcal W\\to\\mathbb R$ measurable with $h^4$ integrable, $a=\\int h\\,d\\rho$, $\\sigma^2=\\int(h-a)^2\\,d\\rho$ and $\\kappa=\\int(h-a)^4\\,d\\rho$. Let $c_m\\in\\mathbb R$ with $c_m^2=1$ for all $m$, and $n\\in\\mathbb N$. Under the product measure $\\rho^{\\otimes\\mathbb N}$ on sequences $w=(w_0,w_1,\\dots)$, the sum\n$$\nS_n(w)=\\sum_{m=0}^{n-1}c_m\\big(h(w_m)-a\\big)\n$$\nhas $S_n^4$ integrable and\n$$\n\\mathbb E[S_n]=0,\\qquad\\mathbb E[S_n^2]=n\\sigma^2,\\qquad\\mathbb E[S_n^4]\\le n\\kappa+3n^2\\sigma^4 .\n$$",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §9.1, p. 58 of the author's version (\"By the Central Limit Theorem, Δg₁, Δg₂ = O(M_ℓ^(−1/2))\").",
+   "explanation": "The terms $X_m(w)=c_m(h(w_m)-a)$ are functions of distinct coordinates, so they are mutually independent under $\\rho^{\\otimes\\mathbb N}$. Each coordinate has law $\\rho$, so $\\mathbb E[X_m]=c_m(\\mathbb E[h]-a)=0$, $\\mathbb E[X_m^2]=\\sigma^2$ and $\\mathbb E[X_m^4]=\\kappa$ (as $c_m^2=1$). The fourth moment is integrable by `centred_moments_le`. Apply `moments_sum_indep`, and linearity for $\\mathbb E[S_n]$.",
+   "tags": [
+    "probability"
+   ]
+  },
+  "MLMC.fiber_nested_moments": {
+   "theorem_title": "Giles (2015), §9.1: for a fixed outer sample, $M\\mathbb E[(A_M-A'_M)^2]$, $M^2\\mathbb E[(A_M-A'_M)^4]$ and $M\\mathbb E[(A_M-G)^2]$ are bounded by $\\mathbb E_W[g^4]$, and $\\mathbb E[A_M]=G$",
+   "natural_language_statement": "Giles (2015), §9.1, p. 58: \"By the Central Limit Theorem, $\\Delta g^{(n)}_1,\\Delta g^{(n)}_2=O(M_\\ell^{-1/2})$ and therefore $f''(\\mathbb E[g(Z^{(n)},W)])(\\Delta g^{(n)}_1-\\Delta g^{(n)}_2)^2=O(M_\\ell^{-1})$. It follows that $\\mathbb E[Y_\\ell]=O(M_\\ell^{-1})$ and $V_\\ell=O(M_\\ell^{-2})$.\" This result proves the orders $\\Delta g_1-\\Delta g_2=O(M^{-1/2})$ in mean square and fourth mean, for a fixed outer sample $z$.\n\nLet $\\rho$ be a probability measure on a measurable space $\\mathcal W$, $g:\\mathcal Z\\to\\mathcal W\\to\\mathbb R$, $z\\in\\mathcal Z$ with $g(z,\\cdot)$ measurable and $g(z,\\cdot)^4$ integrable, and write $m_4=\\int g(z,v)^4\\,d\\rho(v)$ and $G=\\int g(z,v)\\,d\\rho(v)$. Let $M\\ge1$ and write $A_M=A_M(z,w)$, $A'_M=A_M(z,\\mathrm{shift}_Mw)$ for $w\\sim\\rho^{\\otimes\\mathbb N}$. Then $(A_M-A'_M)^4$ and $(A_M-G)^4$ are integrable, and\n$$\nM\\,\\mathbb E\\big[(A_M-A'_M)^2\\big]\\le2(1+16m_4),\\qquad M^2\\,\\mathbb E\\big[(A_M-A'_M)^4\\big]\\le224\\,m_4,\n$$\n$$\nM\\,\\mathbb E\\big[(A_M-G)^2\\big]\\le1+16m_4,\\qquad\\mathbb E[A_M-G]=0 .\n$$",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §9.1, p. 58 of the author's version (\"By the Central Limit Theorem, Δg₁, Δg₂ = O(M_ℓ^(−1/2))\").",
+   "explanation": "By `signed_sum_eq` and `centred_sum_eq`, $A_M-A'_M=M^{-1}S_{2M}$ with signs $\\pm1$, and $A_M-G=M^{-1}S_M$ with signs $+1$, where $S_n$ is the sum of `fiber_sum_moments` for $h=g(z,\\cdot)$. With $\\sigma^2,\\kappa$ as there:\n\n1. $M\\,\\mathbb E[(A_M-A'_M)^2]=M\\cdot M^{-2}\\cdot2M\\sigma^2=2\\sigma^2$;\n2. $M^2\\,\\mathbb E[(A_M-A'_M)^4]\\le M^{-2}(2M\\kappa+12M^2\\sigma^4)\\le2\\kappa+12\\sigma^4$;\n3. $M\\,\\mathbb E[(A_M-G)^2]=\\sigma^2$, and $\\mathbb E[A_M-G]=M^{-1}\\mathbb E[S_M]=0$.\n\nBy `centred_moments_le`, $\\kappa\\le16m_4$, $\\sigma^4\\le\\kappa$ and $\\sigma^2\\le1+16m_4$, which gives the stated constants.",
+   "tags": [
+    "multilevel-monte-carlo",
+    "probability"
+   ]
   }
  },
  "definitions": {
@@ -2710,6 +2784,15 @@
    "tags": [
     "numerical-analysis",
     "monte-carlo"
+   ]
+  },
+  "MLMC_NestedMLMC": {
+   "definition_title": "Giles (2015), §9.1: the nested simulation model $\\nu\\otimes\\rho^{\\otimes\\mathbb N}$, the inner means $A_M$, the level approximations $P_\\ell$ and the antithetic corrections $Y_\\ell$",
+   "natural_language_statement": "Giles (2015), §9.1: nested simulation estimates $\\mathbb E_Z\\big[f(\\mathbb E_W[g(Z,W)])\\big]$, where $Z$ is an outer random variable and $W$ an independent inner random variable. On level $\\ell$ the inner expectation is replaced by the mean of $M_\\ell=2^\\ell$ inner samples, and the level correction is an antithetic difference.\n\nThroughout, $\\nu$ is a measure on a measurable space $\\mathcal Z$ (the law of $Z$), $\\rho$ a measure on a measurable space $\\mathcal W$ (the law of $W$), $g:\\mathcal Z\\to\\mathcal W\\to\\mathbb R$ and $f:\\mathbb R\\to\\mathbb R$.\n\n**`innerMean`**. For $M\\in\\mathbb N$, $z\\in\\mathcal Z$ and a sequence $w=(w_0,w_1,\\dots)$ in $\\mathcal W$, the mean of the first $M$ inner samples:\n$$\nA_M(z,w)=\\frac1M\\sum_{m=0}^{M-1}g(z,w_m)\n$$\n(which is $0$ when $M=0$).\n\n**`shiftSeq`**. For $M\\in\\mathbb N$ and a sequence $w$, the shifted sequence $m\\mapsto w_{M+m}$. With $M=M_{\\ell-1}$ it lists the second half of the level-$\\ell$ inner samples, and $A_M(z,\\mathrm{shift}_M w)$ is their mean $A'_M$.\n\n**`nestedSign`**. For $M,m\\in\\mathbb N$: $s_m=1$ if $m<M$ and $s_m=-1$ otherwise.\n\n**`innerLaw`**. The law $\\rho^{\\otimes\\mathbb N}$ of an independent sequence of inner samples with law $\\rho$: Mathlib's infinite product measure `Measure.infinitePi` of the constant family $\\rho$.\n\n**`nestedLaw`**. The joint law $\\nu\\otimes\\rho^{\\otimes\\mathbb N}$ of the outer variable and the independent inner samples, on $\\mathcal Z\\times\\mathcal W^{\\mathbb N}$.\n\n**`nestedP`**. The level-$\\ell$ approximation $P_\\ell(z,w)=f\\big(A_{2^\\ell}(z,w)\\big)$.\n\n**`nestedDelta`**. The antithetic level correction (one outer sample): $Y_0=P_0$ and, for $\\ell\\ge0$ with $M=2^\\ell$,\n$$\nY_{\\ell+1}(z,w)=f\\big(A_{2M}(z,w)\\big)-\\tfrac12f\\big(A_M(z,w)\\big)-\\tfrac12f\\big(A_M(z,\\mathrm{shift}_Mw)\\big).\n$$\n\n**Formalization Note** The outer and inner randomness are modelled directly on the product space $\\mathcal Z\\times\\mathcal W^{\\mathbb N}$ with the product law; any model with $Z$ and $W^{(0)},W^{(1)},\\dots$ mutually independent, $Z\\sim\\nu$ and $W^{(m)}\\sim\\rho$ has this joint law. Samples are numbered from $0$.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §9.1, pp. 57–58 of the author's version (the nested MC estimator, M_ℓ = 2^ℓ inner samples, and the antithetic estimator Y_ℓ).",
+   "tags": [
+    "multilevel-monte-carlo",
+    "probability"
    ]
   }
  }
