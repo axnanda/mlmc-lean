@@ -19,6 +19,7 @@
 -- * `MlmcLean.Richardson` — Giles §2.3: Richardson extrapolation, ML2R weights, bias, estimator
 -- * `MlmcLean.MultiOutput` — Giles §2.5: several outputs, Hilbert-space outputs, Theorem 1
 -- * `MlmcLean.RoundingError` — Haas–Giles §4: fixed-point rounding, the error-variance model
+-- * `MlmcLean.BitWidth` — Haas–Giles §5–§6: the cost model, the bit-width optimisation
 import MlmcLean.Allocation
 import MlmcLean.Estimator
 import MlmcLean.LevelDiff
@@ -38,3 +39,4 @@ import MlmcLean.Corrections
 import MlmcLean.Richardson
 import MlmcLean.MultiOutput
 import MlmcLean.RoundingError
+import MlmcLean.BitWidth

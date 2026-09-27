@@ -130,7 +130,17 @@
     "MLMC.variance_linearised_corr",
     "MLMC.vIndep_le_vCorr",
     "MLMC.variance_extended_indep",
-    "MLMC.variance_extended_corr"
+    "MLMC.variance_extended_corr",
+    "MLMC.opCost_le_sepCost",
+    "MLMC.levelwise_optimisation",
+    "MLMC.vIndepR_natCast",
+    "MLMC.hasDerivAt_vIndepR_update",
+    "MLMC.hasDerivAt_sepCost_update",
+    "MLMC.exists_unique_bitWidth",
+    "MLMC.hasDerivAt_levelCost",
+    "MLMC.levelCost_stationary_iff",
+    "MLMC.vIndepR_antitone",
+    "MLMC.greedy_rounding_feasible"
   ],
   "bundlePrefix": "MLMC_",
   "paperNamed": [],

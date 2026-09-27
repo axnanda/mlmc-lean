@@ -133,6 +133,16 @@ import MlmcLean
 #print axioms MLMC.vIndep_le_vCorr
 #print axioms MLMC.variance_extended_indep
 #print axioms MLMC.variance_extended_corr
+#print axioms MLMC.opCost_le_sepCost
+#print axioms MLMC.levelwise_optimisation
+#print axioms MLMC.vIndepR_natCast
+#print axioms MLMC.hasDerivAt_vIndepR_update
+#print axioms MLMC.hasDerivAt_sepCost_update
+#print axioms MLMC.exists_unique_bitWidth
+#print axioms MLMC.hasDerivAt_levelCost
+#print axioms MLMC.levelCost_stationary_iff
+#print axioms MLMC.vIndepR_antitone
+#print axioms MLMC.greedy_rounding_feasible
 -- helper lemmas that the prove2.me generator promotes to nodes
 #print axioms MLMC.sqrt_Vb_mul_Cb
 #print axioms MLMC.two_rpow_levelL_le
