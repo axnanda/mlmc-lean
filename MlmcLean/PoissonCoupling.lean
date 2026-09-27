@@ -124,6 +124,7 @@ lemma poissonWeight_succ_mul (r : ℝ≥0) (n : ℕ) :
       r * (Real.exp (-r) * (r : ℝ) ^ n / (n.factorial : ℝ)) := by
   have h1 : ((n : ℝ) + 1)⁻¹ * ((n : ℝ) + 1) = 1 := inv_mul_cancel₀ (by positivity)
   rw [Nat.factorial_succ, Nat.cast_mul, Nat.cast_succ]
+  simp only [div_eq_mul_inv, mul_inv]
   linear_combination (Real.exp (-r) * (r : ℝ) ^ (n + 1) * ((n.factorial : ℝ))⁻¹) * h1
 
 lemma hasSum_poissonWeight_mul_id (r : ℝ≥0) :
@@ -133,9 +134,7 @@ lemma hasSum_poissonWeight_mul_id (r : ℝ≥0) :
     Nat.cast_add, Nat.cast_one]
   have h := (hasSum_one_poissonMeasure r).mul_left (r : ℝ)
   rw [mul_one] at h
-  convert h using 1
-  funext n
-  exact poissonWeight_succ_mul r n
+  exact h.congr_fun fun n => poissonWeight_succ_mul r n
 
 lemma hasSum_poissonWeight_mul_descFactorial (r : ℝ≥0) :
     HasSum (fun n : ℕ =>
@@ -145,10 +144,8 @@ lemma hasSum_poissonWeight_mul_descFactorial (r : ℝ≥0) :
   simp only [Finset.range_one, Finset.sum_singleton, Nat.cast_zero, zero_mul, mul_zero, sub_zero,
     Nat.cast_add, Nat.cast_one, add_sub_cancel_right]
   have h := (hasSum_poissonWeight_mul_id r).mul_left (r : ℝ)
-  convert h using 1
-  · funext n
-    linear_combination (n : ℝ) * poissonWeight_succ_mul r n
-  · ring
+  rw [show (r : ℝ) * r = (r : ℝ) ^ 2 by ring] at h
+  exact h.congr_fun fun n => by linear_combination (n : ℝ) * poissonWeight_succ_mul r n
 
 /-- **The mean of a Poisson variate**: `E[P(r)] = r` (used in Giles 2015, §8). -/
 theorem integral_poissonMeasure_id (r : ℝ≥0) : ∫ n, (n : ℝ) ∂(poissonMeasure r) = r := by
@@ -206,7 +203,7 @@ theorem coupledIncr_fst (a b : ℝ≥0) : (coupledIncr a b).map Prod.fst = poiss
   · have e : Prod.fst ∘ couplePair a b = Prod.fst := by
       funext p
       simp [couplePair, h]
-    push_neg at h
+    push Not at h
     rw [e, Measure.map_fst_prod, measure_univ, one_smul, min_eq_left h]
 
 /-- **The path with rate `b` gets a `P(b)` increment** (Giles 2015, §8): the second marginal of the
@@ -225,7 +222,7 @@ theorem coupledIncr_snd (a b : ℝ≥0) : (coupledIncr a b).map Prod.snd = poiss
   · have e : Prod.snd ∘ couplePair a b = Prod.fst := by
       funext p
       simp [couplePair, h]
-    push_neg at h
+    push Not at h
     rw [e, Measure.map_fst_prod, measure_univ, one_smul, min_eq_right h]
 
 /-- **The coupling in terms of random variables** (Giles 2015, §8, p. 55: "`P₁ = P(h min(λ(x_n),
@@ -333,7 +330,9 @@ theorem coupledTwoStep_fst (lam : ℕ → ℝ≥0) (h : ℝ≥0) (s : ℕ × ℕ
         rw [coupledTwoStep, map_bind_of_discrete _ _ measurable_fst]
         exact congrArg (Measure.bind _) (funext e)
     _ = ((coupledIncr (h * lam s.1) (h * lam s.2)).map Prod.fst).bind fun i =>
-          tauStep lam h (s.1 + i) := (bind_map_of_discrete _ _ _).symm
+          tauStep lam h (s.1 + i) :=
+        (bind_map_of_discrete (coupledIncr (h * lam s.1) (h * lam s.2)) Prod.fst
+          fun i => tauStep lam h (s.1 + i)).symm
     _ = (tauStep lam h s.1).bind (tauStep lam h) := by
         rw [coupledIncr_fst]
         exact (bind_map_of_discrete (poissonMeasure (h * lam s.1)) (s.1 + ·) (tauStep lam h)).symm
@@ -361,7 +360,8 @@ theorem coupledTwoStep_snd (lam : ℕ → ℝ≥0) (h : ℝ≥0) (s : ℕ × ℕ
         exact congrArg (Measure.bind _) (funext e)
     _ = ((coupledIncr (h * lam s.1) (h * lam s.2)).map Prod.snd).bind fun j =>
           (poissonMeasure (h * lam s.2)).map fun k => s.2 + j + k :=
-        (bind_map_of_discrete _ _ _).symm
+        (bind_map_of_discrete (coupledIncr (h * lam s.1) (h * lam s.2)) Prod.snd
+          fun j => (poissonMeasure (h * lam s.2)).map fun k => s.2 + j + k).symm
     _ = (poissonMeasure (h * lam s.2 + h * lam s.2)).map (s.2 + ·) := by
         rw [coupledIncr_snd, poisson_bind_shift]
     _ = tauStep lam (2 * h) s.2 := by
@@ -387,7 +387,9 @@ theorem coupledChain_fst (lam : ℕ → ℝ≥0) (h : ℝ≥0) (x₀ : ℕ) :
         _ = (coupledChain lam h x₀ k).bind fun s => (tauStep lam h s.1).bind (tauStep lam h) := by
             simp_rw [coupledTwoStep_fst]
         _ = ((coupledChain lam h x₀ k).map Prod.fst).bind fun x =>
-              (tauStep lam h x).bind (tauStep lam h) := (bind_map_of_discrete _ _ _).symm
+              (tauStep lam h x).bind (tauStep lam h) :=
+            (bind_map_of_discrete (coupledChain lam h x₀ k) Prod.fst
+              fun x => (tauStep lam h x).bind (tauStep lam h)).symm
         _ = ((tauChain lam h x₀ (2 * k)).bind (tauStep lam h)).bind (tauStep lam h) := by
             rw [coupledChain_fst lam h x₀ k,
               Measure.bind_bind (Measurable.of_discrete (f := tauStep lam h)).aemeasurable
@@ -411,7 +413,7 @@ theorem coupledChain_snd (lam : ℕ → ℝ≥0) (h : ℝ≥0) (x₀ : ℕ) :
         _ = (coupledChain lam h x₀ k).bind fun s => tauStep lam (2 * h) s.2 := by
             simp_rw [coupledTwoStep_snd]
         _ = ((coupledChain lam h x₀ k).map Prod.snd).bind (tauStep lam (2 * h)) :=
-            (bind_map_of_discrete _ _ _).symm
+            (bind_map_of_discrete (coupledChain lam h x₀ k) Prod.snd (tauStep lam (2 * h))).symm
         _ = tauChain lam (2 * h) x₀ (k + 1) := by
             rw [coupledChain_snd lam h x₀ k]
             rfl
