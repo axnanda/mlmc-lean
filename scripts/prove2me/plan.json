@@ -229,7 +229,18 @@
     "MLMC.measurePreserving_shiftSeq",
     "MLMC.integral_nestedDelta",
     "MLMC.fiber_sum_moments",
-    "MLMC.fiber_nested_moments"
+    "MLMC.fiber_nested_moments",
+    "MLMC.abs_le_quadratic",
+    "MLMC.memLp_two_comp_of_pow_four",
+    "MLMC.fiber_bias_le",
+    "MLMC.integrable_of_fiber_bound",
+    "MLMC.nested_variance_rate",
+    "MLMC.nested_mean_rate",
+    "MLMC.integrable_innerMean_pow_four",
+    "MLMC.integrable_condMean_pow_four",
+    "MLMC.nested_bias_rate",
+    "MLMC.nested_mlmc_complexity",
+    "MLMC.nested_mlmc_complexity_iid"
   ],
   "bundlePrefix": "MLMC_",
   "paperNamed": [],
@@ -239,6 +250,7 @@
     "MLMC.alg1Samples_le",
     "MLMC.anchor_le_alg1Rem",
     "MLMC.level_add_one_le",
+    "MLMC.measurable_nestedDelta",
     "MLMC.one_le_complexityBound",
     "MLMC.sum_axis_le_sum_rectSet",
     "MLMC.sum_rectSet_two_rpow_le"

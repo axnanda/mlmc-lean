@@ -232,6 +232,17 @@ import MlmcLean
 #print axioms MLMC.integral_nestedDelta
 #print axioms MLMC.fiber_sum_moments
 #print axioms MLMC.fiber_nested_moments
+#print axioms MLMC.abs_le_quadratic
+#print axioms MLMC.memLp_two_comp_of_pow_four
+#print axioms MLMC.fiber_bias_le
+#print axioms MLMC.integrable_of_fiber_bound
+#print axioms MLMC.nested_variance_rate
+#print axioms MLMC.nested_mean_rate
+#print axioms MLMC.integrable_innerMean_pow_four
+#print axioms MLMC.integrable_condMean_pow_four
+#print axioms MLMC.nested_bias_rate
+#print axioms MLMC.nested_mlmc_complexity
+#print axioms MLMC.nested_mlmc_complexity_iid
 -- helper lemmas that the prove2.me generator promotes to nodes
 #print axioms MLMC.sqrt_Vb_mul_Cb
 #print axioms MLMC.two_rpow_levelL_le
