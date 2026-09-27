@@ -2,3 +2,11 @@
 build.log
 __pycache__/
 *.pyc
+# prove2.me pipeline: generated tree, facts, checks, upload state and credentials
+/facts/
+/prove2me/platform/
+/prove2me/check/
+/prove2me/payload.json
+/prove2me/upload_state.json
+/prove2me/credentials.json
+/prove2me/proposal_state.json

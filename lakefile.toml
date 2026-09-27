@@ -3,16 +3,35 @@ version = "0.1.0"
 keywords = ["math"]
 defaultTargets = ["MlmcLean"]
 
+# The prove2.me verification server elaborates with `autoImplicit = false` and otherwise default
+# options (prove2me_workspace/references/lean-setup.md); build with exactly those options so that
+# everything that compiles here compiles there.
 [leanOptions]
-pp.unicode.fun = true # pretty-prints `fun a ↦ b`
-relaxedAutoImplicit = false
-# weak.linter.mathlibStandardSet = true  -- not a Mathlib contribution; skip header/style linters
-maxSynthPendingDepth = 3
+autoImplicit = false
 
+# Pinned to the prove2.me default verification environment (Lean v4.33.1, Mathlib 0df444a) so
+# that every file here compiles exactly as it does on the platform's servers.
 [[require]]
 name = "mathlib"
-scope = "leanprover-community"
-rev = "v4.35.0-rc2"
+git = "https://github.com/leanprover-community/mathlib4.git"
+rev = "0df444a360eaa60ab8c11dca51a86af692955474"
 
 [[lean_lib]]
 name = "MlmcLean"
+
+# The prove2.me upload tree, generated (not committed) by scripts/prove2me/generate.py into
+# prove2me/platform/{Definitions,Theorems,Solutions}; built and validated in CI.
+[[lean_lib]]
+name = "Definitions"
+srcDir = "prove2me/platform"
+globs = ["Definitions.+"]
+
+[[lean_lib]]
+name = "Theorems"
+srcDir = "prove2me/platform"
+globs = ["Theorems.+"]
+
+[[lean_lib]]
+name = "Solutions"
+srcDir = "prove2me/platform"
+globs = ["Solutions.+"]

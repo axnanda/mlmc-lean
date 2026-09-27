@@ -14,13 +14,107 @@ jobs:
 
     steps:
       - uses: actions/checkout@v7
+      # The prove2.me uploader against a local mock of the API (no network, fake key).
+      - name: prove2.me uploader tests
+        run: python3 scripts/prove2me/test_upload.py
       - uses: leanprover/lean-action@v1
+      # The generator on a small Lean-core-only fixture (recursion, implicit simp lemmas, modules
+      # without project imports, section variables): catches generator regressions in seconds.
+      - name: prove2.me generator regression test (fixture)
+        run: bash scripts/prove2me/fixture/run.sh
       # Axiom audit: every main theorem may depend only on propext, Classical.choice, Quot.sound.
       - name: Axiom audit (fails on sorryAx or extra axioms)
         run: |
           set -o pipefail
           lake env lean scripts/AxiomCheck.lean | tee axioms.txt
           if grep -q "sorryAx" axioms.txt; then echo "::error::sorry found"; exit 1; fi
-          if grep "depends on axioms" axioms.txt | grep -vE "\[propext, Classical.choice, Quot.sound\]"; then
+          # each axiom list must consist of propext, Classical.choice and Quot.sound only
+          ok='(propext|Classical\.choice|Quot\.sound)'
+          if grep "depends on axioms" axioms.txt | grep -vE "depends on axioms: \[$ok(, $ok)*\][[:space:]]*$"; then
             echo "::error::unexpected axioms"; exit 1
           fi
+      # prove2.me upload pipeline, Phase 1: the declaration graph (Stage 1) and the per-file
+      # sketch facts (Stage 2) that scripts/prove2me/generate.py consumes.
+      - name: prove2.me facts (Stage 1 declaration graph, Stage 2 sketch facts)
+        run: |
+          set -eo pipefail
+          mkdir -p facts
+          lake env lean scripts/prove2me/extract_decl_graph.lean
+          mv decl_graph.jsonl facts/
+          for f in MlmcLean/*.lean; do
+            m=$(basename "$f" .lean)
+            if ! lake env lean --run scripts/prove2me/extract_sketch_info.lean "$f" MLMC \
+                > "facts/sketch_info.$m.jsonl"; then
+              cat "facts/sketch_info.$m.jsonl"; exit 1
+            fi
+          done
+          wc -l facts/*
+      # Phases 2-5: generate the platform tree by skeleton subtraction, build it with the platform's
+      # options, and validate the exact upload text (type diff; solutions match their stubs).
+      - name: prove2.me platform tree (generate, build, validate)
+        run: |
+          set -eo pipefail
+          python3 scripts/prove2me/generate.py --facts facts --out prove2me/platform \
+            --payload prove2me/payload.json
+          lake build Definitions Theorems Solutions
+          python3 scripts/prove2me/validate.py --jobs 4
+          # every node and bundle has complete metadata; proposals reference uploaded names only
+          if [ -f prove2me/metadata.json ]; then
+            python3 scripts/prove2me/upload.py --dry-run
+            python3 scripts/prove2me/propose.py --dry-run
+          else
+            echo "::warning::prove2me/metadata.json not written yet; upload dry run skipped"
+          fi
+      - name: prove2.me plan summary
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import json, os
+          if not os.path.exists("prove2me/payload.json"):
+              raise SystemExit(print("no payload (an earlier step failed)"))
+          p = json.load(open("prove2me/payload.json"))
+          c = p["classification"]
+          print("@@PLAN", json.dumps({"nodes": c["nodes"], "helpers": c["inline_helpers"],
+                                     "definitions": c["definitions"],
+                                     "order": p["upload_order"]}))
+          for t in p["theorems"]:
+              print("@@NODE", t["theorem_name"], t["source_file"], *t["source_lines"],
+                    c["proof_lines"].get(t["theorem_name"]))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: prove2me
+          path: |
+            facts
+            prove2me/platform
+            prove2me/payload.json
+
+  # Opt-in upload of the validated tree to prove2.me, from GitHub's runners. Enable it with the
+  # repository variable PROVE2ME_UPLOAD = true and the repository secret PROVE2ME_API_KEY (a `p2m_…`
+  # key of the account that should own the uploads; the uploader sends it only to
+  # https://prove2.me/api/v1). Everything is uploaded private; reruns are idempotent (the uploader
+  # rebuilds its state from the account's publish-job history). Making the tree public is not done
+  # here: run `scripts/prove2me/upload.py --make-public --confirm-irreversible` deliberately.
+  upload:
+    needs: build
+    if: ${{ vars.PROVE2ME_UPLOAD == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    concurrency:
+      group: prove2me-upload
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v4
+        with:
+          name: prove2me
+      - name: Upload to prove2.me (private)
+        env:
+          PROVE2ME_API_KEY: ${{ secrets.PROVE2ME_API_KEY }}
+        run: python3 scripts/prove2me/upload.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: prove2me-upload-state
+          path: prove2me/upload_state.json
