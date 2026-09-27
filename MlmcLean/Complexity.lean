@@ -398,7 +398,7 @@ lemma one_le_complexityBound {α β γ ε : ℝ} (hα : 0 < α) (hε : 0 < ε)
   rcases lt_trichotomy γ β with hlt | heq | hgt
   · rw [complexityBound_of_lt hlt]
     exact h2
-  · rw [complexityBound_of_eq heq]
+  · rw [complexityBound_of_eq heq.symm]
     have ht : 1 ≤ -Real.log ε := one_le_neg_log hε hε1
     have hl : 1 ≤ Real.log ε ^ 2 := by nlinarith
     calc (1 : ℝ) = 1 * 1 := (mul_one 1).symm

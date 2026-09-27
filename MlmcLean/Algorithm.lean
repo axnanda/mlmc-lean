@@ -216,7 +216,7 @@ lemma optimalN_mono_range (V C : ℕ → ℝ) {τ : ℝ} (hτ : 0 < τ) {L L' : 
     optimalN (range (L + 1)) V C τ ℓ ≤ optimalN (range (L' + 1)) V C τ ℓ := by
   unfold optimalN lagrangeN sumSqrtVC
   exact Nat.ceil_mono (mul_le_mul_of_nonneg_left
-    (Finset.sum_le_sum_of_subset_of_nonneg (Finset.range_subset.2 (by omega))
+    (Finset.sum_le_sum_of_subset_of_nonneg (Finset.range_subset_range.2 (by omega))
       fun i _ _ => Real.sqrt_nonneg _)
     (mul_nonneg (inv_nonneg.2 hτ.le) (Real.sqrt_nonneg _)))
 
@@ -441,7 +441,11 @@ theorem alg1_not_guaranteed (α : ℝ) {ε : ℝ} (hε : 0 < ε) (B : ℝ) :
       have h0 := hm 0 (by norm_num)
       have h1 := hm 1 (by norm_num)
       have h2 := hm 2 le_rfl
-      simp [alg1Rem, h0, h1, h2]
+      show max (max (|∫ ω, levelDiff (fun ℓ (_ : Ω) => c ℓ) 0 ω ∂μ| * (2 : ℝ) ^ (-(2 * α)))
+          (|∫ ω, levelDiff (fun ℓ (_ : Ω) => c ℓ) 1 ω ∂μ| * (2 : ℝ) ^ (-α)))
+          |∫ ω, levelDiff (fun ℓ (_ : Ω) => c ℓ) 2 ω ∂μ| / ((2 : ℝ) ^ α - 1) = 0
+      rw [h0, h1, h2]
+      simp
     have hpass : alg1Rem (fun ℓ => ∫ ω, levelDiff (fun ℓ (_ : Ω) => c ℓ) ℓ ω ∂μ) α 2 ≤
         ε / Real.sqrt 2 := by
       rw [hrem]
@@ -593,6 +597,6 @@ theorem alg1_complexity {α β γ c₁ c₂ c₃ : ℝ} (hα : 0 < α) (hγ : 0 
         add_le_add hinit (htarget.trans (hcost ε hε hε1 L hLK))
     _ ≤ (A + c₄) * complexityBound α β γ ε := by
         rw [add_mul]
-        exact add_le_add_right (le_mul_of_one_le_right hA h1) _
+        exact add_le_add (le_mul_of_one_le_right hA h1) le_rfl
 
 end MLMC
