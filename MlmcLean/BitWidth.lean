@@ -28,7 +28,7 @@ FPGAs*, arXiv:2502.07123 (2025), §5 (p. 11) and §6 (pp. 11–13).
   `½ (√(C_ℓ/V^Δ_ℓ) ∂V^Δ_ℓ + √(V_ℓ/C̃_ℓ) ∂C̃_ℓ)`, and it vanishes exactly when (35) holds with
   `λ = √(V_ℓ V^Δ_ℓ / (C_ℓ C̃_ℓ))` (`hasDerivAt_levelCost`, `levelCost_stationary_iff`).
 * **(38)** (§6.2).  Rounding the real bit-widths down and adding one bit at a time, in any order,
-  reaches a feasible configuration after at most one bit per variable
+  until the constraint holds stops at a feasible configuration after at most one bit per variable
   (`greedy_rounding_feasible`, with `vIndepR_antitone`).
 
 The variance bound with real bit-widths is `vIndepR`; at natural bit-widths it is `vIndep` of
@@ -389,17 +389,23 @@ on the error is satisfied.  This heuristic ... is guaranteed to obtain a feasibl
 the real bit-widths `d` satisfy the variance constraint `V(d) ≤ τ` for a variance bound `V` that
 decreases when bits are added (such as `vIndepR`, `vIndepR_antitone`).  For any order `σ` of the
 `n` variables (the order of the ratios (38)), let `d^{(k)}` be `⌊d⌋` with one bit added to the
-first `k` variables.  Then some `k ≤ n` gives a configuration that satisfies the constraint. -/
+first `k` variables.  The heuristic adds bits until the constraint holds, so it stops at the least
+`k` with `V(d^{(k)}) ≤ τ`: that `k` exists and is at most `n` (all `n` variables rounded up give
+at least `d` bits each), i.e. the heuristic stops after at most `n` added bits, with a feasible
+configuration, and every earlier configuration violates the constraint. -/
 theorem greedy_rounding_feasible {n : ℕ} (σ : ι ≃ Fin n) {V : (ι → ℝ) → ℝ} (hV : Antitone V)
     {d : ι → ℝ} {τ : ℝ} (hd : V d ≤ τ) :
-    ∃ k ≤ n, V (fun i => (⌊d i⌋ : ℝ) + if ((σ i : ℕ) < k) then 1 else 0) ≤ τ := by
-  refine ⟨n, le_rfl, ?_⟩
+    ∃ k ≤ n, V (fun i => (⌊d i⌋ : ℝ) + if ((σ i : ℕ) < k) then 1 else 0) ≤ τ ∧
+      ∀ j < k, τ < V (fun i => (⌊d i⌋ : ℝ) + if ((σ i : ℕ) < j) then 1 else 0) := by
   have hle : d ≤ fun i => (⌊d i⌋ : ℝ) + if ((σ i : ℕ) < n) then 1 else 0 := by
     intro i
     show d i ≤ (⌊d i⌋ : ℝ) + if ((σ i : ℕ) < n) then 1 else 0
     rw [if_pos (σ i).isLt]
     exact (Int.lt_floor_add_one (d i)).le
-  exact (hV hle).trans hd
+  have hn : V (fun i => (⌊d i⌋ : ℝ) + if ((σ i : ℕ) < n) then 1 else 0) ≤ τ := (hV hle).trans hd
+  have hex : ∃ k, V (fun i => (⌊d i⌋ : ℝ) + if ((σ i : ℕ) < k) then 1 else 0) ≤ τ := ⟨n, hn⟩
+  exact ⟨Nat.find hex, Nat.find_min' hex hn, Nat.find_spec hex,
+    fun j hj => not_le.1 (Nat.find_min hex hj)⟩
 
 end bitWidths
 
