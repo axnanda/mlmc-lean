@@ -34,6 +34,10 @@
 --   coupling, (2.4), Theorem 1 for it, the variance rate from the strong rate
 -- * `MlmcLean.Implementation` — Giles §3.3–§3.5: the driver's variance estimate, floors and
 --   regression, the probability that the consistency check fails, the MLQMC rule (3.3)
+-- * `MlmcLean.PoissonCoupling` — Giles §8: tau-leaping, the Anderson–Higham Poisson coupling, its
+--   marginals and (2.4), the moments of the coupled difference, the complexity statements
+-- * `MlmcLean.LagrangeBitWidth` — Haas–Giles §4.3, §6: (34) against (33), the Lagrange conditions
+--   (35) (sufficient and necessary) and (37), the ratio (38), the trends of §6.3, the LUT size
 import MlmcLean.Allocation
 import MlmcLean.Estimator
 import MlmcLean.LevelDiff
@@ -63,3 +67,5 @@ import MlmcLean.NestedSimulation
 import MlmcLean.NestedMLMC
 import MlmcLean.EulerMaruyama
 import MlmcLean.Implementation
+import MlmcLean.PoissonCoupling
+import MlmcLean.LagrangeBitWidth

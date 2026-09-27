@@ -3008,6 +3008,356 @@
     "algorithms",
     "optimization"
    ]
+  },
+  "MLMC.poisson_add_hasLaw": {
+   "theorem_title": "Giles (2015), §8: the sum of independent Poisson variates $P(t_1)$ and $P(t_2)$ is distributed as $P(t_1+t_2)$",
+   "natural_language_statement": "Giles (2015), §8, p. 55: \"The key observation in (Anderson and Higham 2012), based on earlier work in a different context by Kurtz (1982), is that for any $t_1,t_2>0$, the sum of two independent Poisson variates $P(t_1)$, $P(t_2)$ is equivalent in distribution to $P(t_1+t_2)$.\"\n\nLet $(\\Omega,\\mathcal F,\\mu)$ be a measure space and $X,Y:\\Omega\\to\\mathbb N$ independent random variables with laws $\\mathrm{Po}(t_1)$ and $\\mathrm{Po}(t_2)$, $t_1,t_2\\ge0$. Then $X+Y$ has law $\\mathrm{Po}(t_1+t_2)$.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §8, p. 55.",
+   "explanation": "This is Mathlib's `IndepFun.hasLaw_add_poissonMeasure`: the law of $X+Y$ is the convolution $\\mathrm{Po}(t_1)*\\mathrm{Po}(t_2)$, which equals $\\mathrm{Po}(t_1+t_2)$ (compare characteristic functions).",
+   "tags": [
+    "probability"
+   ]
+  },
+  "MLMC.integral_poissonMeasure_id": {
+   "theorem_title": "Giles (2015), §8: the mean of a Poisson variate, $\\mathbb E[P(r)]=r$",
+   "natural_language_statement": "Giles (2015), §8: the tau-leaping step adds a Poisson variate $P(h\\lambda(x_n))$, \"a unit-rate Poisson random variable over time interval $[0,t]$\", whose mean is $t$.\n\nFor every $r\\ge0$,\n$$\n\\int n\\;d\\mathrm{Po}(r)(n)=\\sum_{n\\ge0}e^{-r}\\frac{r^n}{n!}\\,n=r .\n$$",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §8, p. 55.",
+   "explanation": "Write the integral as the series $\\sum_n e^{-r}r^n/n!\\cdot n$. The term with $n=0$ vanishes, and $e^{-r}\\frac{r^{n+1}}{(n+1)!}(n+1)=r\\,e^{-r}\\frac{r^n}{n!}$, so after the shift the series is $r$ times $\\sum_n e^{-r}r^n/n!=1$.",
+   "tags": [
+    "probability"
+   ]
+  },
+  "MLMC.integral_sq_poissonMeasure": {
+   "theorem_title": "Giles (2015), §8: the second moment of a Poisson variate, $\\mathbb E[P(r)^2]=r+r^2$",
+   "natural_language_statement": "Giles (2015), §8: used for the variance of the coupled Poisson increments.\n\nFor every $r\\ge0$,\n$$\n\\int n^2\\;d\\mathrm{Po}(r)(n)=r+r^2 .\n$$",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §8, pp. 55–56.",
+   "explanation": "$n^2=n+n(n-1)$. The series $\\sum_n e^{-r}r^n/n!\\cdot n$ is $r$ (`integral_poissonMeasure_id`). For $\\sum_n e^{-r}r^n/n!\\cdot n(n-1)$, the term with $n=0$ vanishes, and the shifted term $e^{-r}\\frac{r^{n+1}}{(n+1)!}(n+1)n$ is $r$ times $e^{-r}\\frac{r^n}{n!}n$, so the sum is $r\\cdot r$.",
+   "tags": [
+    "probability"
+   ]
+  },
+  "MLMC.coupledIncr_fst": {
+   "theorem_title": "Giles (2015), §8: in the Anderson–Higham coupling, the path with rate $a$ receives a $P(a)$ increment",
+   "natural_language_statement": "Giles (2015), §8, p. 55: \"the first step is to express the coarse path Poisson variate as the sum of two Poisson variates, $P(h\\lambda(x^c_n))$ corresponding to the first and second fine path timesteps. For the first of the two fine timesteps, the coarse and fine path Poisson variates are coupled by defining two Poisson variates based on the minimum of the two reactions rates, and the absolute difference, $P_1=P\\big(h\\min(\\lambda(x_n),\\lambda(x^c_n))\\big)$, $P_2=P\\big(h|\\lambda(x_n)-\\lambda(x^c_n)|\\big)$, and then using $P_1$ as the Poisson variate for the path with the smaller rate, and $P_1+P_2$ for the path with the larger rate.\" \n\nFor all rates $a,b\\ge0$, the first marginal of the law of the coupled increments (`coupledIncr`) is $\\mathrm{Po}(a)$.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §8, p. 55.",
+   "explanation": "If $b<a$, the first increment is $P_1+P_2$ with independent $P_1\\sim\\mathrm{Po}(b)$ and $P_2\\sim\\mathrm{Po}(a-b)$, whose law is $\\mathrm{Po}(b)*\\mathrm{Po}(a-b)=\\mathrm{Po}(a)$. Otherwise it is $P_1\\sim\\mathrm{Po}(\\min(a,b))=\\mathrm{Po}(a)$, the first marginal of the product measure.",
+   "tags": [
+    "probability",
+    "multilevel-monte-carlo"
+   ]
+  },
+  "MLMC.coupledIncr_snd": {
+   "theorem_title": "Giles (2015), §8: in the Anderson–Higham coupling, the path with rate $b$ receives a $P(b)$ increment",
+   "natural_language_statement": "Giles (2015), §8, p. 55: \"the first step is to express the coarse path Poisson variate as the sum of two Poisson variates, $P(h\\lambda(x^c_n))$ corresponding to the first and second fine path timesteps. For the first of the two fine timesteps, the coarse and fine path Poisson variates are coupled by defining two Poisson variates based on the minimum of the two reactions rates, and the absolute difference, $P_1=P\\big(h\\min(\\lambda(x_n),\\lambda(x^c_n))\\big)$, $P_2=P\\big(h|\\lambda(x_n)-\\lambda(x^c_n)|\\big)$, and then using $P_1$ as the Poisson variate for the path with the smaller rate, and $P_1+P_2$ for the path with the larger rate.\" \n\nFor all rates $a,b\\ge0$, the second marginal of the law of the coupled increments (`coupledIncr`) is $\\mathrm{Po}(b)$.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §8, p. 55.",
+   "explanation": "If $a<b$, the second increment is $P_1+P_2$ with $P_1\\sim\\mathrm{Po}(a)$ and $P_2\\sim\\mathrm{Po}(b-a)$ independent, of law $\\mathrm{Po}(b)$. Otherwise it is $P_1\\sim\\mathrm{Po}(\\min(a,b))=\\mathrm{Po}(b)$.",
+   "tags": [
+    "probability",
+    "multilevel-monte-carlo"
+   ]
+  },
+  "MLMC.coupled_increments_hasLaw": {
+   "theorem_title": "Giles (2015), §8: with independent $P_1\\sim P(\\min(a,b))$, $P_2\\sim P(|a-b|)$, the increments $P_1$ and $P_1+P_2$ of the two paths have laws $P(a)$ and $P(b)$",
+   "natural_language_statement": "Giles (2015), §8, p. 55: \"the first step is to express the coarse path Poisson variate as the sum of two Poisson variates, $P(h\\lambda(x^c_n))$ corresponding to the first and second fine path timesteps. For the first of the two fine timesteps, the coarse and fine path Poisson variates are coupled by defining two Poisson variates based on the minimum of the two reactions rates, and the absolute difference, $P_1=P\\big(h\\min(\\lambda(x_n),\\lambda(x^c_n))\\big)$, $P_2=P\\big(h|\\lambda(x_n)-\\lambda(x^c_n)|\\big)$, and then using $P_1$ as the Poisson variate for the path with the smaller rate, and $P_1+P_2$ for the path with the larger rate.\" \n\nLet $(\\Omega,\\mathcal F,\\mu)$ be a probability space, $a,b\\ge0$, and $P_1,P_2:\\Omega\\to\\mathbb N$ independent with $P_1\\sim\\mathrm{Po}(\\min(a,b))$ and $P_2\\sim\\mathrm{Po}(|a-b|)$. Let $I_a=P_1+[\\,b<a\\,]P_2$ be the increment of the path with rate $a$ and $I_b=P_1+[\\,a<b\\,]P_2$ that of the path with rate $b$. Then $I_a\\sim\\mathrm{Po}(a)$ and $I_b\\sim\\mathrm{Po}(b)$.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §8, p. 55.",
+   "explanation": "By independence the pair $(P_1,P_2)$ has law $\\mathrm{Po}(\\min(a,b))\\otimes\\mathrm{Po}(|a-b|)$. Pushing this law forward by $(p_1,p_2)\\mapsto$ each increment gives the marginals of the coupled law, which are $\\mathrm{Po}(a)$ and $\\mathrm{Po}(b)$ by `coupledIncr_fst` and `coupledIncr_snd`.",
+   "tags": [
+    "probability",
+    "multilevel-monte-carlo"
+   ]
+  },
+  "MLMC.integral_sq_coupledIncr_sub": {
+   "theorem_title": "Giles (2015), §8: the coupled Poisson increments differ by $P_2$, so $\\mathbb E[(I_a-I_b)^2]=|a-b|+|a-b|^2$ — small when the rates are close",
+   "natural_language_statement": "Giles (2015), §8, p. 55: \"the first step is to express the coarse path Poisson variate as the sum of two Poisson variates, $P(h\\lambda(x^c_n))$ corresponding to the first and second fine path timesteps. For the first of the two fine timesteps, the coarse and fine path Poisson variates are coupled by defining two Poisson variates based on the minimum of the two reactions rates, and the absolute difference, $P_1=P\\big(h\\min(\\lambda(x_n),\\lambda(x^c_n))\\big)$, $P_2=P\\big(h|\\lambda(x_n)-\\lambda(x^c_n)|\\big)$, and then using $P_1$ as the Poisson variate for the path with the smaller rate, and $P_1+P_2$ for the path with the larger rate.\"  \"This elegant approach naturally gives a small difference in the Poisson variates when the difference in rates is small.\"\n\nFor all rates $a,b\\ge0$, under the law of the coupled increments $(I_a,I_b)$ (`coupledIncr`),\n$$\n\\mathbb E\\big[(I_a-I_b)^2\\big]=|a-b|+|a-b|^2 .\n$$\nWith $a=h\\lambda(x_n)$, $b=h\\lambda(x^c_n)$ this is $h|\\Delta\\lambda|+h^2|\\Delta\\lambda|^2$.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §8, p. 56.",
+   "explanation": "If $a=b$ the increments are equal and $|a-b|=0$. Otherwise $|I_a-I_b|=P_2$ for every outcome, so $\\mathbb E[(I_a-I_b)^2]=\\mathbb E[P_2^2]$ with $P_2\\sim\\mathrm{Po}(|a-b|)$ (the second marginal of the product law), which is $|a-b|+|a-b|^2$ by `integral_sq_poissonMeasure`.",
+   "tags": [
+    "probability",
+    "multilevel-monte-carlo"
+   ]
+  },
+  "MLMC.coupledTwoStep_fst": {
+   "theorem_title": "Giles (2015), §8: the fine component of two coupled steps is two tau-leaping steps of size $h$",
+   "natural_language_statement": "Giles (2015), §8, p. 55: \"the 'tau-leaping' method … gives the discrete equation $x_{n+1}=x_n+P(h\\lambda(x_n))$, where $h$ is the timestep, $\\lambda(x_n)$ is the reaction rate (or propensity function), and $P(t)$ represents a unit-rate Poisson random variable over time interval $[0,t]$. If this equation defines the fine path in the multilevel simulation, then the coarse path, with double the timestep, is given by $x^c_{n+2}=x^c_n+P(2h\\lambda(x^c_n))$ for even timesteps $n$.\" Giles (2015), §8, p. 55: \"the first step is to express the coarse path Poisson variate as the sum of two Poisson variates, $P(h\\lambda(x^c_n))$ corresponding to the first and second fine path timesteps. For the first of the two fine timesteps, the coarse and fine path Poisson variates are coupled by defining two Poisson variates based on the minimum of the two reactions rates, and the absolute difference, $P_1=P\\big(h\\min(\\lambda(x_n),\\lambda(x^c_n))\\big)$, $P_2=P\\big(h|\\lambda(x_n)-\\lambda(x^c_n)|\\big)$, and then using $P_1$ as the Poisson variate for the path with the smaller rate, and $P_1+P_2$ for the path with the larger rate.\" \n\nFor every rate function $\\lambda:\\mathbb N\\to[0,\\infty)$, $h\\ge0$ and pair of states $(x,y)$, the first marginal of `coupledTwoStep` is the law of two tau-leaping steps of size $h$ from $x$: the composition of `tauStep` from $x$ with `tauStep`.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §8, p. 55.",
+   "explanation": "The fine increment of the first coupled step has law $\\mathrm{Po}(h\\lambda(x))$ (`coupledIncr_fst`). Given the first step, the fine increment of the second step has law $\\mathrm{Po}(h\\lambda(x+i))$, again by `coupledIncr_fst`, whatever the coarse increment. So the fine component is the composition of two tau-leaping steps.",
+   "tags": [
+    "probability",
+    "multilevel-monte-carlo"
+   ]
+  },
+  "MLMC.coupledTwoStep_snd": {
+   "theorem_title": "Giles (2015), §8: the coarse component of two coupled fine steps is one tau-leaping step of size $2h$: $P(h\\lambda)+P(h\\lambda)\\sim P(2h\\lambda)$",
+   "natural_language_statement": "Giles (2015), §8, p. 55: \"the 'tau-leaping' method … gives the discrete equation $x_{n+1}=x_n+P(h\\lambda(x_n))$, where $h$ is the timestep, $\\lambda(x_n)$ is the reaction rate (or propensity function), and $P(t)$ represents a unit-rate Poisson random variable over time interval $[0,t]$. If this equation defines the fine path in the multilevel simulation, then the coarse path, with double the timestep, is given by $x^c_{n+2}=x^c_n+P(2h\\lambda(x^c_n))$ for even timesteps $n$.\" Giles (2015), §8, p. 55: \"the first step is to express the coarse path Poisson variate as the sum of two Poisson variates, $P(h\\lambda(x^c_n))$ corresponding to the first and second fine path timesteps. For the first of the two fine timesteps, the coarse and fine path Poisson variates are coupled by defining two Poisson variates based on the minimum of the two reactions rates, and the absolute difference, $P_1=P\\big(h\\min(\\lambda(x_n),\\lambda(x^c_n))\\big)$, $P_2=P\\big(h|\\lambda(x_n)-\\lambda(x^c_n)|\\big)$, and then using $P_1$ as the Poisson variate for the path with the smaller rate, and $P_1+P_2$ for the path with the larger rate.\" \n\nFor every rate function $\\lambda:\\mathbb N\\to[0,\\infty)$, $h\\ge0$ and pair of states $(x,y)$, the second marginal of `coupledTwoStep` is one tau-leaping step of size $2h$ from $y$: the law of $y+P$ with $P\\sim\\mathrm{Po}(2h\\lambda(y))$.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §8, p. 55.",
+   "explanation": "The coarse increment of the first coupled step has law $\\mathrm{Po}(h\\lambda(y))$ (`coupledIncr_snd`). For each outcome of the first step, the coarse increment of the second step again has law $\\mathrm{Po}(h\\lambda(y))$, since the coarse rate is frozen. So the two coarse increments are independent $\\mathrm{Po}(h\\lambda(y))$ variates, and their sum has law $\\mathrm{Po}(h\\lambda(y))*\\mathrm{Po}(h\\lambda(y))=\\mathrm{Po}(2h\\lambda(y))$.",
+   "tags": [
+    "probability",
+    "multilevel-monte-carlo"
+   ]
+  },
+  "MLMC.coupledChain_fst": {
+   "theorem_title": "Giles (2015), §8: the fine path of the coupled simulation has the law of the fine tau-leaping chain",
+   "natural_language_statement": "Giles (2015), §8, p. 55: \"the 'tau-leaping' method … gives the discrete equation $x_{n+1}=x_n+P(h\\lambda(x_n))$, where $h$ is the timestep, $\\lambda(x_n)$ is the reaction rate (or propensity function), and $P(t)$ represents a unit-rate Poisson random variable over time interval $[0,t]$. If this equation defines the fine path in the multilevel simulation, then the coarse path, with double the timestep, is given by $x^c_{n+2}=x^c_n+P(2h\\lambda(x^c_n))$ for even timesteps $n$.\" \n\nFor every rate function $\\lambda$, $h\\ge0$, initial state $x_0$ and $k\\in\\mathbb N$, the first marginal of the coupled law after $k$ pairs of steps (`coupledChain`) is the law of the tau-leaping chain with step $h$ after $2k$ steps (`tauChain`).",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §8, p. 55.",
+   "explanation": "Induction on $k$. The first marginal of a composition with `coupledTwoStep` depends only on the first component, through `coupledTwoStep_fst`, so it is the composition of the first marginal after $k$ pairs with two tau-leaping steps.",
+   "tags": [
+    "probability",
+    "multilevel-monte-carlo"
+   ]
+  },
+  "MLMC.coupledChain_snd": {
+   "theorem_title": "Giles (2015), §8: the coarse path of the coupled simulation has the law of the tau-leaping chain with double the time step",
+   "natural_language_statement": "Giles (2015), §8, p. 55: \"the 'tau-leaping' method … gives the discrete equation $x_{n+1}=x_n+P(h\\lambda(x_n))$, where $h$ is the timestep, $\\lambda(x_n)$ is the reaction rate (or propensity function), and $P(t)$ represents a unit-rate Poisson random variable over time interval $[0,t]$. If this equation defines the fine path in the multilevel simulation, then the coarse path, with double the timestep, is given by $x^c_{n+2}=x^c_n+P(2h\\lambda(x^c_n))$ for even timesteps $n$.\" \n\nFor every rate function $\\lambda$, $h\\ge0$, initial state $x_0$ and $k\\in\\mathbb N$, the second marginal of the coupled law after $k$ pairs of steps (`coupledChain`) is the law of the tau-leaping chain with step $2h$ after $k$ steps (`tauChain`).",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §8, p. 55.",
+   "explanation": "Induction on $k$ using `coupledTwoStep_snd`: the coarse marginal of each coupled pair of steps is one coarse step and depends only on the coarse state.",
+   "tags": [
+    "probability",
+    "multilevel-monte-carlo"
+   ]
+  },
+  "MLMC.tauLeaping_2_4": {
+   "theorem_title": "Giles (2015), (2.4) for the Poisson coupling of §8: the coarse and fine payoffs of the coupled simulation have the means of the coarse and fine tau-leaping chains",
+   "natural_language_statement": "Giles (2015), §2.1, p. 8: a multilevel estimator with different fine and coarse approximations needs \"the identity $\\mathbb E[P^f_\\ell]=\\mathbb E[P^c_\\ell]$ (2.4)\". Giles (2015), §8, p. 55: \"the 'tau-leaping' method … gives the discrete equation $x_{n+1}=x_n+P(h\\lambda(x_n))$, where $h$ is the timestep, $\\lambda(x_n)$ is the reaction rate (or propensity function), and $P(t)$ represents a unit-rate Poisson random variable over time interval $[0,t]$. If this equation defines the fine path in the multilevel simulation, then the coarse path, with double the timestep, is given by $x^c_{n+2}=x^c_n+P(2h\\lambda(x^c_n))$ for even timesteps $n$.\" \n\nFor every rate function $\\lambda$, $h\\ge0$, initial state $x_0$, $k\\in\\mathbb N$ and payoff $\\Phi:\\mathbb N\\to\\mathbb R$ of the terminal state:\n1. $\\displaystyle\\int\\Phi(y)\\,d\\,\\mathrm{coupledChain}(x,y)=\\int\\Phi\\,d\\,\\mathrm{tauChain}_{2h}(k)$ (coarse path, $k$ steps of size $2h$);\n2. $\\displaystyle\\int\\Phi(x)\\,d\\,\\mathrm{coupledChain}(x,y)=\\int\\Phi\\,d\\,\\mathrm{tauChain}_{h}(2k)$ (fine path, $2k$ steps of size $h$).",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §2.1, (2.4), p. 8, and §8, pp. 55–56.",
+   "explanation": "The integral of $\\Phi$ of a component is the integral against the corresponding marginal, and the marginals are identified by `coupledChain_snd` and `coupledChain_fst`.",
+   "tags": [
+    "probability",
+    "multilevel-monte-carlo"
+   ]
+  },
+  "MLMC.tauLeaping_level": {
+   "theorem_title": "Giles (2015), §8: level by level, the coarse payoff on level $\\ell+1$ has the law of the level-$\\ell$ payoff and the fine payoff that of the level-$(\\ell+1)$ payoff",
+   "natural_language_statement": "Giles (2015), §8, p. 55: \"the 'tau-leaping' method … gives the discrete equation $x_{n+1}=x_n+P(h\\lambda(x_n))$, where $h$ is the timestep, $\\lambda(x_n)$ is the reaction rate (or propensity function), and $P(t)$ represents a unit-rate Poisson random variable over time interval $[0,t]$. If this equation defines the fine path in the multilevel simulation, then the coarse path, with double the timestep, is given by $x^c_{n+2}=x^c_n+P(2h\\lambda(x^c_n))$ for even timesteps $n$.\" \n\nLet $T\\ge0$ be the final time and $h_\\ell=T2^{-\\ell}$. For every rate function $\\lambda$, initial state $x_0$, level $\\ell$ and payoff $\\Phi$ of the terminal state, in the coupled simulation with fine step $h_{\\ell+1}$ over $2^\\ell$ pairs of steps:\n1. the coarse payoff has the mean of the payoff of the tau-leaping chain with step $h_\\ell$ after $2^\\ell$ steps (level $\\ell$);\n2. the fine payoff has the mean of the payoff of the chain with step $h_{\\ell+1}$ after $2^{\\ell+1}$ steps (level $\\ell+1$).\nHence (2.4) holds and the multilevel telescoping sum is respected.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §8, pp. 55–56; §2.1, (2.4).",
+   "explanation": "`tauLeaping_2_4` with $h=T2^{-(\\ell+1)}$ and $k=2^\\ell$, using $2\\cdot T2^{-(\\ell+1)}=T2^{-\\ell}$ and $2\\cdot2^\\ell=2^{\\ell+1}$.",
+   "tags": [
+    "probability",
+    "multilevel-monte-carlo"
+   ]
+  },
+  "MLMC.tauLeaping_complexity": {
+   "theorem_title": "Giles (2015), §8: tau-leaping MLMC with correction variance $O(h)$ has Theorem 1 complexity $O(\\varepsilon^{-2}(\\log\\varepsilon)^2)$",
+   "natural_language_statement": "Giles (2015), §8, p. 56: the coupling \"leads to a very effective multilevel algorithm with a correction variance which is $O(h)$, leading to an $O(\\varepsilon^{-2}(\\log\\varepsilon)^2)$ complexity\".\n\nFor every $\\varepsilon\\in\\mathbb R$, the complexity bound of Theorem 1 (`complexityBound`) with $\\alpha=\\beta=\\gamma=1$ is\n$$\n\\mathrm{bound}_{1,1,1}(\\varepsilon)=\\varepsilon^{-2}(\\log\\varepsilon)^2 .\n$$",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §8, p. 56.",
+   "explanation": "$\\beta=\\gamma$: the middle case of Theorem 1 (`complexityBound_of_eq`).",
+   "tags": [
+    "complexity",
+    "multilevel-monte-carlo"
+   ]
+  },
+  "MLMC.fixed_levels_cost": {
+   "theorem_title": "Giles (2015), §8: with a fixed number of levels and an unbiased estimator the cost is $O(\\varepsilon^{-2})$",
+   "natural_language_statement": "Giles (2015), §8, p. 56: Anderson and Higham \"also include an additional coupling at the finest level to the exact Stochastic Simulation Algorithm … Hence, their overall multilevel estimator is unbiased, unlike the estimators discussed earlier for SDEs, and the complexity is reduced to $O(\\varepsilon^{-2})$ because the number of levels remains fixed as $\\varepsilon\\to0$.\"\n\nLet $s$ be a nonempty finite set of levels and $V_\\ell>0$, $C_\\ell>0$ for $\\ell\\in s$. There is $c>0$ such that for every $0<\\varepsilon\\le1$ the rounded-up optimal allocation (1.1) with target variance $\\varepsilon^2$ (`optimalN s V C (ε^2)`) satisfies\n$$\n\\sum_{\\ell\\in s}\\frac{V_\\ell}{N_\\ell}\\le\\varepsilon^2\n\\qquad\\text{and}\\qquad\n\\sum_{\\ell\\in s}N_\\ell C_\\ell\\le\\frac{c}{\\varepsilon^2}.\n$$\nFor an unbiased estimator the first bound is the mean square error.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §8, p. 56.",
+   "explanation": "The variance bound is `optimalN_variance`. By `optimalN_cost` the cost is at most $\\varepsilon^{-2}\\big(\\sum_\\ell\\sqrt{V_\\ell C_\\ell}\\big)^2+\\sum_\\ell C_\\ell$, and $\\sum_\\ell C_\\ell\\le\\varepsilon^{-2}\\sum_\\ell C_\\ell$ for $\\varepsilon\\le1$. So $c=\\big(\\sum_\\ell\\sqrt{V_\\ell C_\\ell}\\big)^2+\\sum_\\ell C_\\ell$ works.",
+   "tags": [
+    "complexity",
+    "multilevel-monte-carlo"
+   ]
+  },
+  "MLMC.levelCost34_le_levelCost33": {
+   "theorem_title": "Haas–Giles (2025), §6.1: the approximate level cost (34) is at most the level cost (33) when $\\tilde V_\\ell=V_\\ell$ and $C^\\Delta_\\ell=C_\\ell+\\tilde C_\\ell$",
+   "natural_language_statement": "Haas and Giles (2025), §6, p. 11: \"the total cost after the number of samples in the nested framework were optimised is $\\varepsilon^{-2}\\big(\\sum_{\\ell=0}^L\\sqrt{\\tilde V_\\ell\\tilde C_\\ell}+\\sqrt{V^\\Delta_\\ell C^\\Delta_\\ell}\\big)^2$ (32). We make the assumption that the variance $\\tilde V_\\ell$ of the FPGA sample is approximately equal to $V_\\ell\\triangleq\\mathbb V[\\Delta P_\\ell]$. … the bit-widths of all variables of level $\\ell$ can be optimised independently of the other levels by minimising $\\sqrt{\\tilde V_\\ell\\tilde C_\\ell}+\\sqrt{V^\\Delta_\\ell C^\\Delta_\\ell}$ (33).\" §6.1, p. 11: \"at each level the aim is to minimise the level cost (33) which, using the fact that $C_\\ell\\gg\\tilde C_\\ell$, is approximated as $\\sqrt{V_\\ell\\tilde C_\\ell}+\\sqrt{V^\\Delta_\\ell C_\\ell}$ (34).\" §2, p. 3: \"The cost of computing a sample of the correction term is $C^\\Delta_\\ell=C_\\ell+\\tilde C_\\ell$ where $C_\\ell$ is the cost of generating $\\Delta P_\\ell$ in full precision.\" \n\nLet $V,V^\\Delta,C,\\tilde C\\in\\mathbb R$ with $V^\\Delta\\ge0$ and $\\tilde C\\ge0$. Then\n$$\n\\sqrt{V\\tilde C}+\\sqrt{V^\\Delta C}\\;\\le\\;\\sqrt{V\\tilde C}+\\sqrt{V^\\Delta(C+\\tilde C)} ,\n$$\nthat is, (34) $\\le$ (33) with $\\tilde V_\\ell=V_\\ell$ and $C^\\Delta_\\ell=C_\\ell+\\tilde C_\\ell$.\n\n**Formalization Note** $\\sqrt{\\cdot}$ is `Real.sqrt` (zero on negative numbers).",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §2, p. 3, and §6.1, p. 11, (33) and (34).",
+   "explanation": "$V^\\Delta C\\le V^\\Delta(C+\\tilde C)$ because $V^\\Delta\\ge0$ and $\\tilde C\\ge0$, and the square root is monotone.",
+   "tags": [
+    "numerical-analysis",
+    "optimization"
+   ]
+  },
+  "MLMC.levelCost33_le_sqrt_mul": {
+   "theorem_title": "Haas–Giles (2025), §6.1: the level cost (33) is at most $\\sqrt{1+\\tilde C_\\ell/C_\\ell}$ times its approximation (34)",
+   "natural_language_statement": "Haas and Giles (2025), §6, p. 11: \"the total cost after the number of samples in the nested framework were optimised is $\\varepsilon^{-2}\\big(\\sum_{\\ell=0}^L\\sqrt{\\tilde V_\\ell\\tilde C_\\ell}+\\sqrt{V^\\Delta_\\ell C^\\Delta_\\ell}\\big)^2$ (32). We make the assumption that the variance $\\tilde V_\\ell$ of the FPGA sample is approximately equal to $V_\\ell\\triangleq\\mathbb V[\\Delta P_\\ell]$. … the bit-widths of all variables of level $\\ell$ can be optimised independently of the other levels by minimising $\\sqrt{\\tilde V_\\ell\\tilde C_\\ell}+\\sqrt{V^\\Delta_\\ell C^\\Delta_\\ell}$ (33).\" §6.1, p. 11: \"at each level the aim is to minimise the level cost (33) which, using the fact that $C_\\ell\\gg\\tilde C_\\ell$, is approximated as $\\sqrt{V_\\ell\\tilde C_\\ell}+\\sqrt{V^\\Delta_\\ell C_\\ell}$ (34).\" §2, p. 3: \"The cost of computing a sample of the correction term is $C^\\Delta_\\ell=C_\\ell+\\tilde C_\\ell$ where $C_\\ell$ is the cost of generating $\\Delta P_\\ell$ in full precision.\" \n\nLet $V,V^\\Delta,C,\\tilde C\\in\\mathbb R$ with $C>0$ and $\\tilde C\\ge0$. Then\n$$\n\\sqrt{V\\tilde C}+\\sqrt{V^\\Delta(C+\\tilde C)}\\;\\le\\;\\sqrt{1+\\tilde C/C}\\;\\Big(\\sqrt{V\\tilde C}+\\sqrt{V^\\Delta C}\\Big).\n$$\nTogether with `levelCost34_le_levelCost33`, the ratio of (33) to (34) lies in $[1,\\sqrt{1+\\tilde C_\\ell/C_\\ell}]$, which tends to $1$ as $\\tilde C_\\ell/C_\\ell\\to0$: this is the sense of \"using the fact that $C_\\ell\\gg\\tilde C_\\ell$\".",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §6.1, p. 11, (33) and (34).",
+   "explanation": "$V^\\Delta(C+\\tilde C)=(1+\\tilde C/C)\\,V^\\Delta C$, so $\\sqrt{V^\\Delta(C+\\tilde C)}=\\sqrt{1+\\tilde C/C}\\,\\sqrt{V^\\Delta C}$; and $\\sqrt{V\\tilde C}\\le\\sqrt{1+\\tilde C/C}\\,\\sqrt{V\\tilde C}$ since $\\sqrt{1+\\tilde C/C}\\ge1$.",
+   "tags": [
+    "numerical-analysis",
+    "optimization"
+   ]
+  },
+  "MLMC.levelCost33_le_add_mul": {
+   "theorem_title": "Haas–Giles (2025), §6.1: the relative error of the approximation (34) of the level cost (33) is at most $\\tilde C_\\ell/(2C_\\ell)$",
+   "natural_language_statement": "Haas and Giles (2025), §6, p. 11: \"the total cost after the number of samples in the nested framework were optimised is $\\varepsilon^{-2}\\big(\\sum_{\\ell=0}^L\\sqrt{\\tilde V_\\ell\\tilde C_\\ell}+\\sqrt{V^\\Delta_\\ell C^\\Delta_\\ell}\\big)^2$ (32). We make the assumption that the variance $\\tilde V_\\ell$ of the FPGA sample is approximately equal to $V_\\ell\\triangleq\\mathbb V[\\Delta P_\\ell]$. … the bit-widths of all variables of level $\\ell$ can be optimised independently of the other levels by minimising $\\sqrt{\\tilde V_\\ell\\tilde C_\\ell}+\\sqrt{V^\\Delta_\\ell C^\\Delta_\\ell}$ (33).\" §6.1, p. 11: \"at each level the aim is to minimise the level cost (33) which, using the fact that $C_\\ell\\gg\\tilde C_\\ell$, is approximated as $\\sqrt{V_\\ell\\tilde C_\\ell}+\\sqrt{V^\\Delta_\\ell C_\\ell}$ (34).\" §2, p. 3: \"The cost of computing a sample of the correction term is $C^\\Delta_\\ell=C_\\ell+\\tilde C_\\ell$ where $C_\\ell$ is the cost of generating $\\Delta P_\\ell$ in full precision.\" \n\nLet $V,V^\\Delta,C,\\tilde C\\in\\mathbb R$ with $C>0$ and $\\tilde C\\ge0$. Then\n$$\n\\sqrt{V\\tilde C}+\\sqrt{V^\\Delta(C+\\tilde C)}\\;\\le\\;\\Big(1+\\frac{\\tilde C}{2C}\\Big)\\Big(\\sqrt{V\\tilde C}+\\sqrt{V^\\Delta C}\\Big).\n$$",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §6.1, p. 11, (33) and (34).",
+   "explanation": "By `levelCost33_le_sqrt_mul` it suffices that $\\sqrt{1+q}\\le1+q/2$ for $q=\\tilde C/C\\ge0$, which holds because $(1+q/2)^2=1+q+q^2/4\\ge1+q$.",
+   "tags": [
+    "numerical-analysis",
+    "optimization"
+   ]
+  },
+  "MLMC.totalCost32_bounds": {
+   "theorem_title": "Haas–Giles (2025), §6: the total cost (32) lies between $\\varepsilon^{-2}(\\sum_\\ell(34))^2$ and $(1+r)$ times it when every $\\tilde C_\\ell\\le rC_\\ell$",
+   "natural_language_statement": "Haas and Giles (2025), §6, p. 11: \"the total cost after the number of samples in the nested framework were optimised is $\\varepsilon^{-2}\\big(\\sum_{\\ell=0}^L\\sqrt{\\tilde V_\\ell\\tilde C_\\ell}+\\sqrt{V^\\Delta_\\ell C^\\Delta_\\ell}\\big)^2$ (32). We make the assumption that the variance $\\tilde V_\\ell$ of the FPGA sample is approximately equal to $V_\\ell\\triangleq\\mathbb V[\\Delta P_\\ell]$. … the bit-widths of all variables of level $\\ell$ can be optimised independently of the other levels by minimising $\\sqrt{\\tilde V_\\ell\\tilde C_\\ell}+\\sqrt{V^\\Delta_\\ell C^\\Delta_\\ell}$ (33).\" §6.1, p. 11: \"at each level the aim is to minimise the level cost (33) which, using the fact that $C_\\ell\\gg\\tilde C_\\ell$, is approximated as $\\sqrt{V_\\ell\\tilde C_\\ell}+\\sqrt{V^\\Delta_\\ell C_\\ell}$ (34).\" §2, p. 3: \"The cost of computing a sample of the correction term is $C^\\Delta_\\ell=C_\\ell+\\tilde C_\\ell$ where $C_\\ell$ is the cost of generating $\\Delta P_\\ell$ in full precision.\" \n\nLet $L\\in\\mathbb N$, $\\varepsilon\\in\\mathbb R$, and for each level $\\ell$ let $V_\\ell,V^\\Delta_\\ell,C_\\ell,\\tilde C_\\ell\\in\\mathbb R$ with $V^\\Delta_\\ell\\ge0$, $C_\\ell>0$, $\\tilde C_\\ell\\ge0$. Let $r\\in\\mathbb R$ with $\\tilde C_\\ell/C_\\ell\\le r$ for $\\ell=0,\\dots,L$. Write\n$$\nA=\\sum_{\\ell=0}^L\\Big(\\sqrt{V_\\ell\\tilde C_\\ell}+\\sqrt{V^\\Delta_\\ell C_\\ell}\\Big)\\ \\text{(the sum of (34))},\\qquad\nB=\\sum_{\\ell=0}^L\\Big(\\sqrt{V_\\ell\\tilde C_\\ell}+\\sqrt{V^\\Delta_\\ell(C_\\ell+\\tilde C_\\ell)}\\Big)\\ \\text{(the sum of (33))}.\n$$\nThen\n$$\n\\varepsilon^{-2}A^2\\;\\le\\;\\varepsilon^{-2}B^2\\;\\le\\;(1+r)\\,\\varepsilon^{-2}A^2 .\n$$\nHere $\\varepsilon^{-2}B^2$ is the total cost (32) with $\\tilde V_\\ell=V_\\ell$ and $C^\\Delta_\\ell=C_\\ell+\\tilde C_\\ell$.\n\n**Formalization Note** $\\varepsilon^{-2}$ is `(ε ^ 2)⁻¹`, which is $0$ for $\\varepsilon=0$.",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §6, p. 11, (32)–(34).",
+   "explanation": "Termwise, (34) $\\le$ (33) $\\le\\sqrt{1+\\tilde C_\\ell/C_\\ell}\\,$(34) $\\le\\sqrt{1+r}\\,$(34) (`levelCost34_le_levelCost33`, `levelCost33_le_sqrt_mul`), so $0\\le A\\le B\\le\\sqrt{1+r}\\,A$. Square and multiply by $\\varepsilon^{-2}\\ge0$. ($r\\ge0$ because $\\tilde C_0/C_0\\ge0$.)",
+   "tags": [
+    "numerical-analysis",
+    "optimization",
+    "multilevel-monte-carlo"
+   ]
+  },
+  "MLMC.lagrangian_le_of_eq35": {
+   "theorem_title": "Haas–Giles (2025), §6.1: bit-widths solving (35) with $\\lambda\\ge0$ minimise the Lagrangian $V_{indep}+\\lambda\\tilde C$",
+   "natural_language_statement": "Haas and Giles (2025), §6.1, pp. 11–12: \"To do this, we use a Lagrange multiplier approach. To give the intuition, minimising $V^\\Delta_\\ell(d)$ subject to a fixed $\\tilde C_\\ell(d)$ leads to the equation $\\frac{\\partial V^\\Delta_\\ell}{\\partial d_{i,\\ell}}+\\lambda\\frac{\\partial\\tilde C_\\ell}{\\partial d_{i,\\ell}}=0$ (35) for a value of the Lagrange multiplier $\\lambda$ which gives the desired $\\tilde C_\\ell(d)$. Hence, the Lagrange multiplier $\\lambda$ controls the trade-off between cost and variance.\" \n\nNotation. For a finite set $s$ of variables $i$ with $E_i=\\mathbb E[\\bar x_i^2]$, exponents $e_i\\in\\mathbb Z$ and operation counts $M_i,M'_i$, the variance bound (26) and the cost (31) at real bit-widths $d=(d_i)$ are\n$$\nV_{indep}(d)=\\frac1{12}\\sum_{i\\in s}E_i\\,4^{e_i-d_i}\\quad(\\texttt{vIndepR}),\\qquad\n\\tilde C(d)=\\frac12\\sum_{i\\in s}M_id_i^2+\\sum_{i\\in s}M'_id_i\\quad(\\texttt{sepCost}).\n$$\nTheir partial derivatives are $\\partial V_{indep}/\\partial d_i=-(\\log4)E_i4^{e_i-d_i}/12$ and $\\partial\\tilde C/\\partial d_i=M_id_i+M'_i$, so (35) for the variable $i$ reads\n$$\n-\\frac{(\\log4)\\,E_i\\,4^{e_i-d_i}}{12}+\\lambda\\,(M_id_i+M'_i)=0 .\n$$\n\nLet $E_i\\ge0$ and $M_i\\ge0$ for $i\\in s$, and $\\lambda\\ge0$. Let $d^*$ be real bit-widths that solve (35) for every $i\\in s$. Then for all real bit-widths $d$,\n$$\nV_{indep}(d^*)+\\lambda\\,\\tilde C(d^*)\\;\\le\\;V_{indep}(d)+\\lambda\\,\\tilde C(d).\n$$",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §6.1, pp. 11–12, (35), with (26) and (31).",
+   "explanation": "Both functions are sums of terms in one variable, so it suffices to show that $f_i(t)=E_i4^{e_i-t}/12+\\lambda(M_it^2/2+M'_it)$ is minimised at $t=d^*_i$. With $s=d^*_i$: $4^{e-t}=4^{e-s}4^{s-t}\\ge4^{e-s}\\big(1+(\\log4)(s-t)\\big)$ (from $e^x\\ge1+x$), and $M t^2/2\\ge Ms^2/2+Ms(t-s)$. Hence\n$$\nf_i(t)-f_i(s)\\ \\ge\\ (t-s)\\Big(-\\frac{(\\log4)E_i4^{e_i-s}}{12}+\\lambda(M_is+M'_i)\\Big)=0 .\n$$",
+   "tags": [
+    "numerical-analysis",
+    "optimization",
+    "real-analysis"
+   ]
+  },
+  "MLMC.vIndepR_le_of_eq35": {
+   "theorem_title": "Haas–Giles (2025), §6.1: bit-widths solving (35) have the least variance bound (26) among all bit-widths of no greater cost (31)",
+   "natural_language_statement": "Haas and Giles (2025), §6.1, pp. 11–12: \"To do this, we use a Lagrange multiplier approach. To give the intuition, minimising $V^\\Delta_\\ell(d)$ subject to a fixed $\\tilde C_\\ell(d)$ leads to the equation $\\frac{\\partial V^\\Delta_\\ell}{\\partial d_{i,\\ell}}+\\lambda\\frac{\\partial\\tilde C_\\ell}{\\partial d_{i,\\ell}}=0$ (35) for a value of the Lagrange multiplier $\\lambda$ which gives the desired $\\tilde C_\\ell(d)$. Hence, the Lagrange multiplier $\\lambda$ controls the trade-off between cost and variance.\" \n\nNotation. For a finite set $s$ of variables $i$ with $E_i=\\mathbb E[\\bar x_i^2]$, exponents $e_i\\in\\mathbb Z$ and operation counts $M_i,M'_i$, the variance bound (26) and the cost (31) at real bit-widths $d=(d_i)$ are\n$$\nV_{indep}(d)=\\frac1{12}\\sum_{i\\in s}E_i\\,4^{e_i-d_i}\\quad(\\texttt{vIndepR}),\\qquad\n\\tilde C(d)=\\frac12\\sum_{i\\in s}M_id_i^2+\\sum_{i\\in s}M'_id_i\\quad(\\texttt{sepCost}).\n$$\nTheir partial derivatives are $\\partial V_{indep}/\\partial d_i=-(\\log4)E_i4^{e_i-d_i}/12$ and $\\partial\\tilde C/\\partial d_i=M_id_i+M'_i$, so (35) for the variable $i$ reads\n$$\n-\\frac{(\\log4)\\,E_i\\,4^{e_i-d_i}}{12}+\\lambda\\,(M_id_i+M'_i)=0 .\n$$\n\nLet $E_i\\ge0$ and $M_i\\ge0$ for $i\\in s$, and $\\lambda\\ge0$. Let $d^*$ solve (35) for every $i\\in s$, and let $d$ be real bit-widths with $\\tilde C(d)\\le\\tilde C(d^*)$. Then\n$$\nV_{indep}(d^*)\\le V_{indep}(d).\n$$\nSo the solutions of (35) solve the problem \"minimising $V^\\Delta_\\ell(d)$ subject to a fixed $\\tilde C_\\ell(d)$\" (with $V^\\Delta_\\ell$ approximated by $V_{indep}$).",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §6.1, pp. 11–12, (35).",
+   "explanation": "By `lagrangian_le_of_eq35`, $V_{indep}(d^*)\\le V_{indep}(d)+\\lambda\\big(\\tilde C(d)-\\tilde C(d^*)\\big)\\le V_{indep}(d)$.",
+   "tags": [
+    "numerical-analysis",
+    "optimization",
+    "real-analysis"
+   ]
+  },
+  "MLMC.sepCost_le_of_eq35": {
+   "theorem_title": "Haas–Giles (2025), §6.1: bit-widths solving (35) with $\\lambda>0$ have the least cost (31) among all bit-widths of no greater variance bound (26)",
+   "natural_language_statement": "Haas and Giles (2025), §6.1, pp. 11–12: \"To do this, we use a Lagrange multiplier approach. To give the intuition, minimising $V^\\Delta_\\ell(d)$ subject to a fixed $\\tilde C_\\ell(d)$ leads to the equation $\\frac{\\partial V^\\Delta_\\ell}{\\partial d_{i,\\ell}}+\\lambda\\frac{\\partial\\tilde C_\\ell}{\\partial d_{i,\\ell}}=0$ (35) for a value of the Lagrange multiplier $\\lambda$ which gives the desired $\\tilde C_\\ell(d)$. Hence, the Lagrange multiplier $\\lambda$ controls the trade-off between cost and variance.\" \n\nNotation. For a finite set $s$ of variables $i$ with $E_i=\\mathbb E[\\bar x_i^2]$, exponents $e_i\\in\\mathbb Z$ and operation counts $M_i,M'_i$, the variance bound (26) and the cost (31) at real bit-widths $d=(d_i)$ are\n$$\nV_{indep}(d)=\\frac1{12}\\sum_{i\\in s}E_i\\,4^{e_i-d_i}\\quad(\\texttt{vIndepR}),\\qquad\n\\tilde C(d)=\\frac12\\sum_{i\\in s}M_id_i^2+\\sum_{i\\in s}M'_id_i\\quad(\\texttt{sepCost}).\n$$\nTheir partial derivatives are $\\partial V_{indep}/\\partial d_i=-(\\log4)E_i4^{e_i-d_i}/12$ and $\\partial\\tilde C/\\partial d_i=M_id_i+M'_i$, so (35) for the variable $i$ reads\n$$\n-\\frac{(\\log4)\\,E_i\\,4^{e_i-d_i}}{12}+\\lambda\\,(M_id_i+M'_i)=0 .\n$$\n\nLet $E_i\\ge0$ and $M_i\\ge0$ for $i\\in s$, and $\\lambda>0$. Let $d^*$ solve (35) for every $i\\in s$, and let $d$ be real bit-widths with $V_{indep}(d)\\le V_{indep}(d^*)$. Then\n$$\n\\tilde C(d^*)\\le\\tilde C(d).\n$$",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §6.1, pp. 11–12, (35).",
+   "explanation": "By `lagrangian_le_of_eq35`, $\\lambda\\tilde C(d^*)\\le V_{indep}(d)-V_{indep}(d^*)+\\lambda\\tilde C(d)\\le\\lambda\\tilde C(d)$; divide by $\\lambda>0$.",
+   "tags": [
+    "numerical-analysis",
+    "optimization",
+    "real-analysis"
+   ]
+  },
+  "MLMC.exists_eq35_isMin": {
+   "theorem_title": "Haas–Giles (2025), §6.1: for every $\\lambda>0$ the equations (35) have a solution, and it minimises the variance bound (26) at its cost (31)",
+   "natural_language_statement": "Haas and Giles (2025), §6.1, pp. 11–12: \"To do this, we use a Lagrange multiplier approach. To give the intuition, minimising $V^\\Delta_\\ell(d)$ subject to a fixed $\\tilde C_\\ell(d)$ leads to the equation $\\frac{\\partial V^\\Delta_\\ell}{\\partial d_{i,\\ell}}+\\lambda\\frac{\\partial\\tilde C_\\ell}{\\partial d_{i,\\ell}}=0$ (35) for a value of the Lagrange multiplier $\\lambda$ which gives the desired $\\tilde C_\\ell(d)$. Hence, the Lagrange multiplier $\\lambda$ controls the trade-off between cost and variance.\" \n\nNotation. For a finite set $s$ of variables $i$ with $E_i=\\mathbb E[\\bar x_i^2]$, exponents $e_i\\in\\mathbb Z$ and operation counts $M_i,M'_i$, the variance bound (26) and the cost (31) at real bit-widths $d=(d_i)$ are\n$$\nV_{indep}(d)=\\frac1{12}\\sum_{i\\in s}E_i\\,4^{e_i-d_i}\\quad(\\texttt{vIndepR}),\\qquad\n\\tilde C(d)=\\frac12\\sum_{i\\in s}M_id_i^2+\\sum_{i\\in s}M'_id_i\\quad(\\texttt{sepCost}).\n$$\nTheir partial derivatives are $\\partial V_{indep}/\\partial d_i=-(\\log4)E_i4^{e_i-d_i}/12$ and $\\partial\\tilde C/\\partial d_i=M_id_i+M'_i$, so (35) for the variable $i$ reads\n$$\n-\\frac{(\\log4)\\,E_i\\,4^{e_i-d_i}}{12}+\\lambda\\,(M_id_i+M'_i)=0 .\n$$\n\nLet $E_i>0$, $M_i\\ge0$, $M'_i\\ge0$ and $M_i+M'_i>0$ for $i\\in s$, and let $\\lambda>0$. Then there are real bit-widths $d^*$ such that\n1. $d^*$ solves (35) for every $i\\in s$, and\n2. $V_{indep}(d^*)\\le V_{indep}(d)$ for all real bit-widths $d$ with $\\tilde C(d)\\le\\tilde C(d^*)$.",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §6.1, pp. 11–12, (35).",
+   "explanation": "For each $i\\in s$, (35) has a (unique) solution by `exists_unique_bitWidth`; choose one for each $i$. Then `vIndepR_le_of_eq35` applies.",
+   "tags": [
+    "numerical-analysis",
+    "optimization",
+    "real-analysis"
+   ]
+  },
+  "MLMC.eq35_of_isLocalMinOn": {
+   "theorem_title": "Haas–Giles (2025), §6.1: a local minimum of the variance bound (26) at fixed cost (31) solves (35) for some Lagrange multiplier $\\lambda$",
+   "natural_language_statement": "Haas and Giles (2025), §6.1, pp. 11–12: \"To do this, we use a Lagrange multiplier approach. To give the intuition, minimising $V^\\Delta_\\ell(d)$ subject to a fixed $\\tilde C_\\ell(d)$ leads to the equation $\\frac{\\partial V^\\Delta_\\ell}{\\partial d_{i,\\ell}}+\\lambda\\frac{\\partial\\tilde C_\\ell}{\\partial d_{i,\\ell}}=0$ (35) for a value of the Lagrange multiplier $\\lambda$ which gives the desired $\\tilde C_\\ell(d)$. Hence, the Lagrange multiplier $\\lambda$ controls the trade-off between cost and variance.\" \n\nNotation. For a finite set $s$ of variables $i$ with $E_i=\\mathbb E[\\bar x_i^2]$, exponents $e_i\\in\\mathbb Z$ and operation counts $M_i,M'_i$, the variance bound (26) and the cost (31) at real bit-widths $d=(d_i)$ are\n$$\nV_{indep}(d)=\\frac1{12}\\sum_{i\\in s}E_i\\,4^{e_i-d_i}\\quad(\\texttt{vIndepR}),\\qquad\n\\tilde C(d)=\\frac12\\sum_{i\\in s}M_id_i^2+\\sum_{i\\in s}M'_id_i\\quad(\\texttt{sepCost}).\n$$\nTheir partial derivatives are $\\partial V_{indep}/\\partial d_i=-(\\log4)E_i4^{e_i-d_i}/12$ and $\\partial\\tilde C/\\partial d_i=M_id_i+M'_i$, so (35) for the variable $i$ reads\n$$\n-\\frac{(\\log4)\\,E_i\\,4^{e_i-d_i}}{12}+\\lambda\\,(M_id_i+M'_i)=0 .\n$$\n\nHere $s$ is the set of all variables (a finite type $\\iota$). Let $d^*\\in\\mathbb R^\\iota$ be a local minimum of $V_{indep}$ on the level set $\\{d:\\tilde C(d)=\\tilde C(d^*)\\}$, and assume that the gradient of $\\tilde C$ at $d^*$ is not zero: $M_id^*_i+M'_i\\ne0$ for some $i$. Then there is $\\lambda\\in\\mathbb R$ such that, for every variable $i$,\n$$\n-\\frac{(\\log4)\\,E_i\\,4^{e_i-d^*_i}}{12}+\\lambda\\,(M_id^*_i+M'_i)=0 .\n$$\n\n**Formalization Note** \"Local minimum on the level set\" is Mathlib's `IsLocalMinOn`. No sign conditions on $E_i$, $M_i$, $M'_i$ are needed.",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §6.1, pp. 11–12, (35).",
+   "explanation": "Both $V_{indep}$ and $\\tilde C$ are strictly differentiable. By Mathlib's Lagrange multiplier theorem (`IsLocalExtrOn.exists_multipliers_of_hasStrictFDerivAt_1d`) there are $(a,b)\\ne(0,0)$ with $a\\,D\\tilde C(d^*)+b\\,DV_{indep}(d^*)=0$. Applied to the $i$-th unit vector, the derivatives are the partial derivatives $M_id^*_i+M'_i$ and $-(\\log4)E_i4^{e_i-d^*_i}/12$ (by uniqueness of derivatives along $t\\mapsto d^*$ with the $i$-th coordinate replaced by $t$). If $b=0$ then $a\\ne0$ and every $M_id^*_i+M'_i=0$, which is excluded; so $\\lambda=a/b$ works.",
+   "tags": [
+    "numerical-analysis",
+    "optimization",
+    "real-analysis"
+   ]
+  },
+  "MLMC.marginalRatio_eq_of_isLocalMinOn": {
+   "theorem_title": "Haas–Giles (2025), §6.3: at the optimum all variables have the same marginal ratio of variance reduction to added cost",
+   "natural_language_statement": "Haas and Giles (2025), §6.3, p. 14: \"This is a very important observation because it shows that the portion of the overall error due to a certain variable is constant over levels. In other words, to leading order, all errors are roughly of the same size. This is intuitive because if an error was \"disproportionately\" small, there would be potential for cost savings with a small increase in the error.\"\n\nNotation. For a finite set $s$ of variables $i$ with $E_i=\\mathbb E[\\bar x_i^2]$, exponents $e_i\\in\\mathbb Z$ and operation counts $M_i,M'_i$, the variance bound (26) and the cost (31) at real bit-widths $d=(d_i)$ are\n$$\nV_{indep}(d)=\\frac1{12}\\sum_{i\\in s}E_i\\,4^{e_i-d_i}\\quad(\\texttt{vIndepR}),\\qquad\n\\tilde C(d)=\\frac12\\sum_{i\\in s}M_id_i^2+\\sum_{i\\in s}M'_id_i\\quad(\\texttt{sepCost}).\n$$\nTheir partial derivatives are $\\partial V_{indep}/\\partial d_i=-(\\log4)E_i4^{e_i-d_i}/12$ and $\\partial\\tilde C/\\partial d_i=M_id_i+M'_i$, so (35) for the variable $i$ reads\n$$\n-\\frac{(\\log4)\\,E_i\\,4^{e_i-d_i}}{12}+\\lambda\\,(M_id_i+M'_i)=0 .\n$$\n\nHere $s$ is the set of all variables (a finite type $\\iota$). Let $d^*$ be a local minimum of $V_{indep}$ on the level set $\\{d:\\tilde C(d)=\\tilde C(d^*)\\}$ with $M_id^*_i+M'_i\\ne0$ for some $i$. Then there is $\\lambda\\in\\mathbb R$ such that for every variable $i$ with $M_id^*_i+M'_i\\ne0$,\n$$\n\\frac{(\\log4)\\,E_i\\,4^{e_i-d^*_i}/12}{M_id^*_i+M'_i}=\\lambda ,\n$$\ni.e. the ratio $\\big(-\\partial V_{indep}/\\partial d_i\\big)/\\big(\\partial\\tilde C/\\partial d_i\\big)$ is the same for all such $i$.",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §6.3, p. 14, and §6.1, (35).",
+   "explanation": "Take the $\\lambda$ of `eq35_of_isLocalMinOn` and divide (35) for the variable $i$ by $M_id^*_i+M'_i\\ne0$.",
+   "tags": [
+    "numerical-analysis",
+    "optimization",
+    "real-analysis"
+   ]
+  },
+  "MLMC.eq37_iff": {
+   "theorem_title": "Haas–Giles (2025), §6.1: at a uniform bit-width, equation (37) determines the Lagrange multiplier $\\lambda$ uniquely",
+   "natural_language_statement": "Haas and Giles (2025), §6.1, p. 12: \"For each uniform bit-width from 4 to 16, it computes $\\lambda$ based on $\\sum_i\\frac{\\partial V^\\Delta_\\ell}{\\partial d_{i,\\ell}}+\\lambda\\sum_i\\frac{\\partial\\tilde C_\\ell}{\\partial d_{i,\\ell}}=0$ (37) then uses this value of $\\lambda$ to determine initial values for $d_{i,\\ell}$ by solving a system of equations.\" \n\nNotation. For a finite set $s$ of variables $i$ with $E_i=\\mathbb E[\\bar x_i^2]$, exponents $e_i\\in\\mathbb Z$ and operation counts $M_i,M'_i$, the variance bound (26) and the cost (31) at real bit-widths $d=(d_i)$ are\n$$\nV_{indep}(d)=\\frac1{12}\\sum_{i\\in s}E_i\\,4^{e_i-d_i}\\quad(\\texttt{vIndepR}),\\qquad\n\\tilde C(d)=\\frac12\\sum_{i\\in s}M_id_i^2+\\sum_{i\\in s}M'_id_i\\quad(\\texttt{sepCost}).\n$$\nTheir partial derivatives are $\\partial V_{indep}/\\partial d_i=-(\\log4)E_i4^{e_i-d_i}/12$ and $\\partial\\tilde C/\\partial d_i=M_id_i+M'_i$, so (35) for the variable $i$ reads\n$$\n-\\frac{(\\log4)\\,E_i\\,4^{e_i-d_i}}{12}+\\lambda\\,(M_id_i+M'_i)=0 .\n$$\n\nLet $w\\in\\mathbb R$ be a uniform bit-width ($d_i=w$ for all $i$) with $\\sum_{i\\in s}(M_iw+M'_i)\\ne0$. Then for every $\\lambda\\in\\mathbb R$,\n$$\n\\sum_{i\\in s}\\Big(-\\frac{(\\log4)E_i4^{e_i-w}}{12}\\Big)+\\lambda\\sum_{i\\in s}(M_iw+M'_i)=0\n\\iff\n\\lambda=\\frac{\\sum_{i\\in s}(\\log4)E_i4^{e_i-w}/12}{\\sum_{i\\in s}(M_iw+M'_i)} .\n$$",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §6.1, p. 12, (37).",
+   "explanation": "(37) is linear in $\\lambda$ with nonzero coefficient $\\sum_i(M_iw+M'_i)$.",
+   "tags": [
+    "numerical-analysis",
+    "optimization"
+   ]
+  },
+  "MLMC.lambda37_pos": {
+   "theorem_title": "Haas–Giles (2025), §6.1: the Lagrange multiplier computed from (37) is positive",
+   "natural_language_statement": "Haas and Giles (2025), §6.1, p. 12: \"For each uniform bit-width from 4 to 16, it computes $\\lambda$ based on $\\sum_i\\frac{\\partial V^\\Delta_\\ell}{\\partial d_{i,\\ell}}+\\lambda\\sum_i\\frac{\\partial\\tilde C_\\ell}{\\partial d_{i,\\ell}}=0$ (37) then uses this value of $\\lambda$ to determine initial values for $d_{i,\\ell}$ by solving a system of equations.\" \n\nNotation. For a finite set $s$ of variables $i$ with $E_i=\\mathbb E[\\bar x_i^2]$, exponents $e_i\\in\\mathbb Z$ and operation counts $M_i,M'_i$, the variance bound (26) and the cost (31) at real bit-widths $d=(d_i)$ are\n$$\nV_{indep}(d)=\\frac1{12}\\sum_{i\\in s}E_i\\,4^{e_i-d_i}\\quad(\\texttt{vIndepR}),\\qquad\n\\tilde C(d)=\\frac12\\sum_{i\\in s}M_id_i^2+\\sum_{i\\in s}M'_id_i\\quad(\\texttt{sepCost}).\n$$\nTheir partial derivatives are $\\partial V_{indep}/\\partial d_i=-(\\log4)E_i4^{e_i-d_i}/12$ and $\\partial\\tilde C/\\partial d_i=M_id_i+M'_i$, so (35) for the variable $i$ reads\n$$\n-\\frac{(\\log4)\\,E_i\\,4^{e_i-d_i}}{12}+\\lambda\\,(M_id_i+M'_i)=0 .\n$$\n\nLet $w\\in\\mathbb R$, $E_i\\ge0$ for all $i\\in s$ with $E_i>0$ for some $i\\in s$, and $\\sum_{i\\in s}(M_iw+M'_i)>0$. Then\n$$\n\\frac{\\sum_{i\\in s}(\\log4)E_i4^{e_i-w}/12}{\\sum_{i\\in s}(M_iw+M'_i)}>0 .\n$$",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §6.1, p. 12, (37).",
+   "explanation": "The numerator is a sum of nonnegative terms, one of them positive ($\\log4>0$, $4^{e_i-w}>0$), and the denominator is positive.",
+   "tags": [
+    "numerical-analysis",
+    "optimization"
+   ]
+  },
+  "MLMC.eq37_of_eq35": {
+   "theorem_title": "Haas–Giles (2025), §6.1: equation (37) is the sum over the variables of the equations (35)",
+   "natural_language_statement": "Haas and Giles (2025), §6.1, p. 12: \"For each uniform bit-width from 4 to 16, it computes $\\lambda$ based on $\\sum_i\\frac{\\partial V^\\Delta_\\ell}{\\partial d_{i,\\ell}}+\\lambda\\sum_i\\frac{\\partial\\tilde C_\\ell}{\\partial d_{i,\\ell}}=0$ (37) then uses this value of $\\lambda$ to determine initial values for $d_{i,\\ell}$ by solving a system of equations.\" \n\nNotation. For a finite set $s$ of variables $i$ with $E_i=\\mathbb E[\\bar x_i^2]$, exponents $e_i\\in\\mathbb Z$ and operation counts $M_i,M'_i$, the variance bound (26) and the cost (31) at real bit-widths $d=(d_i)$ are\n$$\nV_{indep}(d)=\\frac1{12}\\sum_{i\\in s}E_i\\,4^{e_i-d_i}\\quad(\\texttt{vIndepR}),\\qquad\n\\tilde C(d)=\\frac12\\sum_{i\\in s}M_id_i^2+\\sum_{i\\in s}M'_id_i\\quad(\\texttt{sepCost}).\n$$\nTheir partial derivatives are $\\partial V_{indep}/\\partial d_i=-(\\log4)E_i4^{e_i-d_i}/12$ and $\\partial\\tilde C/\\partial d_i=M_id_i+M'_i$, so (35) for the variable $i$ reads\n$$\n-\\frac{(\\log4)\\,E_i\\,4^{e_i-d_i}}{12}+\\lambda\\,(M_id_i+M'_i)=0 .\n$$\n\nLet $\\lambda\\in\\mathbb R$ and let $d$ be real bit-widths that solve (35) for every $i\\in s$ with this $\\lambda$. Then\n$$\n\\sum_{i\\in s}\\Big(-\\frac{(\\log4)E_i4^{e_i-d_i}}{12}\\Big)+\\lambda\\sum_{i\\in s}(M_id_i+M'_i)=0 ,\n$$\nwhich is (37) at $d$.",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §6.1, pp. 11–12, (35) and (37).",
+   "explanation": "$\\lambda\\sum_i c_i=\\sum_i\\lambda c_i$, so the left side is $\\sum_i(\\text{left side of (35) for }i)=0$.",
+   "tags": [
+    "numerical-analysis",
+    "optimization"
+   ]
+  },
+  "MLMC.vIndepR_sub_update_add_one": {
+   "theorem_title": "Haas–Giles (2025), §6.2: the numerator of the ratio (38), the decrease of the variance bound (26) when one bit is added to $d_i$, is $\\mathbb E[\\bar x_i^2]4^{e_i-d_i}/16$",
+   "natural_language_statement": "Haas and Giles (2025), §6.2, p. 13: \"For each level $\\ell$ and each variable $i$, first round down the solution to $d^*_{i,\\ell}=\\lfloor d_{i,\\ell}\\rfloor$ and compute the ratio\n$r_{i,\\ell}=\\dfrac{V_{indep}(d^*_{1,\\ell},\\dots,d^*_{i,\\ell},\\dots)-V_{indep}(d^*_{1,\\ell},\\dots,d^*_{i,\\ell}+1,\\dots)}{\\tilde C(d^*_{1,\\ell},\\dots,d^*_{i,\\ell}+1,\\dots)-\\tilde C(d^*_{1,\\ell},\\dots,d^*_{i,\\ell},\\dots)}$ (38). Then order the ratios in decreasing order and add one bit to the variables with the highest ratio until the constraint on the error is satisfied.\" \n\nNotation. For a finite set $s$ of variables $i$ with $E_i=\\mathbb E[\\bar x_i^2]$, exponents $e_i\\in\\mathbb Z$ and operation counts $M_i,M'_i$, the variance bound (26) and the cost (31) at real bit-widths $d=(d_i)$ are\n$$\nV_{indep}(d)=\\frac1{12}\\sum_{i\\in s}E_i\\,4^{e_i-d_i}\\quad(\\texttt{vIndepR}),\\qquad\n\\tilde C(d)=\\frac12\\sum_{i\\in s}M_id_i^2+\\sum_{i\\in s}M'_id_i\\quad(\\texttt{sepCost}).\n$$\nTheir partial derivatives are $\\partial V_{indep}/\\partial d_i=-(\\log4)E_i4^{e_i-d_i}/12$ and $\\partial\\tilde C/\\partial d_i=M_id_i+M'_i$, so (35) for the variable $i$ reads\n$$\n-\\frac{(\\log4)\\,E_i\\,4^{e_i-d_i}}{12}+\\lambda\\,(M_id_i+M'_i)=0 .\n$$\n\nLet $d$ be real bit-widths, $i\\in s$, and let $d'$ be $d$ with $d_i$ replaced by $d_i+1$. Then\n$$\nV_{indep}(d)-V_{indep}(d')=\\frac{E_i\\,4^{e_i-d_i}}{16},\n$$\nwhich depends on $d_i$ only.\n\n**Formalization Note** $d'$ is `Function.update d i (d i + 1)`.",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §6.2, p. 13, (38), with (26).",
+   "explanation": "Only the $i$-th term changes: $\\frac1{12}E_i\\big(4^{e_i-d_i}-4^{e_i-d_i-1}\\big)=\\frac1{12}\\cdot\\frac34E_i4^{e_i-d_i}$.",
+   "tags": [
+    "numerical-analysis",
+    "optimization"
+   ]
+  },
+  "MLMC.sepCost_update_add_one_sub": {
+   "theorem_title": "Haas–Giles (2025), §6.2: the denominator of the ratio (38), the increase of the cost (31) when one bit is added to $d_i$, is $M_i(d_i+\\tfrac12)+M'_i$",
+   "natural_language_statement": "Haas and Giles (2025), §6.2, p. 13: \"For each level $\\ell$ and each variable $i$, first round down the solution to $d^*_{i,\\ell}=\\lfloor d_{i,\\ell}\\rfloor$ and compute the ratio\n$r_{i,\\ell}=\\dfrac{V_{indep}(d^*_{1,\\ell},\\dots,d^*_{i,\\ell},\\dots)-V_{indep}(d^*_{1,\\ell},\\dots,d^*_{i,\\ell}+1,\\dots)}{\\tilde C(d^*_{1,\\ell},\\dots,d^*_{i,\\ell}+1,\\dots)-\\tilde C(d^*_{1,\\ell},\\dots,d^*_{i,\\ell},\\dots)}$ (38). Then order the ratios in decreasing order and add one bit to the variables with the highest ratio until the constraint on the error is satisfied.\" \n\nNotation. For a finite set $s$ of variables $i$ with $E_i=\\mathbb E[\\bar x_i^2]$, exponents $e_i\\in\\mathbb Z$ and operation counts $M_i,M'_i$, the variance bound (26) and the cost (31) at real bit-widths $d=(d_i)$ are\n$$\nV_{indep}(d)=\\frac1{12}\\sum_{i\\in s}E_i\\,4^{e_i-d_i}\\quad(\\texttt{vIndepR}),\\qquad\n\\tilde C(d)=\\frac12\\sum_{i\\in s}M_id_i^2+\\sum_{i\\in s}M'_id_i\\quad(\\texttt{sepCost}).\n$$\nTheir partial derivatives are $\\partial V_{indep}/\\partial d_i=-(\\log4)E_i4^{e_i-d_i}/12$ and $\\partial\\tilde C/\\partial d_i=M_id_i+M'_i$, so (35) for the variable $i$ reads\n$$\n-\\frac{(\\log4)\\,E_i\\,4^{e_i-d_i}}{12}+\\lambda\\,(M_id_i+M'_i)=0 .\n$$\n\nLet $d$ be real bit-widths, $i\\in s$, and let $d'$ be $d$ with $d_i$ replaced by $d_i+1$. Then\n$$\n\\tilde C(d')-\\tilde C(d)=M_i\\Big(d_i+\\frac12\\Big)+M'_i ,\n$$\nwhich depends on $d_i$ only; with `vIndepR_sub_update_add_one`, the ratio (38) depends on $d_i$ only.\n\n**Formalization Note** $d'$ is `Function.update d i (d i + 1)`.",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §6.2, p. 13, (38), with (31).",
+   "explanation": "Only the $i$-th terms change: $\\frac12M_i\\big((d_i+1)^2-d_i^2\\big)+M'_i=M_i(d_i+\\frac12)+M'_i$.",
+   "tags": [
+    "numerical-analysis",
+    "optimization"
+   ]
+  },
+  "MLMC.rpow_four_sub_add_one": {
+   "theorem_title": "Haas–Giles (2025), §6.3: one more bit divides the squared rounding error $4^{e-d}$ by 4",
+   "natural_language_statement": "Haas and Giles (2025), §6.3, p. 13: \"Moreover looking at the variance factors $\\frac1{12}\\mathbb E[\\bar x_i^2]4^{e_{i,\\ell}}$ in Figure 6, for variables $S$ and $mul2$ we notice that the factors are approximately multiplied by 2 at every level. Therefore, using the fact that $d_{S,\\ell+1}=d_{S,\\ell}+1$ is equivalent to division by 4 in the corresponding squared rounding error, the bound on the average error $\\mathbb E[\\bar S_i^2\\delta S_i^2]$ is divided by 2 at every level.\" \n\nFor all $e,d\\in\\mathbb R$,\n$$\n4^{e-(d+1)}=\\frac{4^{e-d}}{4}.\n$$\n(In the bound (26), the squared rounding error of a variable with exponent $e$ and bit-width $d$ is $4^{e-d}$ up to the factor $\\frac1{12}\\mathbb E[\\bar x^2]$.)",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §6.3, p. 13.",
+   "explanation": "$4^{e-(d+1)}=4^{(e-d)-1}=4^{e-d}/4^1$ (`Real.rpow_sub`).",
+   "tags": [
+    "numerical-analysis"
+   ]
+  },
+  "MLMC.errorBound_succ": {
+   "theorem_title": "Haas–Giles (2025), §6.3: if the variance factors double and one bit is added per level, the bound on the squared error halves",
+   "natural_language_statement": "Haas and Giles (2025), §6.3, p. 13: \"Moreover looking at the variance factors $\\frac1{12}\\mathbb E[\\bar x_i^2]4^{e_{i,\\ell}}$ in Figure 6, for variables $S$ and $mul2$ we notice that the factors are approximately multiplied by 2 at every level. Therefore, using the fact that $d_{S,\\ell+1}=d_{S,\\ell}+1$ is equivalent to division by 4 in the corresponding squared rounding error, the bound on the average error $\\mathbb E[\\bar S_i^2\\delta S_i^2]$ is divided by 2 at every level.\" \n\nLet $F,d:\\mathbb N\\to\\mathbb R$ with $F_{\\ell+1}=2F_\\ell$ (the variance factors $F_\\ell=\\frac1{12}\\mathbb E[\\bar x^2]4^{e_\\ell}$ double) and $d_{\\ell+1}=d_\\ell+1$ for all $\\ell$. Then for every $\\ell$,\n$$\nF_{\\ell+1}\\,4^{-d_{\\ell+1}}=\\frac{F_\\ell\\,4^{-d_\\ell}}{2}.\n$$\nHere $F_\\ell4^{-d_\\ell}=\\frac1{12}\\mathbb E[\\bar x^2]4^{e_\\ell-d_\\ell}$ is the bound on the expected squared error of the variable on level $\\ell$.",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §6.3, p. 13, Figures 6 and 7.",
+   "explanation": "$F_{\\ell+1}4^{-d_{\\ell+1}}=2F_\\ell\\cdot4^{-d_\\ell-1}=2F_\\ell4^{-d_\\ell}/4$.",
+   "tags": [
+    "numerical-analysis"
+   ]
+  },
+  "MLMC.errorBound_eq_div_pow": {
+   "theorem_title": "Haas–Giles (2025), §6.3: under the same trend the error bound on level $\\ell$ is $2^{-\\ell}$ times that on level 0, so it evolves like the time step",
+   "natural_language_statement": "Haas and Giles (2025), §6.3, p. 13: \"Moreover looking at the variance factors $\\frac1{12}\\mathbb E[\\bar x_i^2]4^{e_{i,\\ell}}$ in Figure 6, for variables $S$ and $mul2$ we notice that the factors are approximately multiplied by 2 at every level. Therefore, using the fact that $d_{S,\\ell+1}=d_{S,\\ell}+1$ is equivalent to division by 4 in the corresponding squared rounding error, the bound on the average error $\\mathbb E[\\bar S_i^2\\delta S_i^2]$ is divided by 2 at every level.\" \n\nHaas and Giles (2025), §6.3, p. 14: \"Therefore our framework not only allocates the relevant number of bits to each variable within a level but also ensures that the precision evolves with level such that the net error evolves like the time step $h$.\"\n\nLet $F,d:\\mathbb N\\to\\mathbb R$ with $F_{\\ell+1}=2F_\\ell$ and $d_{\\ell+1}=d_\\ell+1$ for all $\\ell$. Then for every $\\ell$,\n$$\nF_\\ell\\,4^{-d_\\ell}=\\frac{F_0\\,4^{-d_0}}{2^\\ell},\n$$\nwhich is proportional to the time step $h_\\ell=2^{-\\ell}h_0$.",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §6.3, pp. 13–14.",
+   "explanation": "Induction on $\\ell$ with `errorBound_succ`.",
+   "tags": [
+    "numerical-analysis"
+   ]
+  },
+  "MLMC.errorShare_succ": {
+   "theorem_title": "Haas–Giles (2025), §6.3: if all error bounds halve from one level to the next, the share of each variable in the total is the same on both levels",
+   "natural_language_statement": "Haas and Giles (2025), §6.3, p. 14: \"This is a very important observation because it shows that the portion of the overall error due to a certain variable is constant over levels.\"\n\nLet $s$ be a finite set of variables and $B_\\ell(i)\\in\\mathbb R$ the error bound of the variable $i$ on level $\\ell$, with $B_{\\ell+1}(i)=B_\\ell(i)/2$ for all $\\ell$ and all $i\\in s$. Then for every $\\ell$ and $i\\in s$,\n$$\n\\frac{B_{\\ell+1}(i)}{\\sum_{j\\in s}B_{\\ell+1}(j)}=\\frac{B_\\ell(i)}{\\sum_{j\\in s}B_\\ell(j)} .\n$$\n\n**Formalization Note** Division by $0$ is $0$ in Lean; the identity holds also when the sums vanish.",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §6.3, p. 14.",
+   "explanation": "Both the numerator and the denominator are halved: $\\frac{B_\\ell(i)/2}{(\\sum_jB_\\ell(j))/2}$.",
+   "tags": [
+    "numerical-analysis"
+   ]
+  },
+  "MLMC.variance_extended_le_two_mul": {
+   "theorem_title": "Haas–Giles (2025), §4.3: if the LUT is chosen so that the MSE term of (28) is at most $V_{indep}$, the error variance is at most $2V_{indep}$",
+   "natural_language_statement": "Haas and Giles (2025), §4.3, p. 10: \"Therefore to integrate both approximate random variables and fixed-point arithmetic, in practice at each level after the bit-widths for all variables (including $Z$) are optimised we can for instance choose the size of the LUT such that the term containing the MSE in (28) is smaller or equal to $V_{indep}$.\"\n\nLet $(\\Omega,\\mathcal F,\\mathbb P)$ be a probability space, $s$ and $t$ finite index sets, $\\bar x_i,\\delta x_i$ ($i\\in s$) and $\\bar Z_j,\\delta Z_j$ ($j\\in t$) real random variables, $e_i\\in\\mathbb Z$, $d_i\\in\\mathbb N$ and $\\mathrm{MSE}\\in\\mathbb R$. Assume the hypotheses of the corrected (28) (`variance_extended_indep`):\n1. each $\\bar x_i\\in L^2$ and each rounding error $\\delta x_i$ is uniform on $[-2^{e_i-d_i-1},2^{e_i-d_i-1}]$;\n2. each $\\bar Z_j$ and $\\delta Z_j$ is a.e. strongly measurable, $\\bar Z_j\\delta Z_j\\in L^2$ and $\\mathbb E[\\delta Z_j^2]=\\mathrm{MSE}$;\n3. $\\bar x_i$ is independent of $\\delta x_i$, $\\bar Z_j$ of $\\delta Z_j$, and the products $\\bar x_i\\delta x_i$, $\\bar Z_j\\delta Z_j$ are pairwise independent.\n\nIf moreover the LUT is chosen so that\n$$\n\\Big(\\sum_{j\\in t}\\mathbb E[\\bar Z_j^2]\\Big)\\,\\mathrm{MSE}\\;\\le\\;V_{indep}=\\frac1{12}\\sum_{i\\in s}\\mathbb E[\\bar x_i^2]\\,4^{e_i-d_i},\n$$\nthen\n$$\n\\mathbb V\\Big[\\sum_{i\\in s}\\bar x_i\\,\\delta x_i+\\sum_{j\\in t}\\bar Z_j\\,\\delta Z_j\\Big]\\;\\le\\;2\\,V_{indep}.\n$$\n\n**Formalization Note** The MSE term of the corrected (28) is $(\\sum_j\\mathbb E[\\bar Z_j^2])\\,\\mathrm{MSE}$, without the factor $\\frac1{12}$ printed in the paper (see `variance_extended_indep`).",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §4.3, p. 10, (28).",
+   "explanation": "By `variance_extended_indep` the variance is at most $V_{indep}+(\\sum_j\\mathbb E[\\bar Z_j^2])\\,\\mathrm{MSE}\\le2V_{indep}$.",
+   "tags": [
+    "probability",
+    "numerical-analysis"
+   ]
   }
  },
  "definitions": {
@@ -3216,6 +3566,15 @@
    "tags": [
     "multilevel-monte-carlo",
     "algorithms"
+   ]
+  },
+  "MLMC_PoissonCoupling": {
+   "definition_title": "Giles (2015), §8: tau-leaping for a continuous-time Markov chain and the Anderson–Higham coupling of the fine and coarse Poisson increments",
+   "natural_language_statement": "Giles (2015), §8, p. 55: \"the 'tau-leaping' method … gives the discrete equation $x_{n+1}=x_n+P(h\\lambda(x_n))$, where $h$ is the timestep, $\\lambda(x_n)$ is the reaction rate (or propensity function), and $P(t)$ represents a unit-rate Poisson random variable over time interval $[0,t]$. If this equation defines the fine path in the multilevel simulation, then the coarse path, with double the timestep, is given by $x^c_{n+2}=x^c_n+P(2h\\lambda(x^c_n))$ for even timesteps $n$.\" \n\nGiles (2015), §8, p. 55: \"the first step is to express the coarse path Poisson variate as the sum of two Poisson variates, $P(h\\lambda(x^c_n))$ corresponding to the first and second fine path timesteps. For the first of the two fine timesteps, the coarse and fine path Poisson variates are coupled by defining two Poisson variates based on the minimum of the two reactions rates, and the absolute difference, $P_1=P\\big(h\\min(\\lambda(x_n),\\lambda(x^c_n))\\big)$, $P_2=P\\big(h|\\lambda(x_n)-\\lambda(x^c_n)|\\big)$, and then using $P_1$ as the Poisson variate for the path with the smaller rate, and $P_1+P_2$ for the path with the larger rate.\" \n\nThroughout, $\\lambda:\\mathbb N\\to[0,\\infty)$ is the rate (propensity) function, $h\\ge0$ the time step, the state is a count $x\\in\\mathbb N$, and $\\mathrm{Po}(r)$ is the Poisson distribution with mean $r\\ge0$ on $\\mathbb N$ (Mathlib's `poissonMeasure`).\n\n**`couplePair`**. For rates $a,b\\ge0$ and $(p_1,p_2)\\in\\mathbb N^2$, the pair of increments of the paths with rates $a$ and $b$:\n$$\n\\mathrm{couplePair}(a,b)(p_1,p_2)=\\big(p_1+[\\,b<a\\,]\\,p_2,\\;\\;p_1+[\\,a<b\\,]\\,p_2\\big),\n$$\nwhere $[\\cdot]$ is $1$ if the condition holds and $0$ otherwise. The path with the smaller rate gets $p_1$, the path with the larger rate gets $p_1+p_2$.\n\n**`coupledIncr`**. The joint law of the coupled increments: the image of $\\mathrm{Po}(\\min(a,b))\\otimes\\mathrm{Po}(\\max(a,b)-\\min(a,b))$ under $\\mathrm{couplePair}(a,b)$.\n\n**`tauStep`**. One tau-leaping step from the state $x$: the law of $x+P$ with $P\\sim\\mathrm{Po}(h\\lambda(x))$.\n\n**`tauChain`**. The law of the tau-leaping chain after $n$ steps from $x_0$: $\\delta_{x_0}$ for $n=0$, and the composition of the law after $n$ steps with `tauStep` for $n+1$.\n\n**`coupledTwoStep`**. Two coupled fine steps from the pair $(x,y)$ of fine and coarse states: first the coupled increments $(i,j)$ with rates $h\\lambda(x)$, $h\\lambda(y)$; then, from $x+i$, the coupled increments $(i',j')$ with rates $h\\lambda(x+i)$ and $h\\lambda(y)$ (the coarse rate stays frozen at $\\lambda(y)$ over the coarse step). The result is $(x+i+i',\\,y+j+j')$.\n\n**`coupledChain`**. The law of the coupled pair after $k$ pairs of fine steps from $(x_0,x_0)$: $\\delta_{(x_0,x_0)}$ for $k=0$, and the composition with `coupledTwoStep` for $k+1$.\n\n**Formalization Note** The laws are measures on $\\mathbb N$ and $\\mathbb N\\times\\mathbb N$; \"composition\" is `Measure.bind`. Rates are nonnegative reals (`ℝ≥0`), so $|a-b|=\\max(a,b)-\\min(a,b)$.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §8, pp. 55–56 of the author's version (after D. Anderson and D. Higham, Multi-level Monte Carlo for continuous time Markov chains, 2012).",
+   "tags": [
+    "multilevel-monte-carlo",
+    "probability"
    ]
   }
  }
