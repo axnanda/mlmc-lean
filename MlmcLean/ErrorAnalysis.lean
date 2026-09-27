@@ -417,7 +417,8 @@ theorem kurtosis_of_ternary {X : Ω → ℝ} (hXm : Measurable X)
 
 /-- Giles 2015, §3.3, p. 23: "the kurtosis will become worse as `ℓ → ∞` since `p, q → 0`".  For
 `{−1, 0, 1}`-valued corrections `X_ℓ` with `P(X_ℓ ≠ 0) > 0` and `E[X_ℓ²] → 0` (for example
-`V_ℓ → 0` and `E[X_ℓ] → 0`), the kurtosis `κ_ℓ` tends to infinity. -/
+`V_ℓ → 0` and `E[X_ℓ] → 0`), the kurtosis `κ_ℓ` tends to infinity (for any measure `μ`). -/
+omit [IsProbabilityMeasure μ] in
 theorem tendsto_kurtosis_atTop {X : ℕ → Ω → ℝ} (hXm : ∀ ℓ, Measurable (X ℓ))
     (hX : ∀ ℓ ω, X ℓ ω = -1 ∨ X ℓ ω = 0 ∨ X ℓ ω = 1)
     (hp : ∀ ℓ, 0 < μ.real {ω | X ℓ ω ≠ 0})

@@ -120,12 +120,12 @@ lemma integral_inner_of_indepFun [CompleteSpace E] [MeasurableSpace E] [BorelSpa
 
 /-- **Giles 2015, §2.5, p. 17** ("when using the 2-norm, this extends to independent random
 vectors `a` and `b`, each with zero mean, since `E[‖a+b‖²] = E[‖a‖²] + E[‖b‖²]`, and similarly to
-random functions with a 2-norm based on an inner product"): for independent, square-integrable,
-zero-mean random variables `a`, `b` with values in a real Hilbert space,
-`E[‖a + b‖²] = E[‖a‖²] + E[‖b‖²]`. -/
+random functions with a 2-norm based on an inner product"): for independent, square-integrable
+random variables `a`, `b` with values in a real Hilbert space, `E[‖a + b‖²] = E[‖a‖²] + E[‖b‖²]`
+as soon as `E[a] = 0` (the paper assumes both means are zero; one of them suffices). -/
 theorem integral_norm_add_sq_of_indepFun [IsProbabilityMeasure μ] [CompleteSpace E]
     [MeasurableSpace E] [BorelSpace E] {a b : Ω → E} (hab : IndepFun a b μ)
-    (ha : MemLp a 2 μ) (hb : MemLp b 2 μ) (ha0 : ∫ ω, a ω ∂μ = 0) (hb0 : ∫ ω, b ω ∂μ = 0) :
+    (ha : MemLp a 2 μ) (hb : MemLp b 2 μ) (ha0 : ∫ ω, a ω ∂μ = 0) :
     ∫ ω, ‖a ω + b ω‖ ^ 2 ∂μ = ∫ ω, ‖a ω‖ ^ 2 ∂μ + ∫ ω, ‖b ω‖ ^ 2 ∂μ := by
   have hcross : ∫ ω, ⟪a ω, b ω⟫_ℝ ∂μ = 0 := by
     rw [integral_inner_of_indepFun hab (ha.integrable one_le_two) (hb.integrable one_le_two), ha0,
@@ -142,12 +142,11 @@ theorem integral_norm_add_sq_of_indepFun [IsProbabilityMeasure μ] [CompleteSpac
 
 /-- **Giles 2015, §2.5, p. 17**: "if `a` and `b` are two independent scalar random variables with
 zero mean then `E[(a+b)²] = E[a²] + E[b²]`" (square-integrable, the case `E = ℝ` of
-`integral_norm_add_sq_of_indepFun`). -/
+`integral_norm_add_sq_of_indepFun`; as there, `E[a] = 0` alone suffices). -/
 theorem integral_add_sq_of_indepFun [IsProbabilityMeasure μ] {a b : Ω → ℝ}
-    (hab : IndepFun a b μ) (ha : MemLp a 2 μ) (hb : MemLp b 2 μ) (ha0 : ∫ ω, a ω ∂μ = 0)
-    (hb0 : ∫ ω, b ω ∂μ = 0) :
+    (hab : IndepFun a b μ) (ha : MemLp a 2 μ) (hb : MemLp b 2 μ) (ha0 : ∫ ω, a ω ∂μ = 0) :
     ∫ ω, (a ω + b ω) ^ 2 ∂μ = ∫ ω, a ω ^ 2 ∂μ + ∫ ω, b ω ^ 2 ∂μ := by
-  have h := integral_norm_add_sq_of_indepFun hab ha hb ha0 hb0
+  have h := integral_norm_add_sq_of_indepFun hab ha hb ha0
   simp only [Real.norm_eq_abs, sq_abs] at h
   exact h
 

@@ -202,7 +202,7 @@ variable {Ω : Type*} [MeasurableSpace Ω] {μ : Measure Ω} [IsProbabilityMeasu
 `∑_i X_i` (with `X_i = x̄_i δx_i`) is `∑_i V[X_i] + ∑_{i ≠ j} Cov(X_i, X_j)`.  The printed (25) has
 `2 ∑_{i≠j}`, which counts every covariance twice; the correct sum over ordered pairs `i ≠ j` has no
 factor 2 (equivalently `2 ∑_{i<j}`). -/
-theorem variance_sum_eq {ι : Type*} (s : Finset ι) {X : ι → Ω → ℝ}
+theorem variance_sum_eq {ι : Type*} [DecidableEq ι] (s : Finset ι) {X : ι → Ω → ℝ}
     (hX : ∀ i ∈ s, MemLp (X i) 2 μ) :
     variance (fun ω => ∑ i ∈ s, X i ω) μ =
       ∑ i ∈ s, variance (X i) μ + ∑ i ∈ s, ∑ j ∈ s.erase i, covariance (X i) (X j) μ := by
