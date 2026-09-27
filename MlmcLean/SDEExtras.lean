@@ -468,13 +468,13 @@ theorem splitting_mean_variance {g : Ω₁ → Ω₂ → ℝ} (hg : Measurable (
       (μ.prod (Measure.infinitePi fun _ => ν)) := fun j => (integrable_integral_subsample j hint).1
   have hgj2 : ∀ j, Integrable (fun q : Ω₁ × (ℕ → Ω₂) => g q.1 (q.2 j) ^ 2)
       (μ.prod (Measure.infinitePi fun _ => ν)) := fun j => (integrable_integral_subsample j hg2).1
-  have hmean_j : ∀ j, ∫ q, g q.1 (q.2 j) ∂(μ.prod (Measure.infinitePi fun _ => ν)) = C := by
+  have hmean_j : ∀ j : ℕ, ∫ q, g q.1 (q.2 j) ∂(μ.prod (Measure.infinitePi fun _ => ν)) = C := by
     intro j
     have h := (integrable_integral_subsample j hint).2
     rw [integral_prod _ hint] at h
     rw [hC]
     exact h
-  have hsq_j : ∀ j, ∫ q, g q.1 (q.2 j) ^ 2 ∂(μ.prod (Measure.infinitePi fun _ => ν)) = A := by
+  have hsq_j : ∀ j : ℕ, ∫ q, g q.1 (q.2 j) ^ 2 ∂(μ.prod (Measure.infinitePi fun _ => ν)) = A := by
     intro j
     have h := (integrable_integral_subsample j hg2).2
     rw [integral_prod _ hg2] at h
@@ -529,7 +529,7 @@ theorem splitting_mean_variance {g : Ω₁ → Ω₂ → ℝ} (hg : Measurable (
   -- the mean of the splitting estimator
   have hES : ∫ q, (∑ j ∈ Finset.range M, g q.1 (q.2 j)) / M
       ∂(μ.prod (Measure.infinitePi fun _ => ν)) = C := by
-    rw [integral_div, integral_finsetSum _ fun j _ => hgj j,
+    rw [integral_div, integral_finsetSum (Finset.range M) fun j _ => hgj j,
       Finset.sum_congr rfl fun j _ => hmean_j j, Finset.sum_const, Finset.card_range,
       nsmul_eq_mul, mul_div_cancel_left₀ _ hM']
   -- its second moment
@@ -550,17 +550,19 @@ theorem splitting_mean_variance {g : Ω₁ → Ω₂ → ℝ} (hg : Measurable (
       ∂(μ.prod (Measure.infinitePi fun _ => ν)) =
       ((M : ℝ) * A + (M : ℝ) * ((M : ℝ) - 1) * B) / (M : ℝ) ^ 2 := by
     rw [integral_congr_ae (Eventually.of_forall hpt), integral_div,
-      integral_finsetSum _ fun j _ => integrable_finsetSum _ fun k _ => (hjk j k).1,
-      Finset.sum_congr rfl fun j _ => integral_finsetSum _ fun k _ => (hjk j k).1,
+      integral_finsetSum (Finset.range M) fun j _ =>
+        integrable_finsetSum (Finset.range M) fun k _ => (hjk j k).1,
+      Finset.sum_congr rfl fun j _ => integral_finsetSum (Finset.range M) fun k _ => (hjk j k).1,
       Finset.sum_congr rfl fun j _ => Finset.sum_congr rfl fun k _ => (hjk j k).2,
       Finset.sum_congr rfl hcount, Finset.sum_const, Finset.card_range, nsmul_eq_mul]
     ring
   have hSint : Integrable (fun q : Ω₁ × (ℕ → Ω₂) => (∑ j ∈ Finset.range M, g q.1 (q.2 j)) / M)
       (μ.prod (Measure.infinitePi fun _ => ν)) :=
-    (integrable_finsetSum _ fun j _ => hgj j).div_const _
+    (integrable_finsetSum (Finset.range M) fun j _ => hgj j).div_const (M : ℝ)
   have hS2int : Integrable (fun q : Ω₁ × (ℕ → Ω₂) =>
       ((∑ j ∈ Finset.range M, g q.1 (q.2 j)) / M) ^ 2) (μ.prod (Measure.infinitePi fun _ => ν)) :=
-    ((integrable_finsetSum _ fun j _ => integrable_finsetSum _ fun k _ => (hjk j k).1).div_const
+    ((integrable_finsetSum (Finset.range M) fun j _ =>
+      integrable_finsetSum (Finset.range M) fun k _ => (hjk j k).1).div_const
       ((M : ℝ) ^ 2)).congr (Eventually.of_forall fun q => (hpt q).symm)
   have hSmem : MemLp (fun q : Ω₁ × (ℕ → Ω₂) => (∑ j ∈ Finset.range M, g q.1 (q.2 j)) / M) 2
       (μ.prod (Measure.infinitePi fun _ => ν)) :=

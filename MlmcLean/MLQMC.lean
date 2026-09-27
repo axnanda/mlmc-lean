@@ -185,7 +185,7 @@ theorem mlqmc_inner_terminates (hv : ∀ ℓ k, 0 < v ℓ k) (hC : ∀ ℓ, 0 < 
   refine ⟨(L + 1) * B + 1, ?_⟩
   have hall : ∀ ℓ ∈ range (L + 1), K ≤ mlqmcIter v C L k₀ ((L + 1) * B + 1) ℓ := by
     by_contra hcon
-    push_neg at hcon
+    push Not at hcon
     have hle := hinv _ hcon
     have hsum := sum_mlqmcIter v C L k₀ ((L + 1) * B + 1)
     have hbound : ∑ ℓ ∈ range (L + 1), mlqmcIter v C L k₀ ((L + 1) * B + 1) ℓ ≤ (L + 1) * B :=
