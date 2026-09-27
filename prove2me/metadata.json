@@ -1326,7 +1326,7 @@
   },
   "MLMC.multiOutput_optimal": {
    "theorem_title": "Giles (2015), §2.5: several outputs — least cost $2(\\sum_\\ell\\sqrt{V_\\ell C_\\ell})^2$ for $V_\\ell=\\max_m V_{\\ell,m}/\\varepsilon_m^2$, attained by an allocation meeting each output's constraint",
-   "natural_language_statement": "Giles (2015), §2.5: with $V_\\ell\\equiv\\max_m V_{\\ell,m}/\\varepsilon_m^2$, enforcing $\\sum_{\\ell=0}^{L}N_\\ell^{-1}V_\\ell\\le\\tfrac12$ \"is then sufficient to ensure that all of the individual variance constraints are satisfied, and the standard Lagrange multiplier approach outlined in Section 1.3 can be used to determine the optimal number of samples to use on each level.\"\n\nLet $M$ be a nonempty finite set of outputs, $V_{\\ell,m}>0$, $\\varepsilon_m>0$, costs $C_\\ell>0$ and $L\\in\\mathbb N$, and let $V_\\ell=\\max_{m\\in M}V_{\\ell,m}/\\varepsilon_m^2$. Then\n\n1. among all real allocations $N_\\ell>0$ ($\\ell=0,\\dots,L$) with $\\sum_{\\ell=0}^{L}V_\\ell/N_\\ell\\le\\tfrac12$, the least cost $\\sum_{\\ell=0}^{L}N_\\ell C_\\ell$ is\n\n$$\n2\\Big(\\sum_{\\ell=0}^{L}\\sqrt{V_\\ell C_\\ell}\\Big)^2\n$$\n\n(attained);\n2. the Lagrange allocation for this problem, $N_\\ell=2\\sqrt{V_\\ell/C_\\ell}\\,\\sum_{j=0}^{L}\\sqrt{V_jC_j}$, is positive ($N_\\ell>0$ for $\\ell=0,\\dots,L$) and attains the least cost: $\\sum_{\\ell=0}^{L}N_\\ell C_\\ell=2\\big(\\sum_{\\ell=0}^{L}\\sqrt{V_\\ell C_\\ell}\\big)^2$;\n3. this allocation satisfies $\\sum_{\\ell=0}^{L}V_{\\ell,m}/N_\\ell\\le\\tfrac12\\varepsilon_m^2$ for every output $m\\in M$.\n\n**Formalization Note** The allocation in parts 2 and 3 is `lagrangeN (range (L + 1)) V C (1 / 2)` with $V_\\ell=\\max_m V_{\\ell,m}/\\varepsilon_m^2$ (`Finset.sup'`). Part 1 is stated with `IsLeast`.",
+   "natural_language_statement": "Giles (2015), §2.5: with $V_\\ell\\equiv\\max_m V_{\\ell,m}/\\varepsilon_m^2$, enforcing $\\sum_{\\ell=0}^{L}N_\\ell^{-1}V_\\ell\\le\\tfrac12$ \"is then sufficient to ensure that all of the individual variance constraints are satisfied, and the standard Lagrange multiplier approach outlined in Section 1.3 can be used to determine the optimal number of samples to use on each level.\"\n\nLet $M$ be a nonempty finite set of outputs, $V_{\\ell,m}>0$, $\\varepsilon_m>0$, costs $C_\\ell>0$ and $L\\in\\mathbb N$, and let $V_\\ell=\\max_{m\\in M}V_{\\ell,m}/\\varepsilon_m^2$. Then\n\n1. among all real allocations $N_\\ell>0$ ($\\ell=0,\\dots,L$) with $\\sum_{\\ell=0}^{L}V_\\ell/N_\\ell\\le\\tfrac12$, the least cost $\\sum_{\\ell=0}^{L}N_\\ell C_\\ell$ is\n\n$$\n2\\Big(\\sum_{\\ell=0}^{L}\\sqrt{V_\\ell C_\\ell}\\Big)^2\n$$\n\n(attained);\n2. the Lagrange allocation for this problem, $N_\\ell=2\\sqrt{V_\\ell/C_\\ell}\\,\\sum_{j=0}^{L}\\sqrt{V_jC_j}$, is positive ($N_\\ell>0$ for $\\ell=0,\\dots,L$) and attains the least cost: $\\sum_{\\ell=0}^{L}N_\\ell C_\\ell=2\\big(\\sum_{\\ell=0}^{L}\\sqrt{V_\\ell C_\\ell}\\big)^2$;\n3. this allocation satisfies $\\sum_{\\ell=0}^{L}V_{\\ell,m}/N_\\ell\\le\\tfrac12\\varepsilon_m^2$ for every output $m\\in M$.\n\n**Formalization Note** The allocation in parts 2 and 3 is `lagrangeN (range (L + 1)) V C (1 / 2)` with $V_\\ell=\\max_m V_{\\ell,m}/\\varepsilon_m^2$ (`Finset.sup'`). Part 1 is stated with `IsLeast`. As in the paper, the minimum is taken under the single combined constraint $\\sum_\\ell V_\\ell/N_\\ell\\le\\frac12$, which is sufficient for the individual constraints; the allocation is not claimed to be the cheapest among all allocations that satisfy the individual constraints $\\sum_\\ell V_{\\ell,m}/N_\\ell\\le\\frac12\\varepsilon_m^2$ directly.",
    "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §2.5, p. 17 of the author's version, with (1.1) and the Lagrange multiplier argument of §1.3 (p. 4).",
    "explanation": "The reduced variances $V_\\ell$ are positive, so `optimal_cost_isLeast` with variance target $\\tau=\\tfrac12$ gives the least cost $\\tau^{-1}(\\sum_\\ell\\sqrt{V_\\ell C_\\ell})^2=2(\\sum_\\ell\\sqrt{V_\\ell C_\\ell})^2$ and shows that the Lagrange allocation is positive, costs exactly this amount and meets $\\sum_\\ell V_\\ell/N_\\ell=\\tfrac12$. `multiOutput_variance` then gives every individual constraint.",
    "tags": [
@@ -1585,6 +1585,106 @@
     "probability",
     "numerical-analysis"
    ]
+  },
+  "MLMC.opCost_le_sepCost": {
+   "theorem_title": "Haas–Giles (2025), §5: for nonnegative bit-widths, the separable cost (31) is an upper bound for the cost (30)",
+   "natural_language_statement": "Haas and Giles (2025), §5: \"replacing $d_{i,\\ell}d_{j,\\ell}$ by its upper bound $\\frac12(d^2_{i,\\ell}+d^2_{j,\\ell})$, and $\\max(d_{i,\\ell},d_{j,\\ell})$ by its upper bound $d_{i,\\ell}+d_{j,\\ell}$ we instead use the following form for the cost: $\\tilde C_\\ell=\\frac12\\sum_iM_{i,\\ell}d^2_{i,\\ell}+\\sum_iM'_{i,\\ell}d_{i,\\ell}$ (31), where $M_{i,\\ell}$ (resp. $M'_{i,\\ell}$) denote the number of multiplications (resp. additions) in which the variable $x_i$ is involved.\"\n\nLet $V$ be a finite set of variables. Let $\\mathcal M$ and $\\mathcal S$ be finite sets of multiplications and additions, the $k$-th multiplication having operands $a(k),b(k)\\in V$ and the $k$-th addition operands $a'(k),b'(k)\\in V$. Let $M_i=\\#\\{k\\in\\mathcal M:a(k)=i\\}+\\#\\{k\\in\\mathcal M:b(k)=i\\}$ and $M'_i=\\#\\{k\\in\\mathcal S:a'(k)=i\\}+\\#\\{k\\in\\mathcal S:b'(k)=i\\}$. Then for all real bit-widths with $d_i\\ge0$ for $i\\in V$,\n\n$$\n\\sum_{k\\in\\mathcal M}d_{a(k)}d_{b(k)}+\\sum_{k\\in\\mathcal S}\\max\\big(d_{a'(k)},d_{b'(k)}\\big)\\;\\le\\;\\frac12\\sum_{i\\in V}M_i\\,d_i^2+\\sum_{i\\in V}M'_i\\,d_i.\n$$\n\n**Formalization Note** The two sides are `opCost` (30) and `sepCost` (31) with the counts `opCount`. A square $x_ix_i$ counts twice in $M_i$, which is what makes (31) an upper bound for it. The bit-widths are real, as in the optimisation of §6.1; nonnegativity is needed only for $\\max(u,v)\\le u+v$.",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §5, p. 11, (30) and (31).",
+   "explanation": "Termwise, $d_ad_b\\le\\frac12(d_a^2+d_b^2)$ because $(d_a-d_b)^2\\ge0$, and $\\max(d_a,d_b)\\le d_a+d_b$ for $d_a,d_b\\ge0$. The resulting sums over operations are regrouped by variable (double counting): $\\sum_{k}f(d_{a(k)})=\\sum_{i\\in V}\\#\\{k:a(k)=i\\}\\,f(d_i)$, using Mathlib's `Finset.sum_fiberwise_of_maps_to`.",
+   "tags": [
+    "numerical-analysis",
+    "combinatorics"
+   ]
+  },
+  "MLMC.levelwise_optimisation": {
+   "theorem_title": "Haas–Giles (2025), §6, (33): the bit-widths of each level can be optimised separately, independently of the accuracy $\\varepsilon$",
+   "natural_language_statement": "Haas and Giles (2025), §6: the total cost after the optimal choice of the sample numbers is $\\varepsilon^{-2}\\big(\\sum_{\\ell=0}^L\\sqrt{\\tilde V_\\ell\\tilde C_\\ell}+\\sqrt{V^\\Delta_\\ell C^\\Delta_\\ell}\\big)^2$, and \"therefore the bit-widths of all variables of level $\\ell$ can be optimised independently of the other levels by minimising $\\sqrt{\\tilde V_\\ell\\tilde C_\\ell}+\\sqrt{V^\\Delta_\\ell C^\\Delta_\\ell}$ (33). ... Note that this optimisation is independent of the overall desired accuracy $\\varepsilon$.\"\n\nLet $X$ be a set (the possible bit-width configurations of one level), $L\\in\\mathbb N$, $S_\\ell\\subseteq X$ the admissible configurations of level $\\ell$, and $g_\\ell:X\\to\\mathbb R$ with $g_\\ell\\ge0$ (the level cost). Let $\\varepsilon>0$ and let $d_\\ell\\in S_\\ell$ for every $\\ell\\in\\mathbb N$. Then the following are equivalent:\n\n1. $\\varepsilon^{-2}\\big(\\sum_{\\ell=0}^{L}g_\\ell(d_\\ell)\\big)^2\\le\\varepsilon^{-2}\\big(\\sum_{\\ell=0}^{L}g_\\ell(d'_\\ell)\\big)^2$ for every choice of $d'_\\ell\\in S_\\ell$ ($\\ell\\in\\mathbb N$);\n2. for every $\\ell\\le L$, $d_\\ell$ minimises $g_\\ell$ over $S_\\ell$: $g_\\ell(d_\\ell)\\le g_\\ell(x)$ for all $x\\in S_\\ell$.\n\nCondition 2 does not involve $\\varepsilon$.\n\n**Formalization Note** Configurations are sequences indexed by all $\\ell\\in\\mathbb N$, of which only $\\ell\\le L$ enter the cost.",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §6, p. 11, (33).",
+   "explanation": "If every $d_\\ell$ minimises $g_\\ell$, then $\\sum_\\ell g_\\ell(d_\\ell)\\le\\sum_\\ell g_\\ell(d'_\\ell)$, and $t\\mapsto\\varepsilon^{-2}t^2$ is increasing on $t\\ge0$. Conversely, if some $x\\in S_\\ell$ had $g_\\ell(x)<g_\\ell(d_\\ell)$, replacing $d_\\ell$ by $x$ (`Function.update`) would make the sum strictly smaller, and hence the total cost strictly smaller, because the sums are nonnegative and $\\varepsilon^{-2}>0$.",
+   "tags": [
+    "optimization",
+    "multilevel-monte-carlo"
+   ]
+  },
+  "MLMC.vIndepR_natCast": {
+   "theorem_title": "Haas–Giles (2025): at natural bit-widths the real-variable variance bound equals $V_{indep}$ (26)",
+   "natural_language_statement": "The variance bound (26) of Haas and Giles (2025), §4.2, $V_{indep}(d)=\\frac1{12}\\sum_iE_i\\,4^{e_i-d_i}$, is used in §6.1 as a function of real bit-widths. For natural bit-widths the two agree.\n\nLet $s$ be a finite index set, $E_i\\in\\mathbb R$, $e_i\\in\\mathbb Z$ and $d_i\\in\\mathbb N$. Then\n\n$$\n\\frac1{12}\\sum_{i\\in s}E_i\\,4^{\\,e_i-d_i}\\;(\\text{real exponent})=\\frac1{12}\\sum_{i\\in s}E_i\\,4^{\\,e_i-d_i}\\;(\\text{integer exponent}).\n$$\n\n**Formalization Note** The left side is `vIndepR` at $d_i$ cast to $\\mathbb R$ (real power `rpow`), the right side `vIndep` (integer power `zpow`).",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §4.2, p. 9, (26), and §6.1, p. 12.",
+   "explanation": "Termwise, $e_i-d_i$ computed in $\\mathbb R$ is the cast of the integer $e_i-d_i$, and `Real.rpow_intCast` identifies the real power with the integer power.",
+   "tags": [
+    "numerical-analysis"
+   ]
+  },
+  "MLMC.hasDerivAt_vIndepR_update": {
+   "theorem_title": "Haas–Giles (2025), §6.1: $\\partial V_{indep}/\\partial d_i=-(\\log4)\\,\\mathbb E[\\bar x_i^2]\\,4^{e_i-d_i}/12$ depends on $d_i$ only",
+   "natural_language_statement": "Haas and Giles (2025), §6.1: \"because of the form of the variance bound (26) and cost (31), equation (35) gives a set of uncoupled nonlinear scalar equations for each pair $i,\\ell$\". This is the variance part: the partial derivative of $V_{indep}$ in $d_i$ depends on $d_i$ alone.\n\nLet $s$ be a finite index set, $E_j\\in\\mathbb R$, $e_j\\in\\mathbb Z$ and $d_j\\in\\mathbb R$ for all $j$, and let $i\\in s$. For $t\\in\\mathbb R$ let $d^{(t)}$ be $d$ with its $i$-th entry replaced by $t$. Then $t\\mapsto V_{indep}(d^{(t)})=\\frac1{12}\\sum_{j\\in s}E_j4^{e_j-d^{(t)}_j}$ is differentiable at every $t$ with derivative\n\n$$\n-\\frac{(\\log 4)\\,E_i\\,4^{e_i-t}}{12}.\n$$\n\n**Formalization Note** $V_{indep}$ is `vIndepR`, $d^{(t)}$ is `Function.update d i t`, and $\\log$ is the natural logarithm.",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §6.1, p. 12 (with the bound (26) of §4.2).",
+   "explanation": "Split off the $i$-th term: $V_{indep}(d^{(t)})=\\frac1{12}\\big(E_i4^{e_i-t}+\\sum_{j\\in s,j\\ne i}E_j4^{e_j-d_j}\\big)$, where the second sum does not depend on $t$ (`Finset.add_sum_erase`, `Function.update_of_ne`). The derivative of $t\\mapsto4^{e_i-t}$ is $(\\log4)(-1)4^{e_i-t}$ (`HasDerivAt.const_rpow`).",
+   "tags": [
+    "numerical-analysis",
+    "real-analysis"
+   ]
+  },
+  "MLMC.hasDerivAt_sepCost_update": {
+   "theorem_title": "Haas–Giles (2025), §6.1: $\\partial\\tilde C/\\partial d_i=M_i\\,d_i+M'_i$ for the cost (31), which depends on $d_i$ only",
+   "natural_language_statement": "Haas and Giles (2025), §6.1: \"because of the form of the variance bound (26) and cost (31), equation (35) gives a set of uncoupled nonlinear scalar equations\". This is the cost part: the partial derivative of the cost (31) in $d_i$ depends on $d_i$ alone.\n\nLet $V$ be a finite set of variables, $M_j,M'_j,d_j\\in\\mathbb R$ for all $j$, and $i\\in V$. For $t\\in\\mathbb R$ let $d^{(t)}$ be $d$ with its $i$-th entry replaced by $t$. Then $t\\mapsto\\tilde C(d^{(t)})=\\frac12\\sum_{j\\in V}M_j\\big(d^{(t)}_j\\big)^2+\\sum_{j\\in V}M'_jd^{(t)}_j$ is differentiable at every $t$ with derivative $M_i\\,t+M'_i$.\n\n**Formalization Note** $\\tilde C$ is `sepCost`, $d^{(t)}$ is `Function.update d i t`.",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §6.1, p. 12 (with the cost (31) of §5).",
+   "explanation": "Split off the $i$-th terms of both sums (`Finset.add_sum_erase`); the rest does not depend on $t$. The derivative of $\\frac12M_it^2+M'_it$ is $M_it+M'_i$.",
+   "tags": [
+    "numerical-analysis",
+    "real-analysis"
+   ]
+  },
+  "MLMC.exists_unique_bitWidth": {
+   "theorem_title": "Haas–Giles (2025), §6.1: each scalar equation (35), $\\partial V_{indep}/\\partial d_i+\\lambda\\,\\partial\\tilde C/\\partial d_i=0$, has exactly one real solution",
+   "natural_language_statement": "Haas and Giles (2025), §6.1: minimising $V^\\Delta_\\ell(d)$ subject to a fixed $\\tilde C_\\ell(d)$ \"leads to the equation $\\frac{\\partial V^\\Delta_\\ell}{\\partial d_{i,\\ell}}+\\lambda\\frac{\\partial\\tilde C_\\ell}{\\partial d_{i,\\ell}}=0$ (35)\", and \"because of the form of the variance bound (26) and cost (31), equation (35) gives a set of uncoupled nonlinear scalar equations for each pair $i,\\ell$, which are easily solved to obtain $d_{i,\\ell}$\".\n\nWith $\\partial V_{indep}/\\partial d_i=-(\\log4)E\\,4^{e-d_i}/12$ and $\\partial\\tilde C/\\partial d_i=Md_i+M'$ (where $E=\\mathbb E[\\bar x_i^2]$, $e=e_i$, $M=M_i$, $M'=M'_i$), equation (35) for $d=d_i$ reads\n\n$$\n-\\frac{(\\log4)\\,E\\,4^{e-d}}{12}+\\lambda\\,(Md+M')=0.\n$$\n\nLet $\\lambda>0$, $E>0$, $M\\ge0$, $M'\\ge0$ with $M+M'>0$, and $e\\in\\mathbb Z$. Then this equation has exactly one solution $d\\in\\mathbb R$.\n\n**Formalization Note** $\\log$ is the natural logarithm and $4^{e-d}$ the real power. The condition $M+M'>0$ (the variable takes part in some operation) is needed: if $M=M'=0$ the equation reads $-(\\log4)E4^{e-d}/12=0$, which has no solution.",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §6.1, p. 12, (35), with (26) and (31).",
+   "explanation": "Write the left side as $\\varphi(d)=\\lambda(Md+M')-c\\,4^{e-d}$ with $c=(\\log4)E/12>0$. It is continuous and strictly increasing ($\\lambda M d$ is nondecreasing and $-c4^{e-d}$ strictly increasing), so it has at most one zero. At $d_2=\\max\\big(1,\\,e-\\log_4(\\lambda(M+M')/c)+1\\big)$ one has $c4^{e-d_2}<\\lambda(M+M')\\le\\lambda(Md_2+M')$, so $\\varphi(d_2)>0$; at $d_1=\\min\\big(0,\\,e-\\log_4((\\lambda M'+1)/c)\\big)$ one has $c4^{e-d_1}\\ge\\lambda M'+1>\\lambda(Md_1+M')$, so $\\varphi(d_1)<0$. The intermediate value theorem (`intermediate_value_Icc`) gives a zero in $[d_1,d_2]$.",
+   "tags": [
+    "numerical-analysis",
+    "real-analysis",
+    "optimization"
+   ]
+  },
+  "MLMC.hasDerivAt_levelCost": {
+   "theorem_title": "Haas–Giles (2025), §6.1, (36): the derivative of the level cost $\\sqrt{V\\tilde C}+\\sqrt{V^\\Delta C}$ is $\\frac12\\big(\\sqrt{C/V^\\Delta}\\,V^{\\Delta\\prime}+\\sqrt{V/\\tilde C}\\,\\tilde C'\\big)$",
+   "natural_language_statement": "Haas and Giles (2025), §6.1: \"minimising (34) [the level cost $\\sqrt{V_\\ell\\tilde C_\\ell}+\\sqrt{V^\\Delta_\\ell C_\\ell}$] by equating its derivative to zero gives $\\sqrt{C_\\ell/V^\\Delta_\\ell(d)}\\,\\frac{\\partial V^\\Delta_\\ell}{\\partial d_{i,\\ell}}+\\sqrt{V_\\ell/\\tilde C_\\ell(d)}\\,\\frac{\\partial\\tilde C_\\ell}{\\partial d_{i,\\ell}}=0$ (36)\".\n\nLet $V,C>0$, and let $\\tilde C,V^\\Delta:\\mathbb R\\to\\mathbb R$ be functions of one bit-width $t$ that are differentiable at $t_0$ with derivatives $\\tilde C'$ and $V^{\\Delta\\prime}$, and with $\\tilde C(t_0)>0$, $V^\\Delta(t_0)>0$. Then $t\\mapsto\\sqrt{V\\,\\tilde C(t)}+\\sqrt{V^\\Delta(t)\\,C}$ is differentiable at $t_0$ with derivative\n\n$$\n\\frac12\\Big(\\sqrt{C/V^\\Delta(t_0)}\\;V^{\\Delta\\prime}+\\sqrt{V/\\tilde C(t_0)}\\;\\tilde C'\\Big),\n$$\n\nwhich vanishes exactly when (36) holds.\n\n**Formalization Note** $\\sqrt{\\cdot}$ is `Real.sqrt`.",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §6.1, p. 12, (34) and (36).",
+   "explanation": "By the chain rule (`HasDerivAt.sqrt`) the derivative is $\\frac{V\\tilde C'}{2\\sqrt{V\\tilde C}}+\\frac{V^{\\Delta\\prime}C}{2\\sqrt{V^\\Delta C}}$. For $x,y>0$, $\\frac{xz}{2\\sqrt{xy}}=\\frac{\\sqrt{x/y}\\,z}{2}$, because $\\sqrt{x/y}\\sqrt{xy}=\\sqrt{x^2}=x$; applied to both terms this gives the stated form.",
+   "tags": [
+    "numerical-analysis",
+    "real-analysis",
+    "optimization"
+   ]
+  },
+  "MLMC.levelCost_stationary_iff": {
+   "theorem_title": "Haas–Giles (2025), §6.1: (36) is (35) with $\\lambda=\\sqrt{V V^\\Delta/(C\\tilde C)}$",
+   "natural_language_statement": "Haas and Giles (2025), §6.1, after (36): \"so it is again of the form (35), where $\\lambda=\\sqrt{V_\\ell V^\\Delta_\\ell(d)/C_\\ell\\tilde C_\\ell(d)}$ gives the optimal trade-off between cost and variance.\"\n\nLet $V,C,\\tilde C,V^\\Delta>0$ and let $\\tilde C',V^{\\Delta\\prime}\\in\\mathbb R$. Then\n\n$$\n\\frac12\\Big(\\sqrt{C/V^\\Delta}\\;V^{\\Delta\\prime}+\\sqrt{V/\\tilde C}\\;\\tilde C'\\Big)=0\n\\iff\nV^{\\Delta\\prime}+\\sqrt{\\frac{V\\,V^\\Delta}{C\\,\\tilde C}}\\;\\tilde C'=0.\n$$\n\nThe left side is the derivative of the level cost computed in `hasDerivAt_levelCost`; the right side is (35) with $\\lambda=\\sqrt{VV^\\Delta/(C\\tilde C)}$.",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §6.1, p. 12, (35) and (36).",
+   "explanation": "Since $\\sqrt{C/V^\\Delta}\\cdot\\sqrt{VV^\\Delta/(C\\tilde C)}=\\sqrt{V/\\tilde C}$, the left expression equals $\\frac12\\sqrt{C/V^\\Delta}\\,\\big(V^{\\Delta\\prime}+\\lambda\\tilde C'\\big)$, and $\\sqrt{C/V^\\Delta}>0$.",
+   "tags": [
+    "numerical-analysis",
+    "optimization"
+   ]
+  },
+  "MLMC.vIndepR_antitone": {
+   "theorem_title": "Haas–Giles (2025): the variance bound $V_{indep}(d)=\\frac1{12}\\sum_i\\mathbb E[\\bar x_i^2]4^{e_i-d_i}$ decreases when bits are added",
+   "natural_language_statement": "The variance bound (26) of Haas and Giles (2025), as a function of real bit-widths, decreases in each bit-width: more bits give a smaller rounding error.\n\nLet $s$ be a finite index set, $E_i\\ge0$ for $i\\in s$, and $e_i\\in\\mathbb Z$. If $d_i\\le d'_i$ for all $i$, then\n\n$$\n\\frac1{12}\\sum_{i\\in s}E_i\\,4^{e_i-d'_i}\\le\\frac1{12}\\sum_{i\\in s}E_i\\,4^{e_i-d_i}.\n$$\n\n**Formalization Note** Stated as `Antitone (vIndepR s E e)` for the pointwise order on bit-width vectors.",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §4.2, p. 9, (26), as used in §6.2, p. 13.",
+   "explanation": "Termwise: $e_i-d'_i\\le e_i-d_i$, $t\\mapsto4^t$ is increasing, and $E_i\\ge0$.",
+   "tags": [
+    "numerical-analysis"
+   ]
+  },
+  "MLMC.greedy_rounding_feasible": {
+   "theorem_title": "Haas–Giles (2025), §6.2: rounding the real bit-widths down and adding one bit per variable in any order reaches a feasible configuration",
+   "natural_language_statement": "Haas and Giles (2025), §6.2: \"For each level $\\ell$ and each variable $i$, first round down the solution to $d^*_{i,\\ell}$ and compute the ratio $r_{i,\\ell}$ (38). Then order the ratios in decreasing order and add one bit to the variables with the highest ratio until the constraint on the error is satisfied. This heuristic performs well and is guaranteed to obtain a feasible solution.\"\n\nLet $V$ be a function of the bit-width vectors $d\\in\\mathbb R^I$ (for a finite set $I$ of $n$ variables) that decreases when bits are added: $d\\le d'$ componentwise implies $V(d')\\le V(d)$. Let $d$ be real bit-widths with $V(d)\\le\\tau$. Let $\\sigma:I\\to\\{0,\\dots,n-1\\}$ be any bijection (the order of the ratios), and for $k\\le n$ let $d^{(k)}_i=\\lfloor d_i\\rfloor+1$ if $\\sigma(i)<k$ and $d^{(k)}_i=\\lfloor d_i\\rfloor$ otherwise ($\\lfloor d\\rfloor$ with one bit added to the first $k$ variables). Then $V(d^{(k)})\\le\\tau$ for some $k\\le n$.\n\n**Formalization Note** The order is an equivalence `σ : ι ≃ Fin n`, and $\\lfloor\\cdot\\rfloor$ is the integer floor. The statement holds for any order, so the ratios (38) only affect which feasible configuration is reached first. `vIndepR_antitone` shows that the variance bound (26) is such a $V$.",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §6.2, p. 13, (38).",
+   "explanation": "Take $k=n$: every variable gets one bit, and $d_i<\\lfloor d_i\\rfloor+1=d^{(n)}_i$ (`Int.lt_floor_add_one`), so $d\\le d^{(n)}$ and $V(d^{(n)})\\le V(d)\\le\\tau$.",
+   "tags": [
+    "numerical-analysis",
+    "optimization"
+   ]
   }
  },
  "definitions": {
@@ -1728,6 +1828,15 @@
    "tags": [
     "numerical-analysis",
     "multilevel-monte-carlo"
+   ]
+  },
+  "MLMC_BitWidth": {
+   "definition_title": "Haas–Giles (2025), §5–§6: the fixed-point cost models (30) and (31), and the variance bound (26) with real bit-widths",
+   "natural_language_statement": "Haas and Giles (2025), §5, model the cost of a fixed-point path simulation on an FPGA as a function of the bit-widths $d_i$ of its variables $x_i$, and §6 optimises the bit-widths.\n\n**`opCost`** (the cost (30), after Lee et al. 2006). The multiplications are indexed by a finite set $\\mathcal M$, the $k$-th multiplying the variables $x_{a(k)}$ and $x_{b(k)}$; the additions are indexed by a finite set $\\mathcal S$, the $k$-th adding $x_{a'(k)}$ and $x_{b'(k)}$. For real bit-widths $d_i$,\n\n$$\n\\tilde C(d)=\\sum_{k\\in\\mathcal M}d_{a(k)}\\,d_{b(k)}+\\sum_{k\\in\\mathcal S}\\max\\big(d_{a'(k)},d_{b'(k)}\\big)\\qquad\\text{(30)}.\n$$\n\n**`opCount`.** For a finite set of operations with operands $a(k),b(k)$, the number of operand slots filled by $x_i$: $\\#\\{k:a(k)=i\\}+\\#\\{k:b(k)=i\\}$. This is $M_i$ for the multiplications and $M'_i$ for the additions (\"the number of multiplications (resp. additions) in which the variable $x_i$ is involved\"); a square $x_ix_i$ counts twice.\n\n**`sepCost`** (the cost (31)). For a finite set of variables and real weights $M_i,M'_i$,\n\n$$\n\\tilde C(d)=\\frac12\\sum_iM_i\\,d_i^2+\\sum_iM'_i\\,d_i\\qquad\\text{(31)}.\n$$\n\n**`vIndepR`** (the bound (26) with real bit-widths). For a finite set $s$ of variables, $E_i=\\mathbb E[\\bar x_i^2]$ and exponents $e_i\\in\\mathbb Z$,\n\n$$\nV_{indep}(d)=\\frac1{12}\\sum_{i\\in s}E_i\\,4^{e_i-d_i},\\qquad d_i\\in\\mathbb R.\n$$\n\n**Formalization Note** The operations are given by index sets with operand maps rather than by sets of pairs, so an operation may occur several times. $4^{e_i-d_i}$ with a real exponent is the real power.",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §5 (p. 11, (30), (31)) and §4.2 (p. 9, (26)), as used in §6.1 (p. 12).",
+   "tags": [
+    "numerical-analysis",
+    "optimization"
    ]
   }
  }

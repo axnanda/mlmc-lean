@@ -69,10 +69,15 @@ def run_lean(path: Path) -> tuple[int, str]:
     return r.returncode, r.stdout + r.stderr
 
 
-def type_dump(names: list[str]) -> str:
-    lines = [f'  IO.println s!"@@TYPE {n} {{canonExpr (← getConstInfo `{n}).type}}"'
-             for n in names]
-    return "run_meta do\n" + "\n".join(lines) + "\n"
+def type_dump(names: list[str], chunk: int = 20) -> str:
+    # One `run_meta` block per `chunk` names: a single `do` block with one statement per node
+    # exceeds Lean's maximum recursion depth once there are more than about 140 nodes.
+    blocks = []
+    for k in range(0, len(names), chunk):
+        lines = [f'  IO.println s!"@@TYPE {n} {{canonExpr (← getConstInfo `{n}).type}}"'
+                 for n in names[k:k + chunk]]
+        blocks.append("run_meta do\n" + "\n".join(lines) + "\n")
+    return "\n".join(blocks)
 
 
 def parse_types(out: str) -> dict[str, str]:
