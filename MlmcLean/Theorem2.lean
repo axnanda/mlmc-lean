@@ -1091,18 +1091,19 @@ theorem hasSum_integral_crossDiff (P : Ω → ℝ) (Pℓ : (Fin D → ℕ) → �
 
 variable [IsProbabilityMeasure μ]
 
-/-- From the deterministic form to the probability space (a step of this formalisation's proof of
-Giles 2015, §2.4, Theorem 2; the paper states the theorem without proof): condition i) and the box
-telescoping `sum_crossDiff` identify the bias with the tail `∑_{ℓ ∉ 𝓛} E[ΔP_ℓ]`, and
-`MSE = V[Y] + bias²` with `V[Y] = ∑ V_ℓ/N_ℓ`.  Here `B` is any bound function. -/
-theorem mimc_mse_cost (P : Ω → ℝ) (Pℓ : (Fin D → ℕ) → Ω → ℝ)
+/-- **One instance of the step from the deterministic form to the probability space** (a step of
+this formalisation's proof of Giles 2015, §2.4, Theorem 2).  For an index set `𝓛`, sample sizes
+`N_ℓ ≥ 1` and a bound `b` with the three deterministic properties — the tail
+`c₁ ∑_{ℓ ∉ 𝓛} 2^{−α·ℓ}` is at most `ε/2`, `∑_{ℓ ∈ 𝓛} c₂ 2^{−β·ℓ}/N_ℓ ≤ ε²/2` and
+`∑_{ℓ ∈ 𝓛} N_ℓ c₃ 2^{γ·ℓ} ≤ b` — the MIMC estimator `∑_{ℓ ∈ 𝓛} Y ℓ (N ℓ)` has `MSE < ε²` and
+expected cost at most `b`. -/
+theorem mimc_mse_cost_of (P : Ω → ℝ) (Pℓ : (Fin D → ℕ) → Ω → ℝ)
     (Y : (Fin D → ℕ) → ℕ → Ω → ℝ) (Cost : (Fin D → ℕ) → ℕ → Ω → ℝ) (V C : (Fin D → ℕ) → ℝ)
-    {α β γ : Fin D → ℝ} {c₁ c₂ c₃ : ℝ} (B : ℝ → ℝ)
-    (hdet : ∃ c₄ : ℝ, 0 < c₄ ∧ ∀ ε : ℝ, 0 < ε → ε < Real.exp (-1) →
-      ∃ (𝓛 : Finset (Fin D → ℕ)) (N : (Fin D → ℕ) → ℕ), (∀ ℓ, 0 < N ℓ) ∧
-        (∀ s : Finset (Fin D → ℕ), c₁ * ∑ ℓ ∈ s \ 𝓛, (2 : ℝ) ^ (-dot α ℓ) ≤ ε / 2) ∧
-        ∑ ℓ ∈ 𝓛, c₂ * (2 : ℝ) ^ (-dot β ℓ) / N ℓ ≤ ε ^ 2 / 2 ∧
-        ∑ ℓ ∈ 𝓛, (N ℓ : ℝ) * (c₃ * (2 : ℝ) ^ dot γ ℓ) ≤ c₄ * B ε)
+    {α β γ : Fin D → ℝ} {c₁ c₂ c₃ ε b : ℝ} (hε : 0 < ε) (𝓛 : Finset (Fin D → ℕ))
+    (N : (Fin D → ℕ) → ℕ) (hN : ∀ ℓ, 0 < N ℓ)
+    (hbias : ∀ s : Finset (Fin D → ℕ), c₁ * ∑ ℓ ∈ s \ 𝓛, (2 : ℝ) ^ (-dot α ℓ) ≤ ε / 2)
+    (hvar : ∑ ℓ ∈ 𝓛, c₂ * (2 : ℝ) ^ (-dot β ℓ) / N ℓ ≤ ε ^ 2 / 2)
+    (hcost : ∑ ℓ ∈ 𝓛, (N ℓ : ℝ) * (c₃ * (2 : ℝ) ^ dot γ ℓ) ≤ b)
     (hP : Integrable P μ) (hPℓ : ∀ ℓ, Integrable (Pℓ ℓ) μ)
     (hY : ∀ ℓ n, 0 < n → MemLp (Y ℓ n) 2 μ)
     (hind : ∀ N : (Fin D → ℕ) → ℕ, (∀ ℓ, 0 < N ℓ) →
@@ -1116,14 +1117,9 @@ theorem mimc_mse_cost (P : Ω → ℝ) (Pℓ : (Fin D → ℕ) → Ω → ℝ)
     (h_ii : ∀ ℓ n, 0 < n → |μ[Y ℓ n]| ≤ c₁ * (2 : ℝ) ^ (-dot α ℓ))
     (h_iv : ∀ ℓ, V ℓ ≤ c₂ * (2 : ℝ) ^ (-dot β ℓ))
     (h_v : ∀ ℓ, C ℓ ≤ c₃ * (2 : ℝ) ^ dot γ ℓ) :
-    ∃ c₄ : ℝ, 0 < c₄ ∧ ∀ ε : ℝ, 0 < ε → ε < Real.exp (-1) →
-      ∃ (𝓛 : Finset (Fin D → ℕ)) (N : (Fin D → ℕ) → ℕ), (∀ ℓ, 0 < N ℓ) ∧
-        μ[fun ω => (∑ ℓ ∈ 𝓛, Y ℓ (N ℓ) ω - μ[P]) ^ 2] < ε ^ 2 ∧
-        μ[fun ω => ∑ ℓ ∈ 𝓛, Cost ℓ (N ℓ) ω] ≤ c₄ * B ε := by
-  obtain ⟨c₄, hc₄, hdet⟩ := hdet
-  refine ⟨c₄, hc₄, fun ε hε hε1 => ?_⟩
-  obtain ⟨𝓛, N, hN, hbias, hvar, hcost⟩ := hdet ε hε hε1
-  refine ⟨𝓛, N, hN, ?_, ?_⟩
+    μ[fun ω => (∑ ℓ ∈ 𝓛, Y ℓ (N ℓ) ω - μ[P]) ^ 2] < ε ^ 2 ∧
+      μ[fun ω => ∑ ℓ ∈ 𝓛, Cost ℓ (N ℓ) ω] ≤ b := by
+  refine ⟨?_, ?_⟩
   · -- the mean-square error
     set p : (Fin D → ℕ) → ℝ := fun m => μ[Pℓ m] with hp
     have hEΔ : ∀ ℓ, μ[fun ω => crossDiff (fun m => Pℓ m ω) ℓ] = crossDiff p ℓ := fun ℓ =>
@@ -1195,6 +1191,41 @@ theorem mimc_mse_cost (P : Ω → ℝ) (Pℓ : (Fin D → ℕ) → Ω → ℝ)
     rw [hE]
     refine le_trans (Finset.sum_le_sum fun ℓ _ => ?_) hcost
     exact mul_le_mul_of_nonneg_left (h_v ℓ) (Nat.cast_nonneg _)
+
+/-- From the deterministic form to the probability space (a step of this formalisation's proof of
+Giles 2015, §2.4, Theorem 2; the paper states the theorem without proof): condition i) and the box
+telescoping `sum_crossDiff` identify the bias with the tail `∑_{ℓ ∉ 𝓛} E[ΔP_ℓ]`, and
+`MSE = V[Y] + bias²` with `V[Y] = ∑ V_ℓ/N_ℓ`.  Here `B` is any bound function. -/
+theorem mimc_mse_cost (P : Ω → ℝ) (Pℓ : (Fin D → ℕ) → Ω → ℝ)
+    (Y : (Fin D → ℕ) → ℕ → Ω → ℝ) (Cost : (Fin D → ℕ) → ℕ → Ω → ℝ) (V C : (Fin D → ℕ) → ℝ)
+    {α β γ : Fin D → ℝ} {c₁ c₂ c₃ : ℝ} (B : ℝ → ℝ)
+    (hdet : ∃ c₄ : ℝ, 0 < c₄ ∧ ∀ ε : ℝ, 0 < ε → ε < Real.exp (-1) →
+      ∃ (𝓛 : Finset (Fin D → ℕ)) (N : (Fin D → ℕ) → ℕ), (∀ ℓ, 0 < N ℓ) ∧
+        (∀ s : Finset (Fin D → ℕ), c₁ * ∑ ℓ ∈ s \ 𝓛, (2 : ℝ) ^ (-dot α ℓ) ≤ ε / 2) ∧
+        ∑ ℓ ∈ 𝓛, c₂ * (2 : ℝ) ^ (-dot β ℓ) / N ℓ ≤ ε ^ 2 / 2 ∧
+        ∑ ℓ ∈ 𝓛, (N ℓ : ℝ) * (c₃ * (2 : ℝ) ^ dot γ ℓ) ≤ c₄ * B ε)
+    (hP : Integrable P μ) (hPℓ : ∀ ℓ, Integrable (Pℓ ℓ) μ)
+    (hY : ∀ ℓ n, 0 < n → MemLp (Y ℓ n) 2 μ)
+    (hind : ∀ N : (Fin D → ℕ) → ℕ, (∀ ℓ, 0 < N ℓ) →
+      Pairwise fun i j => IndepFun (Y i (N i)) (Y j (N j)) μ)
+    (hCost_int : ∀ ℓ n, 0 < n → Integrable (Cost ℓ n) μ)
+    (hCost_mean : ∀ ℓ (n : ℕ), 0 < n → μ[Cost ℓ n] = n * C ℓ)
+    (h_var : ∀ ℓ n, 0 < n → variance (Y ℓ n) μ = V ℓ / n)
+    (h_i : ∀ δ : ℝ, 0 < δ → ∃ n₀ : ℕ, ∀ ℓ : Fin D → ℕ, (∀ d, n₀ ≤ ℓ d) →
+      |μ[fun ω => Pℓ ℓ ω - P ω]| < δ)
+    (h_iii : ∀ ℓ n, 0 < n → μ[Y ℓ n] = μ[fun ω => crossDiff (fun m => Pℓ m ω) ℓ])
+    (h_ii : ∀ ℓ n, 0 < n → |μ[Y ℓ n]| ≤ c₁ * (2 : ℝ) ^ (-dot α ℓ))
+    (h_iv : ∀ ℓ, V ℓ ≤ c₂ * (2 : ℝ) ^ (-dot β ℓ))
+    (h_v : ∀ ℓ, C ℓ ≤ c₃ * (2 : ℝ) ^ dot γ ℓ) :
+    ∃ c₄ : ℝ, 0 < c₄ ∧ ∀ ε : ℝ, 0 < ε → ε < Real.exp (-1) →
+      ∃ (𝓛 : Finset (Fin D → ℕ)) (N : (Fin D → ℕ) → ℕ), (∀ ℓ, 0 < N ℓ) ∧
+        μ[fun ω => (∑ ℓ ∈ 𝓛, Y ℓ (N ℓ) ω - μ[P]) ^ 2] < ε ^ 2 ∧
+        μ[fun ω => ∑ ℓ ∈ 𝓛, Cost ℓ (N ℓ) ω] ≤ c₄ * B ε := by
+  obtain ⟨c₄, hc₄, hdet⟩ := hdet
+  refine ⟨c₄, hc₄, fun ε hε hε1 => ?_⟩
+  obtain ⟨𝓛, N, hN, hbias, hvar, hcost⟩ := hdet ε hε hε1
+  exact ⟨𝓛, N, hN, mimc_mse_cost_of P Pℓ Y Cost V C hε 𝓛 N hN hbias hvar hcost hP hPℓ hY hind
+    hCost_int hCost_mean h_var h_i h_iii h_ii h_iv h_v⟩
 
 set_option linter.unusedVariables false in
 /-- **Giles' Theorem 2** (Giles 2015, §2.4, Theorem 2; Haji-Ali, Nobile & Tempone 2014a), for

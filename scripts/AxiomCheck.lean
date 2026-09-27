@@ -59,6 +59,7 @@ import MlmcLean
 #print axioms MLMC.integrable_integral_crossDiff
 #print axioms MLMC.tendsto_sum_box_integral_crossDiff
 #print axioms MLMC.hasSum_integral_crossDiff
+#print axioms MLMC.mimc_mse_cost_of
 #print axioms MLMC.mimc_mse_cost
 #print axioms MLMC.giles_theorem2
 #print axioms MLMC.giles_theorem2_boundary
@@ -149,6 +150,10 @@ import MlmcLean
 #print axioms MLMC.randomised_infinite_cost
 #print axioms MLMC.singleTermN_eq_sum_levels
 #print axioms MLMC.integral_levelCount
+#print axioms MLMC.sum_rectSet_crossDiff
+#print axioms MLMC.sum_sdiff_rectSet_le
+#print axioms MLMC.mimc_rect_core
+#print axioms MLMC.giles_mimc_rectangular
 -- helper lemmas that the prove2.me generator promotes to nodes
 #print axioms MLMC.sqrt_Vb_mul_Cb
 #print axioms MLMC.two_rpow_levelL_le
@@ -166,3 +171,4 @@ import MlmcLean
 #print axioms MLMC.mimc_construction
 #print axioms MLMC.mimc_level_power
 #print axioms MLMC.mimc_extra_term
+#print axioms MLMC.sum_filter_box_lt_le

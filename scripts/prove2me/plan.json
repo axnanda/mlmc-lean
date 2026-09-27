@@ -57,6 +57,7 @@
     "MLMC.integrable_integral_crossDiff",
     "MLMC.tendsto_sum_box_integral_crossDiff",
     "MLMC.hasSum_integral_crossDiff",
+    "MLMC.mimc_mse_cost_of",
     "MLMC.mimc_mse_cost",
     "MLMC.giles_theorem2",
     "MLMC.giles_theorem2_boundary",
@@ -146,10 +147,16 @@
     "MLMC.cost_of_beta_eq_two_alpha",
     "MLMC.randomised_infinite_cost",
     "MLMC.singleTermN_eq_sum_levels",
-    "MLMC.integral_levelCount"
+    "MLMC.integral_levelCount",
+    "MLMC.sum_rectSet_crossDiff",
+    "MLMC.sum_sdiff_rectSet_le",
+    "MLMC.mimc_rect_core",
+    "MLMC.giles_mimc_rectangular"
   ],
   "bundlePrefix": "MLMC_",
   "paperNamed": [],
   "forceNode": [],
-  "forceInline": []
+  "forceInline": [
+    "MLMC.sum_rectSet_two_rpow_le"
+  ]
 }
