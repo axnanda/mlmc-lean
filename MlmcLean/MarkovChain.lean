@@ -182,7 +182,8 @@ theorem lintegral_dist_backIter_le (hφm : Measurable fun q : α × E => φ q.1 
   induction n with
   | zero =>
     intro m U V _ _
-    simp only [backIter_zero, pow_zero, one_mul, le_refl]
+    rw [pow_zero, one_mul]
+    exact le_of_eq (lintegral_congr fun ω => by rw [backIter_zero, backIter_zero])
   | succ n ih =>
     intro m U V hU hV
     have hU' : Measurable[noiseFrom ξ (m + 1 + n)] U := by
