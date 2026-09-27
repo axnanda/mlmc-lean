@@ -262,7 +262,7 @@ theorem lsSlope_log_geometric (s : Finset ℕ) {i j : ℕ} (hi : i ∈ s) (hj : 
     {c α : ℝ} (hc : 0 < c) :
     lsSlope s (fun ℓ => (ℓ : ℝ)) (fun ℓ => Real.logb 2 (c * (2 : ℝ) ^ (-(α * ℓ)))) = -α := by
   have e : (fun ℓ : ℕ => Real.logb 2 (c * (2 : ℝ) ^ (-(α * ℓ)))) =
-      fun ℓ => Real.logb 2 c + (-α) * (ℓ : ℝ) := by
+      fun ℓ : ℕ => Real.logb 2 c + (-α) * (ℓ : ℝ) := by
     funext ℓ
     rw [Real.logb_mul hc.ne' (by positivity), Real.logb_rpow (by norm_num) (by norm_num)]
     ring
@@ -291,7 +291,7 @@ theorem gaussian_tail_three : (gaussianReal 0 1).real {x : ℝ | 3 < |x|} < 0.00
     intro x _
     have h1 : HasDerivAt (fun x : ℝ => x ^ 2) (2 * x) x := by
       simpa using hasDerivAt_pow 2 x
-    exact ((h1.neg.div_const 2).exp.neg).congr_deriv (by ring)
+    exact ((h1.neg.div_const 2).exp.neg).congr_deriv (by simp only [Pi.neg_apply]; ring)
   have hint : IntegrableOn (fun x : ℝ => x * Real.exp (-x ^ 2 / 2)) (Set.Ioi 3) := by
     have h := integrable_mul_exp_neg_mul_sq (by norm_num : (0 : ℝ) < 1 / 2)
     have e : (fun x : ℝ => x * Real.exp (-(1 / 2) * x ^ 2)) =
@@ -395,17 +395,17 @@ theorem consistency_check_gaussian {a b c : Ω → ℝ} (ha : MemLp a 2 μ) (hb 
   -- the standardised variable has law `N(0, 1)`
   have hZ : HasLaw (fun ω => (a ω - b ω + c ω) / Real.sqrt v) (gaussianReal 0 1) μ := by
     have h := gaussianReal_div_const hlaw (Real.sqrt v)
-    have e : v / (⟨Real.sqrt v ^ 2, sq_nonneg _⟩ : ℝ≥0) = 1 := by
-      apply NNReal.eq
-      simp only [NNReal.coe_div, NNReal.coe_mk, NNReal.coe_one]
+    convert h using 2
+    · simp
+    · apply NNReal.eq
+      simp only [NNReal.coe_one, NNReal.coe_div, NNReal.coe_mk]
       rw [Real.sq_sqrt v.coe_nonneg, div_self hv0.ne']
-    rwa [zero_div, e] at h
   have hmeas : MeasurableSet {z : ℝ | 3 < |z|} :=
     measurableSet_lt measurable_const measurable_abs
   calc μ.real {ω | 3 * s < |a ω - b ω + c ω|}
       ≤ μ.real {ω | 3 < |(a ω - b ω + c ω) / Real.sqrt v|} := by
         refine measureReal_mono fun ω hω => ?_
-        simp only [Set.mem_setOf_eq] at hω ⊢
+        simp only [Set.mem_ofPred_eq] at hω ⊢
         rw [abs_div, abs_of_pos hsv, lt_div_iff₀ hsv]
         nlinarith
     _ = (gaussianReal 0 1).real {z : ℝ | 3 < |z|} := hZ.measureReal_eq hmeas
@@ -487,12 +487,12 @@ theorem measureReal_ternary_zero {X : Ω → ℝ} (hXm : Measurable X)
   have hd : Disjoint {ω | X ω = 1} {ω | X ω = -1} := by
     rw [Set.disjoint_left]
     intro ω h h'
-    simp only [Set.mem_setOf_eq] at h h'
+    simp only [Set.mem_ofPred_eq] at h h'
     rw [h] at h'
     norm_num at h'
   have hc : {ω | X ω = 0} = ({ω | X ω = 1} ∪ {ω | X ω = -1})ᶜ := by
     ext ω
-    simp only [Set.mem_setOf_eq, Set.mem_compl_iff, Set.mem_union]
+    simp only [Set.mem_ofPred_eq, Set.mem_compl_iff, Set.mem_union]
     rcases hX ω with h | h | h <;> rw [h] <;> norm_num
   rw [hc, measureReal_compl (h1.union h2), measureReal_union hd h2, probReal_univ]
   ring
@@ -514,7 +514,7 @@ theorem prob_all_zero (ω : ℕ → Ω → Ω₀) (hω : ∀ n, MeasurePreservin
   have hA : MeasurableSet {y | X y = 0} := hXm (measurableSet_singleton 0)
   have hset : {x | ∀ n ∈ range N, X (ω n x) = 0} = ⋂ n ∈ range N, ω n ⁻¹' {y | X y = 0} := by
     ext x
-    simp only [Set.mem_setOf_eq, Set.mem_iInter, Set.mem_preimage]
+    simp only [Set.mem_ofPred_eq, Set.mem_iInter, Set.mem_preimage]
   have hmeas : μ (⋂ n ∈ range N, ω n ⁻¹' {y | X y = 0}) =
       ∏ n ∈ range N, μ (ω n ⁻¹' {y | X y = 0}) :=
     hind.meas_biInter fun n _ => MeasurableSpace.measurableSet_comap.2 ⟨_, hA, rfl⟩
