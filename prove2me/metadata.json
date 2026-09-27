@@ -1967,6 +1967,289 @@
     "multilevel-monte-carlo",
     "complexity"
    ]
+  },
+  "MLMC.integral_sq_sub_const": {
+   "theorem_title": "Haas–Giles (2025), §3.1: expanding the mean-square error (14) of a constant, $\\int_a^b(z-f)^2=(b-a)z^2-2z\\int_a^bf+\\int_a^bf^2$",
+   "natural_language_statement": "Haas–Giles (2025), §3.1, p. 5: the LUT values of method 1 are chosen by minimising the mean-square error (14)\n$$\n\\int_{u_j}^{u_{j+1}}\\big(Z_j-\\Phi^{-1}(u)\\big)^2\\,du ,\n$$\nwhich is a quadratic function of the constant $Z_j$.\n\nLet $f:\\mathbb R\\to\\mathbb R$ and $a,b\\in\\mathbb R$ be such that $f$ and $f^2$ are interval-integrable on $[a,b]$. Then for every $z\\in\\mathbb R$,\n$$\n\\int_a^b\\big(z-f(u)\\big)^2\\,du=(b-a)\\,z^2-2z\\int_a^b f(u)\\,du+\\int_a^b f(u)^2\\,du .\n$$\n\n**Formalization Note** $\\int_a^b$ is Mathlib's oriented interval integral `∫ u in a..b`; the identity holds for either order of $a$ and $b$.",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §3.1, p. 5, (14).",
+   "explanation": "Expand $(z-f)^2=(z^2-2zf)+f^2$ and use linearity of the interval integral: $\\int_a^bz^2\\,du=(b-a)z^2$ and $\\int_a^b2zf=2z\\int_a^bf$.",
+   "tags": [
+    "numerical-analysis",
+    "real-analysis"
+   ]
+  },
+  "MLMC.integral_sq_sub_eq": {
+   "theorem_title": "Haas–Giles (2025), §3.1 and (18): the mean-square error of a constant $z$ on $[a,b]$ is $(b-a)(z-\\bar z)^2+\\int_a^b(\\bar z-f)^2$, with $\\bar z$ the mean of $f$",
+   "natural_language_statement": "Haas–Giles (2025), §3.1 (p. 5) and §3.3 (p. 6, (18)): the mean-square error of a constant approximation of $\\Phi^{-1}$ on an interval splits into a squared distance to the mean of $\\Phi^{-1}$ and the mean-square error of the mean.\n\nLet $f:\\mathbb R\\to\\mathbb R$ and $a<b$ be real numbers such that $f$ and $f^2$ are integrable on $[a,b]$ (with respect to Lebesgue measure), and let\n$$\n\\bar z=\\frac1{b-a}\\int_a^b f(u)\\,du\n$$\nbe the mean of $f$ over $[a,b]$.\nThen for every $z\\in\\mathbb R$,\n$$\n\\int_a^b\\big(z-f(u)\\big)^2\\,du=(b-a)\\,(z-\\bar z)^2+\\int_a^b\\big(\\bar z-f(u)\\big)^2\\,du .\n$$\n\nOn an interval $[u_j,u_{j+1}]$ of length $2^{-d}$ this is (18) (`integral_sq_sub_lutValue`).\n\n**Formalization Note** Nothing about $\\Phi^{-1}$ beyond square-integrability is used, so the statement is for an arbitrary $f$ with $f$ and $f^2$ interval-integrable; integrals are Mathlib's interval integrals `∫ u in a..b`. $\\bar z$ is `intervalMean f a b`.",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §3.1, p. 5, (14)–(15), and §3.3, p. 6, (18).",
+   "explanation": "By `integral_sq_sub_const` both integrals are quadratics in the constant. With $I=\\int_a^bf$ the difference of the two sides is $(2z-2\\bar z)\\big((b-a)\\bar z-I\\big)$, and $(b-a)\\bar z=I$ because $b-a\\ne0$.",
+   "tags": [
+    "numerical-analysis",
+    "real-analysis"
+   ]
+  },
+  "MLMC.integral_sq_sub_intervalMean_le": {
+   "theorem_title": "Haas–Giles (2025), (14)–(15): the mean of $f$ over $[a,b]$ minimises the mean-square error $\\int_a^b(z-f)^2$ of a constant $z$",
+   "natural_language_statement": "Haas–Giles (2025), §3.1, p. 5: the mean-square error (14) \"is minimised with respect to the LUT values $Z_j$. This gives that $Z_j$ is the mean of $\\Phi^{-1}$ over the interval $\\mathcal I_j$\" (15).\n\nLet $f:\\mathbb R\\to\\mathbb R$ and $a<b$ be real numbers such that $f$ and $f^2$ are integrable on $[a,b]$ (with respect to Lebesgue measure), and let\n$$\n\\bar z=\\frac1{b-a}\\int_a^b f(u)\\,du\n$$\nbe the mean of $f$ over $[a,b]$.\nThen for every $z\\in\\mathbb R$,\n$$\n\\int_a^b\\big(\\bar z-f(u)\\big)^2\\,du\\le\\int_a^b\\big(z-f(u)\\big)^2\\,du .\n$$\n\n**Formalization Note** Nothing about $\\Phi^{-1}$ beyond square-integrability is used, so the statement is for an arbitrary $f$ with $f$ and $f^2$ interval-integrable; integrals are Mathlib's interval integrals `∫ u in a..b`.",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §3.1, p. 5, (14)–(15).",
+   "explanation": "By `integral_sq_sub_eq` the right side exceeds the left side by $(b-a)(z-\\bar z)^2\\ge0$.",
+   "tags": [
+    "numerical-analysis",
+    "real-analysis",
+    "optimization"
+   ]
+  },
+  "MLMC.eq_intervalMean_of_integral_sq_sub_le": {
+   "theorem_title": "Haas–Giles (2025), (14)–(15): the mean of $f$ over $[a,b]$ is the only constant minimising the mean-square error (14)",
+   "natural_language_statement": "Haas–Giles (2025), §3.1, p. 5: minimising (14) determines the LUT value: it is the mean of $\\Phi^{-1}$ over the interval (15).\n\nLet $f:\\mathbb R\\to\\mathbb R$ and $a<b$ be real numbers such that $f$ and $f^2$ are integrable on $[a,b]$ (with respect to Lebesgue measure), and let\n$$\n\\bar z=\\frac1{b-a}\\int_a^b f(u)\\,du\n$$\nbe the mean of $f$ over $[a,b]$.\nIf $z\\in\\mathbb R$ satisfies\n$$\n\\int_a^b\\big(z-f(u)\\big)^2\\,du\\le\\int_a^b\\big(\\bar z-f(u)\\big)^2\\,du ,\n$$\nthen $z=\\bar z$.\n\n**Formalization Note** Nothing about $\\Phi^{-1}$ beyond square-integrability is used, so the statement is for an arbitrary $f$ with $f$ and $f^2$ interval-integrable; integrals are Mathlib's interval integrals `∫ u in a..b`.",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §3.1, p. 5, (14)–(15).",
+   "explanation": "By `integral_sq_sub_eq` the hypothesis says $(b-a)(z-\\bar z)^2\\le0$. Since $b-a>0$, $(z-\\bar z)^2=0$, so $z=\\bar z$.",
+   "tags": [
+    "numerical-analysis",
+    "real-analysis",
+    "optimization"
+   ]
+  },
+  "MLMC.intervalMean_isLeast": {
+   "theorem_title": "Haas–Giles (2025), (14)–(15): the least value of $z\\mapsto\\int_a^b(z-f)^2$ is $\\int_a^b(\\bar z-f)^2$, attained at the mean $\\bar z$ of $f$",
+   "natural_language_statement": "Haas–Giles (2025), §3.1, p. 5: the LUT value minimising (14) is the mean of $\\Phi^{-1}$ over the interval (15).\n\nLet $f:\\mathbb R\\to\\mathbb R$ and $a<b$ be real numbers such that $f$ and $f^2$ are integrable on $[a,b]$ (with respect to Lebesgue measure), and let\n$$\n\\bar z=\\frac1{b-a}\\int_a^b f(u)\\,du\n$$\nbe the mean of $f$ over $[a,b]$.\nThen $\\int_a^b(\\bar z-f(u))^2\\,du$ is the least element of the set\n$$\n\\Big\\{\\int_a^b\\big(z-f(u)\\big)^2\\,du\\ :\\ z\\in\\mathbb R\\Big\\}.\n$$\n\n**Formalization Note** Nothing about $\\Phi^{-1}$ beyond square-integrability is used, so the statement is for an arbitrary $f$ with $f$ and $f^2$ interval-integrable; integrals are Mathlib's interval integrals `∫ u in a..b`. \"Least element\" is Mathlib's `IsLeast`: the value belongs to the set and is a lower bound of it.",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §3.1, p. 5, (14)–(15).",
+   "explanation": "The value belongs to the set (take $z=\\bar z$), and it is a lower bound of the set by `integral_sq_sub_intervalMean_le`.",
+   "tags": [
+    "numerical-analysis",
+    "real-analysis",
+    "optimization"
+   ]
+  },
+  "MLMC.lutValue_isLeast": {
+   "theorem_title": "Haas–Giles (2025), (14)–(15): on each interval $\\mathcal I_j$ the LUT value $Z_j=2^d\\int_{\\mathcal I_j}f$ is the unique minimiser of the mean-square error (14)",
+   "natural_language_statement": "Haas–Giles (2025), §3.1, p. 5: \"To determine the optimal constants $Z_j$ the mean squared error (MSE) $\\int_{u_j}^{u_{j+1}}(Z_j-\\Phi^{-1}(u))^2du$ (14) is minimised with respect to the LUT values $Z_j$. This gives that $Z_j$ is the mean of $\\Phi^{-1}$ over the interval $\\mathcal I_j$: $Z_j=2^d\\int_{u_j}^{u_{j+1}}\\Phi^{-1}(u)du$\" (15).\n\nLet $f:\\mathbb R\\to\\mathbb R$ and $d,j\\in\\mathbb N$. For $d\\in\\mathbb N$ let $u_j=2^{-d}j$ and $\\mathcal I_j=[u_j,u_{j+1}]$ be the uniform intervals of methods 1 and 3, and let\n$$\nZ_j=2^d\\int_{u_j}^{u_{j+1}}f(u)\\,du\n$$\nbe the LUT value (15) of method 1, the mean of $f$ over $\\mathcal I_j$. Assume $f$ and $f^2$ are integrable on $\\mathcal I_j$. Then:\n\n1. $\\int_{u_j}^{u_{j+1}}(Z_j-f(u))^2\\,du$ is the least element of $\\big\\{\\int_{u_j}^{u_{j+1}}(z-f(u))^2\\,du : z\\in\\mathbb R\\big\\}$;\n2. every $z\\in\\mathbb R$ with $\\int_{u_j}^{u_{j+1}}(z-f)^2\\le\\int_{u_j}^{u_{j+1}}(Z_j-f)^2$ equals $Z_j$.\n\n**Formalization Note** Nothing about $\\Phi^{-1}$ beyond square-integrability is used, so the statement is for an arbitrary $f$ with $f$ and $f^2$ interval-integrable; integrals are Mathlib's interval integrals `∫ u in a..b`. $Z_j$ is `lutValue f d j` and $u_j$ is `gridPt d j`.",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §3.1, p. 5, (14)–(15).",
+   "explanation": "Since $u_{j+1}-u_j=2^{-d}$, $Z_j=(u_{j+1}-u_j)^{-1}\\int_{u_j}^{u_{j+1}}f$ is the mean of $f$ over $\\mathcal I_j$; apply `intervalMean_isLeast` and `eq_intervalMean_of_integral_sq_sub_le` on $[u_j,u_{j+1}]$ (where $u_j<u_{j+1}$).",
+   "tags": [
+    "numerical-analysis",
+    "real-analysis",
+    "optimization"
+   ]
+  },
+  "MLMC.integral_sq_sub_lutValue": {
+   "theorem_title": "Haas–Giles (2025), (18): $\\int_{u_j}^{u_{j+1}}(\\bar Z_j-f)^2=2^{-d}(\\bar Z_j-Z_j)^2+\\int_{u_j}^{u_{j+1}}(Z_j-f)^2$ for every value $\\bar Z_j$",
+   "natural_language_statement": "Haas–Giles (2025), §3.3, p. 6: in method 3 the value on $\\mathcal I_j$ is $\\bar Z_j=a+bj$, and \"A simple calculation shows that\n$$\n\\int_{u_j}^{u_{j+1}}\\big(\\bar Z_j-\\Phi^{-1}(u)\\big)^2du=2^{-d}\\big(\\bar Z_j-Z_j\\big)^2+\\int_{u_j}^{u_{j+1}}\\big(Z_j-\\Phi^{-1}(u)\\big)^2du\\text{''}\\qquad(18).\n$$\n\nLet $f:\\mathbb R\\to\\mathbb R$ and $d,j\\in\\mathbb N$. For $d\\in\\mathbb N$ let $u_j=2^{-d}j$ and $\\mathcal I_j=[u_j,u_{j+1}]$ be the uniform intervals of methods 1 and 3, and let\n$$\nZ_j=2^d\\int_{u_j}^{u_{j+1}}f(u)\\,du\n$$\nbe the LUT value (15) of method 1, the mean of $f$ over $\\mathcal I_j$. Assume $f$ and $f^2$ are integrable on $\\mathcal I_j$. Then for every $z\\in\\mathbb R$,\n$$\n\\int_{u_j}^{u_{j+1}}\\big(z-f(u)\\big)^2\\,du=2^{-d}\\,\\big(z-Z_j\\big)^2+\\int_{u_j}^{u_{j+1}}\\big(Z_j-f(u)\\big)^2\\,du .\n$$\n\n**Formalization Note** Nothing about $\\Phi^{-1}$ beyond square-integrability is used, so the statement is for an arbitrary $f$ with $f$ and $f^2$ interval-integrable; integrals are Mathlib's interval integrals `∫ u in a..b`. $2^{-d}$ is written $(2^d)^{-1}$.",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §3.3, p. 6, (18).",
+   "explanation": "`integral_sq_sub_eq` on $[u_j,u_{j+1}]$: its length is $2^{-d}$ and the mean of $f$ over it is $Z_j$.",
+   "tags": [
+    "numerical-analysis",
+    "real-analysis"
+   ]
+  },
+  "MLMC.sum_integral_sq_sub_lutValue": {
+   "theorem_title": "Haas–Giles (2025), (19): the MSE of any piecewise-constant approximation on the intervals $\\mathcal I_j$ is $2^{-d}\\sum_j(w_j-Z_j)^2$ plus the MSE of method 1",
+   "natural_language_statement": "Haas–Giles (2025), §3.3, p. 6: summing (18) over the intervals, \"to calculate the pairs $(a,b)$ we only need to minimise $\\sum_j(\\bar Z_j-Z_j)^2$\" (19).\n\nLet $f:\\mathbb R\\to\\mathbb R$ be such that $f$ and $f^2$ are integrable on $[0,1]$, let $d,n\\in\\mathbb N$ with $n\\le2^d$, and for $j<n$ let $u_j=2^{-d}j$, $\\mathcal I_j=[u_j,u_{j+1}]\\subseteq[0,1]$ and $Z_j=2^d\\int_{u_j}^{u_{j+1}}f(u)\\,du$ (15). Then for every $w:\\mathbb N\\to\\mathbb R$ (the value used on $\\mathcal I_j$; in method 3, $w_j=\\bar Z_j=a+bj$),\n$$\n\\sum_{j<n}\\int_{u_j}^{u_{j+1}}\\big(w_j-f(u)\\big)^2du=2^{-d}\\sum_{j<n}\\big(w_j-Z_j\\big)^2+\\sum_{j<n}\\int_{u_j}^{u_{j+1}}\\big(Z_j-f(u)\\big)^2du .\n$$\n\nThe last sum is the mean-square error of method 1 on these intervals.\n\n**Formalization Note** Nothing about $\\Phi^{-1}$ beyond square-integrability is used, so the statement is for an arbitrary $f$ with $f$ and $f^2$ interval-integrable; integrals are Mathlib's interval integrals `∫ u in a..b`.",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §3.3, p. 6, (18)–(19).",
+   "explanation": "For $j<n\\le2^d$ the interval $\\mathcal I_j$ lies in $[0,1]$, so $f$ and $f^2$ are integrable on it. Summing `integral_sq_sub_lutValue` over $j<n$ gives the identity.",
+   "tags": [
+    "numerical-analysis",
+    "real-analysis"
+   ]
+  },
+  "MLMC.sum_integral_sq_le_iff": {
+   "theorem_title": "Haas–Giles (2025), §3.3: minimising the objective (19) $\\sum_j(\\bar Z_j-Z_j)^2$ is equivalent to minimising the mean-square error of method 3",
+   "natural_language_statement": "Haas–Giles (2025), §3.3, p. 6: \"Therefore to calculate the pairs $(a,b)$ we only need to minimise $\\sum_{j}(\\bar Z_j-Z_j)^2$\" (19).\n\nLet $f:\\mathbb R\\to\\mathbb R$ be such that $f$ and $f^2$ are integrable on $[0,1]$, let $d,n\\in\\mathbb N$ with $n\\le2^d$, and for $j<n$ let $u_j=2^{-d}j$, $\\mathcal I_j=[u_j,u_{j+1}]\\subseteq[0,1]$ and $Z_j=2^d\\int_{u_j}^{u_{j+1}}f(u)\\,du$ (15). Then for all $w,w':\\mathbb N\\to\\mathbb R$,\n$$\n\\sum_{j<n}\\int_{u_j}^{u_{j+1}}\\big(w_j-f\\big)^2\\le\\sum_{j<n}\\int_{u_j}^{u_{j+1}}\\big(w'_j-f\\big)^2\n\\iff\n\\sum_{j<n}\\big(w_j-Z_j\\big)^2\\le\\sum_{j<n}\\big(w'_j-Z_j\\big)^2 .\n$$\n\nSo the values minimising the mean-square error among any family (for example the pairs $(a,b)$ of method 3) are those minimising (19).\n\n**Formalization Note** Nothing about $\\Phi^{-1}$ beyond square-integrability is used, so the statement is for an arbitrary $f$ with $f$ and $f^2$ interval-integrable; integrals are Mathlib's interval integrals `∫ u in a..b`.",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §3.3, p. 6, (19).",
+   "explanation": "By `sum_integral_sq_sub_lutValue` both mean-square errors are $2^{-d}$ times the corresponding sum of squares plus the same method-1 term, and $2^{-d}>0$.",
+   "tags": [
+    "numerical-analysis",
+    "optimization"
+   ]
+  },
+  "MLMC.method1_le": {
+   "theorem_title": "Haas–Giles (2025), §3.3–3.4: methods 2 and 3 cannot beat method 1 — any piecewise-constant approximation on the $\\mathcal I_j$ has MSE at least that of the LUT values $Z_j$",
+   "natural_language_statement": "Haas–Giles (2025), §3.3, p. 6: \"(18) also shows that for the same value of $d$ this approximation cannot be as good as the method 1\"; §3.4, p. 7: \"for the same $d$, the MSE obtained in methods 2 and 3 are necessarily larger than in method 1\".\n\nLet $f:\\mathbb R\\to\\mathbb R$ be such that $f$ and $f^2$ are integrable on $[0,1]$, let $d,n\\in\\mathbb N$ with $n\\le2^d$, and for $j<n$ let $u_j=2^{-d}j$, $\\mathcal I_j=[u_j,u_{j+1}]\\subseteq[0,1]$ and $Z_j=2^d\\int_{u_j}^{u_{j+1}}f(u)\\,du$ (15). Then for every $w:\\mathbb N\\to\\mathbb R$ (the value used on $\\mathcal I_j$):\n\n1. $\\displaystyle\\sum_{j<n}\\int_{u_j}^{u_{j+1}}\\big(Z_j-f\\big)^2\\le\\sum_{j<n}\\int_{u_j}^{u_{j+1}}\\big(w_j-f\\big)^2$;\n2. if the two sums are equal, then $w_j=Z_j$ for every $j<n$.\n\n**Formalization Note** Nothing about $\\Phi^{-1}$ beyond square-integrability is used, so the statement is for an arbitrary $f$ with $f$ and $f^2$ interval-integrable; integrals are Mathlib's interval integrals `∫ u in a..b`.",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §3.3, p. 6, and §3.4, p. 7.",
+   "explanation": "By `sum_integral_sq_sub_lutValue` the difference of the two mean-square errors is $2^{-d}\\sum_{j<n}(w_j-Z_j)^2\\ge0$, and it vanishes only if every term $(w_j-Z_j)^2$ vanishes.",
+   "tags": [
+    "numerical-analysis",
+    "optimization"
+   ]
+  },
+  "MLMC.method1_le_perm": {
+   "theorem_title": "Haas–Giles (2025), §3.2 and §3.4: method 2, which uses $\\tilde Z_j$ on the interval $\\mathcal I_{\\pi(j)}$, has mean-square error at least that of method 1",
+   "natural_language_statement": "Haas–Giles (2025), §3.2, p. 6: \"When the optimised LUT is used and the input integer is $j$, the output is the value $\\tilde Z_j$, which is an approximate of $\\Phi^{-1}(2^{-d}\\pi(j))$\" — method 2 approximates $\\Phi^{-1}$ on $\\mathcal I_{\\pi(j)}$ by $\\tilde Z_j$; §3.4, p. 7: its MSE is necessarily larger than that of method 1.\n\nLet $f:\\mathbb R\\to\\mathbb R$ with $f$ and $f^2$ integrable on $[0,1]$, $d\\in\\mathbb N$, $u_j=2^{-d}j$ and $Z_j=2^d\\int_{u_j}^{u_{j+1}}f$ (15). Let $\\pi$ be a permutation of $\\{0,1,\\dots,2^d-1\\}$ and $\\tilde Z_0,\\dots,\\tilde Z_{2^d-1}\\in\\mathbb R$. Then\n$$\n\\sum_{j=0}^{2^d-1}\\int_{u_j}^{u_{j+1}}\\big(Z_j-f(u)\\big)^2du\\le\\sum_{j=0}^{2^d-1}\\int_{u_{\\pi(j)}}^{u_{\\pi(j)+1}}\\big(\\tilde Z_j-f(u)\\big)^2du .\n$$\n\n**Formalization Note** Nothing about $\\Phi^{-1}$ beyond square-integrability is used, so the statement is for an arbitrary $f$ with $f$ and $f^2$ interval-integrable; integrals are Mathlib's interval integrals `∫ u in a..b`. The permutation is an `Equiv.Perm (Fin (2 ^ d))`.",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §3.2, p. 6, and §3.4, p. 7.",
+   "explanation": "Reindexing by $k=\\pi(j)$, the right side is $\\sum_k\\int_{\\mathcal I_k}(w_k-f)^2$ with $w_k=\\tilde Z_{\\pi^{-1}(k)}$ (`Fintype.sum_equiv`), and `method1_le` with $n=2^d$ bounds it below by the MSE of method 1.",
+   "tags": [
+    "numerical-analysis",
+    "optimization"
+   ]
+  },
+  "MLMC.lutValue_mirror": {
+   "theorem_title": "Haas–Giles (2025), §3: if $f(1-u)=-f(u)$ (as for $\\Phi^{-1}$), the LUT values of mirrored intervals are opposite, $Z_{2^d-1-j}=-Z_j$",
+   "natural_language_statement": "Haas–Giles (2025), §3, p. 5: \"Note that, in practice, we exploit the symmetry of $\\Phi^{-1}$ so we only need to approximate it on $[0,1/2]$.\"\n\nLet $f:\\mathbb R\\to\\mathbb R$ satisfy $f(1-u)=-f(u)$ for every $u$ (the symmetry $\\Phi^{-1}(1-u)=-\\Phi^{-1}(u)$), and let $d,j\\in\\mathbb N$ with $j<2^d$. With $Z_i=2^d\\int_{u_i}^{u_{i+1}}f$ and $u_i=2^{-d}i$ (15),\n$$\nZ_{2^d-1-j}=-Z_j .\n$$\n\n**Formalization Note** $Z_i$ is `lutValue f d i`; $2^d-1-j$ is natural-number subtraction (exact since $j<2^d$). No integrability is needed.",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §3, p. 5.",
+   "explanation": "The mirrored interval is $\\mathcal I_{2^d-1-j}=[1-u_{j+1},1-u_j]$. The substitution $u\\mapsto1-u$ gives $\\int_{1-u_{j+1}}^{1-u_j}f(u)\\,du=\\int_{u_j}^{u_{j+1}}f(1-u)\\,du=-\\int_{u_j}^{u_{j+1}}f(u)\\,du$.",
+   "tags": [
+    "numerical-analysis",
+    "real-analysis"
+   ]
+  },
+  "MLMC.lutValue_upper_half": {
+   "theorem_title": "Haas–Giles (2025), §3.1: a LUT of size $2^{d-1}$ and a sign bit suffice — for $2^{d-1}\\le j<2^d$, $2^d-1-j<2^{d-1}$ and $Z_j=-Z_{2^d-1-j}$",
+   "natural_language_statement": "Haas–Giles (2025), §3.1, p. 5: \"We simply construct a Look-Up-Table (LUT) of size $2^{d-1}$ … The leading bit of $j$ gives the sign of the normal increment, which allows us to extend the approximation of $\\Phi^{-1}$ on the interval $[1/2,1]$.\"\n\nLet $f:\\mathbb R\\to\\mathbb R$ satisfy $f(1-u)=-f(u)$ for every $u$, let $d\\ge1$, and let $j\\in\\mathbb N$ with $2^{d-1}\\le j<2^d$ (the upper half, leading bit $1$). With $Z_i=2^d\\int_{2^{-d}i}^{2^{-d}(i+1)}f$ (15):\n$$\n2^d-1-j<2^{d-1}\\qquad\\text{and}\\qquad Z_j=-Z_{2^d-1-j}.\n$$\n\nSo every LUT value is $\\pm$ an entry of the LUT on $[0,1/2]$, which has size $2^{d-1}$.\n\n**Formalization Note** Subtractions are those of $\\mathbb N$ (exact here).",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §3.1, p. 5.",
+   "explanation": "The first part is arithmetic, using $2^d=2\\cdot2^{d-1}$. For the second, apply `lutValue_mirror` to $2^d-1-j<2^d$ and use $2^d-1-(2^d-1-j)=j$.",
+   "tags": [
+    "numerical-analysis"
+   ]
+  },
+  "MLMC.coupledUniform_eq": {
+   "theorem_title": "Haas–Giles (2025), (17): $2^{-d}\\pi(j)+2^{-D}((J-2^{D-d}j)+\\frac12)=2^{-d}(\\pi(j)-j)+2^{-D}(J+\\frac12)$, the two forms of the coupled uniform variable",
+   "natural_language_statement": "Haas–Giles (2025), §3.2, p. 6: \"the corresponding uniform variable used on the CPU is\n$$\nU=2^{-d}\\pi(j)+2^{-D}\\Big(\\big(J-2^{D-d}j\\big)+\\tfrac12\\Big)=2^{-d}\\big(\\pi(j)-j\\big)+2^{-D}\\Big(J+\\tfrac12\\Big)\\text{''}\\qquad(17).\n$$\n\nLet $d,D\\in\\mathbb N$ with $d\\le D$, let $\\pi:\\mathbb N\\to\\mathbb N$, let $J\\in\\mathbb N$ (a $D$-bit integer when $J<2^D$) and let $j=\\lfloor J/2^{D-d}\\rfloor$ be its leading $d$ bits. Then the two expressions in (17) are equal:\n$$\n2^{-d}\\pi(j)+2^{-D}\\Big(\\big(J-2^{D-d}j\\big)+\\tfrac12\\Big)=2^{-d}\\big(\\pi(j)-j\\big)+2^{-D}\\Big(J+\\tfrac12\\Big).\n$$\n\nWith $\\pi=\\mathrm{id}$ both equal the method-1 variable $U=2^{-D}(J+\\frac12)$ of §3.1.\n\n**Formalization Note** The left side is `coupledUniform π d D J`; $j$ and $D-d$ are computed in $\\mathbb N$, everything else in $\\mathbb R$.",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §3.2, p. 6, (17).",
+   "explanation": "Since $2^D=2^{D-d}2^d$, $2^{-D}\\cdot2^{D-d}j=2^{-d}j$; the rest is rearrangement.",
+   "tags": [
+    "numerical-analysis",
+    "monte-carlo"
+   ]
+  },
+  "MLMC.coupledUniform_mem": {
+   "theorem_title": "Haas–Giles (2025), §3.2: the coupled uniform variable (17) lies strictly inside the interval $\\mathcal I_{\\pi(j)}$ that $\\tilde Z_j$ approximates",
+   "natural_language_statement": "Haas–Giles (2025), §3.2, p. 6: \"the output is the value $\\tilde Z_j$, which is an approximate of $\\Phi^{-1}(2^{-d}\\pi(j))$. Therefore the corresponding uniform variable used on the CPU is\" (17).\n\nLet $d,D\\in\\mathbb N$ with $d\\le D$, let $\\pi:\\mathbb N\\to\\mathbb N$, let $J\\in\\mathbb N$ (a $D$-bit integer when $J<2^D$) and let $j=\\lfloor J/2^{D-d}\\rfloor$ be its leading $d$ bits. Let $U=2^{-d}\\pi(j)+2^{-D}((J-2^{D-d}j)+\\frac12)$ (17) and $u_i=2^{-d}i$. Then\n$$\nu_{\\pi(j)}<U<u_{\\pi(j)+1},\n$$\nso $\\Phi^{-1}(U)$ is evaluated in the interval $\\mathcal I_{\\pi(j)}$ on which method 2 uses the value $\\tilde Z_j$.\n\n**Formalization Note** $U$ is `coupledUniform π d D J` and $u_i$ is `gridPt d i`.",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §3.2, p. 6, (17).",
+   "explanation": "$J-2^{D-d}j=r$ is the remainder of $J$ modulo $2^{D-d}$, so $U=u_{\\pi(j)}+2^{-D}(r+\\frac12)$ with $0\\le r\\le2^{D-d}-1$. Hence $0<2^{-D}(r+\\frac12)<2^{-D}2^{D-d}=2^{-d}=u_{\\pi(j)+1}-u_{\\pi(j)}$.",
+   "tags": [
+    "numerical-analysis",
+    "monte-carlo"
+   ]
+  },
+  "MLMC.midpoint_mem_cell": {
+   "theorem_title": "Haas–Giles (2025), §3.1: the method-1 uniform variable $U=2^{-D}(J+\\frac12)$ lies in the interval $\\mathcal I_j$ given by the leading $d$ bits $j$ of $J$",
+   "natural_language_statement": "Haas–Giles (2025), §3.1, p. 5: \"Locating the interval corresponding to the input uniform variable $U$ is trivial since the integer $j$ maps to the index of the interval\"; \"the corresponding full precision uniform variable is defined as $U=2^{-D}(J+\\frac12)$\".\n\nLet $d,D,J\\in\\mathbb N$ with $d\\le D$, $j=\\lfloor J/2^{D-d}\\rfloor$ and $u_i=2^{-d}i$. Then\n$$\nu_j<2^{-D}\\Big(J+\\tfrac12\\Big)<u_{j+1}.\n$$\n\n**Formalization Note** $u_i$ is `gridPt d i`; $j$ is natural-number division.",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §3.1, p. 5.",
+   "explanation": "Apply `coupledUniform_mem` with $\\pi=\\mathrm{id}$; by (17) (`coupledUniform_eq`), $U=2^{-d}(j-j)+2^{-D}(J+\\frac12)=2^{-D}(J+\\frac12)$.",
+   "tags": [
+    "numerical-analysis",
+    "monte-carlo"
+   ]
+  },
+  "MLMC.coupledUniform_eq_index": {
+   "theorem_title": "Haas–Giles (2025), §3.2: the coupled variable (17) is the midpoint $2^{-D}(K+\\frac12)$ with $K=2^{D-d}\\pi(j)+(J\\bmod2^{D-d})$",
+   "natural_language_statement": "Haas–Giles (2025), §3.2, p. 6: the coupled uniform variable (17), $U=2^{-d}\\pi(j)+2^{-D}((J-2^{D-d}j)+\\frac12)$.\n\nLet $d,D\\in\\mathbb N$ with $d\\le D$, let $\\pi:\\mathbb N\\to\\mathbb N$, let $J\\in\\mathbb N$ (a $D$-bit integer when $J<2^D$) and let $j=\\lfloor J/2^{D-d}\\rfloor$ be its leading $d$ bits. Let $K=2^{D-d}\\pi(j)+(J\\bmod2^{D-d})\\in\\mathbb N$. Then\n$$\n2^{-d}\\pi(j)+2^{-D}\\Big(\\big(J-2^{D-d}j\\big)+\\tfrac12\\Big)=2^{-D}\\Big(K+\\tfrac12\\Big),\n$$\nthe midpoint of the $K$-th of the $2^D$ intervals of length $2^{-D}$.\n\n**Formalization Note** The left side is `coupledUniform π d D J` and $K$ is `coupledIndex π d D J`.",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §3.2, p. 6, (17).",
+   "explanation": "$J-2^{D-d}j=J\\bmod2^{D-d}$ (division with remainder), and $2^{-d}\\pi(j)=2^{-D}2^{D-d}\\pi(j)$ because $2^D=2^{D-d}2^d$.",
+   "tags": [
+    "numerical-analysis",
+    "monte-carlo"
+   ]
+  },
+  "MLMC.sum_coupledIndex": {
+   "theorem_title": "Haas–Giles (2025), §3.2: for a permutation $\\pi$ the coupling (17) permutes the $2^D$ fine indices, so the coupled uniform variable is uniformly distributed",
+   "natural_language_statement": "Haas–Giles (2025), §3.2, p. 6: \"generating the coupled full precision variable requires taking into account the permutation $\\pi$\" — the variable (17) used on the CPU must itself be a (discretised) uniform variable.\n\nLet $d,D\\in\\mathbb N$ with $d\\le D$, and let $\\pi,\\rho:\\mathbb N\\to\\mathbb N$ map $\\{0,\\dots,2^d-1\\}$ into itself with $\\rho(\\pi(j))=j$ and $\\pi(\\rho(j))=j$ for all $j<2^d$ ($\\pi$ is a permutation of $\\{0,\\dots,2^d-1\\}$ with inverse $\\rho$). For $J\\in\\mathbb N$ let\n$$\nK(J)=2^{D-d}\\,\\pi\\big(\\lfloor J/2^{D-d}\\rfloor\\big)+\\big(J\\bmod2^{D-d}\\big)\n$$\nbe the index of the coupled variable, $U=2^{-D}(K(J)+\\frac12)$ (`coupledUniform_eq_index`). Then for every function $g$ from $\\mathbb N$ to an additive commutative monoid,\n$$\n\\sum_{J=0}^{2^D-1}g\\big(K(J)\\big)=\\sum_{J=0}^{2^D-1}g(J).\n$$\n\nThus $K$ permutes $\\{0,\\dots,2^D-1\\}$: if $J$ is uniform on these $2^D$ values, so is $K(J)$, and $U$ has the same law as $2^{-D}(J+\\frac12)$.\n\n**Formalization Note** $K$ is `coupledIndex π d D`.",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §3.2, p. 6, (17).",
+   "explanation": "Write $J=2^{D-d}q+r$ with $q=\\lfloor J/2^{D-d}\\rfloor<2^d$ (as $J<2^D=2^d2^{D-d}$) and $r<2^{D-d}$. Then $K(J)=2^{D-d}\\pi(q)+r<2^{D-d}(\\pi(q)+1)\\le2^D$, $\\lfloor K(J)/2^{D-d}\\rfloor=\\pi(q)$ and $K(J)\\bmod2^{D-d}=r$, so the index map of $\\rho$ undoes that of $\\pi$ and vice versa. A map with a two-sided inverse on $\\{0,\\dots,2^D-1\\}$ preserves sums over it (`Finset.sum_nbij'`).",
+   "tags": [
+    "numerical-analysis",
+    "monte-carlo",
+    "combinatorics"
+   ]
+  },
+  "MLMC.card_signed_sums": {
+   "theorem_title": "Haas–Giles (2025), §3.2: $n$ streams, each a sign bit and an index into a LUT of size $2^{e-1}$, give $(2\\cdot2^{e-1})^n=2^{ne}$ signed sums",
+   "natural_language_statement": "Haas–Giles (2025), §3.2, pp. 5–6: with two streams, \"Both streams of lower precision variables $X^{(1)},X^{(2)}$ are computed with the same LUT of size $2^{d/2-1}$\", and \"we form a larger LUT of size $2^d$ by computing all possible sums $\\pm X_k\\pm X_l$\"; with $n$ streams, \"$n$ low precision variables are summed\".\n\nFor $e\\ge1$ and $n\\in\\mathbb N$, the set of functions from $\\{0,\\dots,n-1\\}$ to $\\{\\text{signs}\\}\\times\\{0,\\dots,2^{e-1}-1\\}$ (a sign and a LUT index for each of the $n$ streams) has\n$$\n\\#\\Big(\\{0,\\dots,n-1\\}\\to\\{+,-\\}\\times\\{0,\\dots,2^{e-1}-1\\}\\Big)=\\big(2\\cdot2^{e-1}\\big)^n=2^{ne}\n$$\nelements. With $n$ streams of $e=d/n$ bits this is the $2^d$ entries of the large LUT.\n\n**Formalization Note** The set of signs is `Bool` and the cardinality is `Fintype.card (Fin n → Bool × Fin (2 ^ (e - 1)))`.",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §3.2, pp. 5–6.",
+   "explanation": "$|B^A|=|B|^{|A|}$ and $|\\{+,-\\}\\times\\{0,\\dots,m-1\\}|=2m$; with $m=2^{e-1}$, $2m=2^e$ and $(2^e)^n=2^{ne}$.",
+   "tags": [
+    "combinatorics",
+    "numerical-analysis"
+   ]
+  },
+  "MLMC.card_image_add_le": {
+   "theorem_title": "Haas–Giles (2025), §3.4: most method-2 values occur in pairs — the sums $x_k+x_l$ over ordered pairs from $N$ values take at most $\\binom{N+1}{2}$ values",
+   "natural_language_statement": "Haas–Giles (2025), §3.4, p. 7: \"most of the values in method 2 occur in pairs ($X_i+X_j$ and $X_j+X_i$)\", apart from \"the extra values of the form $X_i+X_i$\".\n\nLet $s$ be a finite set with $N$ elements and $x:s\\to\\mathbb R$. Then\n$$\n\\#\\big\\{x_k+x_l\\ :\\ k,l\\in s\\big\\}\\le\\binom{N+1}{2}=\\frac{N(N+1)}2 .\n$$\n\n**Formalization Note** The index type has decidable equality; the set of sums is the image of $s\\times s$ under $(k,l)\\mapsto x_k+x_l$.",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §3.4, p. 7.",
+   "explanation": "$x_k+x_l$ depends only on the unordered pair $\\{k,l\\}$: the map factors through the set of unordered pairs with repetition, `Finset.sym2`, which has $\\binom{N+1}{2}$ elements (`Finset.card_sym2`), and an image has at most as many elements as its domain.",
+   "tags": [
+    "combinatorics",
+    "numerical-analysis"
+   ]
+  },
+  "MLMC.choose_two_pow_add_one": {
+   "theorem_title": "Haas–Giles (2025), §3.4: with $N=2^{d/2}$ signed values, $\\binom{N+1}{2}=2^{d-1}+2^{d/2-1}$ — method 2 with $d$ bits has barely more values than method 1 with $d-1$ bits",
+   "natural_language_statement": "Haas–Giles (2025), §3.4, p. 7: \"it is also interesting to compare methods 2 with $d$ bits against the method 1 with $d-1$ bits, since most of the values in method 2 occur in pairs\".\n\nFor every $k\\in\\mathbb N$,\n$$\n\\binom{2^{k+1}+1}{2}=2^{2k+1}+2^k .\n$$\n\nWith $d=2k+2$ (two streams of $d/2=k+1$ bits, hence $N=2^{d/2}$ signed values $\\pm X_i$), the bound $\\binom{N+1}2$ of `card_image_add_le` on the number of distinct method-2 values is $2^{d-1}+2^{d/2-1}$: the $2^{d-1}$ values of a method-1 LUT with $d-1$ bits, plus $2^{d/2-1}$.",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §3.4, p. 7.",
+   "explanation": "$\\binom m2=m(m-1)/2$; with $m=2^{k+1}+1$, $m(m-1)=(2^{k+1}+1)2^{k+1}=2(2^{2k+1}+2^k)$.",
+   "tags": [
+    "combinatorics"
+   ]
+  },
+  "MLMC.sorting_minimises": {
+   "theorem_title": "Haas–Giles (2025), §3.2: ordering the $\\tilde Z_j$ (the ranking permutation $\\pi$) minimises the least-squares objective (16) $\\sum_j(Z_{\\pi(j)}-\\tilde Z_j)^2$ over all permutations",
+   "natural_language_statement": "Haas–Giles (2025), §3.2, p. 6: \"we form a larger LUT … ordering the outputs $\\tilde Z_j$ in ascending order. This step defines a permutation $\\pi$ such that $\\pi(j)$ gives the position of the random number $\\tilde Z_j$ in the ordered list. Then we perform a least-squared minimisation of $\\sum_{j}(Z_{\\pi(j)}-\\tilde Z_j)^2$\" (16).\n\nLet $n\\in\\mathbb N$, let $Z:\\{0,\\dots,n-1\\}\\to\\mathbb R$ be nondecreasing (the method-1 values $Z_k$ increase with the position $k$), let $\\tilde Z:\\{0,\\dots,n-1\\}\\to\\mathbb R$, and let $\\pi$ be a permutation of $\\{0,\\dots,n-1\\}$ that ranks $\\tilde Z$: $\\tilde Z_i<\\tilde Z_j\\Rightarrow\\pi(i)<\\pi(j)$. Then for every permutation $\\sigma$ of $\\{0,\\dots,n-1\\}$,\n$$\n\\sum_{j}\\big(Z_{\\pi(j)}-\\tilde Z_j\\big)^2\\le\\sum_{j}\\big(Z_{\\sigma(j)}-\\tilde Z_j\\big)^2 .\n$$\n\n**Formalization Note** Indices are `Fin n` and permutations are `Equiv.Perm (Fin n)`.",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §3.2, p. 6, (16).",
+   "explanation": "For every permutation $\\tau$, $\\sum_j(Z_{\\tau(j)}-\\tilde Z_j)^2=\\sum_jZ_j^2-2\\sum_jZ_{\\tau(j)}\\tilde Z_j+\\sum_j\\tilde Z_j^2$, since $\\tau$ permutes the $Z_j^2$. The hypotheses make $Z\\circ\\pi$ and $\\tilde Z$ monovary, so by the rearrangement inequality (Mathlib's `Monovary.sum_comp_perm_mul_le_sum_mul`, applied to $\\pi^{-1}\\circ\\sigma$) $\\sum_jZ_{\\sigma(j)}\\tilde Z_j\\le\\sum_jZ_{\\pi(j)}\\tilde Z_j$.",
+   "tags": [
+    "optimization",
+    "combinatorics",
+    "algorithms"
+   ]
+  },
+  "MLMC.alternating_min_antitone": {
+   "theorem_title": "Haas–Giles (2025), §3.2: the method-2 iteration (least squares, then re-sorting) never increases the objective (16)",
+   "natural_language_statement": "Haas–Giles (2025), §3.2, p. 6: \"After this step update the permutation $\\pi$ by ordering the resulting $\\tilde Z_j$ and repeat the least-squares optimisation.\"\n\nLet $P$ and $X$ be sets, $F:P\\times X\\to\\mathbb R$ an objective (in method 2, (16) as a function of the permutation $\\pi$ and the small-LUT values), and $(\\pi_k)_{k\\in\\mathbb N}$, $(x_k)_{k\\in\\mathbb N}$ sequences in $P$ and $X$ such that\n\n1. (least-squares step) $F(\\pi_k,x_k)\\le F(\\pi_k,y)$ for all $k$ and all $y\\in X$;\n2. (sorting step) $F(\\pi_{k+1},x_k)\\le F(p,x_k)$ for all $k$ and all $p\\in P$.\n\nThen $k\\mapsto F(\\pi_k,x_k)$ is nonincreasing.",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §3.2, p. 6, (16).",
+   "explanation": "$F(\\pi_{k+1},x_{k+1})\\le F(\\pi_{k+1},x_k)\\le F(\\pi_k,x_k)$, by the least-squares step at $k+1$ and the sorting step at $k$.",
+   "tags": [
+    "optimization",
+    "algorithms"
+   ]
+  },
+  "MLMC.alternating_min_eventually_const": {
+   "theorem_title": "Haas–Giles (2025), §3.2: with finitely many permutations, the objective (16) of the method-2 iteration is constant after finitely many iterations",
+   "natural_language_statement": "Haas–Giles (2025), §3.2, p. 6: \"The algorithm stops when the permutation has converged.\"\n\nLet $P$ and $X$ be sets, $F:P\\times X\\to\\mathbb R$ an objective (in method 2, (16) as a function of the permutation $\\pi$ and the small-LUT values), and $(\\pi_k)_{k\\in\\mathbb N}$, $(x_k)_{k\\in\\mathbb N}$ sequences in $P$ and $X$ such that\n\n1. (least-squares step) $F(\\pi_k,x_k)\\le F(\\pi_k,y)$ for all $k$ and all $y\\in X$;\n2. (sorting step) $F(\\pi_{k+1},x_k)\\le F(p,x_k)$ for all $k$ and all $p\\in P$.\n\nIf $P$ is finite, there is $K\\in\\mathbb N$ with $F(\\pi_k,x_k)=F(\\pi_K,x_K)$ for all $k\\ge K$.",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §3.2, p. 6, (16).",
+   "explanation": "If $\\pi_k=\\pi_{k'}$, then $x_k$ and $x_{k'}$ both minimise $F(\\pi_k,\\cdot)$, so $F(\\pi_k,x_k)=F(\\pi_{k'},x_{k'})$: the sequence $F(\\pi_k,x_k)$ depends only on $\\pi_k$ and takes finitely many values. Its least value is attained at some $K$, and since the sequence is nonincreasing (`alternating_min_antitone`) it equals that value for all $k\\ge K$.",
+   "tags": [
+    "optimization",
+    "algorithms"
+   ]
+  },
+  "MLMC.alternating_eventually_periodic": {
+   "theorem_title": "Haas–Giles (2025), §3.2: with deterministic steps and finitely many permutations, the method-2 iteration is eventually periodic",
+   "natural_language_statement": "Haas–Giles (2025), §3.2, p. 6: the permutation is updated by re-sorting after each least-squares step, and \"The algorithm stops when the permutation has converged\".\n\nLet $P$ and $X$ be sets, $S:X\\to P$ (the sorting step) and $T:P\\to X$ (the least-squares step, deterministic), and let $(\\pi_k)_{k\\in\\mathbb N}$ satisfy $\\pi_{k+1}=S(T(\\pi_k))$ for all $k$. If $P$ is finite, there are $K\\in\\mathbb N$ and $p\\ge1$ with\n$$\n\\pi_{k+p}=\\pi_k\\qquad\\text{for all }k\\ge K .\n$$\n\nThe permutation \"has converged\" when the period can be taken to be $1$ (`alternating_stationary`).",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §3.2, p. 6.",
+   "explanation": "By the pigeonhole principle $\\pi_a=\\pi_b$ for some $a<b$. Since each term determines the next, induction on $k\\ge a$ gives $\\pi_{k+(b-a)}=\\pi_k$.",
+   "tags": [
+    "algorithms",
+    "combinatorics"
+   ]
+  },
+  "MLMC.alternating_stationary": {
+   "theorem_title": "Haas–Giles (2025), §3.2: the stopping rule of method 2 — once the permutation repeats, $\\pi_{K+1}=\\pi_K$, the deterministic iteration is stationary",
+   "natural_language_statement": "Haas–Giles (2025), §3.2, p. 6: \"The algorithm stops when the permutation has converged.\"\n\nLet $P$ and $X$ be sets, $S:X\\to P$ (the sorting step) and $T:P\\to X$ (the least-squares step, deterministic), and let $(\\pi_k)_{k\\in\\mathbb N}$ satisfy $\\pi_{k+1}=S(T(\\pi_k))$ for all $k$. If $\\pi_{K+1}=\\pi_K$ for some $K$, then $\\pi_k=\\pi_K$ for all $k\\ge K$.",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §3.2, p. 6.",
+   "explanation": "Induction on $k\\ge K$: $\\pi_{k+1}=S(T(\\pi_k))=S(T(\\pi_K))=\\pi_{K+1}=\\pi_K$.",
+   "tags": [
+    "algorithms"
+   ]
+  },
+  "MLMC.dyadic_index": {
+   "theorem_title": "Haas–Giles (2025), §3.3: for $0<j<2^{d-1}$ the leading bit position $i=\\lfloor\\log_2j\\rfloor+1$ has $2^{i-1}\\le j<2^i$ and $1\\le i\\le d-1$ (LUT of size $d-1$)",
+   "natural_language_statement": "Haas–Giles (2025), §3.3, p. 6: \"a separate pair $(a,b)$ for each interval $\\mathcal I'_i=[\\![2^{i-1},2^i-1]\\!]$, where $i$ is the leading non-zero bit of the integer $j$. The coefficients are stored in a LUT of size $d-1$.\"\n\nLet $d,j\\in\\mathbb N$ with $0<j<2^{d-1}$ and let $i=\\lfloor\\log_2j\\rfloor+1$. Then\n$$\n2^{i-1}\\le j<2^i\\qquad\\text{and}\\qquad1\\le i\\le d-1 .\n$$\n\nSo $j$ lies in the dyadic interval $\\mathcal I'_i$, and the $d-1$ intervals $\\mathcal I'_1,\\dots,\\mathcal I'_{d-1}$ cover $\\{1,\\dots,2^{d-1}-1\\}$.\n\n**Formalization Note** $\\lfloor\\log_2j\\rfloor$ is Mathlib's `Nat.log 2 j`; $d-1$ is natural-number subtraction.",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §3.3, p. 6.",
+   "explanation": "$2^{\\lfloor\\log_2j\\rfloor}\\le j<2^{\\lfloor\\log_2j\\rfloor+1}$ for $j\\ne0$ (`Nat.pow_log_le_self`, `Nat.lt_pow_succ_log_self`), and $\\lfloor\\log_2j\\rfloor<d-1$ because $j<2^{d-1}$ (`Nat.log_lt_of_lt_pow`).",
+   "tags": [
+    "numerical-analysis",
+    "combinatorics"
+   ]
+  },
+  "MLMC.affine_fit_exact": {
+   "theorem_title": "Haas–Giles (2025), §3.4: on a dyadic interval with two points the least-squares line fits exactly, so $\\bar Z_j=Z_j$ there",
+   "natural_language_statement": "Haas–Giles (2025), §3.4, p. 7: \"for the first two dyadic intervals there are only two points in each so $\\bar Z_j$ will exactly match $Z_j$.\"\n\nLet $j_1\\ne j_2$ and $Z_1,Z_2$ be real numbers, and let $(a,b)\\in\\mathbb R^2$ minimise the least-squares objective (19) on the two points,\n$$\n(a+bj_1-Z_1)^2+(a+bj_2-Z_2)^2\\le(a'+b'j_1-Z_1)^2+(a'+b'j_2-Z_2)^2\\qquad\\text{for all }a',b'\\in\\mathbb R .\n$$\nThen\n$$\na+bj_1=Z_1\\qquad\\text{and}\\qquad a+bj_2=Z_2 .\n$$",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §3.4, p. 7, and §3.3, p. 6, (19).",
+   "explanation": "The line through $(j_1,Z_1)$ and $(j_2,Z_2)$, $b'=(Z_2-Z_1)/(j_2-j_1)$ and $a'=Z_1-b'j_1$, has objective $0$. So the minimum is at most $0$, and a sum of two squares that is at most $0$ has both terms $0$.",
+   "tags": [
+    "numerical-analysis",
+    "optimization"
+   ]
   }
  },
  "definitions": {
@@ -2138,6 +2421,15 @@
     "multilevel-monte-carlo",
     "algorithms",
     "numerical-analysis"
+   ]
+  },
+  "MLMC_ApproxNormal": {
+   "definition_title": "Haas–Giles (2025), §3: interval means, the uniform grid $u_j=2^{-d}j$, the LUT values (15), and the coupled uniform variable (17)",
+   "natural_language_statement": "Haas–Giles (2025), §3: the three inversion methods approximate the inverse normal CDF $\\Phi^{-1}$ by functions that are constant on the uniform intervals $\\mathcal I_j=[u_j,u_{j+1}]$, $u_j=2^{-d}j$, and couple the low-precision $d$-bit integer $j$ with a full-precision $D$-bit integer $J$ and uniform variable $U$.\n\n**`intervalMean`**. For $f:\\mathbb R\\to\\mathbb R$ and $a,b\\in\\mathbb R$, the mean of $f$ over $[a,b]$:\n$$\n\\mathrm{mean}(f,a,b)=\\frac1{b-a}\\int_a^b f(u)\\,du .\n$$\n\n**`gridPt`**. For $d,j\\in\\mathbb N$, the grid point $u_j=2^{-d}j=j/2^d$ (a real number).\n\n**`lutValue`** (the LUT value (15) of method 1, §3.1). For $f$ and $d,j\\in\\mathbb N$,\n$$\nZ_j=2^d\\int_{u_j}^{u_{j+1}}f(u)\\,du ,\n$$\nthe mean of $f$ over $\\mathcal I_j$ (in the paper, $f=\\Phi^{-1}$).\n\n**`coupledUniform`** (the coupled full-precision uniform variable (17), §3.2). For $\\pi:\\mathbb N\\to\\mathbb N$ and $d,D,J\\in\\mathbb N$, with $j=\\lfloor J/2^{D-d}\\rfloor$ (the leading $d$ bits of the $D$-bit integer $J$),\n$$\nU=2^{-d}\\pi(j)+2^{-D}\\Big(\\big(J-2^{D-d}j\\big)+\\tfrac12\\Big).\n$$\nWith $\\pi=\\mathrm{id}$ this is the method-1 variable $U=2^{-D}(J+\\frac12)$ of §3.1 (`coupledUniform_eq`).\n\n**`coupledIndex`**. The integer index of $U$: $K=2^{D-d}\\pi(j)+(J\\bmod 2^{D-d})$, so that $U=2^{-D}(K+\\frac12)$ (`coupledUniform_eq_index`).\n\n**Formalization Note** All integrals are Mathlib's interval integrals `∫ u in a..b` for Lebesgue measure. In `coupledUniform` the division $\\lfloor J/2^{D-d}\\rfloor$ and the subtraction $D-d$ are those of $\\mathbb N$; the rest is computed in $\\mathbb R$.",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §3.1 (pp. 5, (14)–(15) and $U=2^{-D}(J+\\frac12)$) and §3.2 (p. 6, (17)).",
+   "tags": [
+    "numerical-analysis",
+    "monte-carlo"
    ]
   }
  }

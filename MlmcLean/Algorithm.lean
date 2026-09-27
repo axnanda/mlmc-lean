@@ -409,9 +409,9 @@ theorem alg1_mse {Y P : Ω → ℝ} {Pl : ℕ → Ω → ℝ} {α ε : ℝ} {L k
 /-- **Algorithm 1 is heuristic** (Giles 2015, §3.1, p. 21: "It is important to note that this
 algorithm is heuristic; it is not guaranteed to achieve a MSE error which is less than `ε²`").  On
 every probability space, for all `α`, `ε > 0` and `B`, there are integrable level approximations
-`P_ℓ` with `E[P_ℓ] → E[P]` for which Algorithm 1 stops at `L = 2` (the corrections `E[P_ℓ − P_{ℓ−1}]`
-inspected by the test vanish) while every estimator `Y` with `E[Y] = E[P_2]` has MSE at least
-`B`. -/
+`P_ℓ` with `E[P_ℓ] → E[P]` for which Algorithm 1 stops at `L = 2` (the corrections
+`E[P_ℓ − P_{ℓ−1}]` inspected by the test vanish) while every estimator `Y` with `E[Y] = E[P_2]`
+has MSE at least `B`. -/
 theorem alg1_not_guaranteed (α : ℝ) {ε : ℝ} (hε : 0 < ε) (B : ℝ) :
     ∃ (P : Ω → ℝ) (Pl : ℕ → Ω → ℝ), Integrable P μ ∧ (∀ ℓ, Integrable (Pl ℓ) μ) ∧
       Tendsto (fun ℓ => μ[Pl ℓ]) atTop (𝓝 (μ[P])) ∧
