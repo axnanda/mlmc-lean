@@ -503,7 +503,8 @@ theorem splitting_mean_variance {g : Ω₁ → Ω₂ → ℝ} (hg : Measurable (
         (μ.prod (ν.prod ν)) := by
       rw [← hmp.map_eq]
       exact (integrable_map_measure hFm.aestronglyMeasurable hmp.measurable.aemeasurable).2 hi
-    have h1 := integral_map (f := fun w : Ω₁ × (Ω₂ × Ω₂) => g w.1 w.2.1 * g w.1 w.2.2)
+    have h1 := integral_map (μ := μ.prod (Measure.infinitePi fun _ : ℕ => ν))
+      (f := fun w : Ω₁ × (Ω₂ × Ω₂) => g w.1 w.2.1 * g w.1 w.2.2)
       hmp.measurable.aemeasurable hFm.aestronglyMeasurable
     rw [hmp.map_eq, integral_prod _ hF] at h1
     have h2 : ∫ x, ∫ y, g x y.1 * g x y.2 ∂(ν.prod ν) ∂μ = B := by
