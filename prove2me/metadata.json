@@ -2712,6 +2712,130 @@
     "complexity",
     "probability"
    ]
+  },
+  "MLMC.emCoarsePath_two_mul": {
+   "theorem_title": "Haas–Giles (2025), (5): at even indices the coarse path is the Euler–Maruyama path with step $2h$ driven by the coarse increments $(Z_{2k}+Z_{2k+1})/\\sqrt2$",
+   "natural_language_statement": "Haas–Giles (2025), (5): \"the coarser path is computed as $S^c_{i+1}=S^c_i+a(S^c_{2\\lfloor i/2\\rfloor},t_{2\\lfloor i/2\\rfloor})h+b(S^c_{2\\lfloor i/2\\rfloor},t_{2\\lfloor i/2\\rfloor})\\sqrt h Z_i$, so that when $i$ is even, $S^c_{i+1}$ and $S^c_{i+2}$ are both computed using the drift and volatility evaluated based on $S^c_i,t_i$.\" Giles (2015), §5.1: \"The multilevel coupling is achieved by using the same underlying driving Brownian path for the coarse and fine paths; this is accomplished by summing the Brownian increments for the fine path timesteps to obtain the Brownian increments for the coarse timesteps.\" \n\nFor all $a,b:\\mathbb R\\times\\mathbb R\\to\\mathbb R$, $h,S_0\\in\\mathbb R$, every sequence $z$ and every $k\\in\\mathbb N$,\n$$\nS^c_{2k}=\\hat S_k,\n$$\nwhere $S^c$ is the coarse path with step $h$ driven by $z$ (`emCoarsePath`) and $\\hat S$ is the Euler–Maruyama path with step $2h$ driven by $\\big((z_{2j}+z_{2j+1})/\\sqrt2\\big)_j$ (`emPath`, `pairAvg`).",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §2, eq. (5), p. 3; M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §5.1, p. 29.",
+   "explanation": "This holds by the definition of `emCoarsePath`: for an even index $2k$ it is the value at $k$ of the Euler–Maruyama path with step $2h$ driven by the coarse increments. That this definition is the path of (5) is `emCoarsePath_succ` together with `eq_emCoarsePath`.",
+   "tags": [
+    "numerical-analysis"
+   ]
+  },
+  "MLMC.emCoarsePath_succ": {
+   "theorem_title": "Haas–Giles (2025), (5): the coarse path satisfies $S^c_{i+1}=S^c_i+a(S^c_{2\\lfloor i/2\\rfloor},t_{2\\lfloor i/2\\rfloor})h+b(S^c_{2\\lfloor i/2\\rfloor},t_{2\\lfloor i/2\\rfloor})\\sqrt h Z_i$",
+   "natural_language_statement": "Haas–Giles (2025), (5): \"the coarser path is computed as $S^c_{i+1}=S^c_i+a(S^c_{2\\lfloor i/2\\rfloor},t_{2\\lfloor i/2\\rfloor})h+b(S^c_{2\\lfloor i/2\\rfloor},t_{2\\lfloor i/2\\rfloor})\\sqrt h Z_i$, so that when $i$ is even, $S^c_{i+1}$ and $S^c_{i+2}$ are both computed using the drift and volatility evaluated based on $S^c_i,t_i$.\" Giles (2015), §5.1: \"The multilevel coupling is achieved by using the same underlying driving Brownian path for the coarse and fine paths; this is accomplished by summing the Brownian increments for the fine path timesteps to obtain the Brownian increments for the coarse timesteps.\" \n\nFor all $a,b:\\mathbb R\\times\\mathbb R\\to\\mathbb R$, $h,S_0\\in\\mathbb R$, every sequence $z$ and every $i\\in\\mathbb N$, the coarse path $S^c$ (`emCoarsePath`) satisfies\n$$\nS^c_{i+1}=S^c_i+a\\big(S^c_{2\\lfloor i/2\\rfloor},\\,t_{2\\lfloor i/2\\rfloor}\\big)\\,h+b\\big(S^c_{2\\lfloor i/2\\rfloor},\\,t_{2\\lfloor i/2\\rfloor}\\big)\\,\\sqrt h\\,z_i,\\qquad t_j=jh .\n$$\nIn other words, two coarse sub-steps of size $h$ with frozen coefficients make one Euler–Maruyama step of size $2h$ with the increment $(z_{2k}+z_{2k+1})/\\sqrt2$.",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §2, eq. (5), p. 3; M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §5.1, p. 29.",
+   "explanation": "Write $i=2k$ or $i=2k+1$. For $i=2k$ the claim is the definition of $S^c_{2k+1}$. For $i=2k+1$, let $\\hat S$ be the Euler–Maruyama path with step $2h$ driven by $w_k=(z_{2k}+z_{2k+1})/\\sqrt2$, and $A=a(\\hat S_k,2kh)$, $B=b(\\hat S_k,2kh)$. Then\n$$\nS^c_{2k+2}=\\hat S_{k+1}=\\hat S_k+2Ah+B\\sqrt{2h}\\,w_k,\n$$\nwhile the right-hand side of (5) is $\\hat S_k+Ah+B\\sqrt h\\,z_{2k}+Ah+B\\sqrt h\\,z_{2k+1}$. These agree because $\\sqrt{2h}=\\sqrt2\\sqrt h$ and $\\sqrt2\\,w_k=z_{2k}+z_{2k+1}$, and because $k\\cdot2h=(2k)h$.",
+   "tags": [
+    "numerical-analysis"
+   ]
+  },
+  "MLMC.eq_emCoarsePath": {
+   "theorem_title": "Haas–Giles (2025), (5): the recursion (5) with $S^c_0=S_0$ has exactly one solution, the coarse path",
+   "natural_language_statement": "Haas–Giles (2025), (5): \"the coarser path is computed as $S^c_{i+1}=S^c_i+a(S^c_{2\\lfloor i/2\\rfloor},t_{2\\lfloor i/2\\rfloor})h+b(S^c_{2\\lfloor i/2\\rfloor},t_{2\\lfloor i/2\\rfloor})\\sqrt h Z_i$, so that when $i$ is even, $S^c_{i+1}$ and $S^c_{i+2}$ are both computed using the drift and volatility evaluated based on $S^c_i,t_i$.\" Giles (2015), §5.1: \"The multilevel coupling is achieved by using the same underlying driving Brownian path for the coarse and fine paths; this is accomplished by summing the Brownian increments for the fine path timesteps to obtain the Brownian increments for the coarse timesteps.\" \n\nLet $a,b:\\mathbb R\\times\\mathbb R\\to\\mathbb R$, $h,S_0\\in\\mathbb R$ and a sequence $z$. If a sequence $(S^c_i)_{i\\in\\mathbb N}$ satisfies $S^c_0=S_0$ and, for every $i$,\n$$\nS^c_{i+1}=S^c_i+a\\big(S^c_{2\\lfloor i/2\\rfloor},\\,t_{2\\lfloor i/2\\rfloor}\\big)\\,h+b\\big(S^c_{2\\lfloor i/2\\rfloor},\\,t_{2\\lfloor i/2\\rfloor}\\big)\\,\\sqrt h\\,z_i,\\qquad t_j=jh,\n$$\nthen $S^c$ is the coarse path `emCoarsePath` with step $h$ driven by $z$.",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §2, eq. (5), p. 3.",
+   "explanation": "Strong induction on $i$. For $i=0$ both sequences start at $S_0$. For $i+1$, both sequences satisfy (5) (`emCoarsePath_succ`), and the right-hand side of (5) only involves the indices $i$ and $2\\lfloor i/2\\rfloor\\le i$, where the two sequences agree by the induction hypothesis.",
+   "tags": [
+    "numerical-analysis"
+   ]
+  },
+  "MLMC.map_pairSum_gaussian": {
+   "theorem_title": "Giles (2015), §5.1: if $Z_0,Z_1$ are independent standard normal variables, then $(Z_0+Z_1)/\\sqrt2$ is standard normal",
+   "natural_language_statement": "Haas–Giles (2025), (5): \"the coarser path is computed as $S^c_{i+1}=S^c_i+a(S^c_{2\\lfloor i/2\\rfloor},t_{2\\lfloor i/2\\rfloor})h+b(S^c_{2\\lfloor i/2\\rfloor},t_{2\\lfloor i/2\\rfloor})\\sqrt h Z_i$, so that when $i$ is even, $S^c_{i+1}$ and $S^c_{i+2}$ are both computed using the drift and volatility evaluated based on $S^c_i,t_i$.\" Giles (2015), §5.1: \"The multilevel coupling is achieved by using the same underlying driving Brownian path for the coarse and fine paths; this is accomplished by summing the Brownian increments for the fine path timesteps to obtain the Brownian increments for the coarse timesteps.\" \n\nLet $\\mu=N(0,1)^{\\otimes2}$ be the law of two independent standard normal variables on $\\mathbb R^2$ (Mathlib's product measure of two copies of `gaussianReal 0 1`). Then the image of $\\mu$ under $(y_0,y_1)\\mapsto(y_0+y_1)/\\sqrt2$ is $N(0,1)$.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §5.1, p. 29; I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §2, eqs. (4)–(5), p. 3.",
+   "explanation": "The two coordinates are independent under the product measure and each has law $N(0,1)$. The sum of independent Gaussians is Gaussian with the sums of the means and of the variances (`gaussianReal_add_gaussianReal_of_indepFun`), so $Z_0+Z_1\\sim N(0,2)$. Dividing by $\\sqrt2$ gives $N(0/\\sqrt2,\\;2/(\\sqrt2)^2)=N(0,1)$ (`gaussianReal_map_div_const`).",
+   "tags": [
+    "probability"
+   ]
+  },
+  "MLMC.measurePreserving_pairAvg": {
+   "theorem_title": "Giles (2015), §5.1: the coarse increments $((Z_{2k}+Z_{2k+1})/\\sqrt2)_k$ of i.i.d. standard normals are again i.i.d. standard normal",
+   "natural_language_statement": "Haas–Giles (2025), (5): \"the coarser path is computed as $S^c_{i+1}=S^c_i+a(S^c_{2\\lfloor i/2\\rfloor},t_{2\\lfloor i/2\\rfloor})h+b(S^c_{2\\lfloor i/2\\rfloor},t_{2\\lfloor i/2\\rfloor})\\sqrt h Z_i$, so that when $i$ is even, $S^c_{i+1}$ and $S^c_{i+2}$ are both computed using the drift and volatility evaluated based on $S^c_i,t_i$.\" Giles (2015), §5.1: \"The multilevel coupling is achieved by using the same underlying driving Brownian path for the coarse and fine paths; this is accomplished by summing the Brownian increments for the fine path timesteps to obtain the Brownian increments for the coarse timesteps.\" \n\nThe map $z\\mapsto\\big((z_{2k}+z_{2k+1})/\\sqrt2\\big)_{k\\in\\mathbb N}$ from $\\mathbb R^{\\mathbb N}$ to $\\mathbb R^{\\mathbb N}$ is measurable and maps the law $N(0,1)^{\\otimes\\mathbb N}$ of an independent standard normal sequence to itself.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §5.1, p. 29; I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §2, eqs. (4)–(5), p. 3.",
+   "explanation": "Factor the map into three measure-preserving steps.\n\n1. Reindex the coordinates by the injection $(k,i)\\mapsto2k+i$ of $\\mathbb N\\times\\{0,1\\}$ into $\\mathbb N$. The product measure maps to the product measure over $\\mathbb N\\times\\{0,1\\}$ (`Measure.map_infinitePi_infinitePi_of_inj`).\n2. Curry to a sequence of pairs. The product over $\\mathbb N\\times\\{0,1\\}$ maps to the product over $\\mathbb N$ of the products over $\\{0,1\\}$ (`Measure.infinitePi_map_curry`).\n3. Apply $(y_0,y_1)\\mapsto(y_0+y_1)/\\sqrt2$ to each pair. A coordinatewise map sends the product to the product of the image laws (`Measure.infinitePi_map_pi`), and each image law is $N(0,1)$ by `map_pairSum_gaussian`.\n\nThe composite is $z\\mapsto\\big((z_{2k}+z_{2k+1})/\\sqrt2\\big)_k$.",
+   "tags": [
+    "probability"
+   ]
+  },
+  "MLMC.emCoarse_eq": {
+   "theorem_title": "Haas–Giles (2025), (4)–(5): the coarse approximation on level $\\ell+1$ is the fine level-$\\ell$ approximation driven by the coarse increments",
+   "natural_language_statement": "Haas–Giles (2025), (5): \"the coarser path is computed as $S^c_{i+1}=S^c_i+a(S^c_{2\\lfloor i/2\\rfloor},t_{2\\lfloor i/2\\rfloor})h+b(S^c_{2\\lfloor i/2\\rfloor},t_{2\\lfloor i/2\\rfloor})\\sqrt h Z_i$, so that when $i$ is even, $S^c_{i+1}$ and $S^c_{i+2}$ are both computed using the drift and volatility evaluated based on $S^c_i,t_i$.\" Giles (2015), §5.1: \"The multilevel coupling is achieved by using the same underlying driving Brownian path for the coarse and fine paths; this is accomplished by summing the Brownian increments for the fine path timesteps to obtain the Brownian increments for the coarse timesteps.\" \n\nFor $a,b$, $T,S_0$, payoffs $\\Phi$, $\\ell\\in\\mathbb N$ and every sequence $z$,\n$$\nP^c_\\ell(z)=P^f_\\ell\\Big(\\big((z_{2k}+z_{2k+1})/\\sqrt2\\big)_k\\Big),\n$$\nwhere $P^f_\\ell$ (`emFine`) is the payoff $\\Phi_\\ell$ of the Euler–Maruyama path with step $T2^{-\\ell}$, and $P^c_\\ell$ (`emCoarse`) is the payoff $\\Phi_\\ell$ of the coarse path with step $T2^{-(\\ell+1)}$ at the even indices.",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §2, eqs. (4)–(5), p. 3; M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §5.1, p. 29.",
+   "explanation": "By `emCoarsePath_two_mul`, the coarse path at the index $2k$ is the Euler–Maruyama path with step $2\\cdot T2^{-(\\ell+1)}=T2^{-\\ell}$ driven by the coarse increments, evaluated at $k$.",
+   "tags": [
+    "multilevel-monte-carlo",
+    "numerical-analysis"
+   ]
+  },
+  "MLMC.integral_emCoarse": {
+   "theorem_title": "Giles (2015), (2.4) for Euler–Maruyama: $\\mathbb E[P^c_\\ell]=\\mathbb E[P^f_\\ell]$, the coarse payoff on level $\\ell+1$ has the mean of the fine payoff on level $\\ell$",
+   "natural_language_statement": "Giles (2015), §2.1, p. 8: MLMC with different fine and coarse approximations needs \"the identity $\\mathbb E[P^f_\\ell]=\\mathbb E[P^c_\\ell]$ (2.4)\". Haas–Giles (2025), (5): \"the coarser path is computed as $S^c_{i+1}=S^c_i+a(S^c_{2\\lfloor i/2\\rfloor},t_{2\\lfloor i/2\\rfloor})h+b(S^c_{2\\lfloor i/2\\rfloor},t_{2\\lfloor i/2\\rfloor})\\sqrt h Z_i$, so that when $i$ is even, $S^c_{i+1}$ and $S^c_{i+2}$ are both computed using the drift and volatility evaluated based on $S^c_i,t_i$.\" Giles (2015), §5.1: \"The multilevel coupling is achieved by using the same underlying driving Brownian path for the coarse and fine paths; this is accomplished by summing the Brownian increments for the fine path timesteps to obtain the Brownian increments for the coarse timesteps.\" \n\nFor $a,b$, $T,S_0$, payoffs $\\Phi$ and $\\ell\\in\\mathbb N$, if the fine approximation $P^f_\\ell$ (`emFine`) is a.e. strongly measurable with respect to $N(0,1)^{\\otimes\\mathbb N}$, then\n$$\n\\int P^c_\\ell\\,dN(0,1)^{\\otimes\\mathbb N}=\\int P^f_\\ell\\,dN(0,1)^{\\otimes\\mathbb N},\n$$\nwhere $P^c_\\ell$ is the coarse approximation (`emCoarse`) computed in a level-$(\\ell+1)$ sample.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §2.1, (2.4), p. 8, and §5.1, p. 29; I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §2, eqs. (4)–(5).",
+   "explanation": "By `emCoarse_eq`, $P^c_\\ell=P^f_\\ell\\circ\\mathrm{pairAvg}$. The map $\\mathrm{pairAvg}$ preserves $N(0,1)^{\\otimes\\mathbb N}$ (`measurePreserving_pairAvg`), so the two integrals are equal (change of variables for a measure-preserving map).",
+   "tags": [
+    "multilevel-monte-carlo",
+    "probability"
+   ]
+  },
+  "MLMC.em_mlmc_theorem1": {
+   "theorem_title": "Giles (2015), Theorem 1 for the Euler–Maruyama MLMC estimator with the coupling of Haas–Giles (4)–(5): (2.4) is derived, and the complexity bounds hold",
+   "natural_language_statement": "Giles (2015), §2.1, Theorem 1, with the fine/coarse corrections of §2.1 and §5.1, and Haas–Giles (2025), (3)–(5).\n\nLet $(\\Omega,\\mathcal F,\\mu)$ be a probability space. Let $a,b:\\mathbb R\\times\\mathbb R\\to\\mathbb R$, $T,S_0\\in\\mathbb R$, payoffs $\\Phi_\\ell$, and $P:\\mathbb R^{\\mathbb N}\\to\\mathbb R$ integrable with respect to $N(0,1)^{\\otimes\\mathbb N}$ (the quantity of interest). Let $P^f_\\ell$ and $P^c_\\ell$ be the fine and coarse approximations (`emFine`, `emCoarse`); assume that every $P^f_\\ell$ is measurable and square-integrable. Let the inputs $\\omega^{(\\ell,n)}:\\Omega\\to\\mathbb R^{\\mathbb N}$ ($(\\ell,n)\\in\\mathbb N^2$) be mutually independent, each with law $N(0,1)^{\\otimes\\mathbb N}$. Let the costs $\\mathrm{cost}_{\\ell,n}$ be integrable with $\\mathbb E[\\mathrm{cost}_{\\ell,n}]=C_\\ell$. Let $\\alpha,\\beta,\\gamma,c_1,c_2,c_3>0$ with $\\alpha\\ge\\frac12\\min(\\beta,\\gamma)$, and assume\n\n(i) $|\\mathbb E[P^f_\\ell-P]|\\le c_1\\,2^{-\\alpha\\ell}$;\n\n(iii) $\\mathbb V[Y_\\ell]\\le c_2\\,2^{-\\beta\\ell}$ for the corrections $Y_0=P^f_0$ and $Y_{\\ell+1}=P^f_{\\ell+1}-P^c_\\ell$ (`fineCoarseDiff`);\n\n(iv) $C_\\ell\\le c_3\\,2^{\\gamma\\ell}$.\n\nThen there is $c_4>0$ such that for every $0<\\varepsilon<e^{-1}$ there are $L$ and $N_\\ell\\ge1$ for which the estimator $Y=\\sum_{\\ell=0}^{L}N_\\ell^{-1}\\sum_{n<N_\\ell}Y_\\ell(\\omega^{(\\ell,n)})$ satisfies\n$$\n\\mathbb E\\big[(Y-\\mathbb E[P])^2\\big]<\\varepsilon^2,\\qquad\\mathbb E\\Big[\\sum_{\\ell\\le L}\\sum_{n<N_\\ell}\\mathrm{cost}_{\\ell,n}\\Big]\\le c_4\\,\\mathrm{bound}(\\varepsilon),\n$$\nwith $\\mathrm{bound}(\\varepsilon)=\\varepsilon^{-2}$, $\\varepsilon^{-2}(\\log\\varepsilon)^2$ or $\\varepsilon^{-2-(\\gamma-\\beta)/\\alpha}$ according as $\\beta>\\gamma$, $\\beta=\\gamma$, $\\beta<\\gamma$ (`complexityBound`).\n\n**Formalization Note** Unlike the general theorem, condition (2.4) is not assumed: it is proved (`integral_emCoarse`).",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §2.1, Theorem 1 and (2.4), and §5.1; I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §2, eqs. (3)–(5).",
+   "explanation": "Apply `giles_theorem1_fineCoarse`. Its extra hypotheses are derived. Since $P^c_\\ell=P^f_\\ell\\circ\\mathrm{pairAvg}$ (`emCoarse_eq`) and $\\mathrm{pairAvg}$ is measure-preserving (`measurePreserving_pairAvg`), each $P^c_\\ell$ is measurable and square-integrable. Identity (2.4), $\\mathbb E[P^f_\\ell]=\\mathbb E[P^c_\\ell]$, is `integral_emCoarse`.",
+   "tags": [
+    "multilevel-monte-carlo",
+    "complexity",
+    "probability"
+   ]
+  },
+  "MLMC.variance_sub_le_two_mul": {
+   "theorem_title": "Giles (2015), §5.1: for square-integrable $X,Y$, $\\mathbb V[X-Y]\\le2(\\mathbb V[X]+\\mathbb V[Y])$",
+   "natural_language_statement": "Giles (2015), §5.1, p. 29: \"For Lipschitz payoff functions $P$ … for which $|P(S_1)-P(S_2)|\\le K\\|S_1-S_2\\|$, we have $\\mathbb V[P-P_\\ell]\\le\\mathbb E[(P-P_\\ell)^2]\\le K^2\\,\\mathbb E[\\|S-\\hat S_\\ell\\|^2]$, and $V_\\ell\\equiv\\mathbb V[P_\\ell-P_{\\ell-1}]\\le2\\big(\\mathbb V[P-P_\\ell]+\\mathbb V[P-P_{\\ell-1}]\\big)$, and hence $V_\\ell=O(h_\\ell)$.\" \n\nLet $(\\Omega,\\mathcal F,\\mu)$ be a probability space and $X,Y\\in L^2(\\mu)$ real. Then\n$$\n\\mathbb V[X-Y]\\le2\\big(\\mathbb V[X]+\\mathbb V[Y]\\big).\n$$",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §5.1, p. 29.",
+   "explanation": "With $m=\\mathbb E[X]$ and $n=\\mathbb E[Y]$, $\\mathbb V[X-Y]=\\mathbb E[((X-m)-(Y-n))^2]$. Pointwise $(u-v)^2\\le2u^2+2v^2$ because $2u^2+2v^2-(u-v)^2=(u+v)^2\\ge0$. Integrating gives $\\mathbb V[X-Y]\\le2\\,\\mathbb E[(X-m)^2]+2\\,\\mathbb E[(Y-n)^2]$.",
+   "tags": [
+    "probability"
+   ]
+  },
+  "MLMC.variance_levelDiff_le": {
+   "theorem_title": "Giles (2015), §5.1: $V_\\ell=\\mathbb V[P_\\ell-P_{\\ell-1}]\\le2\\big(\\mathbb V[P-P_\\ell]+\\mathbb V[P-P_{\\ell-1}]\\big)$",
+   "natural_language_statement": "Giles (2015), §5.1, p. 29: \"For Lipschitz payoff functions $P$ … for which $|P(S_1)-P(S_2)|\\le K\\|S_1-S_2\\|$, we have $\\mathbb V[P-P_\\ell]\\le\\mathbb E[(P-P_\\ell)^2]\\le K^2\\,\\mathbb E[\\|S-\\hat S_\\ell\\|^2]$, and $V_\\ell\\equiv\\mathbb V[P_\\ell-P_{\\ell-1}]\\le2\\big(\\mathbb V[P-P_\\ell]+\\mathbb V[P-P_{\\ell-1}]\\big)$, and hence $V_\\ell=O(h_\\ell)$.\" \n\nLet $(\\Omega,\\mathcal F,\\mu)$ be a probability space and $P,P_1,P_2\\in L^2(\\mu)$ real. Then\n$$\n\\mathbb V[P_1-P_2]\\le2\\big(\\mathbb V[P-P_1]+\\mathbb V[P-P_2]\\big).\n$$\nWith $P_1=P_\\ell$ and $P_2=P_{\\ell-1}$ this is the paper's bound on $V_\\ell$.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §5.1, p. 29.",
+   "explanation": "$P_1-P_2=(P-P_2)-(P-P_1)$. Apply `variance_sub_le_two_mul` to $X=P-P_2$ and $Y=P-P_1$.",
+   "tags": [
+    "multilevel-monte-carlo",
+    "probability"
+   ]
+  },
+  "MLMC.variance_sub_le_of_lipschitz": {
+   "theorem_title": "Giles (2015), §5.1: Lipschitz payoffs, $\\mathbb V[P-P_\\ell]\\le\\mathbb E[(P-P_\\ell)^2]\\le K^2\\,\\mathbb E[\\|S-\\hat S_\\ell\\|^2]$",
+   "natural_language_statement": "Giles (2015), §5.1, p. 29: \"For Lipschitz payoff functions $P$ … for which $|P(S_1)-P(S_2)|\\le K\\|S_1-S_2\\|$, we have $\\mathbb V[P-P_\\ell]\\le\\mathbb E[(P-P_\\ell)^2]\\le K^2\\,\\mathbb E[\\|S-\\hat S_\\ell\\|^2]$, and $V_\\ell\\equiv\\mathbb V[P_\\ell-P_{\\ell-1}]\\le2\\big(\\mathbb V[P-P_\\ell]+\\mathbb V[P-P_{\\ell-1}]\\big)$, and hence $V_\\ell=O(h_\\ell)$.\" \n\nLet $(\\Omega,\\mathcal F,\\mu)$ be a probability space. Let $P,P_\\ell,D:\\Omega\\to\\mathbb R$ with $P-P_\\ell$ a.e. strongly measurable and $D^2$ integrable, and let $K\\in\\mathbb R$ with $|P-P_\\ell|\\le K\\,D$ pointwise (for a $K$-Lipschitz payoff, $D=\\|S-\\hat S_\\ell\\|$). Then $(P-P_\\ell)^2$ is integrable and\n$$\n\\mathbb V[P-P_\\ell]\\le\\mathbb E\\big[(P-P_\\ell)^2\\big]\\le K^2\\,\\mathbb E[D^2].\n$$",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §5.1, p. 29.",
+   "explanation": "Pointwise $(P-P_\\ell)^2=|P-P_\\ell|^2\\le(KD)^2=K^2D^2$, since $0\\le|P-P_\\ell|\\le KD$. This bound makes $(P-P_\\ell)^2$ integrable, and integrating it gives the second inequality. The first inequality is $\\mathbb V[X]\\le\\mathbb E[X^2]$ on a probability space (`variance_le_expectation_sq`).",
+   "tags": [
+    "probability"
+   ]
+  },
+  "MLMC.variance_levelDiff_of_strong": {
+   "theorem_title": "Giles (2015), §5.1: a mean-square rate $\\mathbb E[(P-P_\\ell)^2]\\le c\\,2^{-\\beta\\ell}$ gives $\\mathbb V[P_{\\ell+1}-P_\\ell]\\le2c(1+2^\\beta)\\,2^{-\\beta(\\ell+1)}$",
+   "natural_language_statement": "Giles (2015), §5.1, p. 29: \"For Lipschitz payoff functions $P$ … for which $|P(S_1)-P(S_2)|\\le K\\|S_1-S_2\\|$, we have $\\mathbb V[P-P_\\ell]\\le\\mathbb E[(P-P_\\ell)^2]\\le K^2\\,\\mathbb E[\\|S-\\hat S_\\ell\\|^2]$, and $V_\\ell\\equiv\\mathbb V[P_\\ell-P_{\\ell-1}]\\le2\\big(\\mathbb V[P-P_\\ell]+\\mathbb V[P-P_{\\ell-1}]\\big)$, and hence $V_\\ell=O(h_\\ell)$.\" The variance rate $\\beta$ of Theorem 1 is therefore the mean-square convergence rate of the approximations; with a strong error $\\mathbb E\\|S-\\hat S\\|^2=O(h)$ and Lipschitz payoffs it is the rate of $h_\\ell$.\n\nLet $(\\Omega,\\mathcal F,\\mu)$ be a probability space, $P\\in L^2(\\mu)$ and $P_\\ell\\in L^2(\\mu)$ for $\\ell\\in\\mathbb N$. Let $c,\\beta\\in\\mathbb R$ with $\\mathbb E[(P-P_\\ell)^2]\\le c\\,2^{-\\beta\\ell}$ for every $\\ell$. Then for every $\\ell$\n$$\n\\mathbb V[P_{\\ell+1}-P_\\ell]\\le2c\\,(1+2^\\beta)\\,2^{-\\beta(\\ell+1)}.\n$$",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §5.1, pp. 29–30.",
+   "explanation": "By `variance_levelDiff_le`, $\\mathbb V[P_{\\ell+1}-P_\\ell]\\le2(\\mathbb V[P-P_{\\ell+1}]+\\mathbb V[P-P_\\ell])$. Each variance is at most the second moment, so it is at most $c\\,2^{-\\beta k}$. Finally $2^{-\\beta\\ell}=2^\\beta\\cdot2^{-\\beta(\\ell+1)}$.",
+   "tags": [
+    "multilevel-monte-carlo",
+    "probability"
+   ]
+  },
+  "MLMC.em_complexity": {
+   "theorem_title": "Giles (2015), §5.1: Euler–Maruyama MLMC with $(\\alpha,\\beta,\\gamma)=(1,1,1)$ or $(2,2,2)$ has Theorem 1 complexity $\\varepsilon^{-2}(\\log\\varepsilon)^2$",
+   "natural_language_statement": "Giles (2015), §5.1, p. 30: \"If $h_\\ell=4^{-\\ell}h_0$ … then this gives $\\alpha=2$, $\\beta=2$ and $\\gamma=2$. Alternatively, if $h_\\ell=2^{-\\ell}h_0$ with twice as many timesteps on each successive level … then $\\alpha=1$, $\\beta=1$ and $\\gamma=1$. In either case, Theorem 1 gives the complexity to achieve a root-mean-square error of $\\varepsilon$ to be $O(\\varepsilon^{-2}(\\log\\varepsilon)^2)$.\"\n\nFor every $\\varepsilon\\in\\mathbb R$, the complexity bound of Theorem 1 (`complexityBound`) satisfies\n$$\n\\mathrm{bound}_{1,1,1}(\\varepsilon)=\\mathrm{bound}_{2,2,2}(\\varepsilon)=\\varepsilon^{-2}(\\log\\varepsilon)^2 .\n$$",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §5.1, p. 30.",
+   "explanation": "In both cases $\\beta=\\gamma$, the middle case of Theorem 1 (`complexityBound_of_eq`).",
+   "tags": [
+    "complexity",
+    "multilevel-monte-carlo"
+   ]
   }
  },
  "definitions": {
@@ -2900,6 +3024,16 @@
    "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §9.1, pp. 57–58 of the author's version (the quantity E_Z[f(E_W[g(Z,W)])], the nested MC estimator, M_ℓ = 2^ℓ inner samples, and the antithetic estimator Y_ℓ).",
    "tags": [
     "multilevel-monte-carlo",
+    "probability"
+   ]
+  },
+  "MLMC_EulerMaruyama": {
+   "definition_title": "Haas–Giles (2025), (2), (4)–(5): the Euler–Maruyama path, the coarse path with frozen coefficients, the coarse increments $(Z_{2k}+Z_{2k+1})/\\sqrt2$ and the level approximations",
+   "natural_language_statement": "Haas–Giles (2025), §2, and Giles (2015), §5.1: the solution of the SDE $dS_t=a(S_t,t)\\,dt+b(S_t,t)\\,dW_t$ is approximated by the Euler–Maruyama scheme, driven by independent standard normal increments $Z_0,Z_1,\\dots$. The coarse path of a level-$\\ell$ sample reuses the fine increments.\n\nThroughout, $a,b:\\mathbb R\\times\\mathbb R\\to\\mathbb R$ are the drift and the volatility (as functions of the state and the time), $h\\in\\mathbb R$ is the step, $S_0\\in\\mathbb R$ the initial value, and $z=(z_0,z_1,\\dots)$ a sequence of real numbers (the normal increments).\n\n**`emPath`**. The Euler–Maruyama path (Haas–Giles (2) and (4)): $S_0=S_0$ and, with $t_i=ih$,\n$$\nS_{i+1}=S_i+a(S_i,t_i)\\,h+b(S_i,t_i)\\,\\sqrt h\\,z_i .\n$$\n\n**`pairAvg`**. The coarse increments: $\\mathrm{pairAvg}(z)_k=(z_{2k}+z_{2k+1})/\\sqrt2$.\n\n**`emCoarsePath`**. The coarse path of Haas–Giles (5): at even indices $S^c_{2k}$ is the Euler–Maruyama path with step $2h$ driven by $\\mathrm{pairAvg}(z)$ evaluated at $k$, and\n$$\nS^c_{2k+1}=S^c_{2k}+a(S^c_{2k},t_{2k})\\,h+b(S^c_{2k},t_{2k})\\,\\sqrt h\\,z_{2k}.\n$$\n(The theorems `emCoarsePath_succ` and `eq_emCoarsePath` show that this is exactly the sequence defined by the recursion (5).)\n\n**`stdNormalSeq`**. The law $N(0,1)^{\\otimes\\mathbb N}$ of an independent sequence of standard normal increments: Mathlib's infinite product measure `Measure.infinitePi` of the constant family `gaussianReal 0 1`.\n\n**`emFine`**. For $T\\in\\mathbb R$ and payoffs $\\Phi_\\ell:\\mathbb R^{\\mathbb N}\\to\\mathbb R$ (functions of the path), the fine level-$\\ell$ approximation $P^f_\\ell(z)=\\Phi_\\ell\\big(\\text{Euler–Maruyama path with step }T2^{-\\ell}\\text{ driven by }z\\big)$.\n\n**`emCoarse`**. The coarse level-$\\ell$ approximation inside a level-$(\\ell+1)$ sample: $P^c_\\ell(z)=\\Phi_\\ell\\big(k\\mapsto S^c_{2k}\\big)$, where $S^c$ is the coarse path with step $T2^{-(\\ell+1)}$ driven by $z$.\n\n**Formalization Note** Times are $t_i=ih$ with the index cast to $\\mathbb R$. Payoffs are arbitrary functions of the path sequence; their measurability and integrability are hypotheses of the theorems that need them.",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §2, eqs. (2), (4), (5); M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §5.1, p. 29.",
+   "tags": [
+    "multilevel-monte-carlo",
+    "numerical-analysis",
     "probability"
    ]
   }

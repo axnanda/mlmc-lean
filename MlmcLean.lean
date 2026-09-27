@@ -28,8 +28,10 @@
 --   split, the randomised estimator's half cost
 -- * `MlmcLean.NestedSimulation` — Giles §9: nested simulation, the antithetic difference, moment
 --   bounds, the exponents of §9.1–§9.2
--- * `MlmcLean.NestedMLMC` — Giles §9.1: the nested MLMC estimator, its expectation, the moments of
---   the inner means
+-- * `MlmcLean.NestedMLMC` — Giles §9.1: the nested MLMC estimator, its expectation, the rates
+--   α = 1, β = 2 and the complexity O(ε⁻²)
+-- * `MlmcLean.EulerMaruyama` — Haas–Giles (2), (4)–(5), Giles §5.1: the Euler–Maruyama fine/coarse
+--   coupling, (2.4), Theorem 1 for it, the variance rate from the strong rate
 import MlmcLean.Allocation
 import MlmcLean.Estimator
 import MlmcLean.LevelDiff
@@ -57,3 +59,4 @@ import MlmcLean.ApproxNormal
 import MlmcLean.CostComparison
 import MlmcLean.NestedSimulation
 import MlmcLean.NestedMLMC
+import MlmcLean.EulerMaruyama

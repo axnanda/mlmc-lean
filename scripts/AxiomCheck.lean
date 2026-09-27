@@ -243,6 +243,19 @@ import MlmcLean
 #print axioms MLMC.nested_bias_rate
 #print axioms MLMC.nested_mlmc_complexity
 #print axioms MLMC.nested_mlmc_complexity_iid
+#print axioms MLMC.emCoarsePath_two_mul
+#print axioms MLMC.emCoarsePath_succ
+#print axioms MLMC.eq_emCoarsePath
+#print axioms MLMC.map_pairSum_gaussian
+#print axioms MLMC.measurePreserving_pairAvg
+#print axioms MLMC.emCoarse_eq
+#print axioms MLMC.integral_emCoarse
+#print axioms MLMC.em_mlmc_theorem1
+#print axioms MLMC.variance_sub_le_two_mul
+#print axioms MLMC.variance_levelDiff_le
+#print axioms MLMC.variance_sub_le_of_lipschitz
+#print axioms MLMC.variance_levelDiff_of_strong
+#print axioms MLMC.em_complexity
 -- helper lemmas that the prove2.me generator promotes to nodes
 #print axioms MLMC.sqrt_Vb_mul_Cb
 #print axioms MLMC.two_rpow_levelL_le
