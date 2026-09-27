@@ -309,6 +309,26 @@ import MlmcLean
 #print axioms MLMC.errorBound_eq_div_pow
 #print axioms MLMC.errorShare_succ
 #print axioms MLMC.variance_extended_le_two_mul
+#print axioms MLMC.gbmStep_eq
+#print axioms MLMC.gbmPath_succ
+#print axioms MLMC.gbmPath_eq_prod
+#print axioms MLMC.abs_con1_con2
+#print axioms MLMC.integral_sq_mul1_le
+#print axioms MLMC.integral_sq_sum1_le
+#print axioms MLMC.integral_sq_gbmPath_le
+#print axioms MLMC.integral_sq_mul2_le
+#print axioms MLMC.perturbed_sub_eq
+#print axioms MLMC.abs_perturbed_sub_le
+#print axioms MLMC.integral_abs_perturbed_sub_le
+#print axioms MLMC.integral_abs_roundFixed_path_sub_le
+#print axioms MLMC.abs_ml2rWeight_le
+#print axioms MLMC.sum_abs_ml2rWeight_le
+#print axioms MLMC.abs_ml2r_coeff_le
+#print axioms MLMC.ml2rLevel_bias
+#print axioms MLMC.ml2rLevel_lt_sqrt_levelL
+#print axioms MLMC.ml2r_mse_cost
+#print axioms MLMC.ml2r_complexity_eq
+#print axioms MLMC.ml2r_complexity_lt
 -- helper lemmas that the prove2.me generator promotes to nodes
 #print axioms MLMC.sqrt_Vb_mul_Cb
 #print axioms MLMC.two_rpow_levelL_le
