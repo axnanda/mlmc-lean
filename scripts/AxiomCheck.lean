@@ -210,6 +210,20 @@ import MlmcLean
 #print axioms MLMC.tendsto_equal_split_cost
 #print axioms MLMC.tendsto_split_cost
 #print axioms MLMC.randomised_half_cost
+#print axioms MLMC.antithetic_quadratic
+#print axioms MLMC.convexOn_half_sq_sub_add
+#print axioms MLMC.abs_midpoint_sub_avg_le
+#print axioms MLMC.abs_taylor_first_le
+#print axioms MLMC.abs_deriv_sub_le_of_deriv2
+#print axioms MLMC.abs_midpoint_sub_avg_le_of_deriv2
+#print axioms MLMC.mimc_diff_sq
+#print axioms MLMC.abs_mimc_diff_sq_le
+#print axioms MLMC.abs_mimc_diff_sq_le_rpow
+#print axioms MLMC.nested_complexity
+#print axioms MLMC.nested_mimc_complexity
+#print axioms MLMC.integrable_pow_of_pow_four
+#print axioms MLMC.moments_add_indep
+#print axioms MLMC.moments_sum_indep
 -- helper lemmas that the prove2.me generator promotes to nodes
 #print axioms MLMC.sqrt_Vb_mul_Cb
 #print axioms MLMC.two_rpow_levelL_le

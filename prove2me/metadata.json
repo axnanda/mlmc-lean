@@ -2398,6 +2398,138 @@
     "complexity",
     "optimization"
    ]
+  },
+  "MLMC.antithetic_quadratic": {
+   "theorem_title": "Giles (2015), §9.1: for quadratic $f$ ($f''\\equiv K$) the antithetic difference $f(\\frac{A+B}2)-\\frac{f(A)}2-\\frac{f(B)}2$ is exactly $-\\frac K8(A-B)^2$, not $-\\frac K4(A-B)^2$",
+   "natural_language_statement": "Giles (2015), §9.1: nested simulation estimates $\\mathbb E_Z\\big[f(\\mathbb E_W[g(Z,W)])\\big]$. On level $\\ell$ the inner expectation is replaced by the mean of $M_\\ell=2^\\ell$ inner samples, and one outer sample of the correction $Y_\\ell$ is the antithetic difference $f\\big(\\tfrac12(A_1+A_2)\\big)-\\tfrac12f(A_1)-\\tfrac12f(A_2)$, where $A_1,A_2$ are the means of the two halves of the inner samples.\n\nThe paper writes $A_i=\\mathbb E[g(Z,W)]+\\Delta g_i$ and states (p. 58) that if $f$ is twice differentiable, a Taylor series expansion gives\n$$\nY_\\ell\\approx-\\frac1{4N_\\ell}\\sum_{n=1}^{N_\\ell}f''\\big(\\mathbb E[g(Z^{(n)},W)]\\big)\\big(\\Delta g^{(n)}_1-\\Delta g^{(n)}_2\\big)^2 .\n$$\n\nThis result computes the difference exactly when $f$ is quadratic, where the second-order Taylor expansion is exact. It shows that the coefficient should be $-\\frac18$ rather than $-\\frac14$.\n\nLet $c_0,c_1,K\\in\\mathbb R$, let $f(x)=c_0+c_1x+\\frac K2x^2$ for all $x\\in\\mathbb R$ (so $f''\\equiv K$), and let $A,B\\in\\mathbb R$. Then\n$$\nf\\Big(\\frac{A+B}2\\Big)-\\frac{f(A)}2-\\frac{f(B)}2=-\\frac K8\\,(A-B)^2 .\n$$\nMoreover, if $K\\ne0$ and $A\\ne B$, then\n$$\nf\\Big(\\frac{A+B}2\\Big)-\\frac{f(A)}2-\\frac{f(B)}2\\ne-\\frac K4\\,(A-B)^2 .\n$$\n\nWith $A=\\mathbb E[g]+\\Delta g_1$ and $B=\\mathbb E[g]+\\Delta g_2$ we have $A-B=\\Delta g_1-\\Delta g_2$, so the paper's coefficient $-\\frac14$ should be $-\\frac18$. The orders of magnitude $\\mathbb E[Y_\\ell]=O(M_\\ell^{-1})$ and $V_\\ell=O(M_\\ell^{-2})$ derived from the expansion are unaffected.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §9.1, p. 58 of the author's version (the Taylor series expansion of Y_ℓ).",
+   "explanation": "Substitute $f$ and expand: the constant and linear terms cancel, and\n$$\n\\frac K2\\Big(\\frac{A+B}2\\Big)^2-\\frac K4A^2-\\frac K4B^2=\\frac K8\\big(A^2+2AB+B^2-2A^2-2B^2\\big)=-\\frac K8(A-B)^2 .\n$$\nIf the difference also equaled $-\\frac K4(A-B)^2$, then $\\frac K8(A-B)^2=0$, which is impossible when $K\\ne0$ and $A\\ne B$.",
+   "tags": [
+    "multilevel-monte-carlo",
+    "real-analysis"
+   ]
+  },
+  "MLMC.convexOn_half_sq_sub_add": {
+   "theorem_title": "Giles (2015), §9.1: if $f'$ is $K$-Lipschitz, then $\\frac K2x^2-f(x)$ and $\\frac K2x^2+f(x)$ are convex on $\\mathbb R$",
+   "natural_language_statement": "Giles (2015), §9.1: nested simulation estimates $\\mathbb E_Z\\big[f(\\mathbb E_W[g(Z,W)])\\big]$. On level $\\ell$ the inner expectation is replaced by the mean of $M_\\ell=2^\\ell$ inner samples, and one outer sample of the correction $Y_\\ell$ is the antithetic difference $f\\big(\\tfrac12(A_1+A_2)\\big)-\\tfrac12f(A_1)-\\tfrac12f(A_2)$, where $A_1,A_2$ are the means of the two halves of the inner samples. This lemma underlies the rigorous form of the paper's Taylor expansion (p. 58).\n\nLet $K\\in\\mathbb R$ and assume that $f:\\mathbb R\\to\\mathbb R$ is differentiable with derivative $f'$, and $f'$ is $K$-Lipschitz: $|f'(y)-f'(x)|\\le K(y-x)$ for all $x\\le y$. Then the two functions\n$$\nx\\mapsto\\frac K2x^2-f(x)\\qquad\\text{and}\\qquad x\\mapsto\\frac K2x^2+f(x)\n$$\nare convex on $\\mathbb R$.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §9.1, p. 58 of the author's version (used for the Taylor series expansion of Y_ℓ).",
+   "explanation": "Both functions are differentiable, with derivatives $Kx-f'(x)$ and $Kx+f'(x)$. For $x\\le y$ the Lipschitz bound gives $-K(y-x)\\le f'(y)-f'(x)\\le K(y-x)$, so both derivatives are monotone. A differentiable function on $\\mathbb R$ with monotone derivative is convex (`Monotone.convexOn_univ_of_deriv`).",
+   "tags": [
+    "real-analysis"
+   ]
+  },
+  "MLMC.abs_midpoint_sub_avg_le": {
+   "theorem_title": "Giles (2015), §9.1: if $f'$ is $K$-Lipschitz, the antithetic difference satisfies $|f(\\frac{A+B}2)-\\frac{f(A)}2-\\frac{f(B)}2|\\le\\frac K8(A-B)^2$",
+   "natural_language_statement": "Giles (2015), §9.1: nested simulation estimates $\\mathbb E_Z\\big[f(\\mathbb E_W[g(Z,W)])\\big]$. On level $\\ell$ the inner expectation is replaced by the mean of $M_\\ell=2^\\ell$ inner samples, and one outer sample of the correction $Y_\\ell$ is the antithetic difference $f\\big(\\tfrac12(A_1+A_2)\\big)-\\tfrac12f(A_1)-\\tfrac12f(A_2)$, where $A_1,A_2$ are the means of the two halves of the inner samples.\n\nThe paper writes $A_i=\\mathbb E[g(Z,W)]+\\Delta g_i$ and states (p. 58) that if $f$ is twice differentiable, a Taylor series expansion gives\n$$\nY_\\ell\\approx-\\frac1{4N_\\ell}\\sum_{n=1}^{N_\\ell}f''\\big(\\mathbb E[g(Z^{(n)},W)]\\big)\\big(\\Delta g^{(n)}_1-\\Delta g^{(n)}_2\\big)^2 .\n$$\n\nThis result is a rigorous form of the expansion, with the correct constant (see `antithetic_quadratic`).\n\nLet $K\\in\\mathbb R$ and assume that $f:\\mathbb R\\to\\mathbb R$ is differentiable with derivative $f'$, and $f'$ is $K$-Lipschitz: $|f'(y)-f'(x)|\\le K(y-x)$ for all $x\\le y$. Then for all $A,B\\in\\mathbb R$\n$$\n\\Big|f\\Big(\\frac{A+B}2\\Big)-\\frac{f(A)}2-\\frac{f(B)}2\\Big|\\le\\frac K8\\,(A-B)^2 .\n$$\n\nWith $A-B=\\Delta g_1-\\Delta g_2$ this bounds one outer sample of $Y_\\ell$ by $\\frac K8(\\Delta g_1-\\Delta g_2)^2$.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §9.1, p. 58 of the author's version (the Taylor series expansion of Y_ℓ).",
+   "explanation": "Let $m=\\frac{A+B}2=\\frac12A+\\frac12B$. By `convexOn_half_sq_sub_add` the functions $\\frac K2x^2\\mp f(x)$ are convex, so the midpoint inequality gives\n$$\n\\frac K2m^2\\mp f(m)\\le\\frac12\\Big(\\frac K2A^2\\mp f(A)\\Big)+\\frac12\\Big(\\frac K2B^2\\mp f(B)\\Big).\n$$\nSince $\\frac12A^2+\\frac12B^2-m^2=\\frac14(A-B)^2$, the two inequalities read $\\mp\\big(f(m)-\\frac{f(A)}2-\\frac{f(B)}2\\big)\\le\\frac K8(A-B)^2$.",
+   "tags": [
+    "multilevel-monte-carlo",
+    "real-analysis"
+   ]
+  },
+  "MLMC.abs_taylor_first_le": {
+   "theorem_title": "Giles (2015), §9.1: if $f'$ is $K$-Lipschitz, then $|f(y)-f(x)-f'(x)(y-x)|\\le\\frac K2(y-x)^2$ (first-order Taylor bound, for the bias of the nested approximation)",
+   "natural_language_statement": "Giles (2015), §9.1: nested simulation estimates $\\mathbb E_Z\\big[f(\\mathbb E_W[g(Z,W)])\\big]$. On level $\\ell$ the inner expectation is replaced by the mean of $M_\\ell=2^\\ell$ inner samples, and one outer sample of the correction $Y_\\ell$ is the antithetic difference $f\\big(\\tfrac12(A_1+A_2)\\big)-\\tfrac12f(A_1)-\\tfrac12f(A_2)$, where $A_1,A_2$ are the means of the two halves of the inner samples. The level-$\\ell$ approximation $P_\\ell=f(A)$ uses the inner mean $A$ in place of $\\mathbb E_W[g(Z,W)]$; its bias is controlled by a first-order Taylor bound.\n\nLet $K\\in\\mathbb R$ and assume that $f:\\mathbb R\\to\\mathbb R$ is differentiable with derivative $f'$, and $f'$ is $K$-Lipschitz: $|f'(y)-f'(x)|\\le K(y-x)$ for all $x\\le y$. Then for all $x,y\\in\\mathbb R$\n$$\n\\big|f(y)-f(x)-f'(x)(y-x)\\big|\\le\\frac K2\\,(y-x)^2 .\n$$",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §9.1, pp. 57–58 of the author's version (the nested approximation P_ℓ and its Taylor expansion).",
+   "explanation": "By `convexOn_half_sq_sub_add` the functions $\\varphi_\\mp(t)=\\frac K2t^2\\mp f(t)$ are convex, with derivative $Kx\\mp f'(x)$ at $x$. A differentiable convex function lies above its tangent lines: comparing the slope $\\frac{\\varphi(y)-\\varphi(x)}{y-x}$ with the derivative at the left endpoint (if $x<y$) or at the right endpoint (if $y<x$) gives $\\varphi(x)+\\varphi'(x)(y-x)\\le\\varphi(y)$. For $\\varphi_\\mp$ this reads\n$$\n\\mp\\big(f(y)-f(x)-f'(x)(y-x)\\big)\\le\\frac K2y^2-\\frac K2x^2-Kx(y-x)=\\frac K2(y-x)^2 .\n$$",
+   "tags": [
+    "real-analysis"
+   ]
+  },
+  "MLMC.abs_deriv_sub_le_of_deriv2": {
+   "theorem_title": "Giles (2015), §9.1: if $f'$ has derivative $f''$ with $|f''|\\le K$, then $|f'(y)-f'(x)|\\le K(y-x)$ for $x\\le y$",
+   "natural_language_statement": "Giles (2015), §9.1, p. 58, assumes \"$f$ is twice differentiable\". This lemma turns a bound on $f''$ into the Lipschitz condition on $f'$ used by `abs_midpoint_sub_avg_le` and `abs_taylor_first_le`.\n\nLet $f',f'':\\mathbb R\\to\\mathbb R$ and $K\\in\\mathbb R$. Assume that $f'$ is differentiable with derivative $f''$ everywhere, and that $|f''(x)|\\le K$ for all $x$. Then for all $x\\le y$\n$$\n|f'(y)-f'(x)|\\le K\\,(y-x).\n$$",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §9.1, p. 58 of the author's version (\"if f is twice differentiable\").",
+   "explanation": "By the mean value inequality on $\\mathbb R$ (`image_sub_le_mul_sub_of_deriv_le` and `mul_sub_le_image_sub_of_le_deriv`), the bounds $-K\\le f''\\le K$ give $-K(y-x)\\le f'(y)-f'(x)\\le K(y-x)$ for $x\\le y$.",
+   "tags": [
+    "real-analysis"
+   ]
+  },
+  "MLMC.abs_midpoint_sub_avg_le_of_deriv2": {
+   "theorem_title": "Giles (2015), §9.1: if $f$ is twice differentiable with $|f''|\\le K$, then $|f(\\frac{A+B}2)-\\frac{f(A)}2-\\frac{f(B)}2|\\le\\frac K8(A-B)^2$",
+   "natural_language_statement": "Giles (2015), §9.1: nested simulation estimates $\\mathbb E_Z\\big[f(\\mathbb E_W[g(Z,W)])\\big]$. On level $\\ell$ the inner expectation is replaced by the mean of $M_\\ell=2^\\ell$ inner samples, and one outer sample of the correction $Y_\\ell$ is the antithetic difference $f\\big(\\tfrac12(A_1+A_2)\\big)-\\tfrac12f(A_1)-\\tfrac12f(A_2)$, where $A_1,A_2$ are the means of the two halves of the inner samples.\n\nThe paper writes $A_i=\\mathbb E[g(Z,W)]+\\Delta g_i$ and states (p. 58) that if $f$ is twice differentiable, a Taylor series expansion gives\n$$\nY_\\ell\\approx-\\frac1{4N_\\ell}\\sum_{n=1}^{N_\\ell}f''\\big(\\mathbb E[g(Z^{(n)},W)]\\big)\\big(\\Delta g^{(n)}_1-\\Delta g^{(n)}_2\\big)^2 .\n$$\n\nThis result is the rigorous form of the expansion under the paper's hypothesis that $f$ is twice differentiable, with a bounded second derivative.\n\nLet $f,f',f'':\\mathbb R\\to\\mathbb R$ and $K\\in\\mathbb R$. Assume that $f$ has derivative $f'$ and $f'$ has derivative $f''$ everywhere, and that $|f''(x)|\\le K$ for all $x$. Then for all $A,B\\in\\mathbb R$\n$$\n\\Big|f\\Big(\\frac{A+B}2\\Big)-\\frac{f(A)}2-\\frac{f(B)}2\\Big|\\le\\frac K8\\,(A-B)^2 .\n$$",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §9.1, p. 58 of the author's version (the Taylor series expansion of Y_ℓ).",
+   "explanation": "By `abs_deriv_sub_le_of_deriv2`, $f'$ is $K$-Lipschitz; apply `abs_midpoint_sub_avg_le`.",
+   "tags": [
+    "multilevel-monte-carlo",
+    "real-analysis"
+   ]
+  },
+  "MLMC.mimc_diff_sq": {
+   "theorem_title": "Giles (2015), §9.2: the difference of squares $(a_1-b_1)^2-(a_2-b_2)^2=((a_1+a_2)-(b_1+b_2))((a_1-a_2)-(b_1-b_2))$",
+   "natural_language_statement": "Giles (2015), §9.2, p. 60: in the MIMC treatment of nested simulation the Taylor expansion of $Y_\\ell$ involves $\\big(\\Delta g^{(n)}_{1,\\ell_2}-\\Delta g^{(n)}_{2,\\ell_2}\\big)^2-\\big(\\Delta g^{(n)}_{1,\\ell_2-1}-\\Delta g^{(n)}_{2,\\ell_2-1}\\big)^2$, and \"The difference of squares can be re-arranged as\" a product of a sum and a difference.\n\nFor all $a_1,a_2,b_1,b_2\\in\\mathbb R$,\n$$\n(a_1-b_1)^2-(a_2-b_2)^2=\\big((a_1+a_2)-(b_1+b_2)\\big)\\big((a_1-a_2)-(b_1-b_2)\\big).\n$$\n\nIn the paper $a_1=\\Delta g_{1,\\ell_2}$, $a_2=\\Delta g_{1,\\ell_2-1}$, $b_1=\\Delta g_{2,\\ell_2}$ and $b_2=\\Delta g_{2,\\ell_2-1}$.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §9.2, p. 60 of the author's version (\"The difference of squares can be re-arranged as\").",
+   "explanation": "$(a_1-b_1)^2-(a_2-b_2)^2=\\big((a_1-b_1)+(a_2-b_2)\\big)\\big((a_1-b_1)-(a_2-b_2)\\big)$, and the two factors are $(a_1+a_2)-(b_1+b_2)$ and $(a_1-a_2)-(b_1-b_2)$.",
+   "tags": [
+    "multi-index-monte-carlo"
+   ]
+  },
+  "MLMC.abs_mimc_diff_sq_le": {
+   "theorem_title": "Giles (2015), §9.2: if $|a_1+a_2|,|b_1+b_2|\\le s$ and $|a_1-a_2|,|b_1-b_2|\\le t$, then $|(a_1-b_1)^2-(a_2-b_2)^2|\\le4st$",
+   "natural_language_statement": "Giles (2015), §9.2, p. 60: \"Due to the Central Limit Theorem, we have $\\Delta g^{(n)}_{1,\\ell_2}+\\Delta g^{(n)}_{1,\\ell_2-1}=O(2^{-\\ell_1/2})$ … and assuming first order strong convergence we also have $\\Delta g^{(n)}_{1,\\ell_2}-\\Delta g^{(n)}_{1,\\ell_2-1}=O(2^{-\\ell_1/2-\\ell_2})$ … Combining these results we obtain\" that the difference of squares is $O(2^{-\\ell_1-\\ell_2})$. This result is the combination step.\n\nLet $a_1,a_2,b_1,b_2,s,t\\in\\mathbb R$ with\n$$\n|a_1+a_2|\\le s,\\quad|b_1+b_2|\\le s,\\quad|a_1-a_2|\\le t,\\quad|b_1-b_2|\\le t .\n$$\nThen\n$$\n\\big|(a_1-b_1)^2-(a_2-b_2)^2\\big|\\le4st .\n$$",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §9.2, p. 60 of the author's version (\"Combining these results we obtain\").",
+   "explanation": "By `mimc_diff_sq` the left side is $\\big|(a_1+a_2)-(b_1+b_2)\\big|\\cdot\\big|(a_1-a_2)-(b_1-b_2)\\big|$. The first factor is at most $2s$ and the second at most $2t$ by the triangle inequality, and $2s\\ge0$.",
+   "tags": [
+    "multi-index-monte-carlo"
+   ]
+  },
+  "MLMC.abs_mimc_diff_sq_le_rpow": {
+   "theorem_title": "Giles (2015), §9.2: with the rates $O(2^{-\\ell_1/2})$ and $O(2^{-\\ell_1/2-\\ell_2})$, the difference of squares is at most $4c^2\\,2^{-\\ell_1-\\ell_2}$",
+   "natural_language_statement": "Giles (2015), §9.2, p. 60: from the rates $\\Delta g_{i,\\ell_2}+\\Delta g_{i,\\ell_2-1}=O(2^{-\\ell_1/2})$ (Central Limit Theorem) and $\\Delta g_{i,\\ell_2}-\\Delta g_{i,\\ell_2-1}=O(2^{-\\ell_1/2-\\ell_2})$ (first order strong convergence), \"Combining these results we obtain\" that the difference of squares is $O(2^{-\\ell_1-\\ell_2})$.\n\nLet $a_1,a_2,b_1,b_2,c,\\ell_1,\\ell_2\\in\\mathbb R$ with\n$$\n|a_1+a_2|,\\ |b_1+b_2|\\le c\\,2^{-\\ell_1/2}\\qquad\\text{and}\\qquad|a_1-a_2|,\\ |b_1-b_2|\\le c\\,2^{-\\ell_1/2-\\ell_2}.\n$$\nThen\n$$\n\\big|(a_1-b_1)^2-(a_2-b_2)^2\\big|\\le4c^2\\,2^{-\\ell_1-\\ell_2}.\n$$\n\n**Formalization Note** $\\ell_1,\\ell_2$ are real numbers and the powers of $2$ are `Real.rpow`.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §9.2, p. 60 of the author's version (\"Combining these results we obtain\" the order O(2^(−ℓ₁−ℓ₂))).",
+   "explanation": "Apply `abs_mimc_diff_sq_le` with $s=c\\,2^{-\\ell_1/2}$ and $t=c\\,2^{-\\ell_1/2-\\ell_2}$, and use $2^{-\\ell_1/2}\\cdot2^{-\\ell_1/2-\\ell_2}=2^{-\\ell_1-\\ell_2}$.",
+   "tags": [
+    "multi-index-monte-carlo",
+    "asymptotics"
+   ]
+  },
+  "MLMC.nested_complexity": {
+   "theorem_title": "Giles (2015), §9.1–§9.2: Theorem 1 bounds for nested simulation: $\\varepsilon^{-2}$ for $(1,2,1),(1,1.5,1)$, $\\varepsilon^{-2}(\\log\\varepsilon)^2$ for $(1,2,2)$, $\\varepsilon^{-2.5}$ for $(1,1.5,2)$",
+   "natural_language_statement": "Giles (2015) states the complexity of nested simulation with MLMC for four sets of exponents of Theorem 1 ($\\alpha$ weak rate, $\\beta$ variance rate, $\\gamma$ cost rate):\n\n1. §9.1, p. 58: \"For the MLMC theorem, this corresponds to $\\alpha=1,\\beta=2,\\gamma=1$, so the complexity is $O(\\varepsilon^{-2})$\";\n2. p. 58, for piecewise linear $f$ (Bujok et al.): \"$\\beta=1.5$. However, this is still sufficiently large to achieve an overall complexity which is $O(\\varepsilon^{-2})$\";\n3. §9.2, p. 59, when $g$ also needs $2^\\ell$ timesteps: \"this would still give $\\alpha=1,\\beta=2$. However, we would now have $\\gamma=2$ … This then leads to an overall MLMC complexity which is $O(\\varepsilon^{-2}(\\log\\varepsilon)^{-2})$\";\n4. p. 60: \"if the function $f$ is continuous and piecewise differentiable … in the MLMC treatment we would get $\\beta=1.5$, and hence an overall complexity which is $O(\\varepsilon^{-2.5})$\".\n\nLet $B(\\alpha,\\beta,\\gamma,\\varepsilon)$ denote the complexity bound of Theorem 1: $\\varepsilon^{-2}$ if $\\beta>\\gamma$, $\\varepsilon^{-2}(\\log\\varepsilon)^2$ if $\\beta=\\gamma$, and $\\varepsilon^{-2-(\\gamma-\\beta)/\\alpha}$ if $\\beta<\\gamma$. Then for every $\\varepsilon\\in\\mathbb R$\n$$\nB(1,2,1,\\varepsilon)=\\varepsilon^{-2},\\quad B(1,1.5,1,\\varepsilon)=\\varepsilon^{-2},\\quad B(1,2,2,\\varepsilon)=\\varepsilon^{-2}(\\log\\varepsilon)^2,\\quad B(1,1.5,2,\\varepsilon)=\\varepsilon^{-2.5}.\n$$\n\nSo cases 1, 2 and 4 agree with the paper. In case 3 the exponent of $\\log\\varepsilon$ is $2$; the $-2$ printed in the paper is a typo.\n\n**Formalization Note** $B$ is `complexityBound α β γ ε`; powers of $\\varepsilon$ are `Real.rpow`.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §9.1, p. 58, and §9.2, pp. 59–60 of the author's version (the complexities of nested simulation with MLMC).",
+   "explanation": "Cases 1 and 2 have $\\gamma<\\beta$ and case 3 has $\\beta=\\gamma$, so the bound is read off the definition (`complexityBound_of_lt`, `complexityBound_of_eq`). In case 4, $\\beta<\\gamma$ and the exponent is $-2-(2-1.5)/1=-2.5$ (`complexityBound_of_gt`).",
+   "tags": [
+    "multilevel-monte-carlo",
+    "complexity"
+   ]
+  },
+  "MLMC.nested_mimc_complexity": {
+   "theorem_title": "Giles (2015), §9.2: for MIMC nested simulation with $\\alpha=\\gamma=(1,1)$ and $\\beta=(2,2)$ or $(1.5,1.5)$, $\\eta=-1$ resp. $-\\frac12$, so the Theorem 2 bound is $\\varepsilon^{-2}$",
+   "natural_language_statement": "Giles (2015), §9.2, p. 60: \"In Theorem 2 this corresponds to $\\alpha_1=\\alpha_2=1$, $\\beta_1=\\beta_2=2$, and $\\gamma_1=\\gamma_2=1$, so the overall complexity is $O(\\varepsilon^{-2})$\", and for piecewise differentiable $f$ \"with MIMC we would have $\\beta_1=\\beta_2=1.5$ and so the complexity would remain $O(\\varepsilon^{-2})$\".\n\nTheorem 2 has the exponent $\\eta=\\max_d(\\gamma_d-\\beta_d)/\\alpha_d$, and its complexity bound $B(\\eta,e_1,e_2,\\varepsilon)$ is $\\varepsilon^{-2}$ when $\\eta<0$, $\\varepsilon^{-2}|\\log\\varepsilon|^{e_1}$ when $\\eta=0$, and $\\varepsilon^{-2-\\eta}|\\log\\varepsilon|^{e_2}$ when $\\eta>0$.\n\nLet $D=2$, $\\alpha=(1,1)$ and $\\gamma=(1,1)$. Then\n1. for $\\beta=(2,2)$: $\\eta=-1$;\n2. for $\\beta=(1.5,1.5)$: $\\eta=-\\frac12$;\n3. in both cases $B(\\eta,e_1,e_2,\\varepsilon)=\\varepsilon^{-2}$ for all $e_1,e_2,\\varepsilon\\in\\mathbb R$.\n\nHere $\\alpha_d=\\frac12\\beta_d$ in the first case. The paper's Theorem 2 allows this ($\\alpha_d\\ge\\frac12\\beta_d$) with more complicated logarithmic exponents; the bound for $\\eta<0$ does not involve them, and the formal Theorem 2 for $\\alpha_d\\ge\\frac12\\beta_d$ is `giles_theorem2_boundary`.\n\n**Formalization Note** $\\eta$ is `mimcEta α β γ` and $B$ is `mimcBound`; the vectors are constant functions on `Fin 2`.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §9.2, p. 60 of the author's version (\"In Theorem 2 this corresponds to α₁ = α₂ = 1, β₁ = β₂ = 2, and γ₁ = γ₂ = 1\").",
+   "explanation": "For constant vectors every direction gives the same ratio $(\\gamma_d-\\beta_d)/\\alpha_d$, namely $(1-2)/1=-1$ resp. $(1-1.5)/1=-\\frac12$, so the maximum $\\eta$ is this value. Since $\\eta<0$, the bound is $\\varepsilon^{-2}$ (`mimcBound_of_neg`).",
+   "tags": [
+    "multi-index-monte-carlo",
+    "complexity"
+   ]
+  },
+  "MLMC.integrable_pow_of_pow_four": {
+   "theorem_title": "Giles (2015), §9.1: on a finite measure space, if $\\mathbb E[Y^4]<\\infty$ then $Y^k$ is integrable for every $k\\le4$",
+   "natural_language_statement": "Giles (2015), §9.1, p. 58: \"By the Central Limit Theorem, $\\Delta g^{(n)}_1,\\Delta g^{(n)}_2=O(M_\\ell^{-1/2})$ and therefore $f''(\\mathbb E[g(Z^{(n)},W)])(\\Delta g^{(n)}_1-\\Delta g^{(n)}_2)^2=O(M_\\ell^{-1})$. It follows that $\\mathbb E[Y_\\ell]=O(M_\\ell^{-1})$ and $V_\\ell=O(M_\\ell^{-2})$.\" The deviations $\\Delta g_i$ are means of $M_{\\ell-1}$ independent centred terms. The needed bounds on their second and fourth moments follow from the moments of sums of independent centred variables, without the Central Limit Theorem.\n\nLet $(\\Omega,\\mathcal F,\\mu)$ be a finite measure space and $Y:\\Omega\\to\\mathbb R$ measurable with $Y^4$ integrable. Then $Y^k$ is integrable for every natural number $k\\le4$.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §9.1, p. 58 of the author's version (the moments behind Δg = O(M_ℓ^(−1/2))).",
+   "explanation": "Pointwise $|Y|^k\\le1+Y^4$: if $|Y|\\le1$ then $|Y|^k\\le1$, and if $|Y|\\ge1$ then $|Y|^k\\le|Y|^4=Y^4$. The bound $1+Y^4$ is integrable on a finite measure space, and $Y^k$ is measurable.",
+   "tags": [
+    "probability"
+   ]
+  },
+  "MLMC.moments_add_indep": {
+   "theorem_title": "Giles (2015), §9.1: for independent centred $S,X$ with finite fourth moments, $\\mathbb E[(S+X)^4]=\\mathbb E[S^4]+6\\mathbb E[S^2]\\mathbb E[X^2]+\\mathbb E[X^4]$",
+   "natural_language_statement": "Giles (2015), §9.1, p. 58: \"By the Central Limit Theorem, $\\Delta g^{(n)}_1,\\Delta g^{(n)}_2=O(M_\\ell^{-1/2})$ and therefore $f''(\\mathbb E[g(Z^{(n)},W)])(\\Delta g^{(n)}_1-\\Delta g^{(n)}_2)^2=O(M_\\ell^{-1})$. It follows that $\\mathbb E[Y_\\ell]=O(M_\\ell^{-1})$ and $V_\\ell=O(M_\\ell^{-2})$.\" The deviations $\\Delta g_i$ are means of $M_{\\ell-1}$ independent centred terms. The needed bounds on their second and fourth moments follow from the moments of sums of independent centred variables, without the Central Limit Theorem.\n\nLet $(\\Omega,\\mathcal F,\\mu)$ be a probability space and $S,X:\\Omega\\to\\mathbb R$. Assume\n\n1. $S$ and $X$ are independent and measurable;\n2. $S^4$ and $X^4$ are integrable;\n3. $\\mathbb E[S]=\\mathbb E[X]=0$.\n\nThen $(S+X)^4$ is integrable,\n$$\n\\mathbb E[(S+X)^2]=\\mathbb E[S^2]+\\mathbb E[X^2],\\qquad\\mathbb E[(S+X)^4]=\\mathbb E[S^4]+6\\,\\mathbb E[S^2]\\,\\mathbb E[X^2]+\\mathbb E[X^4].\n$$",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §9.1, p. 58 of the author's version (the moments behind Δg = O(M_ℓ^(−1/2))).",
+   "explanation": "All powers $S^k,X^k$ with $k\\le4$ are integrable (`integrable_pow_of_pow_four`). Products of functions of $S$ and of $X$ are integrable by independence, and their expectations factorise: $\\mathbb E[S^aX^b]=\\mathbb E[S^a]\\,\\mathbb E[X^b]$. Expand $(S+X)^2=S^2+2SX+X^2$ and $(S+X)^4=S^4+4S^3X+6S^2X^2+4SX^3+X^4$ and take expectations. The terms $\\mathbb E[SX]$, $\\mathbb E[S^3X]$ and $\\mathbb E[SX^3]$ vanish because $\\mathbb E[S]=\\mathbb E[X]=0$.",
+   "tags": [
+    "probability"
+   ]
+  },
+  "MLMC.moments_sum_indep": {
+   "theorem_title": "Giles (2015), §9.1: for independent centred $X_i$ with $\\mathbb E[X_i^2]=v$ and $\\mathbb E[X_i^4]\\le q$, $\\mathbb E[(\\sum_{i<n}X_i)^2]=nv$ and $\\mathbb E[(\\sum_{i<n}X_i)^4]\\le nq+3n^2v^2$",
+   "natural_language_statement": "Giles (2015), §9.1, p. 58: \"By the Central Limit Theorem, $\\Delta g^{(n)}_1,\\Delta g^{(n)}_2=O(M_\\ell^{-1/2})$ and therefore $f''(\\mathbb E[g(Z^{(n)},W)])(\\Delta g^{(n)}_1-\\Delta g^{(n)}_2)^2=O(M_\\ell^{-1})$. It follows that $\\mathbb E[Y_\\ell]=O(M_\\ell^{-1})$ and $V_\\ell=O(M_\\ell^{-2})$.\" The deviations $\\Delta g_i$ are means of $M_{\\ell-1}$ independent centred terms. The needed bounds on their second and fourth moments follow from the moments of sums of independent centred variables, without the Central Limit Theorem.\n\nLet $(\\Omega,\\mathcal F,\\mu)$ be a probability space, $X_0,X_1,\\dots:\\Omega\\to\\mathbb R$, and $v,q\\in\\mathbb R$. Assume\n\n1. the $X_i$ are mutually independent and measurable;\n2. $X_i^4$ is integrable for every $i$;\n3. $\\mathbb E[X_i]=0$, $\\mathbb E[X_i^2]=v$ and $\\mathbb E[X_i^4]\\le q$ for every $i$.\n\nThen for every $n\\in\\mathbb N$, $\\big(\\sum_{i=0}^{n-1}X_i\\big)^4$ is integrable and\n$$\n\\mathbb E\\Big[\\Big(\\sum_{i=0}^{n-1}X_i\\Big)^2\\Big]=nv,\\qquad\\mathbb E\\Big[\\Big(\\sum_{i=0}^{n-1}X_i\\Big)^4\\Big]\\le nq+3n^2v^2 .\n$$\n\nFor the mean $\\bar X_n=\\frac1n\\sum_{i<n}X_i$ this gives $\\mathbb E[\\bar X_n^2]=v/n$ and $\\mathbb E[\\bar X_n^4]\\le q/n^3+3v^2/n^2=O(n^{-2})$. These are the precise forms of \"$\\Delta g=O(M^{-1/2})$\" needed for $\\mathbb E[Y_\\ell]=O(M_\\ell^{-1})$ and $V_\\ell=O(M_\\ell^{-2})$.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §9.1, p. 58 of the author's version (\"By the Central Limit Theorem, Δg₁, Δg₂ = O(M_ℓ^(−1/2))\").",
+   "explanation": "Induction on $n$; the case $n=0$ is trivial. For the step write $S=\\sum_{i<n}X_i$. Then $S$ is independent of $X_n$, $\\mathbb E[S]=0$, and $S^4$ is integrable by the induction hypothesis. By `moments_add_indep`, $\\mathbb E[(S+X_n)^2]=nv+v$ and\n$$\n\\mathbb E[(S+X_n)^4]=\\mathbb E[S^4]+6nv\\cdot v+\\mathbb E[X_n^4]\\le nq+3n^2v^2+6nv^2+q\\le(n+1)q+3(n+1)^2v^2 .\n$$",
+   "tags": [
+    "probability"
+   ]
   }
  },
  "definitions": {

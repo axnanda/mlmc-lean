@@ -26,6 +26,8 @@
 -- * `MlmcLean.ApproxNormal` — Haas–Giles §3: approximate normals, (14)–(19), the coupling (17)
 -- * `MlmcLean.CostComparison` — Giles §1.3, §2.1–§2.2: standard MC cost, the MLMC saving, the MSE
 --   split, the randomised estimator's half cost
+-- * `MlmcLean.NestedSimulation` — Giles §9: nested simulation, the antithetic difference, moment
+--   bounds, the exponents of §9.1–§9.2
 import MlmcLean.Allocation
 import MlmcLean.Estimator
 import MlmcLean.LevelDiff
@@ -51,3 +53,4 @@ import MlmcLean.RectangularMIMC
 import MlmcLean.Algorithm
 import MlmcLean.ApproxNormal
 import MlmcLean.CostComparison
+import MlmcLean.NestedSimulation
