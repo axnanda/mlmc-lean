@@ -134,7 +134,7 @@ independent identically distributed increments, for instance `N(0,1)^{⊗ℕ}`. 
 theorem measurePreserving_swapIncrements (P : Measure ℝ) [IsProbabilityMeasure P] :
     MeasurePreserving swapIncrements (Measure.infinitePi fun _ : ℕ => P)
       (Measure.infinitePi fun _ : ℕ => P) :=
-  ⟨measurable_pi_lambda _ fun i => measurable_pi_apply _,
+  ⟨measurable_pi_lambda _ fun _ => measurable_pi_apply _,
     Measure.map_infinitePi_infinitePi_of_inj pairSwap_involutive.injective⟩
 
 /-- **Giles 2015, §5.3, pointwise**: for `f` with a `K`-Lipschitz derivative (for instance
@@ -163,9 +163,8 @@ theorem abs_antithetic_le {f f' : ℝ → ℝ} {K : ℝ} (hf : ∀ x, HasDerivAt
           (div_le_div_of_nonneg_right hb zero_le_two)) le_rfl
     _ = |f' c| * |(a + b) / 2 - c| + K / 4 * ((a - c) ^ 2 + (b - c) ^ 2) := by ring
 
-/-- `|Y| ≤ a + κ(s + t)` with `a, κ, s, t ≥ 0` gives `Y² ≤ 2a² + 4κ²(s² + t²)`. -/
-lemma sq_le_of_abs_le_add {Y a κ s t : ℝ} (ha : 0 ≤ a) (hκ : 0 ≤ κ) (hs : 0 ≤ s) (ht : 0 ≤ t)
-    (h : |Y| ≤ a + κ * (s + t)) : Y ^ 2 ≤ 2 * a ^ 2 + 4 * κ ^ 2 * (s ^ 2 + t ^ 2) := by
+/-- `|Y| ≤ a + κ(s + t)` gives `Y² ≤ 2a² + 4κ²(s² + t²)`. -/
+lemma sq_le_of_abs_le_add {Y a κ s t : ℝ} (h : |Y| ≤ a + κ * (s + t)) : Y ^ 2 ≤ 2 * a ^ 2 + 4 * κ ^ 2 * (s ^ 2 + t ^ 2) := by
   have h1 : Y ^ 2 ≤ (a + κ * (s + t)) ^ 2 := by
     rw [← sq_abs]
     exact pow_le_pow_left₀ (abs_nonneg _) h 2
@@ -191,7 +190,6 @@ theorem variance_antithetic_le {Ω : Type*} [MeasurableSpace Ω] {μ : Measure �
     (continuous_iff_continuousAt.2 fun x => (hf x).continuousAt).measurable
   have hYm : Measurable fun ω => (f (A ω) + f (B ω)) / 2 - f (C ω) :=
     (((hfm.comp hA).add (hfm.comp hB)).div_const 2).sub (hfm.comp hC)
-  have hL0 : 0 ≤ L := (abs_nonneg _).trans (hL 0)
   -- the pointwise bound on the square
   have hpt : ∀ ω, ((f (A ω) + f (B ω)) / 2 - f (C ω)) ^ 2 ≤
       2 * L ^ 2 * ((A ω + B ω) / 2 - C ω) ^ 2 +
@@ -202,8 +200,7 @@ theorem variance_antithetic_le {Ω : Type*} [MeasurableSpace Ω] {μ : Measure �
         L * |(A ω + B ω) / 2 - C ω| + |K| / 4 * ((A ω - C ω) ^ 2 + (B ω - C ω) ^ 2) := by
       refine h.trans (add_le_add (mul_le_mul_of_nonneg_right (hL _) (abs_nonneg _)) ?_)
       exact mul_le_mul_of_nonneg_right (by linarith [le_abs_self K]) (by positivity)
-    refine (sq_le_of_abs_le_add (mul_nonneg hL0 (abs_nonneg _)) (by positivity) (sq_nonneg _)
-      (sq_nonneg _) hb).trans_eq ?_
+    refine (sq_le_of_abs_le_add hb).trans_eq ?_
     rw [mul_pow, sq_abs, div_pow, sq_abs]
     ring
   have hi23 : Integrable (fun ω => (A ω - C ω) ^ 4 + (B ω - C ω) ^ 4) μ := hi2.add hi3
@@ -290,7 +287,7 @@ theorem smooth_step_eventually {g : ℝ → ℝ} (hg0 : ∀ y < -1, g y = 0) (hg
   · rw [if_neg (not_lt.2 hneg.le)]
     apply hg0
     rw [abs_of_neg hneg] at hδy
-    rw [lt_div_iff₀ hδ0]
+    rw [div_lt_iff₀ hδ0]
     linarith
   · rw [if_pos hpos']
     apply hg1

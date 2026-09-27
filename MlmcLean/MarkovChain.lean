@@ -100,7 +100,8 @@ lemma backIter_add (φ : α → E → α) (n m : ℕ) (e : ℕ → E) (x : α) :
   induction m generalizing e with
   | zero => rfl
   | succ m ih =>
-    rw [← Nat.add_assoc, backIter_succ, ih (fun k => e (k + 1)), backIter_succ φ m e] <;> rfl
+    rw [← Nat.add_assoc, backIter_succ, ih (fun k => e (k + 1)), backIter_succ φ m e]
+    rfl
 
 end backward
 
@@ -119,9 +120,11 @@ lemma noiseFrom_le {ξ : ℕ → Ω → E} (hξm : ∀ i, Measurable (ξ i)) (m 
     noiseFrom ξ m ≤ ‹MeasurableSpace Ω› :=
   iSup₂_le fun i _ => (hξm i).comap_le
 
+omit [MeasurableSpace Ω] in
 lemma noiseFrom_anti (ξ : ℕ → Ω → E) {m m' : ℕ} (h : m ≤ m') : noiseFrom ξ m' ≤ noiseFrom ξ m :=
   iSup₂_mono' fun i hi => ⟨i, Set.mem_Ici.2 (h.trans (Set.mem_Ici.1 hi)), le_rfl⟩
 
+omit [MeasurableSpace Ω] in
 lemma measurable_noise (ξ : ℕ → Ω → E) {m i : ℕ} (h : m ≤ i) : Measurable[noiseFrom ξ m] (ξ i) :=
   (comap_measurable (ξ i)).mono
     (le_iSup₂ (f := fun j (_ : j ∈ Set.Ici m) => MeasurableSpace.comap (ξ j) mE) i
@@ -241,7 +244,7 @@ theorem lintegral_dist_backIter_le (hφm : Measurable fun q : α × E => φ q.1 
           congrArg (ENNReal.ofReal ρ * ·) (lintegral_map hd hAB')
       _ ≤ ENNReal.ofReal ρ * (ENNReal.ofReal ρ ^ n *
             ∫⁻ ω, ENNReal.ofReal (dist (U ω) (V ω) ^ p) ∂μ) := by
-          refine mul_le_mul_of_nonneg_left ?_ (zero_le _)
+          refine mul_le_mul_of_nonneg_left ?_ zero_le
           rw [hA_def, hB_def]
           exact ih (m + 1) hU' hV'
       _ = ENNReal.ofReal ρ ^ (n + 1) * ∫⁻ ω, ENNReal.ofReal (dist (U ω) (V ω) ^ p) ∂μ := by
@@ -387,7 +390,7 @@ theorem lintegral_dist_start_le (hφm : Measurable fun q : α × E => φ q.1 q.2
         · exact fun j _ => (hDm j).const_mul _
     _ ≤ ∑ j ∈ range k, ENNReal.ofReal ((1 - (1 + ρ) / 2)⁻¹ * (((1 + ρ) / 2) ^ j)⁻¹) *
           (ENNReal.ofReal ρ ^ j * ∫⁻ e, ENNReal.ofReal (dist x₀ (φ x₀ e) ^ (2 * γ)) ∂ν) :=
-        Finset.sum_le_sum fun j _ => mul_le_mul_of_nonneg_left (hDj j) (zero_le _)
+        Finset.sum_le_sum fun j _ => mul_le_mul_of_nonneg_left (hDj j) zero_le
     _ = ENNReal.ofReal (∑ j ∈ range k,
           (1 - (1 + ρ) / 2)⁻¹ * (((1 + ρ) / 2) ^ j)⁻¹ * ρ ^ j) *
           ∫⁻ e, ENNReal.ofReal (dist x₀ (φ x₀ e) ^ (2 * γ)) ∂ν := by
@@ -398,7 +401,7 @@ theorem lintegral_dist_start_le (hφm : Measurable fun q : α × E => φ q.1 q.2
     _ ≤ ENNReal.ofReal (4 / (1 - ρ) ^ 2) *
           ∫⁻ e, ENNReal.ofReal (dist x₀ (φ x₀ e) ^ (2 * γ)) ∂ν :=
         mul_le_mul_of_nonneg_right (ENNReal.ofReal_le_ofReal (sum_weight_pow_le hρ0 hρ1 k))
-          (zero_le _)
+          zero_le
 
 /-- **The multilevel correction of Giles 2015, §10.1 is small** (in the `2γ`-th moment of the
 distance).  With the hypotheses of `lintegral_dist_start_le`, let the level `ℓ` path start
@@ -443,7 +446,7 @@ theorem lintegral_dist_levels_le (hφm : Measurable fun q : α × E => φ q.1 q.
         exact lintegral_congr fun ω => by rw [dist_comm]
     _ ≤ ENNReal.ofReal ρ ^ N' * (ENNReal.ofReal (4 / (1 - ρ) ^ 2) *
           ∫⁻ e, ENNReal.ofReal (dist x₀ (φ x₀ e) ^ (2 * γ)) ∂ν) :=
-        mul_le_mul_of_nonneg_left hstart (zero_le _)
+        mul_le_mul_of_nonneg_left hstart zero_le
 
 /-- **Giles 2015, §10.1: "a coupling with a multilevel correction variance which decays as `ℓ`
 increases".**  With the hypotheses of `lintegral_dist_levels_le`, let `f` be Hölder continuous with
@@ -593,7 +596,7 @@ theorem map_halfStep {Ω : Type*} [MeasurableSpace Ω] {μ : Measure Ω} [IsProb
     {X ξ : Ω → ℝ} (hX : Measurable X) (hξ : Measurable ξ) (hind : IndepFun ξ X μ)
     (hlawX : μ.map X = uniform02) (hlawξ : μ.map ξ = fairCoin) :
     μ.map (fun ω => halfStep (X ω) (ξ ω)) = uniform02 := by
-  haveI : IsProbabilityMeasure uniform02 := ⟨uniform02_univ⟩
+  have : IsProbabilityMeasure uniform02 := ⟨uniform02_univ⟩
   have hg : Measurable fun q : ℝ × ℝ => halfStep q.2 q.1 :=
     measurable_halfStep.comp (measurable_snd.prodMk measurable_fst)
   have hjoint : μ.map (fun ω => (ξ ω, X ω)) = fairCoin.prod uniform02 := by
@@ -604,7 +607,8 @@ theorem map_halfStep {Ω : Type*} [MeasurableSpace Ω] {μ : Measure Ω} [IsProb
   have hd : ∀ b : ℝ, ((Measure.dirac b).prod uniform02).map (fun q : ℝ × ℝ => halfStep q.2 q.1) =
       uniform02.map (fun x => halfStep x b) := by
     intro b
-    rw [Measure.dirac_prod, Measure.map_map hg measurable_prodMk_left] <;> rfl
+    rw [Measure.dirac_prod, Measure.map_map hg measurable_prodMk_left]
+    rfl
   rw [hcomp, ← Measure.map_map hg (hξ.prodMk hX), hjoint, fairCoin, Measure.add_prod,
     Measure.prod_smul_left, Measure.prod_smul_left, Measure.map_add _ _ hg, Measure.map_smul,
     Measure.map_smul, hd, hd, halfStep_invariant]

@@ -46,10 +46,10 @@ section rates
 variable {Ω : Type*} [MeasurableSpace Ω] {μ : Measure Ω} [IsProbabilityMeasure μ]
 
 /-- **Giles 2015, §7.1: pathwise accuracy gives `α` and `β = 2α`.**  If `|P − P_ℓ| ≤ K 2^{−pℓ}`
-everywhere, with `P` and the `P_ℓ` integrable, then `|E[P_ℓ − P]| ≤ K 2^{−pℓ}` (condition (i) of
+everywhere, with the `P_ℓ` integrable, then `|E[P_ℓ − P]| ≤ K 2^{−pℓ}` (condition (i) of
 Theorem 1 with `α = p`) and `V[P_{ℓ+1} − P_ℓ] ≤ (1 + 2^p)² K² 2^{−2p(ℓ+1)}` (condition (iii)
 with `β = 2p`). -/
-theorem rates_of_pathwise {P : Ω → ℝ} {Pl : ℕ → Ω → ℝ} {K p : ℝ} (hP : Integrable P μ)
+theorem rates_of_pathwise {P : Ω → ℝ} {Pl : ℕ → Ω → ℝ} {K p : ℝ}
     (hPl : ∀ ℓ, Integrable (Pl ℓ) μ)
     (herr : ∀ ℓ ω, |P ω - Pl ℓ ω| ≤ K * (2 : ℝ) ^ (-(p * (ℓ : ℝ)))) :
     (∀ ℓ : ℕ, |∫ ω, (Pl ℓ ω - P ω) ∂μ| ≤ K * (2 : ℝ) ^ (-(p * (ℓ : ℝ)))) ∧
@@ -108,7 +108,7 @@ theorem rates_of_pathwise {P : Ω → ℝ} {Pl : ℕ → Ω → ℝ} {K p : ℝ}
 /-- **Giles 2015, §7.1, the elliptic example: "`|P − P_ℓ| < K h_ℓ²` and therefore we have `α = 2`,
 `β = 4`"**, with `h_ℓ = 2^{−(ℓ+1)}`: `|E[P_ℓ − P]| ≤ (K/4) 2^{−2ℓ}` and
 `V[P_{ℓ+1} − P_ℓ] ≤ (25/16) K² 2^{−4(ℓ+1)}`. -/
-theorem elliptic_rates {P : Ω → ℝ} {Pl : ℕ → Ω → ℝ} {K : ℝ} (hP : Integrable P μ)
+theorem elliptic_rates {P : Ω → ℝ} {Pl : ℕ → Ω → ℝ} {K : ℝ}
     (hPl : ∀ ℓ, Integrable (Pl ℓ) μ)
     (herr : ∀ (ℓ : ℕ) ω, |P ω - Pl ℓ ω| ≤ K * ((2 : ℝ) ^ (-((ℓ : ℝ) + 1))) ^ 2) :
     (∀ ℓ : ℕ, |∫ ω, (Pl ℓ ω - P ω) ∂μ| ≤ K / 4 * (2 : ℝ) ^ (-(2 * (ℓ : ℝ)))) ∧
@@ -121,7 +121,7 @@ theorem elliptic_rates {P : Ω → ℝ} {Pl : ℕ → Ω → ℝ} {K : ℝ} (hP 
       Real.rpow_add (by norm_num),
       show (2 : ℝ) ^ (-2 : ℝ) = 1 / 4 by rw [Real.rpow_neg (by norm_num), Real.rpow_two]; norm_num]
     ring
-  have h := rates_of_pathwise (p := 2) hP hPl fun ℓ ω => (herr ℓ ω).trans_eq (hh ℓ)
+  have h := rates_of_pathwise (p := 2) hPl fun ℓ ω => (herr ℓ ω).trans_eq (hh ℓ)
   refine ⟨h.1, fun ℓ => (h.2 ℓ).trans_eq ?_⟩
   rw [show (2 : ℝ) ^ (2 : ℝ) = 4 by rw [Real.rpow_two]; norm_num,
     show 2 * (2 : ℝ) * ((ℓ : ℝ) + 1) = 4 * ((ℓ : ℝ) + 1) by ring]
