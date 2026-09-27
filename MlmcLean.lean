@@ -38,6 +38,10 @@
 --   marginals and (2.4), the moments of the coupled difference, the complexity statements
 -- * `MlmcLean.LagrangeBitWidth` — Haas–Giles §4.3, §6: (34) against (33), the Lagrange conditions
 --   (35) (sufficient and necessary) and (37), the ratio (38), the trends of §6.3, the LUT size
+-- * `MlmcLean.FixedPointPath` — Haas–Giles §4.1, §6.3: Algorithm 1 (the GBM path), the sizes
+--   (39)–(41) of its variables, the accumulation of rounding errors
+-- * `MlmcLean.ML2RComplexity` — Giles §2.3: uniform bounds on the ML2R weights, the number of
+--   levels, the costs O(ε⁻²|log ε|) (β = γ) and O(ε⁻² 2^{(γ−β)√(2 log₂(1/ε)/α)}) (β < γ)
 import MlmcLean.Allocation
 import MlmcLean.Estimator
 import MlmcLean.LevelDiff
@@ -69,3 +73,5 @@ import MlmcLean.EulerMaruyama
 import MlmcLean.Implementation
 import MlmcLean.PoissonCoupling
 import MlmcLean.LagrangeBitWidth
+import MlmcLean.FixedPointPath
+import MlmcLean.ML2RComplexity

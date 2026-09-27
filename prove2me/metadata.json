@@ -3358,6 +3358,200 @@
     "probability",
     "numerical-analysis"
    ]
+  },
+  "MLMC.gbmStep_eq": {
+   "theorem_title": "Haas–Giles (2025), Algorithm 1: one decomposed time step computes the Euler–Maruyama step (13) for geometric Brownian motion",
+   "natural_language_statement": "Haas and Giles (2025), §4.1, p. 8, Algorithm 1 \"Geometric Brownian Motion path calculation (decomposed in elementary operations to show the intermediary fixed-point variables)\":\n$h\\leftarrow T/N$; $con1\\leftarrow r\\times h$; $con2\\leftarrow\\sqrt h\\times\\sigma$; generate (approximate) random normal increments $\\tilde Z_i$ for $i=1,\\dots,N$; for $i=1,\\dots,N$: $mul1_i\\leftarrow con2\\times\\tilde Z_i$, $sum1_i\\leftarrow con1+mul1_i$, $mul2_i\\leftarrow S_i\\times sum1_i$, $S_{i+1}\\leftarrow S_i+mul2_i$. \"This algorithm details how we decomposed the operations to compute each time step from (13)\", where (13) is $\\tilde S_{i+1}=\\tilde S_i+a(\\tilde S_i,t_i)h+b(\\tilde S_i,t_i)\\sqrt h\\,\\tilde Z_i$.\n\nFor all $r,\\sigma,h,S,Z\\in\\mathbb R$,\n$$\n\\mathrm{gbmStep}(r,\\sigma,h,S,Z)=S+rS\\,h+\\sigma S\\sqrt h\\,Z ,\n$$\nwhich is (13) with the drift $a(S,t)=rS$ and the volatility $b(S,t)=\\sigma S$ of geometric Brownian motion.",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §4.1, p. 8, Algorithm 1, and (13).",
+   "explanation": "$S+S\\,(rh+\\sqrt h\\,\\sigma Z)=S+rSh+\\sigma S\\sqrt h\\,Z$.",
+   "tags": [
+    "numerical-analysis"
+   ]
+  },
+  "MLMC.gbmPath_succ": {
+   "theorem_title": "Haas–Giles (2025), Algorithm 1: each step multiplies the path by $1+sum1_i=1+rh+\\sqrt h\\,\\sigma\\,\\tilde Z_i$",
+   "natural_language_statement": "Haas and Giles (2025), §4.1, p. 8, Algorithm 1 \"Geometric Brownian Motion path calculation (decomposed in elementary operations to show the intermediary fixed-point variables)\":\n$h\\leftarrow T/N$; $con1\\leftarrow r\\times h$; $con2\\leftarrow\\sqrt h\\times\\sigma$; generate (approximate) random normal increments $\\tilde Z_i$ for $i=1,\\dots,N$; for $i=1,\\dots,N$: $mul1_i\\leftarrow con2\\times\\tilde Z_i$, $sum1_i\\leftarrow con1+mul1_i$, $mul2_i\\leftarrow S_i\\times sum1_i$, $S_{i+1}\\leftarrow S_i+mul2_i$. \"This algorithm details how we decomposed the operations to compute each time step from (13)\", where (13) is $\\tilde S_{i+1}=\\tilde S_i+a(\\tilde S_i,t_i)h+b(\\tilde S_i,t_i)\\sqrt h\\,\\tilde Z_i$.\n\nFor all $r,\\sigma,h,s_0$, increments $Z$ and $i\\in\\mathbb N$,\n$$\nS_{i+1}=S_i\\,\\big(1+rh+\\sqrt h\\,\\sigma Z_i\\big),\\qquad S=\\mathrm{gbmPath}(r,\\sigma,h,s_0,Z).\n$$",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §4.1, p. 8, Algorithm 1.",
+   "explanation": "Unfold one step and use `gbmStep_eq`.",
+   "tags": [
+    "numerical-analysis"
+   ]
+  },
+  "MLMC.gbmPath_eq_prod": {
+   "theorem_title": "Haas–Giles (2025), Algorithm 1: the path is $S_n=S_0\\prod_{i<n}(1+rh+\\sqrt h\\,\\sigma\\,\\tilde Z_i)$",
+   "natural_language_statement": "Haas and Giles (2025), §4.1, p. 8, Algorithm 1 \"Geometric Brownian Motion path calculation (decomposed in elementary operations to show the intermediary fixed-point variables)\":\n$h\\leftarrow T/N$; $con1\\leftarrow r\\times h$; $con2\\leftarrow\\sqrt h\\times\\sigma$; generate (approximate) random normal increments $\\tilde Z_i$ for $i=1,\\dots,N$; for $i=1,\\dots,N$: $mul1_i\\leftarrow con2\\times\\tilde Z_i$, $sum1_i\\leftarrow con1+mul1_i$, $mul2_i\\leftarrow S_i\\times sum1_i$, $S_{i+1}\\leftarrow S_i+mul2_i$. \"This algorithm details how we decomposed the operations to compute each time step from (13)\", where (13) is $\\tilde S_{i+1}=\\tilde S_i+a(\\tilde S_i,t_i)h+b(\\tilde S_i,t_i)\\sqrt h\\,\\tilde Z_i$.\n\nFor all $r,\\sigma,h,s_0$, increments $Z$ and $n\\in\\mathbb N$,\n$$\n\\mathrm{gbmPath}(r,\\sigma,h,s_0,Z)_n=s_0\\prod_{i=0}^{n-1}\\big(1+rh+\\sqrt h\\,\\sigma Z_i\\big).\n$$",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §4.1, p. 8, Algorithm 1.",
+   "explanation": "Induction on $n$ with `gbmPath_succ`.",
+   "tags": [
+    "numerical-analysis"
+   ]
+  },
+  "MLMC.abs_con1_con2": {
+   "theorem_title": "Haas–Giles (2025), §6.3, (39)–(40): $con1=rh$ has size $|r|h$ and $con2=\\sqrt h\\,\\sigma$ has size $|\\sigma|\\sqrt h$",
+   "natural_language_statement": "Haas and Giles (2025), §6.3, p. 13: \"In order to explain the evolution of the bit-widths we use a similar approach to [23] to estimate the size of the fixed-point variables: assume that $h\\ll\\sqrt h$ and $\\sigma,r,S_0,Z_i=O(1)$, then we obtain $con2,\\ mul1,\\ sum1,\\ mul2\\sim\\sqrt h$ (39), $con1\\sim h$ (40), $S\\sim1$. (41)\" \n\nFor all $r,\\sigma\\in\\mathbb R$ and $h\\ge0$,\n$$\n|rh|=|r|\\,h\\qquad\\text{and}\\qquad|\\sqrt h\\,\\sigma|=|\\sigma|\\sqrt h .\n$$\nSo \"$con1\\sim h$\" (40) and \"$con2\\sim\\sqrt h$\" (39) with the constants $|r|$ and $|\\sigma|$.",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §6.3, p. 13, (39) and (40).",
+   "explanation": "$|ab|=|a||b|$, $|h|=h$ and $|\\sqrt h|=\\sqrt h$.",
+   "tags": [
+    "numerical-analysis"
+   ]
+  },
+  "MLMC.integral_sq_mul1_le": {
+   "theorem_title": "Haas–Giles (2025), §6.3, (39): $mul1_i=\\sqrt h\\,\\sigma\\tilde Z_i$ has mean square at most $\\sigma^2h$",
+   "natural_language_statement": "Haas and Giles (2025), §6.3, p. 13: \"In order to explain the evolution of the bit-widths we use a similar approach to [23] to estimate the size of the fixed-point variables: assume that $h\\ll\\sqrt h$ and $\\sigma,r,S_0,Z_i=O(1)$, then we obtain $con2,\\ mul1,\\ sum1,\\ mul2\\sim\\sqrt h$ (39), $con1\\sim h$ (40), $S\\sim1$. (41)\" \n\nLet $(\\Omega,\\mathcal F,\\mu)$ be a measure space (for instance a probability space) and $Y:\\Omega\\to\\mathbb R$ with $\\int_\\Omega Y^2\\,d\\mu\\le1$ (the increment $\\tilde Z_i$, of second moment at most $1$). For $\\sigma\\in\\mathbb R$ and $h\\ge0$,\n$$\n\\int_\\Omega(\\sqrt h\\,\\sigma\\,Y)^2\\,d\\mu\\le\\sigma^2h ,\n$$\nso $mul1_i$ has root mean square at most $|\\sigma|\\sqrt h$: \"$mul1\\sim\\sqrt h$\".\n\n**Formalization Note** $\\int$ is the Bochner integral, which is $0$ for a non-integrable integrand, so no integrability hypothesis is needed.",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §6.3, p. 13, (39).",
+   "explanation": "$(\\sqrt h\\,\\sigma Y)^2=\\sigma^2hY^2$, so the mean is $\\sigma^2h\\,\\mathbb E[Y^2]\\le\\sigma^2h$.",
+   "tags": [
+    "probability",
+    "numerical-analysis"
+   ]
+  },
+  "MLMC.integral_sq_sum1_le": {
+   "theorem_title": "Haas–Giles (2025), §6.3, (39): $sum1_i=rh+\\sqrt h\\,\\sigma\\tilde Z_i$ has mean square at most $(r^2+\\sigma^2)h$ for $0\\le h\\le1$",
+   "natural_language_statement": "Haas and Giles (2025), §6.3, p. 13: \"In order to explain the evolution of the bit-widths we use a similar approach to [23] to estimate the size of the fixed-point variables: assume that $h\\ll\\sqrt h$ and $\\sigma,r,S_0,Z_i=O(1)$, then we obtain $con2,\\ mul1,\\ sum1,\\ mul2\\sim\\sqrt h$ (39), $con1\\sim h$ (40), $S\\sim1$. (41)\" \n\nLet $(\\Omega,\\mathcal F,\\mathbb P)$ be a probability space and $Y\\in L^2$ a real random variable with $\\mathbb E[Y]=0$ and $\\mathbb E[Y^2]\\le1$ (the increment $\\tilde Z_i$). For $r,\\sigma\\in\\mathbb R$ and $0\\le h\\le1$,\n$$\n\\mathbb E\\big[(rh+\\sqrt h\\,\\sigma\\,Y)^2\\big]\\le(r^2+\\sigma^2)\\,h ,\n$$\nso $sum1_i$ has root mean square $O(\\sqrt h)$: \"$sum1\\sim\\sqrt h$\" (the term $rh$ is negligible since $h\\ll\\sqrt h$).",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §6.3, p. 13, (39).",
+   "explanation": "$\\mathbb E[(a+bY)^2]=a^2+2ab\\,\\mathbb E[Y]+b^2\\mathbb E[Y^2]\\le a^2+b^2$ with $a=rh$, $b=\\sqrt h\\,\\sigma$; and $r^2h^2\\le r^2h$ for $0\\le h\\le1$.",
+   "tags": [
+    "probability",
+    "numerical-analysis"
+   ]
+  },
+  "MLMC.integral_sq_gbmPath_le": {
+   "theorem_title": "Haas–Giles (2025), §6.3, (41): the path of Algorithm 1 has $\\mathbb E[S_n^2]\\le S_0^2e^{(2|r|+r^2+\\sigma^2)nh}$, so $S\\sim1$ over a fixed horizon",
+   "natural_language_statement": "Haas and Giles (2025), §6.3, p. 13: \"In order to explain the evolution of the bit-widths we use a similar approach to [23] to estimate the size of the fixed-point variables: assume that $h\\ll\\sqrt h$ and $\\sigma,r,S_0,Z_i=O(1)$, then we obtain $con2,\\ mul1,\\ sum1,\\ mul2\\sim\\sqrt h$ (39), $con1\\sim h$ (40), $S\\sim1$. (41)\" \n\nLet $(\\Omega,\\mathcal F,\\mathbb P)$ be a probability space and $Z_0,Z_1,\\dots$ independent real random variables (the increments $\\tilde Z_i$) with $Z_i\\in L^2$, $\\mathbb E[Z_i]=0$ and $\\mathbb E[Z_i^2]\\le1$ (exact normal increments, or the approximate normals of §3). Let $r,\\sigma\\in\\mathbb R$ and $0\\le h\\le1$. Write $S_n(\\omega)=\\mathrm{gbmPath}(r,\\sigma,h,s_0,Z(\\omega))_n$ for the path of Algorithm 1 in exact arithmetic, and $c=2|r|+r^2+\\sigma^2$.\n\nThen for every $s_0\\in\\mathbb R$ and $n\\in\\mathbb N$,\n$$\n\\mathbb E\\big[S_n^2\\big]\\le s_0^2\\,e^{c\\,nh}.\n$$\nOver a fixed time horizon $nh\\le T$ this is at most $s_0^2e^{cT}$, independently of $h$: \"$S\\sim1$\".",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §6.3, p. 13, (41).",
+   "explanation": "$S_n^2=s_0^2\\prod_{i<n}(1+rh+\\sqrt h\\,\\sigma Z_i)^2$ (`gbmPath_eq_prod`). By independence the mean of the product is the product of the means, and each factor has mean at most $(1+rh)^2+\\sigma^2h\\le1+ch\\le e^{ch}$.",
+   "tags": [
+    "probability",
+    "numerical-analysis"
+   ]
+  },
+  "MLMC.integral_sq_mul2_le": {
+   "theorem_title": "Haas–Giles (2025), §6.3, (39): $mul2_i=S_i\\,sum1_i$ has mean square at most $S_0^2e^{(2|r|+r^2+\\sigma^2)ih}(r^2+\\sigma^2)h$",
+   "natural_language_statement": "Haas and Giles (2025), §6.3, p. 13: \"In order to explain the evolution of the bit-widths we use a similar approach to [23] to estimate the size of the fixed-point variables: assume that $h\\ll\\sqrt h$ and $\\sigma,r,S_0,Z_i=O(1)$, then we obtain $con2,\\ mul1,\\ sum1,\\ mul2\\sim\\sqrt h$ (39), $con1\\sim h$ (40), $S\\sim1$. (41)\" \n\nLet $(\\Omega,\\mathcal F,\\mathbb P)$ be a probability space and $Z_0,Z_1,\\dots$ independent real random variables (the increments $\\tilde Z_i$) with $Z_i\\in L^2$, $\\mathbb E[Z_i]=0$ and $\\mathbb E[Z_i^2]\\le1$ (exact normal increments, or the approximate normals of §3). Let $r,\\sigma\\in\\mathbb R$ and $0\\le h\\le1$. Write $S_n(\\omega)=\\mathrm{gbmPath}(r,\\sigma,h,s_0,Z(\\omega))_n$ for the path of Algorithm 1 in exact arithmetic, and $c=2|r|+r^2+\\sigma^2$.\n\nThen for every $s_0\\in\\mathbb R$ and $i\\in\\mathbb N$,\n$$\n\\mathbb E\\Big[\\big(S_i\\,(rh+\\sqrt h\\,\\sigma Z_i)\\big)^2\\Big]\\le s_0^2\\,e^{c\\,ih}\\,(r^2+\\sigma^2)\\,h ,\n$$\nso over a fixed horizon $ih\\le T$, $mul2_i=S_i\\times sum1_i$ has root mean square $O(\\sqrt h)$: \"$mul2\\sim\\sqrt h$\".",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §6.3, p. 13, (39).",
+   "explanation": "$S_i$ depends on $Z_0,\\dots,Z_{i-1}$ only, so $S_i^2$ and $sum1_i^2$ are independent; the mean is $s_0^2\\prod_{j<i}\\mathbb E[(1+rh+\\sqrt h\\sigma Z_j)^2]\\cdot\\mathbb E[sum1_i^2]$ (independence of the family $j\\mapsto$ (a function of $Z_j$)), bounded by `integral_sq_sum1_le` and the factor bound $e^{ch}$.",
+   "tags": [
+    "probability",
+    "numerical-analysis"
+   ]
+  },
+  "MLMC.perturbed_sub_eq": {
+   "theorem_title": "Haas–Giles (2025), §6.3: the accumulated error of a perturbed product recursion is the sum of the local errors propagated by the later multipliers",
+   "natural_language_statement": "Haas and Giles (2025), §6.3, p. 14: \"On the contrary, if the bit-widths in the low precision path generation were fixed, starting at a certain level, the accuracy would decrease. Indeed in the fixed precision case the rounding error at each time step of the Euler-Maruyama scheme is of order $O(h^{-1}2^{e_{S,\\ell}-d_{S,\\ell}})$ [1, 23] (neglecting the effect of approximate random variables) so for large time steps the net error in $S_N$ is dominated by the time step, however for small time steps the rounding errors due to the finite precision are relatively large.\" \n\nLet $m,\\rho,S,\\tilde S:\\mathbb N\\to\\mathbb R$ with $S_{k+1}=S_km_k$ (exact path), $\\tilde S_{k+1}=\\tilde S_km_k+\\rho_k$ (path with local errors $\\rho_k$) and $\\tilde S_0=S_0$. Then for every $n$,\n$$\n\\tilde S_n-S_n=\\sum_{k=0}^{n-1}\\rho_k\\prod_{j=k+1}^{n-1}m_j .\n$$",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §6.3, p. 14.",
+   "explanation": "Induction on $n$: $\\tilde S_{n+1}-S_{n+1}=(\\tilde S_n-S_n)m_n+\\rho_n$, and $\\prod_{j=k+1}^{n}m_j=\\big(\\prod_{j=k+1}^{n-1}m_j\\big)m_n$ for $k<n$ (`Finset.prod_Ico_succ_top`).",
+   "tags": [
+    "numerical-analysis"
+   ]
+  },
+  "MLMC.abs_perturbed_sub_le": {
+   "theorem_title": "Haas–Giles (2025), §6.3: if every local error is at most $u$, the accumulated error is at most $u\\sum_k|\\prod_{k<j<n}m_j|$",
+   "natural_language_statement": "Haas and Giles (2025), §6.3, p. 14: \"On the contrary, if the bit-widths in the low precision path generation were fixed, starting at a certain level, the accuracy would decrease. Indeed in the fixed precision case the rounding error at each time step of the Euler-Maruyama scheme is of order $O(h^{-1}2^{e_{S,\\ell}-d_{S,\\ell}})$ [1, 23] (neglecting the effect of approximate random variables) so for large time steps the net error in $S_N$ is dominated by the time step, however for small time steps the rounding errors due to the finite precision are relatively large.\" \n\nLet $m,\\rho,S,\\tilde S:\\mathbb N\\to\\mathbb R$ with $S_{k+1}=S_km_k$, $\\tilde S_{k+1}=\\tilde S_km_k+\\rho_k$, $\\tilde S_0=S_0$, and $|\\rho_k|\\le u$ for all $k$. Then for every $n$,\n$$\n|\\tilde S_n-S_n|\\le u\\sum_{k=0}^{n-1}\\Big|\\prod_{j=k+1}^{n-1}m_j\\Big| .\n$$",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §6.3, p. 14.",
+   "explanation": "Triangle inequality in `perturbed_sub_eq`.",
+   "tags": [
+    "numerical-analysis"
+   ]
+  },
+  "MLMC.integral_abs_perturbed_sub_le": {
+   "theorem_title": "Haas–Giles (2025), §6.3: with local rounding errors at most $u$, the expected error of the GBM path after $n$ steps is at most $u\\,n\\,e^{(2|r|+r^2+\\sigma^2)nh}$",
+   "natural_language_statement": "Haas and Giles (2025), §6.3, p. 14: \"On the contrary, if the bit-widths in the low precision path generation were fixed, starting at a certain level, the accuracy would decrease. Indeed in the fixed precision case the rounding error at each time step of the Euler-Maruyama scheme is of order $O(h^{-1}2^{e_{S,\\ell}-d_{S,\\ell}})$ [1, 23] (neglecting the effect of approximate random variables) so for large time steps the net error in $S_N$ is dominated by the time step, however for small time steps the rounding errors due to the finite precision are relatively large.\" \n\nLet $(\\Omega,\\mathcal F,\\mathbb P)$ be a probability space and $Z_0,Z_1,\\dots$ independent real random variables (the increments $\\tilde Z_i$) with $Z_i\\in L^2$, $\\mathbb E[Z_i]=0$ and $\\mathbb E[Z_i^2]\\le1$ (exact normal increments, or the approximate normals of §3). Let $r,\\sigma\\in\\mathbb R$ and $0\\le h\\le1$. Write $S_n(\\omega)=\\mathrm{gbmPath}(r,\\sigma,h,s_0,Z(\\omega))_n$ for the path of Algorithm 1 in exact arithmetic, and $c=2|r|+r^2+\\sigma^2$.\n\nLet $u\\ge0$, $s_0\\in\\mathbb R$, and let $\\tilde S_k,\\rho_k:\\Omega\\to\\mathbb R$ with $\\tilde S_0=s_0$,\n$$\n\\tilde S_{k+1}=\\tilde S_k\\,\\big(1+rh+\\sqrt h\\,\\sigma Z_k\\big)+\\rho_k,\\qquad|\\rho_k|\\le u\n$$\n(the path of Algorithm 1 perturbed by a local error of size at most $u$ at every step). Then for every $n$,\n$$\n\\mathbb E\\,|\\tilde S_n-S_n|\\le u\\,n\\,e^{c\\,nh}.\n$$\nWith $n=T/h$ steps the bound is $u\\,(T/h)\\,e^{cT}$: the error grows like $h^{-1}$ times the local error.\n\n**Formalization Note** No measurability of $\\rho_k$ is assumed; the bound holds because $|\\tilde S_n-S_n|$ is dominated by an integrable function.",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §6.3, p. 14.",
+   "explanation": "By `abs_perturbed_sub_le`, $|\\tilde S_n-S_n|\\le u\\sum_k|P_k|$ with $P_k=\\prod_{k<j<n}(1+rh+\\sqrt h\\sigma Z_j)$, and $|P_k|\\le(1+P_k^2)/2$. By independence $\\mathbb E[P_k^2]=\\prod_{k<j<n}\\mathbb E[(1+rh+\\sqrt h\\sigma Z_j)^2]\\le e^{c(n-k-1)h}\\le e^{cnh}$. Integrate the dominating function: $\\mathbb E|\\tilde S_n-S_n|\\le u\\sum_{k<n}(1+e^{cnh})/2\\le u\\,n\\,e^{cnh}$.",
+   "tags": [
+    "probability",
+    "numerical-analysis"
+   ]
+  },
+  "MLMC.integral_abs_roundFixed_path_sub_le": {
+   "theorem_title": "Haas–Giles (2025), §6.3: with fixed precision, rounding $S$ after every step gives an expected error at most $(T/h)\\,2^{e-d-1}e^{(2|r|+r^2+\\sigma^2)T}$",
+   "natural_language_statement": "Haas and Giles (2025), §6.3, p. 14: \"On the contrary, if the bit-widths in the low precision path generation were fixed, starting at a certain level, the accuracy would decrease. Indeed in the fixed precision case the rounding error at each time step of the Euler-Maruyama scheme is of order $O(h^{-1}2^{e_{S,\\ell}-d_{S,\\ell}})$ [1, 23] (neglecting the effect of approximate random variables) so for large time steps the net error in $S_N$ is dominated by the time step, however for small time steps the rounding errors due to the finite precision are relatively large.\" \n\nLet $(\\Omega,\\mathcal F,\\mathbb P)$ be a probability space and $Z_0,Z_1,\\dots$ independent real random variables (the increments $\\tilde Z_i$) with $Z_i\\in L^2$, $\\mathbb E[Z_i]=0$ and $\\mathbb E[Z_i^2]\\le1$ (exact normal increments, or the approximate normals of §3). Let $r,\\sigma\\in\\mathbb R$ and $0\\le h\\le1$. Write $S_n(\\omega)=\\mathrm{gbmPath}(r,\\sigma,h,s_0,Z(\\omega))_n$ for the path of Algorithm 1 in exact arithmetic, and $c=2|r|+r^2+\\sigma^2$.\n\nLet $0<h\\le1$, $T\\in\\mathbb R$ and $n\\in\\mathbb N$ with $nh=T$. Let $e\\in\\mathbb Z$, $d\\in\\mathbb N$, and let $\\tilde S$ be the path of Algorithm 1 in which $S$ is rounded to nearest in the fixed-point format with exponent $e$ and bit-width $d$ after every step: $\\tilde S_0=s_0$ and\n$$\n\\tilde S_{k+1}=\\mathrm{round}_{e,d}\\big(\\mathrm{gbmStep}(r,\\sigma,h,\\tilde S_k,Z_k)\\big)\n$$\n(`roundFixed e d`, the nearest point of $2^{e-d}\\mathbb Z$). Then\n$$\n\\mathbb E\\,|\\tilde S_n-S_n|\\le\\frac Th\\,2^{e-d-1}\\,e^{cT}=O\\big(h^{-1}2^{e-d}\\big).\n$$",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §6.3, p. 14, with (20).",
+   "explanation": "Each step makes the local error $\\rho_k=\\mathrm{round}_{e,d}(x)-x$ with $x=\\mathrm{gbmStep}(\\dots)=\\tilde S_k(1+rh+\\sqrt h\\sigma Z_k)$ (`gbmStep_eq`), and $|\\rho_k|\\le2^{e-d-1}$ by (20) (`abs_sub_roundFixed_le`). Apply `integral_abs_perturbed_sub_le` with $u=2^{e-d-1}$ and $n=T/h$.",
+   "tags": [
+    "probability",
+    "numerical-analysis"
+   ]
+  },
+  "MLMC.abs_ml2rWeight_le": {
+   "theorem_title": "Giles (2015), §2.3: the ML2R weights decay geometrically away from the finest level, $|w_\\ell|\\le B^2 r^{L-\\ell}$, uniformly in $L$",
+   "natural_language_statement": "Giles (2015), §2.3, p. 12: \"Because the remaining error is $O(2^{-\\alpha L^2})$, rather than the usual $O(2^{-\\alpha L})$, it is possible to obtain the usual $O(\\varepsilon)$ weak error with a value of $L$ which is the square root of the usual value. Hence, in the case $\\beta=\\gamma$ they prove that the overall cost is reduced to $O(\\varepsilon^{-2}|\\log\\varepsilon|)$, while for $\\beta<\\gamma$ the cost is reduced much more to $O(\\varepsilon^{-2}2^{(\\gamma-\\beta)\\sqrt{|\\log_2\\varepsilon|/\\alpha}})$.\" (The remaining error is in fact of order $2^{-\\alpha L(L+1)/2}$, see `ml2r_bias`.)\n\nThe ML2R weights of Giles (2015), §2.3 (`ml2rWeight α L ℓ`) are $w_\\ell=\\prod_{k\\le L,\\,k\\ne\\ell}x_k/(x_k-x_\\ell)$ with $x_k=2^{-\\alpha k}$, $\\ell=0,\\dots,L$; the coefficients of the ML2R estimator are $v_\\ell=\\sum_{\\ell'=\\ell}^{L}w_{\\ell'}$.\n\nLet $\\alpha>0$, $r=2^{-\\alpha}$ and $B=e^{r/(1-r)^2}$. For all $\\ell\\le L$,\n$$\n|w_\\ell|\\le B^2\\,r^{L-\\ell}.\n$$",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §2.3, p. 12.",
+   "explanation": "With $x_k=r^k$: for $k<\\ell$, $|x_k/(x_k-x_\\ell)|=1/(1-r^{\\ell-k})\\le e^{r^{\\ell-k}/(1-r)}$; for $k>\\ell$, $|x_k/(x_k-x_\\ell)|=r^{k-\\ell}/(1-r^{k-\\ell})$, each $r^{k-\\ell}\\le r$. The product over $k<\\ell$ is at most $e^{\\sum_{j\\ge1}r^j/(1-r)}\\le B$, and the product over $\\ell<k\\le L$ is at most $B\\,r^{L-\\ell}$.",
+   "tags": [
+    "multilevel-monte-carlo",
+    "numerical-analysis"
+   ]
+  },
+  "MLMC.sum_abs_ml2rWeight_le": {
+   "theorem_title": "Giles (2015), §2.3: the ML2R weights are bounded in $\\ell^1$ uniformly in the number of levels",
+   "natural_language_statement": "Giles (2015), §2.3, p. 12: \"Because the remaining error is $O(2^{-\\alpha L^2})$, rather than the usual $O(2^{-\\alpha L})$, it is possible to obtain the usual $O(\\varepsilon)$ weak error with a value of $L$ which is the square root of the usual value. Hence, in the case $\\beta=\\gamma$ they prove that the overall cost is reduced to $O(\\varepsilon^{-2}|\\log\\varepsilon|)$, while for $\\beta<\\gamma$ the cost is reduced much more to $O(\\varepsilon^{-2}2^{(\\gamma-\\beta)\\sqrt{|\\log_2\\varepsilon|/\\alpha}})$.\" (The remaining error is in fact of order $2^{-\\alpha L(L+1)/2}$, see `ml2r_bias`.)\n\nThe ML2R weights of Giles (2015), §2.3 (`ml2rWeight α L ℓ`) are $w_\\ell=\\prod_{k\\le L,\\,k\\ne\\ell}x_k/(x_k-x_\\ell)$ with $x_k=2^{-\\alpha k}$, $\\ell=0,\\dots,L$; the coefficients of the ML2R estimator are $v_\\ell=\\sum_{\\ell'=\\ell}^{L}w_{\\ell'}$.\n\nFor every $\\alpha>0$ and every $L\\in\\mathbb N$,\n$$\n\\sum_{\\ell=0}^{L}|w_\\ell|\\le\\mathrm{ml2rWeightBound}(\\alpha).\n$$",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §2.3, p. 12.",
+   "explanation": "By `abs_ml2rWeight_le`, $\\sum_\\ell|w_\\ell|\\le B^2\\sum_{j=0}^{L}r^j\\le B^2/(1-r)$.",
+   "tags": [
+    "multilevel-monte-carlo",
+    "numerical-analysis"
+   ]
+  },
+  "MLMC.abs_ml2r_coeff_le": {
+   "theorem_title": "Giles (2015), §2.3: the coefficients $v_\\ell=\\sum_{\\ell'\\ge\\ell}w_{\\ell'}$ of the ML2R estimator are bounded uniformly in $L$",
+   "natural_language_statement": "Giles (2015), §2.3, p. 12: \"Because the remaining error is $O(2^{-\\alpha L^2})$, rather than the usual $O(2^{-\\alpha L})$, it is possible to obtain the usual $O(\\varepsilon)$ weak error with a value of $L$ which is the square root of the usual value. Hence, in the case $\\beta=\\gamma$ they prove that the overall cost is reduced to $O(\\varepsilon^{-2}|\\log\\varepsilon|)$, while for $\\beta<\\gamma$ the cost is reduced much more to $O(\\varepsilon^{-2}2^{(\\gamma-\\beta)\\sqrt{|\\log_2\\varepsilon|/\\alpha}})$.\" (The remaining error is in fact of order $2^{-\\alpha L(L+1)/2}$, see `ml2r_bias`.)\n\nThe ML2R weights of Giles (2015), §2.3 (`ml2rWeight α L ℓ`) are $w_\\ell=\\prod_{k\\le L,\\,k\\ne\\ell}x_k/(x_k-x_\\ell)$ with $x_k=2^{-\\alpha k}$, $\\ell=0,\\dots,L$; the coefficients of the ML2R estimator are $v_\\ell=\\sum_{\\ell'=\\ell}^{L}w_{\\ell'}$.\n\nFor every $\\alpha>0$ and all $L,\\ell\\in\\mathbb N$,\n$$\n\\Big|\\sum_{k=\\ell}^{L}w_k\\Big|\\le\\mathrm{ml2rWeightBound}(\\alpha).\n$$",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §2.3, p. 12.",
+   "explanation": "$|v_\\ell|\\le\\sum_{k=\\ell}^{L}|w_k|\\le\\sum_{k=0}^{L}|w_k|$ and `sum_abs_ml2rWeight_le`.",
+   "tags": [
+    "multilevel-monte-carlo",
+    "numerical-analysis"
+   ]
+  },
+  "MLMC.ml2rLevel_bias": {
+   "theorem_title": "Giles (2015), §2.3: with $L=\\lceil\\sqrt{2\\log_2^+(2c_1/\\varepsilon)/\\alpha}\\,\\rceil$ levels the ML2R remaining error $c_1 2^{-\\alpha L(L+1)/2}$ is at most $\\varepsilon/2$",
+   "natural_language_statement": "Giles (2015), §2.3, p. 12: \"Because the remaining error is $O(2^{-\\alpha L^2})$, rather than the usual $O(2^{-\\alpha L})$, it is possible to obtain the usual $O(\\varepsilon)$ weak error with a value of $L$ which is the square root of the usual value. Hence, in the case $\\beta=\\gamma$ they prove that the overall cost is reduced to $O(\\varepsilon^{-2}|\\log\\varepsilon|)$, while for $\\beta<\\gamma$ the cost is reduced much more to $O(\\varepsilon^{-2}2^{(\\gamma-\\beta)\\sqrt{|\\log_2\\varepsilon|/\\alpha}})$.\" (The remaining error is in fact of order $2^{-\\alpha L(L+1)/2}$, see `ml2r_bias`.)\n\nLet $\\alpha,c_1,\\varepsilon>0$ and $L=\\mathrm{ml2rLevel}(\\alpha,c_1,\\varepsilon)$. Then\n$$\nc_1\\,2^{-\\alpha L(L+1)/2}\\le\\frac\\varepsilon2 .\n$$",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §2.3, p. 12.",
+   "explanation": "$L^2\\ge2\\log_2^+(2c_1/\\varepsilon)/\\alpha$, so $\\alpha L(L+1)/2\\ge\\alpha L^2/2\\ge\\log_2(2c_1/\\varepsilon)$ and $2^{-\\alpha L(L+1)/2}\\le\\varepsilon/(2c_1)$.",
+   "tags": [
+    "multilevel-monte-carlo",
+    "complexity"
+   ]
+  },
+  "MLMC.ml2rLevel_lt_sqrt_levelL": {
+   "theorem_title": "Giles (2015), §2.3: ML2R needs a number of levels of the order of the square root of the usual number",
+   "natural_language_statement": "Giles (2015), §2.3, p. 12: \"Because the remaining error is $O(2^{-\\alpha L^2})$, rather than the usual $O(2^{-\\alpha L})$, it is possible to obtain the usual $O(\\varepsilon)$ weak error with a value of $L$ which is the square root of the usual value. Hence, in the case $\\beta=\\gamma$ they prove that the overall cost is reduced to $O(\\varepsilon^{-2}|\\log\\varepsilon|)$, while for $\\beta<\\gamma$ the cost is reduced much more to $O(\\varepsilon^{-2}2^{(\\gamma-\\beta)\\sqrt{|\\log_2\\varepsilon|/\\alpha}})$.\" (The remaining error is in fact of order $2^{-\\alpha L(L+1)/2}$, see `ml2r_bias`.)\n\nFor $\\alpha>0$ and all $c_1,\\varepsilon\\in\\mathbb R$, with the usual number of levels $\\mathrm{levelL}(\\alpha,c_1,\\varepsilon/2)=\\lceil\\log_2(2c_1/\\varepsilon)/\\alpha\\rceil$ (the least $L$ with $c_1 2^{-\\alpha L}\\le\\varepsilon/2$, `levelL_bias`),\n$$\n\\mathrm{ml2rLevel}(\\alpha,c_1,\\varepsilon)<\\sqrt{2\\,\\mathrm{levelL}(\\alpha,c_1,\\varepsilon/2)}+1 .\n$$",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §2.3, p. 12.",
+   "explanation": "$\\mathrm{ml2rLevel}<\\sqrt{2\\log_2^+(2c_1/\\varepsilon)/\\alpha}+1$, and $\\log_2^+(2c_1/\\varepsilon)/\\alpha\\le\\mathrm{levelL}(\\alpha,c_1,\\varepsilon/2)$ (the ceiling, and $c_1/(\\varepsilon/2)=2c_1/\\varepsilon$).",
+   "tags": [
+    "multilevel-monte-carlo",
+    "complexity"
+   ]
+  },
+  "MLMC.ml2r_mse_cost": {
+   "theorem_title": "Giles (2015), §2.3: for any number of levels with remaining error at most $\\varepsilon/2$, the ML2R estimator reaches mean square error $<\\varepsilon^2$ at an explicit cost",
+   "natural_language_statement": "Giles (2015), §2.3, p. 12: \"Because the remaining error is $O(2^{-\\alpha L^2})$, rather than the usual $O(2^{-\\alpha L})$, it is possible to obtain the usual $O(\\varepsilon)$ weak error with a value of $L$ which is the square root of the usual value. Hence, in the case $\\beta=\\gamma$ they prove that the overall cost is reduced to $O(\\varepsilon^{-2}|\\log\\varepsilon|)$, while for $\\beta<\\gamma$ the cost is reduced much more to $O(\\varepsilon^{-2}2^{(\\gamma-\\beta)\\sqrt{|\\log_2\\varepsilon|/\\alpha}})$.\" (The remaining error is in fact of order $2^{-\\alpha L(L+1)/2}$, see `ml2r_bias`.)\n\nThe ML2R weights of Giles (2015), §2.3 (`ml2rWeight α L ℓ`) are $w_\\ell=\\prod_{k\\le L,\\,k\\ne\\ell}x_k/(x_k-x_\\ell)$ with $x_k=2^{-\\alpha k}$, $\\ell=0,\\dots,L$; the coefficients of the ML2R estimator are $v_\\ell=\\sum_{\\ell'=\\ell}^{L}w_{\\ell'}$.\n\nLet $\\alpha>0$, $c_1\\ge0$, $c_2,c_3>0$, $\\varepsilon>0$, $V_\\ell=c_2 2^{-\\beta\\ell}$ and $C_\\ell=c_3 2^{\\gamma\\ell}$ (`Vb`, `Cb`). Let $L\\in\\mathbb N$ with $c_1 2^{-\\alpha L(L+1)/2}\\le\\varepsilon/2$, and $W=\\mathrm{ml2rWeightBound}(\\alpha)$. Then there are $N_\\ell\\ge1$ with\n$$\n\\big(c_1 2^{-\\alpha L(L+1)/2}\\big)^2+\\sum_{\\ell=0}^{L}\\frac{v_\\ell^2V_\\ell}{N_\\ell}<\\varepsilon^2\n$$\n(the squared remaining error plus the variance $\\sum_\\ell v_\\ell^2V_\\ell/N_\\ell$ of the ML2R estimator, `ml2r_estimator_mean_variance`) and\n$$\n\\sum_{\\ell=0}^{L}N_\\ell C_\\ell\\le\\frac{2}{\\varepsilon^2}\\,W^2c_2c_3\\Big(\\sum_{\\ell=0}^{L}r^\\ell\\Big)^2+\\sum_{\\ell=0}^{L}C_\\ell,\\qquad r=2^{(\\gamma-\\beta)/2}.\n$$",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §2.3, p. 12.",
+   "explanation": "Take the rounded-up optimal allocation (`optimalN`) for the variances $W^2V_\\ell$ and the target $\\varepsilon^2/2$. Since $v_\\ell^2\\le W^2$ (`abs_ml2r_coeff_le`), the variance is at most $\\varepsilon^2/2$ (`optimalN_variance`), and the squared remaining error is at most $\\varepsilon^2/4$. The cost bound is `optimalN_cost` with $\\sqrt{W^2V_\\ell C_\\ell}=W\\sqrt{c_2c_3}\\,r^\\ell$ (`sqrt_Vb_mul_Cb`).",
+   "tags": [
+    "multilevel-monte-carlo",
+    "complexity"
+   ]
+  },
+  "MLMC.ml2r_complexity_eq": {
+   "theorem_title": "Giles (2015), §2.3: when $\\beta=\\gamma$, ML2R reaches mean square error $\\varepsilon^2$ at cost $O(\\varepsilon^{-2}|\\log\\varepsilon|)$",
+   "natural_language_statement": "Giles (2015), §2.3, p. 12: \"Because the remaining error is $O(2^{-\\alpha L^2})$, rather than the usual $O(2^{-\\alpha L})$, it is possible to obtain the usual $O(\\varepsilon)$ weak error with a value of $L$ which is the square root of the usual value. Hence, in the case $\\beta=\\gamma$ they prove that the overall cost is reduced to $O(\\varepsilon^{-2}|\\log\\varepsilon|)$, while for $\\beta<\\gamma$ the cost is reduced much more to $O(\\varepsilon^{-2}2^{(\\gamma-\\beta)\\sqrt{|\\log_2\\varepsilon|/\\alpha}})$.\" (The remaining error is in fact of order $2^{-\\alpha L(L+1)/2}$, see `ml2r_bias`.)\n\nThe ML2R weights of Giles (2015), §2.3 (`ml2rWeight α L ℓ`) are $w_\\ell=\\prod_{k\\le L,\\,k\\ne\\ell}x_k/(x_k-x_\\ell)$ with $x_k=2^{-\\alpha k}$, $\\ell=0,\\dots,L$; the coefficients of the ML2R estimator are $v_\\ell=\\sum_{\\ell'=\\ell}^{L}w_{\\ell'}$.\n\nLet $\\alpha>0$, $\\gamma>0$, $c_1,c_2,c_3>0$, $V_\\ell=c_2 2^{-\\beta\\ell}$, $C_\\ell=c_3 2^{\\gamma\\ell}$ (`Vb`, `Cb`), and take the remaining error bound $c_1 2^{-\\alpha L(L+1)/2}$ of `ml2r_bias`.\n\nIf $\\beta=\\gamma$, there is $c_4>0$ such that for every $0<\\varepsilon<e^{-1}$ there are $L\\in\\mathbb N$ and $N_\\ell\\ge1$ with\n$$\n\\big(c_1 2^{-\\alpha L(L+1)/2}\\big)^2+\\sum_{\\ell=0}^{L}\\frac{v_\\ell^2V_\\ell}{N_\\ell}<\\varepsilon^2\n\\qquad\\text{and}\\qquad\n\\sum_{\\ell=0}^{L}N_\\ell C_\\ell\\le c_4\\,\\varepsilon^{-2}|\\log\\varepsilon| .\n$$\n(Standard MLMC costs $O(\\varepsilon^{-2}(\\log\\varepsilon)^2)$ in this case.)",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §2.3, p. 12.",
+   "explanation": "Take $L=\\mathrm{ml2rLevel}(\\alpha,c_1,\\varepsilon)$ (`ml2rLevel_bias`) and `ml2r_mse_cost`. With $\\beta=\\gamma$, $\\sum_{\\ell\\le L}r^\\ell=L+1$ and $(L+1)^2\\le K|\\log\\varepsilon|$ because $L<\\sqrt{2\\log_2^+(2c_1/\\varepsilon)/\\alpha}+1$. The rounding overhead $\\sum_{\\ell\\le L}C_\\ell$ is $O(\\varepsilon^{-1})$: $2^{\\gamma L}\\le2^{\\gamma+\\gamma^2/(2\\alpha)}(1+2c_1)/\\varepsilon$ by the arithmetic–geometric mean inequality $\\gamma\\sqrt{2y/\\alpha}\\le y+\\gamma^2/(2\\alpha)$.",
+   "tags": [
+    "multilevel-monte-carlo",
+    "complexity"
+   ]
+  },
+  "MLMC.ml2r_complexity_lt": {
+   "theorem_title": "Giles (2015), §2.3: when $\\beta<\\gamma$, ML2R reaches mean square error $\\varepsilon^2$ at cost $O(\\varepsilon^{-2}2^{(\\gamma-\\beta)\\sqrt{2\\log_2(1/\\varepsilon)/\\alpha}})$",
+   "natural_language_statement": "Giles (2015), §2.3, p. 12: \"Because the remaining error is $O(2^{-\\alpha L^2})$, rather than the usual $O(2^{-\\alpha L})$, it is possible to obtain the usual $O(\\varepsilon)$ weak error with a value of $L$ which is the square root of the usual value. Hence, in the case $\\beta=\\gamma$ they prove that the overall cost is reduced to $O(\\varepsilon^{-2}|\\log\\varepsilon|)$, while for $\\beta<\\gamma$ the cost is reduced much more to $O(\\varepsilon^{-2}2^{(\\gamma-\\beta)\\sqrt{|\\log_2\\varepsilon|/\\alpha}})$.\" (The remaining error is in fact of order $2^{-\\alpha L(L+1)/2}$, see `ml2r_bias`.)\n\nThe ML2R weights of Giles (2015), §2.3 (`ml2rWeight α L ℓ`) are $w_\\ell=\\prod_{k\\le L,\\,k\\ne\\ell}x_k/(x_k-x_\\ell)$ with $x_k=2^{-\\alpha k}$, $\\ell=0,\\dots,L$; the coefficients of the ML2R estimator are $v_\\ell=\\sum_{\\ell'=\\ell}^{L}w_{\\ell'}$.\n\nLet $\\alpha>0$, $\\gamma>0$, $c_1,c_2,c_3>0$, $V_\\ell=c_2 2^{-\\beta\\ell}$, $C_\\ell=c_3 2^{\\gamma\\ell}$ (`Vb`, `Cb`), and take the remaining error bound $c_1 2^{-\\alpha L(L+1)/2}$ of `ml2r_bias`.\n\nIf $\\beta<\\gamma$, there is $c_4>0$ such that for every $0<\\varepsilon<e^{-1}$ there are $L\\in\\mathbb N$ and $N_\\ell\\ge1$ with\n$$\n\\big(c_1 2^{-\\alpha L(L+1)/2}\\big)^2+\\sum_{\\ell=0}^{L}\\frac{v_\\ell^2V_\\ell}{N_\\ell}<\\varepsilon^2\n\\qquad\\text{and}\\qquad\n\\sum_{\\ell=0}^{L}N_\\ell C_\\ell\\le c_4\\,\\varepsilon^{-2}\\,2^{(\\gamma-\\beta)\\sqrt{2\\log_2(1/\\varepsilon)/\\alpha}} .\n$$\n\n**Formalization Note** The exponent is $\\sqrt2$ times the printed $(\\gamma-\\beta)\\sqrt{|\\log_2\\varepsilon|/\\alpha}$, which corresponds to the printed remaining error $2^{-\\alpha L^2}$; with the actual remaining error $2^{-\\alpha L(L+1)/2}$ (`ml2r_bias`) the number of levels is $\\approx\\sqrt{2\\log_2(1/\\varepsilon)/\\alpha}$. The bound is $o(\\varepsilon^{-2-\\delta})$ for every $\\delta>0$, against $\\varepsilon^{-2-(\\gamma-\\beta)/\\alpha}$ for standard MLMC.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §2.3, p. 12.",
+   "explanation": "Take $L=\\mathrm{ml2rLevel}(\\alpha,c_1,\\varepsilon)$ and `ml2r_mse_cost`. With $r=2^{(\\gamma-\\beta)/2}>1$, $\\big(\\sum_{\\ell\\le L}r^\\ell\\big)^2\\le(r/(r-1))^2\\,2^{(\\gamma-\\beta)L}$, and $L<\\sqrt{2\\log_2^+(2c_1/\\varepsilon)/\\alpha}+1\\le\\sqrt{2\\log_2(1/\\varepsilon)/\\alpha}+\\sqrt{2\\log_2^+(2c_1)/\\alpha}+1$ ($\\sqrt{a+b}\\le\\sqrt a+\\sqrt b$). The rounding overhead is $O(\\varepsilon^{-1})$ as in `ml2r_complexity_eq`.",
+   "tags": [
+    "multilevel-monte-carlo",
+    "complexity"
+   ]
   }
  },
  "definitions": {
@@ -3575,6 +3769,24 @@
    "tags": [
     "multilevel-monte-carlo",
     "probability"
+   ]
+  },
+  "MLMC_FixedPointPath": {
+   "definition_title": "Haas–Giles (2025), Algorithm 1: one time step of the geometric Brownian motion path decomposed into elementary operations, and the resulting path",
+   "natural_language_statement": "Haas and Giles (2025), §4.1, p. 8, Algorithm 1 \"Geometric Brownian Motion path calculation (decomposed in elementary operations to show the intermediary fixed-point variables)\":\n$h\\leftarrow T/N$; $con1\\leftarrow r\\times h$; $con2\\leftarrow\\sqrt h\\times\\sigma$; generate (approximate) random normal increments $\\tilde Z_i$ for $i=1,\\dots,N$; for $i=1,\\dots,N$: $mul1_i\\leftarrow con2\\times\\tilde Z_i$, $sum1_i\\leftarrow con1+mul1_i$, $mul2_i\\leftarrow S_i\\times sum1_i$, $S_{i+1}\\leftarrow S_i+mul2_i$. \"This algorithm details how we decomposed the operations to compute each time step from (13)\", where (13) is $\\tilde S_{i+1}=\\tilde S_i+a(\\tilde S_i,t_i)h+b(\\tilde S_i,t_i)\\sqrt h\\,\\tilde Z_i$.\n\n**`gbmStep`**. For $r,\\sigma,h,S,Z\\in\\mathbb R$, one step of Algorithm 1 in exact arithmetic:\n$$\ncon1=rh,\\quad con2=\\sqrt h\\,\\sigma,\\quad mul1=con2\\cdot Z,\\quad sum1=con1+mul1,\\quad mul2=S\\cdot sum1,\\qquad \\mathrm{gbmStep}(r,\\sigma,h,S,Z)=S+mul2 .\n$$\n\n**`gbmPath`**. For $r,\\sigma,h,s_0\\in\\mathbb R$ and increments $Z:\\mathbb N\\to\\mathbb R$, the path $S_0=s_0$, $S_{i+1}=\\mathrm{gbmStep}(r,\\sigma,h,S_i,Z_i)$.\n\n**Formalization Note** $\\sqrt h$ is `Real.sqrt` (zero for $h<0$). The increments are indexed from $0$.",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §4.1, p. 8, Algorithm 1, and (13).",
+   "tags": [
+    "numerical-analysis",
+    "multilevel-monte-carlo"
+   ]
+  },
+  "MLMC_ML2RComplexity": {
+   "definition_title": "Giles (2015), §2.3: the uniform bound on the ML2R weights and the number of levels of multilevel Richardson–Romberg extrapolation",
+   "natural_language_statement": "Giles (2015), §2.3, p. 12: \"Because the remaining error is $O(2^{-\\alpha L^2})$, rather than the usual $O(2^{-\\alpha L})$, it is possible to obtain the usual $O(\\varepsilon)$ weak error with a value of $L$ which is the square root of the usual value. Hence, in the case $\\beta=\\gamma$ they prove that the overall cost is reduced to $O(\\varepsilon^{-2}|\\log\\varepsilon|)$, while for $\\beta<\\gamma$ the cost is reduced much more to $O(\\varepsilon^{-2}2^{(\\gamma-\\beta)\\sqrt{|\\log_2\\varepsilon|/\\alpha}})$.\" (The remaining error is in fact of order $2^{-\\alpha L(L+1)/2}$, see `ml2r_bias`.)\n\n**`ml2rWeightBound`**. For $\\alpha\\in\\mathbb R$, with $r=2^{-\\alpha}$ and $B=e^{r/(1-r)^2}$:\n$$\n\\mathrm{ml2rWeightBound}(\\alpha)=\\frac{B^2}{1-r}=\\frac{\\exp\\!\\big(r/(1-r)^2\\big)^2}{1-r}.\n$$\nFor $\\alpha>0$ it bounds $\\sum_\\ell|w_\\ell|$ uniformly in $L$ (`sum_abs_ml2rWeight_le`).\n\n**`ml2rLevel`**. For $\\alpha,c_1,\\varepsilon\\in\\mathbb R$, the number of levels\n$$\n\\mathrm{ml2rLevel}(\\alpha,c_1,\\varepsilon)=\\Big\\lceil\\sqrt{2\\max\\big(0,\\log_2(2c_1/\\varepsilon)\\big)/\\alpha}\\;\\Big\\rceil ,\n$$\nthe natural-number ceiling.\n\n**Formalization Note** $\\sqrt{\\cdot}$ is `Real.sqrt` and $\\lceil\\cdot\\rceil$ is `Nat.ceil`; $\\log_2$ is `Real.logb 2`.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §2.3, p. 12 (after V. Lemaire and G. Pagès, Multilevel Richardson–Romberg extrapolation, 2013).",
+   "tags": [
+    "multilevel-monte-carlo",
+    "complexity"
    ]
   }
  }
