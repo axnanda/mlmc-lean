@@ -34,6 +34,8 @@
 --   coupling, (2.4), Theorem 1 for it, the variance rate from the strong rate
 -- * `MlmcLean.Implementation` — Giles §3.3–§3.5: the driver's variance estimate, floors and
 --   regression, the probability that the consistency check fails, the MLQMC rule (3.3)
+-- * `MlmcLean.PoissonCoupling` — Giles §8: tau-leaping, the Anderson–Higham Poisson coupling, its
+--   marginals and (2.4), the moments of the coupled difference, the complexity statements
 import MlmcLean.Allocation
 import MlmcLean.Estimator
 import MlmcLean.LevelDiff
@@ -63,3 +65,4 @@ import MlmcLean.NestedSimulation
 import MlmcLean.NestedMLMC
 import MlmcLean.EulerMaruyama
 import MlmcLean.Implementation
+import MlmcLean.PoissonCoupling

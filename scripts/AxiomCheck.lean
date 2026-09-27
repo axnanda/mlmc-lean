@@ -274,6 +274,21 @@ import MlmcLean
 #print axioms MLMC.prob_all_zero
 #print axioms MLMC.powerSum_variance_of_zero
 #print axioms MLMC.mlqmc_doubling_level
+#print axioms MLMC.poisson_add_hasLaw
+#print axioms MLMC.integral_poissonMeasure_id
+#print axioms MLMC.integral_sq_poissonMeasure
+#print axioms MLMC.coupledIncr_fst
+#print axioms MLMC.coupledIncr_snd
+#print axioms MLMC.coupled_increments_hasLaw
+#print axioms MLMC.integral_sq_coupledIncr_sub
+#print axioms MLMC.coupledTwoStep_fst
+#print axioms MLMC.coupledTwoStep_snd
+#print axioms MLMC.coupledChain_fst
+#print axioms MLMC.coupledChain_snd
+#print axioms MLMC.tauLeaping_2_4
+#print axioms MLMC.tauLeaping_level
+#print axioms MLMC.tauLeaping_complexity
+#print axioms MLMC.fixed_levels_cost
 -- helper lemmas that the prove2.me generator promotes to nodes
 #print axioms MLMC.sqrt_Vb_mul_Cb
 #print axioms MLMC.two_rpow_levelL_le
