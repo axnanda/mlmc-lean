@@ -67,7 +67,7 @@ theorem levelCost34_le_levelCost33 {V Vd C Ct : ℝ} (hVd : 0 ≤ Vd) (hCt : 0 �
 cost (33) is "approximated as (34) using the fact that `C_ℓ ≫ C̃_ℓ`": with `Ṽ_ℓ = V_ℓ` and
 `C^Δ_ℓ = C_ℓ + C̃_ℓ`, the ratio of (33) to (34) lies between `1` (`levelCost34_le_levelCost33`)
 and `√(1 + C̃_ℓ/C_ℓ)`. -/
-theorem levelCost33_le_sqrt_mul {V Vd C Ct : ℝ} (hVd : 0 ≤ Vd) (hC : 0 < C) (hCt : 0 ≤ Ct) :
+theorem levelCost33_le_sqrt_mul {V Vd C Ct : ℝ} (hC : 0 < C) (hCt : 0 ≤ Ct) :
     Real.sqrt (V * Ct) + Real.sqrt (Vd * (C + Ct)) ≤
       Real.sqrt (1 + Ct / C) * (Real.sqrt (V * Ct) + Real.sqrt (Vd * C)) := by
   have hq : 0 ≤ Ct / C := div_nonneg hCt hC.le
@@ -80,14 +80,13 @@ theorem levelCost33_le_sqrt_mul {V Vd C Ct : ℝ} (hVd : 0 ≤ Vd) (hC : 0 < C) 
     rw [show (1 + Ct / C) * (Vd * C) = Vd * (C + Ct / C * C) by ring, div_mul_cancel₀ Ct hC.ne']
   have h3 : Real.sqrt (V * Ct) ≤ Real.sqrt (1 + Ct / C) * Real.sqrt (V * Ct) :=
     le_mul_of_one_le_left (Real.sqrt_nonneg _) h1
-  have h4 : 0 ≤ Real.sqrt (Vd * C) := Real.sqrt_nonneg _
   rw [h2, mul_add]
   linarith
 
 /-- **Haas–Giles (2025), §6.1, p. 11: the relative error of (34).**  With `Ṽ_ℓ = V_ℓ` and
 `C^Δ_ℓ = C_ℓ + C̃_ℓ`, (33) exceeds (34) by at most the fraction `C̃_ℓ/(2 C_ℓ)` of (34), which is
 small "using the fact that `C_ℓ ≫ C̃_ℓ`". -/
-theorem levelCost33_le_add_mul {V Vd C Ct : ℝ} (hVd : 0 ≤ Vd) (hC : 0 < C) (hCt : 0 ≤ Ct) :
+theorem levelCost33_le_add_mul {V Vd C Ct : ℝ} (hC : 0 < C) (hCt : 0 ≤ Ct) :
     Real.sqrt (V * Ct) + Real.sqrt (Vd * (C + Ct)) ≤
       (1 + Ct / (2 * C)) * (Real.sqrt (V * Ct) + Real.sqrt (Vd * C)) := by
   have hq : 0 ≤ Ct / C := div_nonneg hCt hC.le
@@ -98,7 +97,7 @@ theorem levelCost33_le_add_mul {V Vd C Ct : ℝ} (hVd : 0 ≤ Vd) (hC : 0 < C) (
           Real.sqrt_le_sqrt (by nlinarith [sq_nonneg (Ct / C)])
       _ = 1 + Ct / C / 2 := Real.sqrt_sq (by linarith)
   have h0 : 0 ≤ Real.sqrt (V * Ct) + Real.sqrt (Vd * C) := by positivity
-  exact (levelCost33_le_sqrt_mul hVd hC hCt).trans (mul_le_mul_of_nonneg_right hs h0)
+  exact (levelCost33_le_sqrt_mul hC hCt).trans (mul_le_mul_of_nonneg_right hs h0)
 
 /-- **Haas–Giles (2025), §6, p. 11, the total cost (32) and the approximation (34).**  With
 `Ṽ_ℓ = V_ℓ` and `C^Δ_ℓ = C_ℓ + C̃_ℓ`, the total cost (32),
@@ -125,7 +124,7 @@ theorem totalCost32_bounds (L : ℕ) {V Vd C Ct : ℕ → ℝ} {ε r : ℝ} (hVd
         ∑ ℓ ∈ range (L + 1), (Real.sqrt (V ℓ * Ct ℓ) + Real.sqrt (Vd ℓ * C ℓ)) := by
     rw [Finset.mul_sum]
     refine Finset.sum_le_sum fun ℓ hℓ => ?_
-    refine (levelCost33_le_sqrt_mul (hVd ℓ) (hC ℓ) (hCt ℓ)).trans ?_
+    refine (levelCost33_le_sqrt_mul (hC ℓ) (hCt ℓ)).trans ?_
     exact mul_le_mul_of_nonneg_right (Real.sqrt_le_sqrt (by linarith [hr ℓ hℓ])) (by positivity)
   generalize ∑ ℓ ∈ range (L + 1), (Real.sqrt (V ℓ * Ct ℓ) + Real.sqrt (Vd ℓ * C ℓ)) = A
     at hA0 hAB hBA ⊢
@@ -262,6 +261,7 @@ section necessity
 
 variable {ι : Type*} [Fintype ι] [DecidableEq ι]
 
+omit [DecidableEq ι] in
 /-- The variance bound (26) is strictly differentiable in the bit-widths. -/
 lemma exists_hasStrictFDerivAt_vIndepR (E : ι → ℝ) (e : ι → ℤ) (d : ι → ℝ) :
     ∃ V' : StrongDual ℝ (ι → ℝ), HasStrictFDerivAt (vIndepR univ E e) V' d := by
@@ -270,13 +270,14 @@ lemma exists_hasStrictFDerivAt_vIndepR (E : ι → ℝ) (e : ι → ℤ) (d : ι
     intro i
     have h1 : HasStrictDerivAt (fun t : ℝ => (e i : ℝ) - t) (-1) (d i) :=
       (hasStrictDerivAt_id (d i)).const_sub _
-    have h2 := ((hasStrictDerivAt_const_rpow (by norm_num : (0 : ℝ) < 4)
+    have h2 := ((Real.hasStrictDerivAt_const_rpow (by norm_num : (0 : ℝ) < 4)
       ((e i : ℝ) - d i)).comp (d i) h1).const_mul (E i)
     exact ⟨_, HasStrictDerivAt.comp_hasStrictFDerivAt (f := fun x : ι → ℝ => x i) d h2
       (hasStrictFDerivAt_apply (𝕜 := ℝ) i d)⟩
   choose A' hA' using hterm
   exact ⟨_, (HasStrictFDerivAt.fun_sum (u := univ) fun i _ => hA' i).const_mul (1 / 12)⟩
 
+omit [DecidableEq ι] in
 /-- The cost (31) is strictly differentiable in the bit-widths. -/
 lemma exists_hasStrictFDerivAt_sepCost (M M' : ι → ℝ) (d : ι → ℝ) :
     ∃ C' : StrongDual ℝ (ι → ℝ), HasStrictFDerivAt (sepCost univ M M') C' d := by
