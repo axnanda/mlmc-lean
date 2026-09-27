@@ -163,9 +163,10 @@ The platform's upload standard (prove2me_workspace `upload_full_project.md`) is 
 `scripts/prove2me/`: Lean extractors for the declaration graph and per-file facts, a generator
 that builds the `Definitions/Theorems/Solutions` tree by skeleton subtraction, a validator (stub
 types equal the source types; every solution has exactly its stub's type; no `sorry`), and an
-idempotent, private-by-default uploader. CI runs all of it on every push: the tree has 82
-theorem nodes (the 66 main theorems and 16 long or shared lemmas, all 82 in the axiom audit),
-10 definition bundles and 74 inlined helpers, and validates with 0 failures.
+idempotent, private-by-default uploader. CI runs all of it on every push and prints the size of
+the tree in its plan summary (theorem nodes: the main theorems and the long or shared lemmas, all
+in the axiom audit; one definition bundle per module with definitions; inlined helpers); the tree
+validates with 0 failures.
 `prove2me/metadata.json` holds the titles, natural-language statements, sources and proof
 explanations; `prove2me/proposals/` the mission proposals for Theorems 1 and 2 (`propose.py`).
 Uploading needs an account API key (CI's opt-in `upload` job, or `upload.py` locally); making the
