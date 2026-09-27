@@ -93,3 +93,70 @@ Findings and what was done:
     the corrections) are used by the proofs: independence is preserved by composition with
     measurable maps, and square-integrability alone gives only a.e.-strong measurability.
 
+**Fourth round (2026-09-27).** Two read-backs, in the same blind setting:
+`rounding_error.md` (Haas–Giles §4: `roundFixed`, `abs_sub_roundFixed_le`, `roundFixed_mantissa`,
+`integral_sq_roundError_le`, `integral_sq_of_isUniform`, `integral_sq_uniform_roundError`,
+`vIndep`, `vCorr`, `variance_sum_eq`, `variance_le_integral_sq`, `variance_sum_mul_le_of_indep`,
+`variance_linearised_indep`, `variance_sum_le_sq_sum_sqrt`, `sqrt_variance_mul_le`,
+`variance_linearised_corr`, `vIndep_le_vCorr`, `variance_extended_indep`,
+`variance_extended_corr`) and `theorem1_uniform_multioutput.md` (the statements changed in the
+third round: `giles_theorem1_of_core`, `giles_theorem1_uniform`, `multiOutput_optimal`,
+`integral_norm_add_sq_of_indepFun`, `integral_add_sq_of_indepFun`, `tendsto_kurtosis_atTop`).
+No statement is false or vacuous, and none holds only because of a junk value.  Points recorded,
+all consistent with the papers or deliberate:
+
+- `roundFixed` rounds on the fixed grid `2^{e−d}ℤ` with ties toward `+∞` (Haas–Giles fix the
+  exponent `e_i` of each variable in advance, §4.1); the mantissa bound needs the separate range
+  hypothesis of `roundFixed_mantissa`.
+- `variance_linearised_indep` and `variance_extended_indep` take the rounding errors to be
+  uniform and independent of the sensitivities, the model assumption of Haas–Giles (22) and
+  (26); a measurable function of `x̄_i` cannot satisfy it, and the worst-case (`corr`) theorems
+  cover actual rounding errors.  Their `≤` is an equality under these hypotheses.
+- `sqrt_variance_mul_le` (`hB`) and `vIndep_le_vCorr` (`hM`) have a redundant hypothesis; kept,
+  as they mirror the paper's setting.
+- `multiOutput_optimal` optimises the aggregated variance of Giles §2.5,
+  `V_ℓ ≡ max_m V_{ℓ,m}/ε_m²` (Nagapetyan's "simple approach"), with real sample sizes; for each
+  output separately the allocation is feasible but need not be optimal.
+
+**Fifth round (2026-09-27).** Five blind read-backs of 341 declarations, covering every module
+added since the fourth round and the new §2, §3.5 and §5 statements:
+`fixedpoint_bitwidth.md` (Haas–Giles §4.1, §5–§6: `FixedPointPath`, `BitWidth`,
+`LagrangeBitWidth`), `approxnormal_em_sde.md` (Haas–Giles §3 and (2), (4)–(5); Giles §5:
+`ApproxNormal`, `EulerMaruyama`, `SDEExtras`, including splitting and the density as a limit),
+`giles_sections1_2.md` (Giles §1–§2: cost comparisons, geometric rates, the rectangular MIMC set,
+ML2R complexity, the Figure 2.1 cross-difference, the randomised optimal cost, the level subsets
+of §2.6), `giles_section3_algorithms.md` (Giles §3: Algorithm 1, the implementation facts,
+Algorithm 2) and `giles_applications.md` (Giles §7–§10: `PDEExamples`, `PoissonCoupling`,
+`NestedSimulation`, `NestedMLMC`, `MarkovChain`).  No statement is false or vacuous, and none
+holds only because of a junk value.  Changed in response:
+
+- `mlqmc_mse`: the hypothesis that the corrections `m_ℓ` tend to `0` is derived from
+  `E[P_ℓ] → E[P]` instead of assumed, and the variance hypothesis is `V[Y] ≤ ∑ V_ℓ` (it was an
+  equality).
+- `greedy_rounding_feasible` held with `k = n` for every order; it now states the stopping rule
+  of the heuristic of Haas–Giles §6.2: the least feasible number `k` of added bits exists, is at
+  most `n`, and every smaller number is infeasible.
+- `integral_abs_perturbed_sub_le` did not require the perturbations to be measurable, so for a
+  non-measurable perturbation the bound held through the convention `∫ f = 0` for non-integrable
+  `f`.  It now assumes measurable perturbations and concludes that the error is integrable;
+  `integral_abs_roundFixed_path_sub_le` concludes the same, rounding being measurable
+  (`measurable_roundFixed`).
+
+Points recorded, all consistent with the papers or deliberate:
+
+- `em_complexity`, `digital_em_complexity`, `milstein_complexity`, `pde_complexity`,
+  `tauLeaping_complexity`, `nested_complexity` and `nested_mimc_complexity` only evaluate the
+  regime of `complexityBound` / `mimcBound` at the exponents the paper derives; the statements
+  about the estimators are the instances of Theorems 1 and 2 (`em_mlmc_theorem1`,
+  `nested_mlmc_complexity`, `giles_theorem2_boundary`, …).
+- `exists_optimal_subset` is the exhaustive search of §2.6: a finite nonempty family of subsets
+  has a minimiser of the cost; `subset_optimal_cost` relaxes the sample numbers to reals, as (1.1).
+- `mimc_rect_lower_bounds` and `mimc_rect_necessary` rest on a lower bound of the bias in each
+  direction, the assumption under which the converse of Giles §2.4 is stated.
+- Several identities hold in the non-integrable case with both sides `0` (`integral_emCoarse`,
+  `integral_condExp_eq_of_map_eq`, `lutValue_mirror`); their meaning in the integrable case is
+  unaffected.
+- Redundant hypotheses, kept because they mirror the papers' setting: `a < b` in
+  `integral_sq_sub_eq`, `M > 0` in `fiber_bias_le` and `integrable_innerMean_pow_four`, `c₃ > 0` in
+  `nested_mlmc_complexity`, `v ≠ 0` in `consistency_check_gaussian`, `h ≤ 1` in
+  `integral_sq_gbmPath_le`, `V, C > 0` in `hasDerivAt_levelCost`.

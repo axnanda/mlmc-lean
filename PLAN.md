@@ -14,7 +14,7 @@ bounds, stated as in the papers and with zero `sorry`, building on what is alrea
 - **Treat everything else as unverified:** the Status section below, README claims and `notes/`
   are leads to check, not facts. `notes/` is optional background and isn't needed for M0–M3.
 
-## Status (2026-09-26; re-verified in M0; CI builds and audits every push)
+## Status (2026-09-27; re-verified in M0; CI builds and audits every push)
 
 Proved with zero `sorry` and only `propext`, `Classical.choice`, `Quot.sound` (see the README
 table and `notes/statement-audit.md`, which compares every statement with the papers):
@@ -35,6 +35,13 @@ table and `notes/statement-audit.md`, which compares every statement with the pa
 - **Haas–Giles (2025) nested estimator, eq. (9)–(12)** (`MlmcLean/Nested.lean`): (12) as the
   least nested cost, the claimed saving factor as an inequality, and the estimator built from
   independent inputs with its mean, variance and expected cost.
+- **Every other formal claim of both papers that follows from probability and algebra** (M5):
+  Giles §1–§3 in full (control variates, Richardson–Romberg MLMC and its complexity, multiple
+  outputs, non-geometric MLMC and the subset search, Algorithms 1 and 2, the implementation
+  checks), the pure steps of the applications in §5, §7, §8 (the Poisson coupling), §9 and §10,
+  and Haas–Giles §2–§6 (the Euler–Maruyama coupling, approximate normals, the rounding-error
+  model, the fixed-point path, the cost model and the bit-width optimisation). The README table
+  lists the modules; `scripts/AxiomCheck.lean` lists the 390 audited theorems.
 
 ## Setup and verification (Linux / cloud session)
 
@@ -106,7 +113,8 @@ leaves the exponents open, with `e₁ = 2D₂ + (D₃−3)⁺`, `e₂ = (D₂−
 - The hard part is summing over index sets `{ℓ : δ·ℓ ≤ L}` (lattice-point counting).
 - Done when: Theorem 2 is proved as stated, or a clearly documented subset is (e.g. D = 2 first).
 
-**M5: Every formal claim of the papers, and a full review (in progress, 2026-09-26).**
+**M5: Every formal claim of the papers, and a full review.** ✅ Done 2026-09-27, except the
+items listed under "Not formalised" below.
 - ✅ Independent review of all modules; every finding fixed (docstrings, citations, truncated
   exponents, hypotheses for `n ≥ 1`, unused hypotheses and deprecated tactics removed).
 - ✅ Theorem 2 in the paper's form (`giles_theorem2_full`) and the MIMC telescoping sum.
@@ -114,9 +122,25 @@ leaves the exponents open, with `e₁ = 2D₂ + (D₃−3)⁺`, `e₂ = (D₂−
 - ✅ §2.2: expected cost per sample, necessity of both series, `N`-sample estimator, optimal
   level probabilities as a minimiser.
 - ✅ Haas–Giles §2.2: (12) as the least cost, the saving factor, the estimator from samples.
-- Remaining claims (see the coverage inventory): §1.2 control variates, §2.1 remarks, §2.3
-  Richardson extrapolation and ML2R, §2.5 multiple outputs, §2.6 non-geometric MLMC, §3
-  implementation facts, Haas–Giles §4–6.
+- ✅ §1.1–§1.3 control variates and cost comparisons; §2.1 remarks; §2.3 Richardson extrapolation,
+  ML2R and its complexity; §2.5 multiple outputs; §2.6 non-geometric MLMC (the subset cost, the
+  exhaustive search, the test (2.5)); §2.4 Figure 2.1 and the rectangular index set.
+- ✅ §3: Algorithm 1 and Algorithm 2 (MLQMC) with exact values (termination, variance target,
+  MSE), the driver's estimates, the consistency check, the kurtosis.
+- ✅ Applications, the parts that need no SDE/PDE theory: §5 (Euler–Maruyama coupling, rates from
+  the timestep, conditional expectations, Brownian-bridge midpoint, antithetic swap, splitting,
+  explicit-step stability, smoothed CDF, density limit), §7.1, §8 (tau-leaping and the Poisson
+  coupling), §9 (nested simulation, the `−1/8` constant), §10.1 (contraction, variance decay, the
+  uniform invariant law).
+- ✅ Haas–Giles §2–§6: the Euler–Maruyama coupling (4)–(5), approximate normals (13)–(19), the
+  rounding-error model (20)–(29) (with the corrections recorded in `notes/statement-audit.md`),
+  Algorithm 1 and the error accumulation, the cost model and the bit-width optimisation
+  (30)–(41).
+- Not formalised: the convergence orders of the discretisations (Itô calculus, not in Mathlib)
+  and of QMC; the weak convergence of the contracting chain to `X_∞` (§10.1, a cited result of
+  Diaconis–Freedman); Algorithm 3 with path-dependent timesteps (§5.6, needs Brownian motion and
+  stopping times); the limits of the MSE of the lookup tables as `d → ∞` (Haas–Giles §3.3); the
+  remaining claims are numerical or empirical (tables, figures, run times).
 
 **M4: Research, needs Alex's sign-off before formalising: nested MLMC with level-dependent
 precision.**
