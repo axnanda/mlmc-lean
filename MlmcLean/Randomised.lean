@@ -421,29 +421,6 @@ theorem randomised_necessary (hK : Measurable K) (hPlm : ∀ ℓ, Measurable (Pl
   have h := (integral_cost_level hK hκm hκ0 hκi hκind hp).1.1 hcost
   exact h.congr fun ℓ => by rw [hC ℓ]
 
-/-- **Infinite expected cost when `β ≤ γ`** (Giles 2015, §2.2, p. 10: "for these cases the
-estimators constructed by Rhee and Glynn (2013) have infinite expected cost").  If the rates are
-attained, `V_ℓ = V[P_ℓ − P_{ℓ−1}] ≥ c₂ 2^{−βℓ}` and `C_ℓ ≥ c₃ 2^{γℓ}` with `β ≤ γ`, then every
-single-term estimator whose sample `Y` has finite variance has infinite expected cost: the cost
-`κ_K ≥ 0` of a sample (with `E[κ_ℓ] = C_ℓ`, independent of the level `K`) has
-`E[κ_K] = ∫ κ_K dμ = ∞`. -/
-theorem randomised_infinite_cost (hK : Measurable K) (hPlm : ∀ ℓ, Measurable (Pl ℓ))
-    (hPl : ∀ ℓ, MemLp (Pl ℓ) 2 μ) (hp : ∀ ℓ, μ.real {ω | K ω = ℓ} = p ℓ) (hp0 : ∀ ℓ, 0 < p ℓ)
-    (hind : ∀ ℓ, IndepFun K (levelDiff Pl ℓ) μ) {κ : ℕ → Ω → ℝ} {C : ℕ → ℝ}
-    (hκm : ∀ ℓ, Measurable (κ ℓ)) (hκ0 : ∀ ℓ ω, 0 ≤ κ ℓ ω) (hκi : ∀ ℓ, Integrable (κ ℓ) μ)
-    (hκind : ∀ ℓ, IndepFun K (κ ℓ) μ) (hC : ∀ ℓ, ∫ ω, κ ℓ ω ∂μ = C ℓ)
-    {β γ c₂ c₃ : ℝ} (hβγ : β ≤ γ) (hc₂ : 0 < c₂) (hc₃ : 0 < c₃)
-    (hV : ∀ ℓ : ℕ, c₂ * (2 : ℝ) ^ (-(β * (ℓ : ℝ))) ≤ variance (levelDiff Pl ℓ) μ)
-    (hCb : ∀ ℓ : ℕ, c₃ * (2 : ℝ) ^ (γ * (ℓ : ℝ)) ≤ C ℓ) (hY : MemLp (singleTerm Pl K p) 2 μ) :
-    ∫⁻ ω, ENNReal.ofReal (κ (K ω) ω) ∂μ = ⊤ := by
-  by_contra hfin
-  have hm : Measurable fun ω => κ (K ω) ω := measurable_comp_level hK hκm
-  have hcost : Integrable (fun ω => κ (K ω) ω) μ :=
-    ⟨hm.aestronglyMeasurable, (hasFiniteIntegral_iff_ofReal
-      (Eventually.of_forall fun ω => hκ0 (K ω) ω)).2 (lt_top_iff_ne_top.2 hfin)⟩
-  exact randomised_not_summable hβγ hc₂ hc₃ hp0 hV hCb
-    (randomised_necessary hK hPlm hPl hp hp0 hind hκm hκ0 hκi hκind hC hY hcost)
-
 end levelSelection
 
 /-! ### The single-term estimator with `N` samples -/
@@ -793,5 +770,29 @@ theorem randomised_mlmc_finite [IsProbabilityMeasure μ] {K : Ω → ℕ} {Pl : 
   obtain ⟨hcostiff, hcosteq⟩ := integral_cost_level hK hκm hκ0 hκi hκind hp
   exact ⟨hint, hmean, (singleTerm_variance hK hPlm hPl hp hp0 hind hVs).1, hcostiff.2 hCs,
     hcosteq hCs⟩
+
+/-- **Infinite expected cost when `β ≤ γ`** (Giles 2015, §2.2, p. 10: "for these cases the
+estimators constructed by Rhee and Glynn (2013) have infinite expected cost").  If the rates are
+attained, `V_ℓ = V[P_ℓ − P_{ℓ−1}] ≥ c₂ 2^{−βℓ}` and `C_ℓ ≥ c₃ 2^{γℓ}` with `β ≤ γ`, then every
+single-term estimator whose sample `Y` has finite variance has infinite expected cost: the cost
+`κ_K ≥ 0` of a sample (with `E[κ_ℓ] = C_ℓ`, independent of the level `K`) has
+`E[κ_K] = ∫ κ_K dμ = ∞`. -/
+theorem randomised_infinite_cost [IsProbabilityMeasure μ] {K : Ω → ℕ} {Pl : ℕ → Ω → ℝ}
+    {p : ℕ → ℝ} (hK : Measurable K) (hPlm : ∀ ℓ, Measurable (Pl ℓ))
+    (hPl : ∀ ℓ, MemLp (Pl ℓ) 2 μ) (hp : ∀ ℓ, μ.real {ω | K ω = ℓ} = p ℓ) (hp0 : ∀ ℓ, 0 < p ℓ)
+    (hind : ∀ ℓ, IndepFun K (levelDiff Pl ℓ) μ) {κ : ℕ → Ω → ℝ} {C : ℕ → ℝ}
+    (hκm : ∀ ℓ, Measurable (κ ℓ)) (hκ0 : ∀ ℓ ω, 0 ≤ κ ℓ ω) (hκi : ∀ ℓ, Integrable (κ ℓ) μ)
+    (hκind : ∀ ℓ, IndepFun K (κ ℓ) μ) (hC : ∀ ℓ, ∫ ω, κ ℓ ω ∂μ = C ℓ)
+    {β γ c₂ c₃ : ℝ} (hβγ : β ≤ γ) (hc₂ : 0 < c₂) (hc₃ : 0 < c₃)
+    (hV : ∀ ℓ : ℕ, c₂ * (2 : ℝ) ^ (-(β * (ℓ : ℝ))) ≤ variance (levelDiff Pl ℓ) μ)
+    (hCb : ∀ ℓ : ℕ, c₃ * (2 : ℝ) ^ (γ * (ℓ : ℝ)) ≤ C ℓ) (hY : MemLp (singleTerm Pl K p) 2 μ) :
+    ∫⁻ ω, ENNReal.ofReal (κ (K ω) ω) ∂μ = ⊤ := by
+  by_contra hfin
+  have hm : Measurable fun ω => κ (K ω) ω := measurable_comp_level hK hκm
+  have hcost : Integrable (fun ω => κ (K ω) ω) μ :=
+    ⟨hm.aestronglyMeasurable, (hasFiniteIntegral_iff_ofReal
+      (Eventually.of_forall fun ω => hκ0 (K ω) ω)).2 (lt_top_iff_ne_top.2 hfin)⟩
+  exact randomised_not_summable hβγ hc₂ hc₃ hp0 hV hCb
+    (randomised_necessary hK hPlm hPl hp hp0 hind hκm hκ0 hκi hκind hC hY hcost)
 
 end MLMC
