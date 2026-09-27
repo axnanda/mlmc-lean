@@ -17,8 +17,11 @@ additional condition that `∑_d γ_d/α_d ≤ 2`."
   rounded-up optimal sample sizes give bias `≤ ε/2`, variance `≤ ε²/2` and cost `≤ c₄ ε⁻²`.
 * `giles_mimc_rectangular`: the sufficiency direction of the statement quoted above — the MIMC
   estimator on a rectangular index set has `MSE < ε²` at expected cost `O(ε⁻²)`, the optimal order.
-  (The "only when" direction needs lower bounds on the bias, variance and cost that the paper does
-  not state; it is not formalised.)
+* `mimc_rect_lower_bounds`, `mimc_rect_necessary`: the "only when" direction.  The paper states no
+  hypotheses for it; under attained rates (`|E[P_ℓ − P]| ≥ a₁ 2^{−α_d ℓ_d}` in each direction,
+  `V_ℓ ≥ a₂ 2^{−β·ℓ}`, `C_ℓ ≥ a₃ 2^{γ·ℓ}`) a rectangle with `MSE < ε²` costs at least
+  `a₃ (a₁/ε)^{∑ γ_d/α_d}`, and at least `a₂ a₃ (L_d + 1)² ε⁻²` in every direction with
+  `β_d ≤ γ_d`; so cost `O(ε⁻²)` forces `η < 0` and `∑_d γ_d/α_d ≤ 2`.
 -/
 
 open MeasureTheory ProbabilityTheory Finset Real
@@ -392,5 +395,276 @@ theorem giles_mimc_rectangular (P : Ω → ℝ) (Pℓ : (Fin D → ℕ) → Ω �
   obtain ⟨L, N, hN, hbias, hvar, hcost⟩ := hcore ε hε hε1
   exact ⟨L, N, hN, mimc_mse_cost_of P Pℓ Y Cost V C hε (rectSet L) N hN hbias hvar hcost hP hPℓ
     hY hind hCost_int hCost_mean h_var h_i h_iii h_ii h_iv h_v⟩
+
+/-! ### The converse under attained rates -/
+
+/-- `a·(k e_d) = a_d k`, where `k e_d = Pi.single d k` is the multi-index with `k` in direction `d`
+and `0` elsewhere. -/
+lemma dot_single (a : Fin D → ℝ) (d : Fin D) (k : ℕ) : dot a (Pi.single d k) = a d * k := by
+  rw [dot, Finset.sum_eq_single d
+    (fun b _ hb => by rw [Pi.single_eq_of_ne hb, Nat.cast_zero, mul_zero])
+    (fun h => absurd (Finset.mem_univ d) h), Pi.single_eq_same]
+
+/-- The multi-indices `k e_d` with `k ≤ L_d` lie in the rectangle, so for nonnegative `f`,
+`∑_{k ≤ L_d} f(k e_d) ≤ ∑_{ℓ ∈ rect L} f ℓ`. -/
+lemma sum_axis_le_sum_rectSet {f : (Fin D → ℕ) → ℝ} (hf : ∀ ℓ, 0 ≤ f ℓ) (L : Fin D → ℕ)
+    (d : Fin D) : ∑ k ∈ range (L d + 1), f (Pi.single d k) ≤ ∑ ℓ ∈ rectSet L, f ℓ := by
+  have himg : ∑ ℓ ∈ (range (L d + 1)).image (fun k => (Pi.single d k : Fin D → ℕ)), f ℓ =
+      ∑ k ∈ range (L d + 1), f (Pi.single d k) :=
+    Finset.sum_image fun x _ y _ h => Pi.single_injective d h
+  rw [← himg]
+  refine Finset.sum_le_sum_of_subset_of_nonneg (fun ℓ hℓ => ?_) fun ℓ _ _ => hf ℓ
+  obtain ⟨k, hk, rfl⟩ := Finset.mem_image.1 hℓ
+  have hk' : k ≤ L d := Nat.lt_add_one_iff.1 (Finset.mem_range.1 hk)
+  refine mem_rectSet.2 fun d' => ?_
+  show (Pi.single d k : Fin D → ℕ) d' ≤ L d'
+  by_cases h : d' = d
+  · rw [h, Pi.single_eq_same]
+    exact hk'
+  · rw [Pi.single_eq_of_ne h]
+    exact Nat.zero_le _
+
+/-- **Lower bounds for the MIMC estimator on a rectangle** (for the converse of the statement of
+Giles 2015, §2.4, p. 15: a rectangle "gives the optimal order of complexity only when `η < 0`, and
+under the additional condition that `∑_d γ_d/α_d ≤ 2`").  The paper states no hypotheses for the
+converse; here the rates are *attained*: `|E[P_ℓ − P]| ≥ a₁ 2^{−α_d ℓ_d}` in every direction `d`,
+`V_ℓ ≥ a₂ 2^{−β·ℓ}` and `C_ℓ ≥ a₃ 2^{γ·ℓ}`, with `α_d > 0` and `γ_d ≥ 0`.  If the estimator
+`∑_{ℓ ∈ rect L} Y ℓ (N ℓ)` has `MSE < ε²`, then `2^{α_d L_d} > a₁/ε` in every direction, its
+expected cost is at least `a₃ (a₁/ε)^{∑_d γ_d/α_d}` (the cost of the outermost point `L`), and at
+least `a₂ a₃ (L_d + 1)² ε⁻²` in every direction with `β_d ≤ γ_d` (Cauchy–Schwarz,
+`cost_lower_bound`, along the axis `{k e_d : k ≤ L_d}`). -/
+theorem mimc_rect_lower_bounds (P : Ω → ℝ) (Pℓ : (Fin D → ℕ) → Ω → ℝ)
+    (Y : (Fin D → ℕ) → ℕ → Ω → ℝ) (Cost : (Fin D → ℕ) → ℕ → Ω → ℝ) (V C : (Fin D → ℕ) → ℝ)
+    {α β γ : Fin D → ℝ} {a₁ a₂ a₃ ε : ℝ} (hα : ∀ d, 0 < α d) (hγ : ∀ d, 0 ≤ γ d)
+    (ha₁ : 0 < a₁) (ha₂ : 0 < a₂) (ha₃ : 0 < a₃) (hε : 0 < ε)
+    (L : Fin D → ℕ) (N : (Fin D → ℕ) → ℕ) (hN : ∀ ℓ, 0 < N ℓ)
+    (hP : Integrable P μ) (hPℓ : ∀ ℓ, Integrable (Pℓ ℓ) μ)
+    (hY : ∀ ℓ n, 0 < n → MemLp (Y ℓ n) 2 μ)
+    (hind : Pairwise fun i j => IndepFun (Y i (N i)) (Y j (N j)) μ)
+    (hCost_int : ∀ ℓ n, 0 < n → Integrable (Cost ℓ n) μ)
+    (hCost_mean : ∀ ℓ (n : ℕ), 0 < n → μ[Cost ℓ n] = n * C ℓ)
+    (h_var : ∀ ℓ n, 0 < n → variance (Y ℓ n) μ = V ℓ / n)
+    (h_iii : ∀ ℓ n, 0 < n → μ[Y ℓ n] = μ[fun ω => crossDiff (fun m => Pℓ m ω) ℓ])
+    (hbias : ∀ (ℓ : Fin D → ℕ) (d : Fin D),
+      a₁ * (2 : ℝ) ^ (-(α d * ℓ d)) ≤ |μ[fun ω => Pℓ ℓ ω - P ω]|)
+    (hV : ∀ ℓ, a₂ * (2 : ℝ) ^ (-dot β ℓ) ≤ V ℓ) (hC : ∀ ℓ, a₃ * (2 : ℝ) ^ dot γ ℓ ≤ C ℓ)
+    (hmse : μ[fun ω => (∑ ℓ ∈ rectSet L, Y ℓ (N ℓ) ω - μ[P]) ^ 2] < ε ^ 2) :
+    (∀ d, a₁ / ε < (2 : ℝ) ^ (α d * L d)) ∧
+      a₃ * (a₁ / ε) ^ (∑ d, γ d / α d) ≤ μ[fun ω => ∑ ℓ ∈ rectSet L, Cost ℓ (N ℓ) ω] ∧
+      ∀ d, β d ≤ γ d → a₂ * a₃ * ((L d : ℝ) + 1) ^ 2 * ε ^ (-2 : ℝ) ≤
+        μ[fun ω => ∑ ℓ ∈ rectSet L, Cost ℓ (N ℓ) ω] := by
+  have hVpos : ∀ ℓ, 0 < V ℓ := fun ℓ =>
+    lt_of_lt_of_le (mul_pos ha₂ (Real.rpow_pos_of_pos two_pos _)) (hV ℓ)
+  have hCpos : ∀ ℓ, 0 < C ℓ := fun ℓ =>
+    lt_of_lt_of_le (mul_pos ha₃ (Real.rpow_pos_of_pos two_pos _)) (hC ℓ)
+  -- the mean-square error is `∑_{ℓ ∈ rect} V_ℓ/N_ℓ + E[P_L − P]²` (rectangle telescoping)
+  set p : (Fin D → ℕ) → ℝ := fun m => μ[Pℓ m]
+  have hEΔ : ∀ ℓ, μ[fun ω => crossDiff (fun m => Pℓ m ω) ℓ] = crossDiff p ℓ := fun ℓ =>
+    (integrable_integral_crossDiff Pℓ hPℓ ℓ).2
+  have hmean : μ[fun ω => ∑ ℓ ∈ rectSet L, Y ℓ (N ℓ) ω] = ∑ ℓ ∈ rectSet L, crossDiff p ℓ := by
+    rw [integral_finsetSum _ fun ℓ _ => (hY ℓ (N ℓ) (hN ℓ)).integrable one_le_two]
+    exact Finset.sum_congr rfl fun ℓ _ => by rw [h_iii ℓ (N ℓ) (hN ℓ), hEΔ]
+  have hmean' : μ[∑ ℓ ∈ rectSet L, Y ℓ (N ℓ)] - μ[P] = μ[fun ω => Pℓ L ω - P ω] := by
+    have h1 : μ[∑ ℓ ∈ rectSet L, Y ℓ (N ℓ)] = μ[fun ω => ∑ ℓ ∈ rectSet L, Y ℓ (N ℓ) ω] := by
+      congr 1
+      ext ω
+      simp [Finset.sum_apply]
+    rw [h1, hmean, sum_rectSet_crossDiff p L, integral_sub (hPℓ L) hP] <;> rfl
+  have hsum : MemLp (∑ ℓ ∈ rectSet L, Y ℓ (N ℓ)) 2 μ :=
+    memLp_finsetSum' _ fun ℓ _ => hY ℓ (N ℓ) (hN ℓ)
+  have hind' : Set.Pairwise ↑(rectSet L) fun i j => IndepFun (Y i (N i)) (Y j (N j)) μ :=
+    fun i _ j _ hij => hind hij
+  have hdec := mse_eq_variance_add_sq_bias hsum (μ[P])
+  rw [IndepFun.variance_sum (fun ℓ _ => hY ℓ (N ℓ) (hN ℓ)) hind', hmean'] at hdec
+  have hfun : (fun ω => (∑ ℓ ∈ rectSet L, Y ℓ (N ℓ) ω - μ[P]) ^ 2) =
+      fun ω => ((∑ ℓ ∈ rectSet L, Y ℓ (N ℓ)) ω - μ[P]) ^ 2 := by
+    ext ω
+    simp [Finset.sum_apply]
+  have hvar : ∑ ℓ ∈ rectSet L, variance (Y ℓ (N ℓ)) μ = ∑ ℓ ∈ rectSet L, V ℓ / N ℓ :=
+    Finset.sum_congr rfl fun ℓ _ => h_var ℓ (N ℓ) (hN ℓ)
+  rw [hfun, hdec, hvar] at hmse
+  have hS0 : 0 ≤ ∑ ℓ ∈ rectSet L, V ℓ / N ℓ :=
+    Finset.sum_nonneg fun ℓ _ => div_nonneg (hVpos ℓ).le (Nat.cast_nonneg _)
+  have hB : |μ[fun ω => Pℓ L ω - P ω]| < ε :=
+    abs_lt_of_sq_lt_sq (by linarith) hε.le
+  have hS : ∑ ℓ ∈ rectSet L, V ℓ / N ℓ ≤ ε ^ 2 := by
+    linarith [sq_nonneg (μ[fun ω => Pℓ L ω - P ω])]
+  -- the finest levels: `2^{α_d L_d} > a₁/ε`
+  have hpart1 : ∀ d, a₁ / ε < (2 : ℝ) ^ (α d * L d) := fun d => by
+    have h2 : (0 : ℝ) < (2 : ℝ) ^ (α d * L d) := Real.rpow_pos_of_pos two_pos _
+    have h1 := lt_of_le_of_lt (hbias L d) hB
+    rw [Real.rpow_neg zero_le_two, ← div_eq_mul_inv, div_lt_iff₀ h2] at h1
+    rw [div_lt_iff₀ hε, mul_comm]
+    exact h1
+  -- the expected cost is `∑ N_ℓ C_ℓ`, at least the cost `C_L` of the outermost point
+  have hcost : μ[fun ω => ∑ ℓ ∈ rectSet L, Cost ℓ (N ℓ) ω] =
+      ∑ ℓ ∈ rectSet L, (N ℓ : ℝ) * C ℓ := by
+    rw [integral_finsetSum _ fun ℓ _ => hCost_int ℓ (N ℓ) (hN ℓ)]
+    exact Finset.sum_congr rfl fun ℓ _ => hCost_mean ℓ (N ℓ) (hN ℓ)
+  have hcorner : C L ≤ ∑ ℓ ∈ rectSet L, (N ℓ : ℝ) * C ℓ :=
+    calc C L ≤ (N L : ℝ) * C L := le_mul_of_one_le_left (hCpos L).le (Nat.one_le_cast.2 (hN L))
+      _ ≤ ∑ ℓ ∈ rectSet L, (N ℓ : ℝ) * C ℓ :=
+          Finset.single_le_sum (f := fun ℓ => (N ℓ : ℝ) * C ℓ)
+            (fun ℓ _ => mul_nonneg (Nat.cast_nonneg _) (hCpos ℓ).le)
+            (mem_rectSet.2 fun _ => le_rfl)
+  have hγL : (a₁ / ε) ^ (∑ d, γ d / α d) ≤ (2 : ℝ) ^ dot γ L := by
+    have hq : 0 < a₁ / ε := div_pos ha₁ hε
+    rw [Real.rpow_sum_of_pos hq, dot, Real.rpow_sum_of_pos two_pos]
+    refine Finset.prod_le_prod (fun d _ => (Real.rpow_pos_of_pos hq _).le) fun d _ => ?_
+    calc (a₁ / ε) ^ (γ d / α d) ≤ ((2 : ℝ) ^ (α d * L d)) ^ (γ d / α d) :=
+          Real.rpow_le_rpow hq.le (hpart1 d).le (div_nonneg (hγ d) (hα d).le)
+      _ = (2 : ℝ) ^ (γ d * L d) := by
+          rw [← Real.rpow_mul zero_le_two]
+          congr 1
+          rw [mul_comm (α d), mul_assoc, mul_div_cancel₀ (γ d) (hα d).ne', mul_comm]
+  have hpart2 : a₃ * (a₁ / ε) ^ (∑ d, γ d / α d) ≤
+      μ[fun ω => ∑ ℓ ∈ rectSet L, Cost ℓ (N ℓ) ω] := by
+    rw [hcost]
+    calc a₃ * (a₁ / ε) ^ (∑ d, γ d / α d) ≤ a₃ * (2 : ℝ) ^ dot γ L :=
+          mul_le_mul_of_nonneg_left hγL ha₃.le
+      _ ≤ C L := hC L
+      _ ≤ ∑ ℓ ∈ rectSet L, (N ℓ : ℝ) * C ℓ := hcorner
+  -- directions with `β_d ≤ γ_d`: `∑_{rect} √(V_ℓ C_ℓ) ≥ (L_d + 1) √(a₂ a₃)` along the axis
+  have hpart3 : ∀ d, β d ≤ γ d → a₂ * a₃ * ((L d : ℝ) + 1) ^ 2 * ε ^ (-2 : ℝ) ≤
+      μ[fun ω => ∑ ℓ ∈ rectSet L, Cost ℓ (N ℓ) ω] := by
+    intro d hd
+    have hcs := cost_lower_bound (rectSet L) V C (fun ℓ => (N ℓ : ℝ)) (pow_pos hε 2)
+      (fun ℓ _ => (hVpos ℓ).le) (fun ℓ _ => (hCpos ℓ).le) (fun ℓ _ => Nat.cast_pos.2 (hN ℓ)) hS
+    have hVC : ∀ k : ℕ, a₂ * a₃ ≤ V (Pi.single d k) * C (Pi.single d k) := fun k => by
+      have h1 : a₂ * (2 : ℝ) ^ (-dot β (Pi.single d k)) * (a₃ * (2 : ℝ) ^ dot γ (Pi.single d k)) ≤
+          V (Pi.single d k) * C (Pi.single d k) :=
+        mul_le_mul (hV _) (hC _) (mul_pos ha₃ (Real.rpow_pos_of_pos two_pos _)).le (hVpos _).le
+      have h2 : (1 : ℝ) ≤ (2 : ℝ) ^ (-dot β (Pi.single d k)) * (2 : ℝ) ^ dot γ (Pi.single d k) := by
+        rw [← Real.rpow_add two_pos, dot_single, dot_single]
+        apply Real.one_le_rpow one_le_two
+        rw [show -(β d * (k : ℝ)) + γ d * k = (γ d - β d) * k by ring]
+        exact mul_nonneg (sub_nonneg.2 hd) (Nat.cast_nonneg k)
+      calc a₂ * a₃ = a₂ * a₃ * 1 := (mul_one _).symm
+        _ ≤ a₂ * a₃ * ((2 : ℝ) ^ (-dot β (Pi.single d k)) * (2 : ℝ) ^ dot γ (Pi.single d k)) :=
+            mul_le_mul_of_nonneg_left h2 (mul_pos ha₂ ha₃).le
+        _ = a₂ * (2 : ℝ) ^ (-dot β (Pi.single d k)) * (a₃ * (2 : ℝ) ^ dot γ (Pi.single d k)) := by
+            ring
+        _ ≤ V (Pi.single d k) * C (Pi.single d k) := h1
+    have hax : ((L d : ℝ) + 1) * Real.sqrt (a₂ * a₃) ≤
+        ∑ ℓ ∈ rectSet L, Real.sqrt (V ℓ * C ℓ) :=
+      calc ((L d : ℝ) + 1) * Real.sqrt (a₂ * a₃)
+          = ∑ k ∈ range (L d + 1), Real.sqrt (a₂ * a₃) := by
+            rw [Finset.sum_const, Finset.card_range, nsmul_eq_mul, Nat.cast_add, Nat.cast_one]
+        _ ≤ ∑ k ∈ range (L d + 1), Real.sqrt (V (Pi.single d k) * C (Pi.single d k)) :=
+            Finset.sum_le_sum fun k _ => Real.sqrt_le_sqrt (hVC k)
+        _ ≤ ∑ ℓ ∈ rectSet L, Real.sqrt (V ℓ * C ℓ) :=
+            sum_axis_le_sum_rectSet (fun ℓ => Real.sqrt_nonneg _) L d
+    have hsq : ((L d : ℝ) + 1) ^ 2 * (a₂ * a₃) ≤ (∑ ℓ ∈ rectSet L, Real.sqrt (V ℓ * C ℓ)) ^ 2 := by
+      have h0 : 0 ≤ ((L d : ℝ) + 1) * Real.sqrt (a₂ * a₃) := by positivity
+      calc ((L d : ℝ) + 1) ^ 2 * (a₂ * a₃) = (((L d : ℝ) + 1) * Real.sqrt (a₂ * a₃)) ^ 2 := by
+            rw [mul_pow, Real.sq_sqrt (mul_pos ha₂ ha₃).le]
+        _ ≤ (∑ ℓ ∈ rectSet L, Real.sqrt (V ℓ * C ℓ)) ^ 2 := pow_le_pow_left₀ h0 hax 2
+    rw [hcost]
+    calc a₂ * a₃ * ((L d : ℝ) + 1) ^ 2 * ε ^ (-2 : ℝ)
+        = (ε ^ 2)⁻¹ * (((L d : ℝ) + 1) ^ 2 * (a₂ * a₃)) := by
+          rw [← eps_inv_sq_eq hε, inv_pow]
+          ring
+      _ ≤ (ε ^ 2)⁻¹ * (∑ ℓ ∈ rectSet L, Real.sqrt (V ℓ * C ℓ)) ^ 2 :=
+          mul_le_mul_of_nonneg_left hsq (inv_nonneg.2 (pow_nonneg hε.le 2))
+      _ ≤ ∑ ℓ ∈ rectSet L, (N ℓ : ℝ) * C ℓ := hcs
+  exact ⟨hpart1, hpart2, hpart3⟩
+
+/-- **A rectangle attains the order `ε⁻²` only when `η < 0` and `∑_d γ_d/α_d ≤ 2`** (the converse
+direction of Giles 2015, §2.4, p. 15: "Haji-Ali et al. (2014a) prove that this gives the optimal
+order of complexity only when `η < 0`, and under the additional condition that
+`∑_d γ_d/α_d ≤ 2`"), under the attained rates of `mimc_rect_lower_bounds`.  If for some `c₄` and
+`ε₀ > 0` every `0 < ε < ε₀` admits a rectangle `rect L` and sample sizes `N_ℓ ≥ 1` with
+`MSE < ε²` and expected cost `≤ c₄ ε⁻²`, then `γ_d < β_d` for every `d` (that is, `η < 0`) and
+`∑_d γ_d/α_d ≤ 2`.  Together with `giles_mimc_rectangular` this is the statement quoted above. -/
+theorem mimc_rect_necessary (P : Ω → ℝ) (Pℓ : (Fin D → ℕ) → Ω → ℝ)
+    (Y : (Fin D → ℕ) → ℕ → Ω → ℝ) (Cost : (Fin D → ℕ) → ℕ → Ω → ℝ) (V C : (Fin D → ℕ) → ℝ)
+    {α β γ : Fin D → ℝ} {a₁ a₂ a₃ : ℝ} (hα : ∀ d, 0 < α d) (hγ : ∀ d, 0 ≤ γ d)
+    (ha₁ : 0 < a₁) (ha₂ : 0 < a₂) (ha₃ : 0 < a₃)
+    (hP : Integrable P μ) (hPℓ : ∀ ℓ, Integrable (Pℓ ℓ) μ)
+    (hY : ∀ ℓ n, 0 < n → MemLp (Y ℓ n) 2 μ)
+    (hind : ∀ N : (Fin D → ℕ) → ℕ, (∀ ℓ, 0 < N ℓ) →
+      Pairwise fun i j => IndepFun (Y i (N i)) (Y j (N j)) μ)
+    (hCost_int : ∀ ℓ n, 0 < n → Integrable (Cost ℓ n) μ)
+    (hCost_mean : ∀ ℓ (n : ℕ), 0 < n → μ[Cost ℓ n] = n * C ℓ)
+    (h_var : ∀ ℓ n, 0 < n → variance (Y ℓ n) μ = V ℓ / n)
+    (h_iii : ∀ ℓ n, 0 < n → μ[Y ℓ n] = μ[fun ω => crossDiff (fun m => Pℓ m ω) ℓ])
+    (hbias : ∀ (ℓ : Fin D → ℕ) (d : Fin D),
+      a₁ * (2 : ℝ) ^ (-(α d * ℓ d)) ≤ |μ[fun ω => Pℓ ℓ ω - P ω]|)
+    (hV : ∀ ℓ, a₂ * (2 : ℝ) ^ (-dot β ℓ) ≤ V ℓ) (hC : ∀ ℓ, a₃ * (2 : ℝ) ^ dot γ ℓ ≤ C ℓ)
+    (hopt : ∃ c₄ ε₀ : ℝ, 0 < ε₀ ∧ ∀ ε : ℝ, 0 < ε → ε < ε₀ →
+      ∃ (L : Fin D → ℕ) (N : (Fin D → ℕ) → ℕ), (∀ ℓ, 0 < N ℓ) ∧
+        μ[fun ω => (∑ ℓ ∈ rectSet L, Y ℓ (N ℓ) ω - μ[P]) ^ 2] < ε ^ 2 ∧
+        μ[fun ω => ∑ ℓ ∈ rectSet L, Cost ℓ (N ℓ) ω] ≤ c₄ * ε ^ (-2 : ℝ)) :
+    (∀ d, γ d < β d) ∧ ∑ d, γ d / α d ≤ 2 := by
+  obtain ⟨c₄, ε₀, hε₀, hopt⟩ := hopt
+  have key : ∀ ε : ℝ, 0 < ε → ε < ε₀ → ∃ L : Fin D → ℕ,
+      (∀ d, a₁ / ε < (2 : ℝ) ^ (α d * L d)) ∧
+      a₃ * (a₁ / ε) ^ (∑ d, γ d / α d) ≤ c₄ * ε ^ (-2 : ℝ) ∧
+      ∀ d, β d ≤ γ d → a₂ * a₃ * ((L d : ℝ) + 1) ^ 2 * ε ^ (-2 : ℝ) ≤ c₄ * ε ^ (-2 : ℝ) := by
+    intro ε hε hεε₀
+    obtain ⟨L, N, hN, hmse, hcost⟩ := hopt ε hε hεε₀
+    obtain ⟨h1, h2, h3⟩ := mimc_rect_lower_bounds P Pℓ Y Cost V C hα hγ ha₁ ha₂ ha₃ hε L N hN
+      hP hPℓ hY (hind N hN) hCost_int hCost_mean h_var h_iii hbias hV hC hmse
+    exact ⟨L, h1, h2.trans hcost, fun d hd => (h3 d hd).trans hcost⟩
+  refine ⟨fun d => ?_, ?_⟩
+  · -- `γ_d < β_d`: otherwise `L_d` stays bounded while `2^{α_d L_d} > a₁/ε` is unbounded
+    by_contra hlt
+    rw [not_lt] at hlt
+    have hK : 0 < a₂ * a₃ := mul_pos ha₂ ha₃
+    set B : ℝ := (2 : ℝ) ^ (α d * (c₄ / (a₂ * a₃)))
+    have hB : 0 < B := Real.rpow_pos_of_pos two_pos _
+    set ε : ℝ := min (ε₀ / 2) (a₁ / B)
+    have hε : 0 < ε := lt_min (half_pos hε₀) (div_pos ha₁ hB)
+    have hεε₀ : ε < ε₀ := lt_of_le_of_lt (min_le_left _ _) (half_lt_self hε₀)
+    obtain ⟨L, h1, -, h3⟩ := key ε hε hεε₀
+    have hc : a₂ * a₃ * ((L d : ℝ) + 1) ^ 2 ≤ c₄ :=
+      le_of_mul_le_mul_right (h3 d hlt) (Real.rpow_pos_of_pos hε _)
+    have hLsq : (L d : ℝ) ≤ ((L d : ℝ) + 1) ^ 2 := by
+      nlinarith [sq_nonneg (L d : ℝ), (Nat.cast_nonneg (L d) : (0 : ℝ) ≤ L d)]
+    have hLd : (L d : ℝ) ≤ c₄ / (a₂ * a₃) := by
+      rw [le_div_iff₀ hK]
+      calc (L d : ℝ) * (a₂ * a₃) = a₂ * a₃ * (L d : ℝ) := mul_comm _ _
+        _ ≤ a₂ * a₃ * ((L d : ℝ) + 1) ^ 2 := mul_le_mul_of_nonneg_left hLsq hK.le
+        _ ≤ c₄ := hc
+    have hle : (2 : ℝ) ^ (α d * L d) ≤ B :=
+      Real.rpow_le_rpow_of_exponent_le one_le_two (mul_le_mul_of_nonneg_left hLd (hα d).le)
+    have hεB : ε ≤ a₁ / B := min_le_right _ _
+    rw [le_div_iff₀ hB] at hεB
+    have hBε : B ≤ a₁ / ε := by
+      rw [le_div_iff₀ hε, mul_comm]
+      exact hεB
+    linarith [h1 d]
+  · -- `∑_d γ_d/α_d ≤ 2`: otherwise `a₃ a₁^s ≤ c₄ ε^{s−2}` for all small `ε`, with `s − 2 > 0`
+    by_contra hlt
+    rw [not_le] at hlt
+    set s : ℝ := ∑ d, γ d / α d
+    have hs2 : 0 < s - 2 := by linarith
+    have hA : 0 < a₃ * a₁ ^ s := mul_pos ha₃ (Real.rpow_pos_of_pos ha₁ _)
+    set c : ℝ := max c₄ 1
+    have hc : 0 < c := lt_of_lt_of_le one_pos (le_max_right _ _)
+    set X : ℝ := a₃ * a₁ ^ s / (2 * c) with hX_def
+    have hX : 0 < X := div_pos hA (mul_pos two_pos hc)
+    set ε : ℝ := min (ε₀ / 2) (X ^ (1 / (s - 2)))
+    have hε : 0 < ε := lt_min (half_pos hε₀) (Real.rpow_pos_of_pos hX _)
+    have hεε₀ : ε < ε₀ := lt_of_le_of_lt (min_le_left _ _) (half_lt_self hε₀)
+    obtain ⟨L, -, h2, -⟩ := key ε hε hεε₀
+    have hεs : 0 < ε ^ s := Real.rpow_pos_of_pos hε s
+    rw [Real.div_rpow ha₁.le hε.le] at h2
+    have h3 : a₃ * (a₁ ^ s / ε ^ s) * ε ^ s = a₃ * a₁ ^ s := by
+      rw [mul_assoc, div_mul_cancel₀ _ hεs.ne']
+    have h4 : c₄ * ε ^ (-2 : ℝ) * ε ^ s = c₄ * ε ^ (s - 2) := by
+      rw [mul_assoc, ← Real.rpow_add hε, show (-2 : ℝ) + s = s - 2 by ring]
+    have h5 : a₃ * a₁ ^ s ≤ c₄ * ε ^ (s - 2) := by
+      rw [← h3, ← h4]
+      exact mul_le_mul_of_nonneg_right h2 hεs.le
+    have h6 : ε ^ (s - 2) ≤ X :=
+      calc ε ^ (s - 2) ≤ (X ^ (1 / (s - 2))) ^ (s - 2) :=
+            Real.rpow_le_rpow hε.le (min_le_right _ _) hs2.le
+        _ = X := by rw [← Real.rpow_mul hX.le, one_div_mul_cancel hs2.ne', Real.rpow_one]
+    have h7 : c₄ * ε ^ (s - 2) ≤ c * X :=
+      mul_le_mul (le_max_left _ _) h6 (Real.rpow_nonneg hε.le _) hc.le
+    have h8 : c * X = a₃ * a₁ ^ s / 2 := by
+      rw [hX_def, ← mul_div_assoc, mul_comm c, mul_div_mul_right _ _ hc.ne']
+    linarith
 
 end MLMC

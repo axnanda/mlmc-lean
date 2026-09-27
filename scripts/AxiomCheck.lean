@@ -154,6 +154,8 @@ import MlmcLean
 #print axioms MLMC.sum_sdiff_rectSet_le
 #print axioms MLMC.mimc_rect_core
 #print axioms MLMC.giles_mimc_rectangular
+#print axioms MLMC.mimc_rect_lower_bounds
+#print axioms MLMC.mimc_rect_necessary
 -- helper lemmas that the prove2.me generator promotes to nodes
 #print axioms MLMC.sqrt_Vb_mul_Cb
 #print axioms MLMC.two_rpow_levelL_le

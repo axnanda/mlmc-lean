@@ -151,12 +151,15 @@
     "MLMC.sum_rectSet_crossDiff",
     "MLMC.sum_sdiff_rectSet_le",
     "MLMC.mimc_rect_core",
-    "MLMC.giles_mimc_rectangular"
+    "MLMC.giles_mimc_rectangular",
+    "MLMC.mimc_rect_lower_bounds",
+    "MLMC.mimc_rect_necessary"
   ],
   "bundlePrefix": "MLMC_",
   "paperNamed": [],
   "forceNode": [],
   "forceInline": [
+    "MLMC.sum_axis_le_sum_rectSet",
     "MLMC.sum_rectSet_two_rpow_le"
   ]
 }
