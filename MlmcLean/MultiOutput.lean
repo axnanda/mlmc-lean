@@ -67,8 +67,8 @@ theorem multiOutput_variance {M : Finset κ} (hM : M.Nonempty) (V : ℕ → κ �
 `V_ℓ = max_{m ∈ M} V_{ℓ,m}/ε_m²`, "the standard Lagrange multiplier approach outlined in
 Section 1.3 can be used to determine the optimal number of samples to use on each level".
 Among real allocations `N_ℓ > 0` with `∑_{ℓ=0}^{L} N_ℓ⁻¹ V_ℓ ≤ ½` the least cost `∑ N_ℓ C_ℓ` is
-`2 (∑_{ℓ=0}^{L} √(V_ℓ C_ℓ))²`, and the Lagrange allocation that attains it (`lagrangeN` with
-`τ = ½`) satisfies every individual constraint `∑_ℓ N_ℓ⁻¹ V_{ℓ,m} ≤ ½ ε_m²`. -/
+`2 (∑_{ℓ=0}^{L} √(V_ℓ C_ℓ))²`; the Lagrange allocation (`lagrangeN` with `τ = ½`) is positive,
+attains this cost, and satisfies every individual constraint `∑_ℓ N_ℓ⁻¹ V_{ℓ,m} ≤ ½ ε_m²`. -/
 theorem multiOutput_optimal {M : Finset κ} (hM : M.Nonempty) (V : ℕ → κ → ℝ) (C : ℕ → ℝ)
     {ε : κ → ℝ} (hε : ∀ m ∈ M, 0 < ε m) (hV : ∀ ℓ, ∀ m ∈ M, 0 < V ℓ m) (hC : ∀ ℓ, 0 < C ℓ)
     (L : ℕ) :
@@ -76,6 +76,11 @@ theorem multiOutput_optimal {M : Finset κ} (hM : M.Nonempty) (V : ℕ → κ �
         ∑ ℓ ∈ range (L + 1), M.sup' hM (fun m => V ℓ m / ε m ^ 2) / n ℓ ≤ 1 / 2 ∧
         c = ∑ ℓ ∈ range (L + 1), n ℓ * C ℓ}
       (2 * (∑ ℓ ∈ range (L + 1), Real.sqrt (M.sup' hM (fun m => V ℓ m / ε m ^ 2) * C ℓ)) ^ 2) ∧
+    (∀ ℓ ∈ range (L + 1),
+      0 < lagrangeN (range (L + 1)) (fun ℓ => M.sup' hM fun m => V ℓ m / ε m ^ 2) C (1 / 2) ℓ) ∧
+    ∑ ℓ ∈ range (L + 1),
+        lagrangeN (range (L + 1)) (fun ℓ => M.sup' hM fun m => V ℓ m / ε m ^ 2) C (1 / 2) ℓ * C ℓ =
+      2 * (∑ ℓ ∈ range (L + 1), Real.sqrt (M.sup' hM (fun m => V ℓ m / ε m ^ 2) * C ℓ)) ^ 2 ∧
     ∀ m ∈ M, ∑ ℓ ∈ range (L + 1), V ℓ m /
       lagrangeN (range (L + 1)) (fun ℓ => M.sup' hM fun m => V ℓ m / ε m ^ 2) C (1 / 2) ℓ ≤
         ε m ^ 2 / 2 := by
@@ -89,7 +94,8 @@ theorem multiOutput_optimal {M : Finset κ} (hM : M.Nonempty) (V : ℕ → κ �
     (fun ℓ _ => hVmax ℓ) (fun ℓ _ => hC ℓ)
   have h2 : ((1 : ℝ) / 2)⁻¹ = 2 := by norm_num
   rw [h2] at h
-  refine ⟨h.1, fun m hm => multiOutput_variance ⟨m₀, hm₀⟩ V hε L h.2.1.1 h.2.1.2.1.le m hm⟩
+  refine ⟨h.1, h.2.1.1, h.2.1.2.2,
+    fun m hm => multiOutput_variance ⟨m₀, hm₀⟩ V hε L h.2.1.1 h.2.1.2.1.le m hm⟩
 
 end finite
 

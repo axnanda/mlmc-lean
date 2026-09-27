@@ -19,6 +19,8 @@
     "MLMC.variance_sample_mean",
     "MLMC.giles_theorem1",
     "MLMC.giles_theorem1_cost_sum",
+    "MLMC.giles_theorem1_uniform",
+    "MLMC.giles_theorem1_of_core",
     "MLMC.giles_theorem1_isBigO",
     "MLMC.integral_levelEstimator",
     "MLMC.variance_levelEstimator",

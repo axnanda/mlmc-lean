@@ -21,6 +21,8 @@ import MlmcLean
 #print axioms MLMC.variance_sample_mean
 #print axioms MLMC.giles_theorem1
 #print axioms MLMC.giles_theorem1_cost_sum
+#print axioms MLMC.giles_theorem1_uniform
+#print axioms MLMC.giles_theorem1_of_core
 #print axioms MLMC.giles_theorem1_isBigO
 #print axioms MLMC.integral_levelEstimator
 #print axioms MLMC.variance_levelEstimator

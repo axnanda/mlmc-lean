@@ -31,6 +31,8 @@ and (pairwise) independence across levels for every choice of sample sizes `N �
 * `giles_theorem1` — the theorem, with the paper's conclusion `E[C] ≤ c₄ · (…)` for the random
   total cost `C = ∑_ℓ Cost ℓ (N ℓ)`;
 * `giles_theorem1_cost_sum` — the same with the cost written as `∑ N_ℓ C_ℓ` (`= E[C]`);
+* `giles_theorem1_uniform` — the theorem with one constant `c₄` for all probability spaces and
+  data, depending only on `α, β, γ, c₁, c₂, c₃` (as in the paper's proof);
 * `giles_theorem1_isBigO` — the three regimes as `Asymptotics.IsBigO` statements as `ε → 0⁺`.
 -/
 
@@ -58,14 +60,22 @@ theorem variance_sample_mean (X : ℕ → Ω → ℝ) (N : ℕ) (hN : 0 < N) (v 
   have hN' : (N : ℝ) ≠ 0 := Nat.cast_ne_zero.2 hN.ne'
   field_simp
 
-/-- **Giles' Theorem 1, with the cost written as `∑_ℓ N_ℓ C_ℓ`** (Giles 2015, §2.1, Theorem 1).
-Hypotheses as in `giles_theorem1` without the random costs; the conclusion bounds
-`∑_{ℓ=0}^{L} N_ℓ C_ℓ`, which is the expected total cost `E[C]` when each level-`ℓ` sample has
-expected cost `C_ℓ`. -/
-theorem giles_theorem1_cost_sum
+/-- **Giles' Theorem 1 from the deterministic core** (a step of this formalisation's proof of
+Giles 2015, §2.1, Theorem 1).  Hypotheses (i)–(iv) as in `giles_theorem1_cost_sum`, and any
+constant `c₄` with the property that `mlmc_complexity_core` provides: for every `0 < ε < e⁻¹`
+there are `L` and `N_ℓ ≥ 1` with `(c₁ 2^{−αL})² + ∑_{ℓ=0}^{L} c₂ 2^{−βℓ}/N_ℓ < ε²` and
+`∑_{ℓ=0}^{L} N_ℓ c₃ 2^{γℓ} ≤ c₄ · complexityBound α β γ ε`.  Then for every `0 < ε < e⁻¹` there are
+`L` and `N_ℓ ≥ 1` for which the multilevel estimator has `MSE < ε²` and
+`∑_{ℓ=0}^{L} N_ℓ C_ℓ ≤ c₄ · complexityBound α β γ ε`.  The constant `c₄` is not changed, so it
+depends only on what the core's constant depends on (`giles_theorem1_uniform`). -/
+theorem giles_theorem1_of_core
     (P : Ω → ℝ) (Pℓ : ℕ → Ω → ℝ) (Y : ℕ → ℕ → Ω → ℝ) (V C : ℕ → ℝ)
-    {α β γ c₁ c₂ c₃ : ℝ} (hα : 0 < α) (hβ : 0 < β) (hγ : 0 < γ)
-    (hc₁ : 0 < c₁) (hc₂ : 0 < c₂) (hc₃ : 0 < c₃) (hαβγ : min β γ / 2 ≤ α)
+    {α β γ c₁ c₂ c₃ c₄ : ℝ}
+    (hcore : ∀ ε : ℝ, 0 < ε → ε < Real.exp (-1) →
+      ∃ (L : ℕ) (N : ℕ → ℕ), (∀ ℓ, 0 < N ℓ) ∧
+        (c₁ * (2 : ℝ) ^ (-(α * (L : ℝ)))) ^ 2 +
+          ∑ ℓ ∈ range (L + 1), Vb β c₂ ℓ / (N ℓ : ℝ) < ε ^ 2 ∧
+        ∑ ℓ ∈ range (L + 1), (N ℓ : ℝ) * Cb γ c₃ ℓ ≤ c₄ * complexityBound α β γ ε)
     (hP : Integrable P μ) (hPℓ : ∀ ℓ, Integrable (Pℓ ℓ) μ)
     (hY : ∀ ℓ n, 0 < n → MemLp (Y ℓ n) 2 μ)
     (hind : ∀ N : ℕ → ℕ, (∀ ℓ, 0 < N ℓ) →
@@ -76,13 +86,11 @@ theorem giles_theorem1_cost_sum
     (h_var : ∀ ℓ n, 0 < n → variance (Y ℓ n) μ = V ℓ / n)
     (h_iii : ∀ ℓ, V ℓ ≤ c₂ * (2 : ℝ) ^ (-(β * (ℓ : ℝ))))
     (h_iv : ∀ ℓ, C ℓ ≤ c₃ * (2 : ℝ) ^ (γ * (ℓ : ℝ))) :
-    ∃ c₄ : ℝ, 0 < c₄ ∧ ∀ ε : ℝ, 0 < ε → ε < Real.exp (-1) →
+    ∀ ε : ℝ, 0 < ε → ε < Real.exp (-1) →
       ∃ (L : ℕ) (N : ℕ → ℕ), (∀ ℓ, 0 < N ℓ) ∧
         μ[fun ω => (∑ ℓ ∈ range (L + 1), Y ℓ (N ℓ) ω - μ[P]) ^ 2] < ε ^ 2 ∧
         ∑ ℓ ∈ range (L + 1), (N ℓ : ℝ) * C ℓ ≤ c₄ * complexityBound α β γ ε := by
-  obtain ⟨c₄, hc₄, hcore⟩ :=
-    mlmc_complexity_core (c₁ := c₁) (c₂ := c₂) (c₃ := c₃) hα hβ hγ hc₁ hc₂ hc₃ hαβγ
-  refine ⟨c₄, hc₄, fun ε hε hε1 => ?_⟩
+  intro ε hε hε1
   obtain ⟨L, N, hN, hmse, hcost⟩ := hcore ε hε hε1
   refine ⟨L, N, hN, ?_, ?_⟩
   · -- mean-square error
@@ -108,6 +116,33 @@ theorem giles_theorem1_cost_sum
           intro ℓ _
           exact mul_le_mul_of_nonneg_left (h_iv ℓ) (by positivity)
       _ ≤ c₄ * complexityBound α β γ ε := hcost
+
+/-- **Giles' Theorem 1, with the cost written as `∑_ℓ N_ℓ C_ℓ`** (Giles 2015, §2.1, Theorem 1).
+Hypotheses as in `giles_theorem1` without the random costs; the conclusion bounds
+`∑_{ℓ=0}^{L} N_ℓ C_ℓ`, which is the expected total cost `E[C]` when each level-`ℓ` sample has
+expected cost `C_ℓ`. -/
+theorem giles_theorem1_cost_sum
+    (P : Ω → ℝ) (Pℓ : ℕ → Ω → ℝ) (Y : ℕ → ℕ → Ω → ℝ) (V C : ℕ → ℝ)
+    {α β γ c₁ c₂ c₃ : ℝ} (hα : 0 < α) (hβ : 0 < β) (hγ : 0 < γ)
+    (hc₁ : 0 < c₁) (hc₂ : 0 < c₂) (hc₃ : 0 < c₃) (hαβγ : min β γ / 2 ≤ α)
+    (hP : Integrable P μ) (hPℓ : ∀ ℓ, Integrable (Pℓ ℓ) μ)
+    (hY : ∀ ℓ n, 0 < n → MemLp (Y ℓ n) 2 μ)
+    (hind : ∀ N : ℕ → ℕ, (∀ ℓ, 0 < N ℓ) →
+      Pairwise fun i j => IndepFun (Y i (N i)) (Y j (N j)) μ)
+    (h_i : ∀ ℓ : ℕ, |μ[fun ω => Pℓ ℓ ω - P ω]| ≤ c₁ * (2 : ℝ) ^ (-(α * (ℓ : ℝ))))
+    (h_ii₀ : ∀ n, 0 < n → μ[Y 0 n] = μ[Pℓ 0])
+    (h_ii : ∀ ℓ n, 0 < n → μ[Y (ℓ + 1) n] = μ[fun ω => Pℓ (ℓ + 1) ω - Pℓ ℓ ω])
+    (h_var : ∀ ℓ n, 0 < n → variance (Y ℓ n) μ = V ℓ / n)
+    (h_iii : ∀ ℓ, V ℓ ≤ c₂ * (2 : ℝ) ^ (-(β * (ℓ : ℝ))))
+    (h_iv : ∀ ℓ, C ℓ ≤ c₃ * (2 : ℝ) ^ (γ * (ℓ : ℝ))) :
+    ∃ c₄ : ℝ, 0 < c₄ ∧ ∀ ε : ℝ, 0 < ε → ε < Real.exp (-1) →
+      ∃ (L : ℕ) (N : ℕ → ℕ), (∀ ℓ, 0 < N ℓ) ∧
+        μ[fun ω => (∑ ℓ ∈ range (L + 1), Y ℓ (N ℓ) ω - μ[P]) ^ 2] < ε ^ 2 ∧
+        ∑ ℓ ∈ range (L + 1), (N ℓ : ℝ) * C ℓ ≤ c₄ * complexityBound α β γ ε := by
+  obtain ⟨c₄, hc₄, hcore⟩ :=
+    mlmc_complexity_core (c₁ := c₁) (c₂ := c₂) (c₃ := c₃) hα hβ hγ hc₁ hc₂ hc₃ hαβγ
+  exact ⟨c₄, hc₄, giles_theorem1_of_core P Pℓ Y V C hcore hP hPℓ hY hind h_i h_ii₀ h_ii h_var
+    h_iii h_iv⟩
 
 /-- **Giles' Theorem 1** (Giles 2015, §2.1, Theorem 1).
 Let `P` be an integrable random variable and `Pℓ ℓ` its integrable level-`ℓ` approximation.
@@ -150,6 +185,53 @@ theorem giles_theorem1
     hind h_i h_ii₀ h_ii h_var h_iii h_iv
   refine ⟨c₄, hc₄, fun ε hε hε1 => ?_⟩
   obtain ⟨L, N, hN, hmse, hcost⟩ := h ε hε hε1
+  refine ⟨L, N, hN, hmse, ?_⟩
+  have hE : μ[fun ω => ∑ ℓ ∈ range (L + 1), Cost ℓ (N ℓ) ω] =
+      ∑ ℓ ∈ range (L + 1), (N ℓ : ℝ) * C ℓ := by
+    rw [integral_finsetSum _ fun ℓ _ => hCost_int ℓ (N ℓ) (hN ℓ)]
+    exact Finset.sum_congr rfl fun ℓ _ => hCost_mean ℓ (N ℓ) (hN ℓ)
+  rw [hE]
+  exact hcost
+
+universe u
+
+/-- **Giles' Theorem 1 with a constant that depends only on `α, β, γ, c₁, c₂, c₃`** (Giles 2015,
+§2.1, Theorem 1; the proof in the paper computes `c₄` from these six constants alone).  Let
+`α, β, γ, c₁, c₂, c₃` be positive with `α ≥ ½ min(β,γ)`.  Then one `c₄ > 0` serves every
+probability space and every `P`, `Pℓ`, `Y`, `Cost`, `V`, `C` that satisfy the hypotheses of
+`giles_theorem1` with these constants: for every `0 < ε < e⁻¹` there are `L` and `N ℓ ≥ 1` for
+which `Y = ∑_{ℓ=0}^{L} Y ℓ (N ℓ)` has `E[(Y − E[P])²] < ε²` and the cost
+`C = ∑_{ℓ=0}^{L} Cost ℓ (N ℓ)` has `E[C] ≤ c₄ · complexityBound α β γ ε`. -/
+theorem giles_theorem1_uniform {α β γ c₁ c₂ c₃ : ℝ} (hα : 0 < α) (hβ : 0 < β) (hγ : 0 < γ)
+    (hc₁ : 0 < c₁) (hc₂ : 0 < c₂) (hc₃ : 0 < c₃) (hαβγ : min β γ / 2 ≤ α) :
+    ∃ c₄ : ℝ, 0 < c₄ ∧
+      ∀ {Ω : Type u} [MeasurableSpace Ω] (μ : Measure Ω) [IsProbabilityMeasure μ]
+        (P : Ω → ℝ) (Pℓ : ℕ → Ω → ℝ) (Y : ℕ → ℕ → Ω → ℝ) (Cost : ℕ → ℕ → Ω → ℝ)
+        (V C : ℕ → ℝ),
+        Integrable P μ → (∀ ℓ, Integrable (Pℓ ℓ) μ) →
+        (∀ ℓ n, 0 < n → MemLp (Y ℓ n) 2 μ) →
+        (∀ N : ℕ → ℕ, (∀ ℓ, 0 < N ℓ) →
+          Pairwise fun i j => IndepFun (Y i (N i)) (Y j (N j)) μ) →
+        (∀ ℓ n, 0 < n → Integrable (Cost ℓ n) μ) →
+        (∀ ℓ (n : ℕ), 0 < n → μ[Cost ℓ n] = n * C ℓ) →
+        (∀ ℓ : ℕ, |μ[fun ω => Pℓ ℓ ω - P ω]| ≤ c₁ * (2 : ℝ) ^ (-(α * (ℓ : ℝ)))) →
+        (∀ n, 0 < n → μ[Y 0 n] = μ[Pℓ 0]) →
+        (∀ ℓ n, 0 < n → μ[Y (ℓ + 1) n] = μ[fun ω => Pℓ (ℓ + 1) ω - Pℓ ℓ ω]) →
+        (∀ ℓ n, 0 < n → variance (Y ℓ n) μ = V ℓ / n) →
+        (∀ ℓ, V ℓ ≤ c₂ * (2 : ℝ) ^ (-(β * (ℓ : ℝ)))) →
+        (∀ ℓ, C ℓ ≤ c₃ * (2 : ℝ) ^ (γ * (ℓ : ℝ))) →
+        ∀ ε : ℝ, 0 < ε → ε < Real.exp (-1) →
+          ∃ (L : ℕ) (N : ℕ → ℕ), (∀ ℓ, 0 < N ℓ) ∧
+            μ[fun ω => (∑ ℓ ∈ range (L + 1), Y ℓ (N ℓ) ω - μ[P]) ^ 2] < ε ^ 2 ∧
+            μ[fun ω => ∑ ℓ ∈ range (L + 1), Cost ℓ (N ℓ) ω] ≤
+              c₄ * complexityBound α β γ ε := by
+  obtain ⟨c₄, hc₄, hcore⟩ :=
+    mlmc_complexity_core (c₁ := c₁) (c₂ := c₂) (c₃ := c₃) hα hβ hγ hc₁ hc₂ hc₃ hαβγ
+  refine ⟨c₄, hc₄, ?_⟩
+  intro Ω _ μ _ P Pℓ Y Cost V C hP hPℓ hY hind hCost_int hCost_mean h_i h_ii₀ h_ii h_var h_iii
+    h_iv ε hε hε1
+  obtain ⟨L, N, hN, hmse, hcost⟩ := giles_theorem1_of_core P Pℓ Y V C hcore hP hPℓ hY hind h_i
+    h_ii₀ h_ii h_var h_iii h_iv ε hε hε1
   refine ⟨L, N, hN, hmse, ?_⟩
   have hE : μ[fun ω => ∑ ℓ ∈ range (L + 1), Cost ℓ (N ℓ) ω] =
       ∑ ℓ ∈ range (L + 1), (N ℓ : ℝ) * C ℓ := by
