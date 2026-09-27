@@ -113,10 +113,10 @@ lemma integral_sq_affine_le {Y : Ω → ℝ} (hY : MemLp Y 2 μ) (hmean : ∫ ω
   simp only [probReal_univ, smul_eq_mul, one_mul, mul_zero, zero_add]
   linarith [mul_le_mul_of_nonneg_left hvar (sq_nonneg b)]
 
+omit [IsProbabilityMeasure μ] in
 /-- **Haas–Giles (2025), §6.3, p. 13, (39) for `mul1`**: "`mul1 ∼ √h`".  If the increment `Y = Z̃_i`
-has second moment at most 1, then `mul1_i = √h σ Z̃_i` has `E[mul1_i²] ≤ σ² h`. -/
-theorem integral_sq_mul1_le {Y : Ω → ℝ} (hY : MemLp Y 2 μ) (hvar : ∫ ω, Y ω ^ 2 ∂μ ≤ 1)
-    {σ h : ℝ} (hh : 0 ≤ h) :
+has second moment at most 1, then `mul1_i = √h σ Z̃_i` has `E[mul1_i²] ≤ σ² h` (for any measure). -/
+theorem integral_sq_mul1_le {Y : Ω → ℝ} (hvar : ∫ ω, Y ω ^ 2 ∂μ ≤ 1) {σ h : ℝ} (hh : 0 ≤ h) :
     ∫ ω, (Real.sqrt h * σ * Y ω) ^ 2 ∂μ ≤ σ ^ 2 * h := by
   have e : (fun ω => (Real.sqrt h * σ * Y ω) ^ 2) = fun ω => σ ^ 2 * h * Y ω ^ 2 := by
     funext ω
@@ -199,8 +199,8 @@ lemma integrable_prod_of_iIndepFun {ι : Type*} {X : ι → Ω → ℝ} (hX : iI
       funext ω
       exact Finset.prod_apply ω s X
     rwa [e] at h
-  have h := hind.integrable_mul (hi i) ih
-  simpa only [Finset.prod_insert his] using h
+  refine (hind.integrable_mul (hi i) ih).congr (Filter.Eventually.of_forall fun ω => ?_)
+  simp only [Pi.mul_apply, Finset.prod_insert his]
 
 variable {Z : ℕ → Ω → ℝ}
 
@@ -424,12 +424,12 @@ theorem integral_abs_roundFixed_path_sub_le (hZ : iIndepFun Z μ) (hm : ∀ i, M
       ring
     rw [hSt k ω, hstep, abs_sub_comm]
     exact abs_sub_roundFixed_le e d _
-  have h := integral_abs_perturbed_sub_le hZ hm hZ2 hmean hvar hh0.le hh1
+  have hacc := integral_abs_perturbed_sub_le hZ hm hZ2 hmean hvar hh0.le hh1
     (zpow_pos two_pos _).le s₀ St _ hSt0 hSt' hρ n
   have hn : (n : ℝ) = T / h := by
     rw [← hT, mul_div_cancel_right₀ _ hh0.ne']
-  rw [hT, hn] at h
-  exact h.trans_eq (by ring)
+  rw [hT, hn] at hacc
+  exact hacc.trans_eq (by ring)
 
 end accumulation
 

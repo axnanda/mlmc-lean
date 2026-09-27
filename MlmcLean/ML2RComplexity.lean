@@ -181,9 +181,6 @@ lemma sum_abs_prod_ml2r_le {r : ℝ} (hr0 : 0 < r) (hr1 : r < 1) (L : ℕ) :
     _ = Real.exp (r / (1 - r) ^ 2) ^ 2 * ∑ j ∈ range (L + 1), r ^ j := by
         rw [← Finset.mul_sum, ← Finset.sum_range_reflect (fun j => r ^ j) (L + 1)]
         congr 1
-        refine Finset.sum_congr rfl fun ℓ _ => ?_
-        congr 1
-        omega
     _ ≤ Real.exp (r / (1 - r) ^ 2) ^ 2 * (1 - r)⁻¹ :=
         mul_le_mul_of_nonneg_left (geom_sum_le_of_lt_one hr0.le hr1 _)
           (pow_nonneg (Real.exp_pos _).le 2)
@@ -282,7 +279,7 @@ usual value").  Standard MLMC needs `levelL α c₁ (ε/2) = ⌈log₂(2c₁/ε)
 `c₁ 2^{−αL} ≤ ε/2` (`levelL_bias`); ML2R needs at most `√(2 · levelL α c₁ (ε/2)) + 1`. -/
 theorem ml2rLevel_lt_sqrt_levelL {α : ℝ} (hα : 0 < α) (c₁ ε : ℝ) :
     (ml2rLevel α c₁ ε : ℝ) < Real.sqrt (2 * levelL α c₁ (ε / 2)) + 1 := by
-  refine (ml2rLevel_lt α c₁ ε).trans_le (add_le_add_right (Real.sqrt_le_sqrt ?_) 1)
+  refine (ml2rLevel_lt α c₁ ε).trans_le (add_le_add (Real.sqrt_le_sqrt ?_) le_rfl)
   have h1 : Real.logb 2 (c₁ / (ε / 2)) / α ≤ levelL α c₁ (ε / 2) := Nat.le_ceil _
   rw [show c₁ / (ε / 2) = 2 * c₁ / ε by ring] at h1
   have h0 : (0 : ℝ) ≤ levelL α c₁ (ε / 2) := Nat.cast_nonneg _
@@ -328,7 +325,7 @@ lemma two_rpow_max_logb {x : ℝ} (hx : 0 < x) :
       max_eq_right ((Real.logb_nonneg_iff (by norm_num) hx).1 h)]
   · have hx1 : x ≤ 1 := by
       by_contra hgt
-      have := (Real.logb_pos (by norm_num) (not_le.1 hgt))
+      have : 0 < Real.logb 2 x := Real.logb_pos (by norm_num) (not_le.1 hgt)
       linarith
     rw [max_eq_left h, Real.rpow_zero, max_eq_left hx1]
 
