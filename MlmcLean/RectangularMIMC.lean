@@ -553,7 +553,8 @@ theorem mimc_rect_lower_bounds (P : Ω → ℝ) (Pℓ : (Fin D → ℕ) → Ω �
         _ ≤ ∑ k ∈ range (L d + 1), Real.sqrt (V (Pi.single d k) * C (Pi.single d k)) :=
             Finset.sum_le_sum fun k _ => Real.sqrt_le_sqrt (hVC k)
         _ ≤ ∑ ℓ ∈ rectSet L, Real.sqrt (V ℓ * C ℓ) :=
-            sum_axis_le_sum_rectSet (fun ℓ => Real.sqrt_nonneg _) L d
+            sum_axis_le_sum_rectSet (f := fun ℓ => Real.sqrt (V ℓ * C ℓ))
+              (fun ℓ => Real.sqrt_nonneg _) L d
     have hsq : ((L d : ℝ) + 1) ^ 2 * (a₂ * a₃) ≤ (∑ ℓ ∈ rectSet L, Real.sqrt (V ℓ * C ℓ)) ^ 2 := by
       have h0 : 0 ≤ ((L d : ℝ) + 1) * Real.sqrt (a₂ * a₃) := by positivity
       calc ((L d : ℝ) + 1) ^ 2 * (a₂ * a₃) = (((L d : ℝ) + 1) * Real.sqrt (a₂ * a₃)) ^ 2 := by

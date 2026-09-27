@@ -22,6 +22,7 @@
 -- * `MlmcLean.BitWidth` — Haas–Giles §5–§6: the cost model, the bit-width optimisation
 -- * `MlmcLean.GeometricRates` — Giles §2.1: allocation under geometric rates, the case β = 2α
 -- * `MlmcLean.RectangularMIMC` — Giles §2.4: MIMC on a rectangular index set (η < 0, ∑ γ/α ≤ 2)
+-- * `MlmcLean.Algorithm` — Giles §3.1: Algorithm 1 (robust test, termination, MSE, cost)
 import MlmcLean.Allocation
 import MlmcLean.Estimator
 import MlmcLean.LevelDiff
@@ -44,3 +45,4 @@ import MlmcLean.RoundingError
 import MlmcLean.BitWidth
 import MlmcLean.GeometricRates
 import MlmcLean.RectangularMIMC
+import MlmcLean.Algorithm

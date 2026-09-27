@@ -156,6 +156,18 @@ import MlmcLean
 #print axioms MLMC.giles_mimc_rectangular
 #print axioms MLMC.mimc_rect_lower_bounds
 #print axioms MLMC.mimc_rect_necessary
+#print axioms MLMC.cost_le_of_level
+#print axioms MLMC.abs_div_le_alg1Rem
+#print axioms MLMC.abs_tail_le
+#print axioms MLMC.abs_tail_le_alg1Rem
+#print axioms MLMC.alg1_terminates
+#print axioms MLMC.alg1Level_le
+#print axioms MLMC.alg1_variance
+#print axioms MLMC.abs_integral_sub_le_alg1Rem
+#print axioms MLMC.robust_test_mse
+#print axioms MLMC.alg1_mse
+#print axioms MLMC.alg1_not_guaranteed
+#print axioms MLMC.alg1_complexity
 -- helper lemmas that the prove2.me generator promotes to nodes
 #print axioms MLMC.sqrt_Vb_mul_Cb
 #print axioms MLMC.two_rpow_levelL_le

@@ -153,12 +153,29 @@
     "MLMC.mimc_rect_core",
     "MLMC.giles_mimc_rectangular",
     "MLMC.mimc_rect_lower_bounds",
-    "MLMC.mimc_rect_necessary"
+    "MLMC.mimc_rect_necessary",
+    "MLMC.cost_le_of_level",
+    "MLMC.abs_div_le_alg1Rem",
+    "MLMC.abs_tail_le",
+    "MLMC.abs_tail_le_alg1Rem",
+    "MLMC.alg1_terminates",
+    "MLMC.alg1Level_le",
+    "MLMC.alg1_variance",
+    "MLMC.abs_integral_sub_le_alg1Rem",
+    "MLMC.robust_test_mse",
+    "MLMC.alg1_mse",
+    "MLMC.alg1_not_guaranteed",
+    "MLMC.alg1_complexity"
   ],
   "bundlePrefix": "MLMC_",
   "paperNamed": [],
   "forceNode": [],
   "forceInline": [
+    "MLMC.alg1Rem_le",
+    "MLMC.alg1Samples_le",
+    "MLMC.anchor_le_alg1Rem",
+    "MLMC.level_add_one_le",
+    "MLMC.one_le_complexityBound",
     "MLMC.sum_axis_le_sum_rectSet",
     "MLMC.sum_rectSet_two_rpow_le"
   ]

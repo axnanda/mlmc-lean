@@ -363,6 +363,210 @@ lemma tail_cost_bound {α γ c₃ K ε : ℝ} (hα : 0 < α) (hγ : 0 < γ) (hc�
 lemma eps_inv_sq_eq {ε : ℝ} (hε : 0 < ε) : ε⁻¹ ^ 2 = ε ^ (-2 : ℝ) := by
   rw [Real.rpow_neg hε.le, Real.rpow_two, inv_pow]
 
+/-- `L + 1 ≤ K' |log ε|` whenever `2^{αL} ≤ K/ε` and `0 < ε < e⁻¹`, with
+`K' = (|log K| + 1)/(α log 2) + 1` (the number of levels is `O(|log ε|)`; proof of Theorem 1,
+Giles 2015, p. 7). -/
+lemma level_add_one_le {α K ε : ℝ} (hα : 0 < α) (hK : 0 < K) (hε : 0 < ε)
+    (hε1 : ε < Real.exp (-1)) {L : ℕ} (hL : (2 : ℝ) ^ (α * (L : ℝ)) ≤ K / ε) :
+    (L : ℝ) + 1 ≤ ((|Real.log K| + 1) / (α * Real.log 2) + 1) * (-Real.log ε) := by
+  have ht : 1 ≤ -Real.log ε := one_le_neg_log hε hε1
+  have hαl : 0 < α * Real.log 2 := mul_pos hα (Real.log_pos one_lt_two)
+  have h1 : α * (L : ℝ) * Real.log 2 ≤ Real.log K - Real.log ε := by
+    have h := Real.log_le_log (Real.rpow_pos_of_pos two_pos _) hL
+    rwa [Real.log_rpow two_pos, Real.log_div hK.ne' hε.ne'] at h
+  have h2 : (L : ℝ) * (α * Real.log 2) ≤ (|Real.log K| + 1) * (-Real.log ε) := by
+    have h3 : Real.log K ≤ |Real.log K| * (-Real.log ε) :=
+      (le_abs_self _).trans (le_mul_of_one_le_right (abs_nonneg _) ht)
+    have e1 : (L : ℝ) * (α * Real.log 2) = α * (L : ℝ) * Real.log 2 := by ring
+    have e2 : (|Real.log K| + 1) * (-Real.log ε) = |Real.log K| * (-Real.log ε) + -Real.log ε := by
+      ring
+    rw [e1, e2]
+    linarith
+  have h4 : (L : ℝ) ≤ (|Real.log K| + 1) / (α * Real.log 2) * (-Real.log ε) := by
+    rw [div_mul_eq_mul_div, le_div_iff₀ hαl]
+    exact h2
+  rw [add_mul, one_mul]
+  linarith
+
+/-- `complexityBound α β γ ε ≥ 1` for `α > 0` and `0 < ε < e⁻¹` (each of the three regimes of
+Theorem 1, Giles 2015, p. 7, is at least `ε⁻²`). -/
+lemma one_le_complexityBound {α β γ ε : ℝ} (hα : 0 < α) (hε : 0 < ε)
+    (hε1 : ε < Real.exp (-1)) : 1 ≤ complexityBound α β γ ε := by
+  have hε1' : ε < 1 := eps_lt_one hε1
+  have h2 : 1 ≤ ε ^ (-2 : ℝ) :=
+    Real.one_le_rpow_of_pos_of_le_one_of_nonpos hε hε1'.le (by norm_num)
+  rcases lt_trichotomy γ β with hlt | heq | hgt
+  · rw [complexityBound_of_lt hlt]
+    exact h2
+  · rw [complexityBound_of_eq heq]
+    have ht : 1 ≤ -Real.log ε := one_le_neg_log hε hε1
+    have hl : 1 ≤ Real.log ε ^ 2 := by nlinarith
+    calc (1 : ℝ) = 1 * 1 := (mul_one 1).symm
+      _ ≤ ε ^ (-2 : ℝ) * Real.log ε ^ 2 := mul_le_mul h2 hl zero_le_one (by linarith)
+  · rw [complexityBound_of_gt hgt]
+    apply Real.one_le_rpow_of_pos_of_le_one_of_nonpos hε hε1'.le
+    have : 0 ≤ (γ - β) / α := div_nonneg (by linarith) hα.le
+    linarith
+
+/-- **The cost bound of the three regimes, for any finest level with `2^{αL} ≤ K/ε`** (a step of
+this formalisation's proof of Giles 2015, §2.1, Theorem 1; not stated in the paper).  Let
+`α, γ, c₂, c₃, K > 0` and `α ≥ ½ min(β, γ)`.  There is `c₄ > 0` such that for every `0 < ε < e⁻¹`
+and every `L` with `2^{αL} ≤ K/ε`, the cost of the rounded-up optimal allocation for
+`V_ℓ = c₂ 2^{−βℓ}`, `C_ℓ = c₃ 2^{γℓ}` and the variance target `ε²/2`, as bounded by
+`optimalN_cost` — `2ε⁻² c₂ c₃ (∑_{ℓ≤L} r^ℓ)² + c₃ ∑_{ℓ≤L} (2^γ)^ℓ` with `r = 2^{(γ−β)/2}` — is at
+most `c₄ · complexityBound α β γ ε`.  The constant depends on `α, β, γ, c₂, c₃, K` only. -/
+theorem cost_le_of_level {α β γ c₂ c₃ K : ℝ} (hα : 0 < α) (hγ : 0 < γ) (hc₂ : 0 < c₂)
+    (hc₃ : 0 < c₃) (hK : 0 < K) (hαβγ : min β γ / 2 ≤ α) :
+    ∃ c₄ : ℝ, 0 < c₄ ∧ ∀ ε : ℝ, 0 < ε → ε < Real.exp (-1) → ∀ L : ℕ,
+      (2 : ℝ) ^ (α * (L : ℝ)) ≤ K / ε →
+      2 * ε⁻¹ ^ 2 * (c₂ * c₃) * (∑ ℓ ∈ range (L + 1), ((2 : ℝ) ^ ((γ - β) / 2)) ^ ℓ) ^ 2
+          + c₃ * ∑ ℓ ∈ range (L + 1), ((2 : ℝ) ^ γ) ^ ℓ ≤ c₄ * complexityBound α β γ ε := by
+  -- notation
+  set r : ℝ := (2 : ℝ) ^ ((γ - β) / 2) with hr_def
+  set g : ℝ := (2 : ℝ) ^ γ with hg_def
+  have hr0 : 0 < r := Real.rpow_pos_of_pos two_pos _
+  have hg : 1 < g := Real.one_lt_rpow (by norm_num) hγ
+  have hg1 : 0 < g - 1 := by linarith
+  set K' : ℝ := (|Real.log K| + 1) / (α * Real.log 2) + 1
+  -- the tail constant, common to all three cases
+  set T : ℝ := c₃ * (g / (g - 1)) * K ^ (γ / α) with hT_def
+  have hT : 0 < T := by rw [hT_def]; positivity
+  rcases lt_trichotomy γ β with hlt | heq | hgt
+  · -- ### Case β > γ : cost ≤ c₄ ε⁻²
+    have hmin : min β γ = γ := min_eq_right hlt.le
+    have hγα : γ / α ≤ 2 := by
+      rw [hmin] at hαβγ
+      rw [div_le_iff₀ hα]; linarith
+    have hr1 : r < 1 := Real.rpow_lt_one_of_one_lt_of_neg (by norm_num) (by linarith)
+    have h1r : 0 < 1 - r := by linarith
+    refine ⟨2 * (c₂ * c₃) * (1 - r)⁻¹ ^ 2 + T, by positivity, ?_⟩
+    intro ε hε hε1 L hL
+    have hε1' : ε < 1 := eps_lt_one hε1
+    have hA : (∑ ℓ ∈ range (L + 1), r ^ ℓ) ^ 2 ≤ (1 - r)⁻¹ ^ 2 := by
+      have := geom_sum_le_of_lt_one hr0.le hr1 (L + 1)
+      have h0 : 0 ≤ ∑ ℓ ∈ range (L + 1), r ^ ℓ := Finset.sum_nonneg fun _ _ => pow_nonneg hr0.le _
+      gcongr
+    have hB := tail_cost_bound hα hγ hc₃ hK hε L hL
+    have hε2 : ε ^ (-(γ / α)) ≤ ε ^ (-2 : ℝ) :=
+      Real.rpow_le_rpow_of_exponent_ge hε hε1'.le (by linarith)
+    have hbound : complexityBound α β γ ε = ε ^ (-2 : ℝ) := by
+      unfold complexityBound; simp [hlt]
+    rw [hbound]
+    have hKp : 0 ≤ K ^ (γ / α) := Real.rpow_nonneg hK.le _
+    calc 2 * ε⁻¹ ^ 2 * (c₂ * c₃) * (∑ ℓ ∈ range (L + 1), r ^ ℓ) ^ 2
+            + c₃ * ∑ ℓ ∈ range (L + 1), g ^ ℓ
+        ≤ 2 * ε⁻¹ ^ 2 * (c₂ * c₃) * (1 - r)⁻¹ ^ 2
+            + c₃ * (g / (g - 1)) * (K ^ (γ / α) * ε ^ (-(γ / α))) := by
+          gcongr
+      _ ≤ 2 * ε ^ (-2 : ℝ) * (c₂ * c₃) * (1 - r)⁻¹ ^ 2
+            + c₃ * (g / (g - 1)) * (K ^ (γ / α) * ε ^ (-2 : ℝ)) := by
+          rw [eps_inv_sq_eq hε]
+          gcongr
+      _ = (2 * (c₂ * c₃) * (1 - r)⁻¹ ^ 2 + T) * ε ^ (-2 : ℝ) := by
+          rw [hT_def]; ring
+  · -- ### Case β = γ : cost ≤ c₄ ε⁻² (log ε)²
+    have hmin : min β γ = γ := by rw [heq, min_self]
+    have hγα : γ / α ≤ 2 := by
+      rw [hmin] at hαβγ
+      rw [div_le_iff₀ hα]; linarith
+    have hr1 : r = 1 := by
+      rw [hr_def, heq, sub_self, zero_div, Real.rpow_zero]
+    refine ⟨2 * (c₂ * c₃) * K' ^ 2 + T, by positivity, ?_⟩
+    intro ε hε hε1 L hL
+    have hL1 : (L : ℝ) + 1 ≤ K' * (-Real.log ε) := level_add_one_le hα hK hε hε1 hL
+    have hε1' : ε < 1 := eps_lt_one hε1
+    have ht : 1 ≤ -Real.log ε := one_le_neg_log hε hε1
+    have hsum : ∑ ℓ ∈ range (L + 1), r ^ ℓ = (L : ℝ) + 1 := by
+      rw [hr1]; simp
+    have hA : (∑ ℓ ∈ range (L + 1), r ^ ℓ) ^ 2 ≤ (K' * (-Real.log ε)) ^ 2 := by
+      rw [hsum]
+      have h0 : (0 : ℝ) ≤ (L : ℝ) + 1 := by positivity
+      gcongr
+    have hB := tail_cost_bound hα hγ hc₃ hK hε L hL
+    have ht2 : 1 ≤ (Real.log ε) ^ 2 := by
+      have : (-Real.log ε) ^ 2 = (Real.log ε) ^ 2 := by ring
+      rw [← this]
+      exact one_le_pow₀ ht
+    have hε2 : ε ^ (-(γ / α)) ≤ ε ^ (-2 : ℝ) * (Real.log ε) ^ 2 := by
+      calc ε ^ (-(γ / α)) ≤ ε ^ (-2 : ℝ) :=
+            Real.rpow_le_rpow_of_exponent_ge hε hε1'.le (by linarith)
+        _ = ε ^ (-2 : ℝ) * 1 := by ring
+        _ ≤ ε ^ (-2 : ℝ) * (Real.log ε) ^ 2 := by gcongr
+    have hbound : complexityBound α β γ ε = ε ^ (-2 : ℝ) * (Real.log ε) ^ 2 := by
+      unfold complexityBound; simp [heq]
+    rw [hbound]
+    have hKp : 0 ≤ K ^ (γ / α) := Real.rpow_nonneg hK.le _
+    calc 2 * ε⁻¹ ^ 2 * (c₂ * c₃) * (∑ ℓ ∈ range (L + 1), r ^ ℓ) ^ 2
+            + c₃ * ∑ ℓ ∈ range (L + 1), g ^ ℓ
+        ≤ 2 * ε⁻¹ ^ 2 * (c₂ * c₃) * (K' * (-Real.log ε)) ^ 2
+            + c₃ * (g / (g - 1)) * (K ^ (γ / α) * ε ^ (-(γ / α))) := by
+          gcongr
+      _ ≤ 2 * ε ^ (-2 : ℝ) * (c₂ * c₃) * (K' * (-Real.log ε)) ^ 2
+            + c₃ * (g / (g - 1)) * (K ^ (γ / α) * (ε ^ (-2 : ℝ) * (Real.log ε) ^ 2)) := by
+          rw [eps_inv_sq_eq hε]
+          gcongr
+      _ = (2 * (c₂ * c₃) * K' ^ 2 + T) * (ε ^ (-2 : ℝ) * (Real.log ε) ^ 2) := by
+          rw [hT_def]; ring
+  · -- ### Case β < γ : cost ≤ c₄ ε^{−2−(γ−β)/α}
+    have hmin : min β γ = β := min_eq_left hgt.le
+    have hβα : β / α ≤ 2 := by
+      rw [hmin] at hαβγ
+      rw [div_le_iff₀ hα]; linarith
+    have hr1 : 1 < r := Real.one_lt_rpow (by norm_num) (by linarith)
+    have hr1' : 0 < r - 1 := by linarith
+    have hγβ : 0 ≤ γ - β := by linarith
+    refine ⟨2 * (c₂ * c₃) * (r / (r - 1)) ^ 2 * K ^ ((γ - β) / α) + T, by positivity, ?_⟩
+    intro ε hε hε1 L hL
+    have hε1' : ε < 1 := eps_lt_one hε1
+    -- (∑ r^ℓ)² ≤ r^{2L} (r/(r−1))² and r^{2L} = 2^{(γ−β)L} ≤ K1^{(γ−β)/α} ε^{−(γ−β)/α}
+    have hr2L : r ^ (2 * L) = (2 : ℝ) ^ ((γ - β) * (L : ℝ)) := by
+      rw [hr_def, ← Real.rpow_mul_natCast (by norm_num)]
+      congr 1
+      push_cast
+      ring
+    have hpow := two_rpow_L_le hα hγβ hK hε hL
+    have hA : (∑ ℓ ∈ range (L + 1), r ^ ℓ) ^ 2 ≤
+        (r / (r - 1)) ^ 2 * (K ^ ((γ - β) / α) * ε ^ (-((γ - β) / α))) := by
+      have h0 : 0 ≤ ∑ ℓ ∈ range (L + 1), r ^ ℓ := Finset.sum_nonneg fun _ _ => pow_nonneg hr0.le _
+      calc (∑ ℓ ∈ range (L + 1), r ^ ℓ) ^ 2 ≤ (r ^ L * (r / (r - 1))) ^ 2 := by
+            gcongr
+            exact geom_sum_le_of_one_lt hr1 L
+        _ = (r / (r - 1)) ^ 2 * r ^ (2 * L) := by ring
+        _ = (r / (r - 1)) ^ 2 * (2 : ℝ) ^ ((γ - β) * (L : ℝ)) := by rw [hr2L]
+        _ ≤ (r / (r - 1)) ^ 2 * (K ^ ((γ - β) / α) * ε ^ (-((γ - β) / α))) := by
+            gcongr
+    have hB := tail_cost_bound hα hγ hc₃ hK hε L hL
+    -- exponent bookkeeping
+    have hexp : ε ^ (-2 : ℝ) * ε ^ (-((γ - β) / α)) = ε ^ (-2 - (γ - β) / α) := by
+      rw [show (-2 : ℝ) - (γ - β) / α = -2 + -((γ - β) / α) by ring, Real.rpow_add hε]
+    have hε2 : ε ^ (-(γ / α)) ≤ ε ^ (-2 - (γ - β) / α) := by
+      apply Real.rpow_le_rpow_of_exponent_ge hε hε1'.le
+      -- -2 - (γ-β)/α ≤ -(γ/α)  ⟺  β/α ≤ 2
+      have : (γ - β) / α = γ / α - β / α := by ring
+      rw [this]; linarith
+    have hbound : complexityBound α β γ ε = ε ^ (-2 - (γ - β) / α) := by
+      unfold complexityBound; simp [hgt.ne, not_lt.2 hgt.le]
+    rw [hbound]
+    have hKp : 0 ≤ K ^ (γ / α) := Real.rpow_nonneg hK.le _
+    calc 2 * ε⁻¹ ^ 2 * (c₂ * c₃) * (∑ ℓ ∈ range (L + 1), r ^ ℓ) ^ 2
+            + c₃ * ∑ ℓ ∈ range (L + 1), g ^ ℓ
+        ≤ 2 * ε⁻¹ ^ 2 * (c₂ * c₃) *
+            ((r / (r - 1)) ^ 2 * (K ^ ((γ - β) / α) * ε ^ (-((γ - β) / α))))
+            + c₃ * (g / (g - 1)) * (K ^ (γ / α) * ε ^ (-(γ / α))) := by
+          gcongr
+      _ = 2 * (c₂ * c₃) * (r / (r - 1)) ^ 2 * K ^ ((γ - β) / α) *
+            (ε ^ (-2 : ℝ) * ε ^ (-((γ - β) / α)))
+            + c₃ * (g / (g - 1)) * K ^ (γ / α) * ε ^ (-(γ / α)) := by
+          rw [eps_inv_sq_eq hε]; ring
+      _ ≤ 2 * (c₂ * c₃) * (r / (r - 1)) ^ 2 * K ^ ((γ - β) / α) *
+            ε ^ (-2 - (γ - β) / α)
+            + c₃ * (g / (g - 1)) * K ^ (γ / α) * ε ^ (-2 - (γ - β) / α) := by
+          rw [hexp]
+          gcongr
+      _ = (2 * (c₂ * c₃) * (r / (r - 1)) ^ 2 * K ^ ((γ - β) / α) + T) *
+            ε ^ (-2 - (γ - β) / α) := by
+          rw [hT_def]; ring
+
 set_option linter.unusedVariables false in
 /-- **Giles' Theorem 1 — deterministic core** (a step of this formalisation's proof of Giles 2015,
 §2.1, Theorem 1; not stated in the paper).  Under the hypotheses of Theorem 1, with
@@ -377,162 +581,10 @@ theorem mlmc_complexity_core {α β γ c₁ c₂ c₃ : ℝ} (hα : 0 < α) (hβ
         (c₁ * (2 : ℝ) ^ (-(α * (L : ℝ)))) ^ 2 +
           ∑ ℓ ∈ range (L + 1), Vb β c₂ ℓ / (N ℓ : ℝ) < ε ^ 2 ∧
         ∑ ℓ ∈ range (L + 1), (N ℓ : ℝ) * Cb γ c₃ ℓ ≤ c₄ * complexityBound α β γ ε := by
-  -- notation
-  set r : ℝ := (2 : ℝ) ^ ((γ - β) / 2) with hr_def
-  set g : ℝ := (2 : ℝ) ^ γ with hg_def
-  have hr0 : 0 < r := Real.rpow_pos_of_pos two_pos _
-  have hg : 1 < g := Real.one_lt_rpow (by norm_num) hγ
-  have hg1 : 0 < g - 1 := by linarith
-  have hK1 := K1_pos (α := α) hc₁
-  have hK2 := K2_pos (c₁ := c₁) hα
-  -- the tail constant, common to all three cases
-  set T : ℝ := c₃ * (g / (g - 1)) * K1 α c₁ ^ (γ / α) with hT_def
-  have hT : 0 < T := by positivity
-  rcases lt_trichotomy γ β with hlt | heq | hgt
-  · -- ### Case β > γ : cost ≤ c₄ ε⁻²
-    have hmin : min β γ = γ := min_eq_right hlt.le
-    have hγα : γ / α ≤ 2 := by
-      rw [hmin] at hαβγ
-      rw [div_le_iff₀ hα]; linarith
-    have hr1 : r < 1 := Real.rpow_lt_one_of_one_lt_of_neg (by norm_num) (by linarith)
-    have h1r : 0 < 1 - r := by linarith
-    refine ⟨2 * (c₂ * c₃) * (1 - r)⁻¹ ^ 2 + T, by positivity, ?_⟩
-    intro ε hε hε1
-    obtain ⟨L, N, hN, hbias, hvar, hcost, hL, -⟩ :=
-      exists_L_N (β := β) (γ := γ) hα hc₁ hc₂ hc₃ hε hε1
-    refine ⟨L, N, hN, by have := pow_pos hε 2; linarith, ?_⟩
-    have hε1' : ε < 1 := eps_lt_one hε1
-    have hA : (∑ ℓ ∈ range (L + 1), r ^ ℓ) ^ 2 ≤ (1 - r)⁻¹ ^ 2 := by
-      have := geom_sum_le_of_lt_one hr0.le hr1 (L + 1)
-      have h0 : 0 ≤ ∑ ℓ ∈ range (L + 1), r ^ ℓ := Finset.sum_nonneg fun _ _ => pow_nonneg hr0.le _
-      gcongr
-    have hB := tail_cost_bound hα hγ hc₃ hK1 hε L hL
-    have hε2 : ε ^ (-(γ / α)) ≤ ε ^ (-2 : ℝ) :=
-      Real.rpow_le_rpow_of_exponent_ge hε hε1'.le (by linarith)
-    have hbound : complexityBound α β γ ε = ε ^ (-2 : ℝ) := by
-      unfold complexityBound; simp [hlt]
-    rw [hbound]
-    have hKp : 0 ≤ K1 α c₁ ^ (γ / α) := Real.rpow_nonneg hK1.le _
-    calc ∑ ℓ ∈ range (L + 1), (N ℓ : ℝ) * Cb γ c₃ ℓ
-        ≤ 2 * ε⁻¹ ^ 2 * (c₂ * c₃) * (∑ ℓ ∈ range (L + 1), r ^ ℓ) ^ 2
-            + c₃ * ∑ ℓ ∈ range (L + 1), g ^ ℓ := hcost
-      _ ≤ 2 * ε⁻¹ ^ 2 * (c₂ * c₃) * (1 - r)⁻¹ ^ 2
-            + c₃ * (g / (g - 1)) * (K1 α c₁ ^ (γ / α) * ε ^ (-(γ / α))) := by
-          gcongr
-      _ ≤ 2 * ε ^ (-2 : ℝ) * (c₂ * c₃) * (1 - r)⁻¹ ^ 2
-            + c₃ * (g / (g - 1)) * (K1 α c₁ ^ (γ / α) * ε ^ (-2 : ℝ)) := by
-          rw [eps_inv_sq_eq hε]
-          gcongr
-      _ = (2 * (c₂ * c₃) * (1 - r)⁻¹ ^ 2 + T) * ε ^ (-2 : ℝ) := by
-          rw [hT_def]; ring
-  · -- ### Case β = γ : cost ≤ c₄ ε⁻² (log ε)²
-    have hmin : min β γ = γ := by rw [heq, min_self]
-    have hγα : γ / α ≤ 2 := by
-      rw [hmin] at hαβγ
-      rw [div_le_iff₀ hα]; linarith
-    have hr1 : r = 1 := by
-      rw [hr_def, heq, sub_self, zero_div, Real.rpow_zero]
-    refine ⟨2 * (c₂ * c₃) * K2 α c₁ ^ 2 + T, by positivity, ?_⟩
-    intro ε hε hε1
-    obtain ⟨L, N, hN, hbias, hvar, hcost, hL, hL1⟩ :=
-      exists_L_N (β := β) (γ := γ) hα hc₁ hc₂ hc₃ hε hε1
-    refine ⟨L, N, hN, by have := pow_pos hε 2; linarith, ?_⟩
-    have hε1' : ε < 1 := eps_lt_one hε1
-    have ht : 1 ≤ -Real.log ε := one_le_neg_log hε hε1
-    have hsum : ∑ ℓ ∈ range (L + 1), r ^ ℓ = (L : ℝ) + 1 := by
-      rw [hr1]; simp
-    have hA : (∑ ℓ ∈ range (L + 1), r ^ ℓ) ^ 2 ≤ (K2 α c₁ * (-Real.log ε)) ^ 2 := by
-      rw [hsum]
-      have h0 : (0 : ℝ) ≤ (L : ℝ) + 1 := by positivity
-      gcongr
-    have hB := tail_cost_bound hα hγ hc₃ hK1 hε L hL
-    have ht2 : 1 ≤ (Real.log ε) ^ 2 := by
-      have : (-Real.log ε) ^ 2 = (Real.log ε) ^ 2 := by ring
-      rw [← this]
-      exact one_le_pow₀ ht
-    have hε2 : ε ^ (-(γ / α)) ≤ ε ^ (-2 : ℝ) * (Real.log ε) ^ 2 := by
-      calc ε ^ (-(γ / α)) ≤ ε ^ (-2 : ℝ) :=
-            Real.rpow_le_rpow_of_exponent_ge hε hε1'.le (by linarith)
-        _ = ε ^ (-2 : ℝ) * 1 := by ring
-        _ ≤ ε ^ (-2 : ℝ) * (Real.log ε) ^ 2 := by gcongr
-    have hbound : complexityBound α β γ ε = ε ^ (-2 : ℝ) * (Real.log ε) ^ 2 := by
-      unfold complexityBound; simp [heq]
-    rw [hbound]
-    have hKp : 0 ≤ K1 α c₁ ^ (γ / α) := Real.rpow_nonneg hK1.le _
-    calc ∑ ℓ ∈ range (L + 1), (N ℓ : ℝ) * Cb γ c₃ ℓ
-        ≤ 2 * ε⁻¹ ^ 2 * (c₂ * c₃) * (∑ ℓ ∈ range (L + 1), r ^ ℓ) ^ 2
-            + c₃ * ∑ ℓ ∈ range (L + 1), g ^ ℓ := hcost
-      _ ≤ 2 * ε⁻¹ ^ 2 * (c₂ * c₃) * (K2 α c₁ * (-Real.log ε)) ^ 2
-            + c₃ * (g / (g - 1)) * (K1 α c₁ ^ (γ / α) * ε ^ (-(γ / α))) := by
-          gcongr
-      _ ≤ 2 * ε ^ (-2 : ℝ) * (c₂ * c₃) * (K2 α c₁ * (-Real.log ε)) ^ 2
-            + c₃ * (g / (g - 1)) * (K1 α c₁ ^ (γ / α) * (ε ^ (-2 : ℝ) * (Real.log ε) ^ 2)) := by
-          rw [eps_inv_sq_eq hε]
-          gcongr
-      _ = (2 * (c₂ * c₃) * K2 α c₁ ^ 2 + T) * (ε ^ (-2 : ℝ) * (Real.log ε) ^ 2) := by
-          rw [hT_def]; ring
-  · -- ### Case β < γ : cost ≤ c₄ ε^{−2−(γ−β)/α}
-    have hmin : min β γ = β := min_eq_left hgt.le
-    have hβα : β / α ≤ 2 := by
-      rw [hmin] at hαβγ
-      rw [div_le_iff₀ hα]; linarith
-    have hr1 : 1 < r := Real.one_lt_rpow (by norm_num) (by linarith)
-    have hr1' : 0 < r - 1 := by linarith
-    have hγβ : 0 ≤ γ - β := by linarith
-    refine ⟨2 * (c₂ * c₃) * (r / (r - 1)) ^ 2 * K1 α c₁ ^ ((γ - β) / α) + T, by positivity, ?_⟩
-    intro ε hε hε1
-    obtain ⟨L, N, hN, hbias, hvar, hcost, hL, -⟩ :=
-      exists_L_N (β := β) (γ := γ) hα hc₁ hc₂ hc₃ hε hε1
-    refine ⟨L, N, hN, by have := pow_pos hε 2; linarith, ?_⟩
-    have hε1' : ε < 1 := eps_lt_one hε1
-    -- (∑ r^ℓ)² ≤ r^{2L} (r/(r−1))² and r^{2L} = 2^{(γ−β)L} ≤ K1^{(γ−β)/α} ε^{−(γ−β)/α}
-    have hr2L : r ^ (2 * L) = (2 : ℝ) ^ ((γ - β) * (L : ℝ)) := by
-      rw [hr_def, ← Real.rpow_mul_natCast (by norm_num)]
-      congr 1
-      push_cast
-      ring
-    have hpow := two_rpow_L_le hα hγβ hK1 hε hL
-    have hA : (∑ ℓ ∈ range (L + 1), r ^ ℓ) ^ 2 ≤
-        (r / (r - 1)) ^ 2 * (K1 α c₁ ^ ((γ - β) / α) * ε ^ (-((γ - β) / α))) := by
-      have h0 : 0 ≤ ∑ ℓ ∈ range (L + 1), r ^ ℓ := Finset.sum_nonneg fun _ _ => pow_nonneg hr0.le _
-      calc (∑ ℓ ∈ range (L + 1), r ^ ℓ) ^ 2 ≤ (r ^ L * (r / (r - 1))) ^ 2 := by
-            gcongr
-            exact geom_sum_le_of_one_lt hr1 L
-        _ = (r / (r - 1)) ^ 2 * r ^ (2 * L) := by ring
-        _ = (r / (r - 1)) ^ 2 * (2 : ℝ) ^ ((γ - β) * (L : ℝ)) := by rw [hr2L]
-        _ ≤ (r / (r - 1)) ^ 2 * (K1 α c₁ ^ ((γ - β) / α) * ε ^ (-((γ - β) / α))) := by
-            gcongr
-    have hB := tail_cost_bound hα hγ hc₃ hK1 hε L hL
-    -- exponent bookkeeping
-    have hexp : ε ^ (-2 : ℝ) * ε ^ (-((γ - β) / α)) = ε ^ (-2 - (γ - β) / α) := by
-      rw [show (-2 : ℝ) - (γ - β) / α = -2 + -((γ - β) / α) by ring, Real.rpow_add hε]
-    have hε2 : ε ^ (-(γ / α)) ≤ ε ^ (-2 - (γ - β) / α) := by
-      apply Real.rpow_le_rpow_of_exponent_ge hε hε1'.le
-      -- -2 - (γ-β)/α ≤ -(γ/α)  ⟺  β/α ≤ 2
-      have : (γ - β) / α = γ / α - β / α := by ring
-      rw [this]; linarith
-    have hbound : complexityBound α β γ ε = ε ^ (-2 - (γ - β) / α) := by
-      unfold complexityBound; simp [hgt.ne, not_lt.2 hgt.le]
-    rw [hbound]
-    have hKp : 0 ≤ K1 α c₁ ^ (γ / α) := Real.rpow_nonneg hK1.le _
-    calc ∑ ℓ ∈ range (L + 1), (N ℓ : ℝ) * Cb γ c₃ ℓ
-        ≤ 2 * ε⁻¹ ^ 2 * (c₂ * c₃) * (∑ ℓ ∈ range (L + 1), r ^ ℓ) ^ 2
-            + c₃ * ∑ ℓ ∈ range (L + 1), g ^ ℓ := hcost
-      _ ≤ 2 * ε⁻¹ ^ 2 * (c₂ * c₃) *
-            ((r / (r - 1)) ^ 2 * (K1 α c₁ ^ ((γ - β) / α) * ε ^ (-((γ - β) / α))))
-            + c₃ * (g / (g - 1)) * (K1 α c₁ ^ (γ / α) * ε ^ (-(γ / α))) := by
-          gcongr
-      _ = 2 * (c₂ * c₃) * (r / (r - 1)) ^ 2 * K1 α c₁ ^ ((γ - β) / α) *
-            (ε ^ (-2 : ℝ) * ε ^ (-((γ - β) / α)))
-            + c₃ * (g / (g - 1)) * K1 α c₁ ^ (γ / α) * ε ^ (-(γ / α)) := by
-          rw [eps_inv_sq_eq hε]; ring
-      _ ≤ 2 * (c₂ * c₃) * (r / (r - 1)) ^ 2 * K1 α c₁ ^ ((γ - β) / α) *
-            ε ^ (-2 - (γ - β) / α)
-            + c₃ * (g / (g - 1)) * K1 α c₁ ^ (γ / α) * ε ^ (-2 - (γ - β) / α) := by
-          rw [hexp]
-          gcongr
-      _ = (2 * (c₂ * c₃) * (r / (r - 1)) ^ 2 * K1 α c₁ ^ ((γ - β) / α) + T) *
-            ε ^ (-2 - (γ - β) / α) := by
-          rw [hT_def]; ring
+  obtain ⟨c₄, hc₄, hcost⟩ := cost_le_of_level (β := β) hα hγ hc₂ hc₃ (K1_pos (α := α) hc₁) hαβγ
+  refine ⟨c₄, hc₄, fun ε hε hε1 => ?_⟩
+  obtain ⟨L, N, hN, hbias, hvar, hcost', hL, -⟩ :=
+    exists_L_N (β := β) (γ := γ) hα hc₁ hc₂ hc₃ hε hε1
+  exact ⟨L, N, hN, by have := pow_pos hε 2; linarith, hcost'.trans (hcost ε hε hε1 L hL)⟩
 
 end MLMC
