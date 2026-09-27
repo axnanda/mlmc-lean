@@ -32,6 +32,8 @@
 --   α = 1, β = 2 and the complexity O(ε⁻²)
 -- * `MlmcLean.EulerMaruyama` — Haas–Giles (2), (4)–(5), Giles §5.1: the Euler–Maruyama fine/coarse
 --   coupling, (2.4), Theorem 1 for it, the variance rate from the strong rate
+-- * `MlmcLean.Implementation` — Giles §3.3–§3.5: the driver's variance estimate, floors and
+--   regression, the probability that the consistency check fails, the MLQMC rule (3.3)
 import MlmcLean.Allocation
 import MlmcLean.Estimator
 import MlmcLean.LevelDiff
@@ -60,3 +62,4 @@ import MlmcLean.CostComparison
 import MlmcLean.NestedSimulation
 import MlmcLean.NestedMLMC
 import MlmcLean.EulerMaruyama
+import MlmcLean.Implementation

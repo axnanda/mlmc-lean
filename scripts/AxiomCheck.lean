@@ -256,6 +256,24 @@ import MlmcLean
 #print axioms MLMC.variance_sub_le_of_lipschitz
 #print axioms MLMC.variance_levelDiff_of_strong
 #print axioms MLMC.em_complexity
+#print axioms MLMC.powerSum_variance_eq
+#print axioms MLMC.powerSum_variance_nonneg
+#print axioms MLMC.powerSum_variance_mean
+#print axioms MLMC.le_floorEst
+#print axioms MLMC.floorEst_ge_extrapolation
+#print axioms MLMC.floorEst_le
+#print axioms MLMC.lsFit_le
+#print axioms MLMC.lsSlope_affine
+#print axioms MLMC.lsSlope_log_geometric
+#print axioms MLMC.gaussian_tail_three
+#print axioms MLMC.consistency_check_gaussian
+#print axioms MLMC.consistency_check_chebyshev
+#print axioms MLMC.sampleVariance_relative_sd_le_iff
+#print axioms MLMC.integral_ternary
+#print axioms MLMC.measureReal_ternary_zero
+#print axioms MLMC.prob_all_zero
+#print axioms MLMC.powerSum_variance_of_zero
+#print axioms MLMC.mlqmc_doubling_level
 -- helper lemmas that the prove2.me generator promotes to nodes
 #print axioms MLMC.sqrt_Vb_mul_Cb
 #print axioms MLMC.two_rpow_levelL_le

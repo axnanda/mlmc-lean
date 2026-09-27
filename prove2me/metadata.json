@@ -2836,6 +2836,178 @@
     "complexity",
     "multilevel-monte-carlo"
    ]
+  },
+  "MLMC.powerSum_variance_eq": {
+   "theorem_title": "Giles (2015), §3.4: the driver's variance estimate $s_2/N-(s_1/N)^2$ is the mean squared deviation from the sample mean",
+   "natural_language_statement": "Giles (2015), §3.4, p. 25, the driver `mlmc.m`: from the sums `suml(1,:)`, `suml(2,:)` of the level corrections and of their squares, \"`% compute absolute average and variance` `ml = abs( suml(1,:)./Nl);` `Vl = max(0, suml(2,:)./Nl - ml.^2);`\".\n\nFor every sequence $x:\\mathbb N\\to\\mathbb R$ and every $N\\ge1$, with $s_1=\\sum_{n<N}x_n$ and $s_2=\\sum_{n<N}x_n^2$,\n$$\n\\frac{s_2}{N}-\\Big(\\frac{s_1}{N}\\Big)^2=\\frac1N\\sum_{n<N}\\Big(x_n-\\frac{s_1}{N}\\Big)^2 .\n$$",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §3.4, p. 25; §3.2, p. 22.",
+   "explanation": "With $m=s_1/N$, expand $\\sum_n(x_n-m)^2=s_2-2ms_1+Nm^2$ and use $Nm=s_1$, so that the right-hand side is $(s_2-Nm^2)/N=s_2/N-m^2$.",
+   "tags": [
+    "monte-carlo",
+    "algorithms"
+   ]
+  },
+  "MLMC.powerSum_variance_nonneg": {
+   "theorem_title": "Giles (2015), §3.4: the driver's variance estimate $s_2/N-(s_1/N)^2$ is never negative",
+   "natural_language_statement": "Giles (2015), §3.4, p. 25, the driver `mlmc.m`: from the sums `suml(1,:)`, `suml(2,:)` of the level corrections and of their squares, \"`% compute absolute average and variance` `ml = abs( suml(1,:)./Nl);` `Vl = max(0, suml(2,:)./Nl - ml.^2);`\".\n\nFor every sequence $x:\\mathbb N\\to\\mathbb R$ and every $N\\ge1$,\n$$\n\\frac1N\\sum_{n<N}x_n^2-\\Big(\\frac1N\\sum_{n<N}x_n\\Big)^2\\ge0,\n$$\nso the `max(0, ·)` in the driver only guards against rounding errors.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §3.4, p. 25.",
+   "explanation": "By `powerSum_variance_eq` the estimate is an average of squares.",
+   "tags": [
+    "monte-carlo",
+    "algorithms"
+   ]
+  },
+  "MLMC.powerSum_variance_mean": {
+   "theorem_title": "Giles (2015), §3.4: for $N$ independent samples the driver's variance estimate has mean $(1-N^{-1})\\mathbb V[X]$",
+   "natural_language_statement": "Giles (2015), §3.4, p. 25, the driver `mlmc.m`: from the sums `suml(1,:)`, `suml(2,:)` of the level corrections and of their squares, \"`% compute absolute average and variance` `ml = abs( suml(1,:)./Nl);` `Vl = max(0, suml(2,:)./Nl - ml.^2);`\".\n\nLet $(\\Omega,\\mathcal F,\\mu)$ be a probability space, $\\omega^{(0)},\\omega^{(1)},\\dots:\\Omega\\to\\Omega_0$ independent random inputs, each with law $\\nu$, and $X:\\Omega_0\\to\\mathbb R$ measurable with $\\mathbb E_\\nu[X^2]<\\infty$. For $N\\ge1$,\n$$\n\\mathbb E\\Big[\\frac1N\\sum_{n<N}X(\\omega^{(n)})^2-\\Big(\\frac1N\\sum_{n<N}X(\\omega^{(n)})\\Big)^2\\Big]=\\Big(1-\\frac1N\\Big)\\mathbb V_\\nu[X].\n$$\nThe estimate is consistent, with bias $-\\mathbb V[X]/N$.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §3.4, p. 25.",
+   "explanation": "The first term has mean $\\mathbb E_\\nu[X^2]$, since each $\\omega^{(n)}$ has law $\\nu$. For the sample mean $\\bar X$, plain Monte Carlo (`mc_estimate`) gives $\\mathbb E[\\bar X]=\\mathbb E_\\nu[X]$ and $\\mathbb V[\\bar X]=\\mathbb V_\\nu[X]/N$, so $\\mathbb E[\\bar X^2]=\\mathbb V_\\nu[X]/N+\\mathbb E_\\nu[X]^2$. Subtracting, and using $\\mathbb V_\\nu[X]=\\mathbb E_\\nu[X^2]-\\mathbb E_\\nu[X]^2$, leaves $\\mathbb V_\\nu[X]-\\mathbb V_\\nu[X]/N$.",
+   "tags": [
+    "monte-carlo",
+    "probability"
+   ]
+  },
+  "MLMC.le_floorEst": {
+   "theorem_title": "Giles (2015), §3.4: the floors of the MLMC driver never lower an estimate",
+   "natural_language_statement": "Giles (2015), §3.4, pp. 24–25: \"If the mean and variance are decaying as expected, one would expect $m_\\ell=2^{-\\alpha}m_{\\ell-1}$, $V_\\ell=2^{-\\beta}V_{\\ell-1}$. To avoid possible problems from high kurtosis generating poor empirical estimates, the estimates for $m_\\ell$ and $V_\\ell$ are not allowed to decrease by more than factor $\\tfrac12$ relative to this anticipated value.\" The driver sets `ml(l) = max(ml(l), 0.5*ml(l-1)/2^alpha);` and `Vl(l) = max(Vl(l), 0.5*Vl(l-1)/2^beta);` for `l = 3:L+1`, i.e. for the levels $\\ell\\ge2$.\n\nFor every sequence $x:\\mathbb N\\to\\mathbb R$, every $r\\in\\mathbb R$ and every $\\ell\\in\\mathbb N$, the floored estimate `floorEst` satisfies $x_\\ell\\le\\hat x_\\ell$.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §3.4, p. 25.",
+   "explanation": "On levels $0$ and $1$, $\\hat x_\\ell=x_\\ell$; on the other levels $\\hat x_\\ell$ is a maximum with $x_\\ell$ as one argument.",
+   "tags": [
+    "algorithms"
+   ]
+  },
+  "MLMC.floorEst_ge_extrapolation": {
+   "theorem_title": "Giles (2015), §3.4: each floored estimate is at least $r$ times the floored estimate on the level below",
+   "natural_language_statement": "Giles (2015), §3.4, pp. 24–25: \"If the mean and variance are decaying as expected, one would expect $m_\\ell=2^{-\\alpha}m_{\\ell-1}$, $V_\\ell=2^{-\\beta}V_{\\ell-1}$. To avoid possible problems from high kurtosis generating poor empirical estimates, the estimates for $m_\\ell$ and $V_\\ell$ are not allowed to decrease by more than factor $\\tfrac12$ relative to this anticipated value.\" The driver sets `ml(l) = max(ml(l), 0.5*ml(l-1)/2^alpha);` and `Vl(l) = max(Vl(l), 0.5*Vl(l-1)/2^beta);` for `l = 3:L+1`, i.e. for the levels $\\ell\\ge2$.\n\nFor every sequence $x:\\mathbb N\\to\\mathbb R$, every $r\\in\\mathbb R$ and every $\\ell\\in\\mathbb N$, $r\\,\\hat x_{\\ell+1}\\le\\hat x_{\\ell+2}$. With $r=\\tfrac12 2^{-\\alpha}$, the estimate on level $\\ell+2$ is at least half the value $2^{-\\alpha}\\hat x_{\\ell+1}$ anticipated from the level below.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §3.4, p. 25.",
+   "explanation": "$\\hat x_{\\ell+2}$ is the maximum of $x_{\\ell+2}$ and $r\\hat x_{\\ell+1}$.",
+   "tags": [
+    "algorithms"
+   ]
+  },
+  "MLMC.floorEst_le": {
+   "theorem_title": "Giles (2015), §3.4: the floored estimates are the smallest estimates that are above the raw ones and at least $r$ times the estimate on the level below",
+   "natural_language_statement": "Giles (2015), §3.4, pp. 24–25: \"If the mean and variance are decaying as expected, one would expect $m_\\ell=2^{-\\alpha}m_{\\ell-1}$, $V_\\ell=2^{-\\beta}V_{\\ell-1}$. To avoid possible problems from high kurtosis generating poor empirical estimates, the estimates for $m_\\ell$ and $V_\\ell$ are not allowed to decrease by more than factor $\\tfrac12$ relative to this anticipated value.\" The driver sets `ml(l) = max(ml(l), 0.5*ml(l-1)/2^alpha);` and `Vl(l) = max(Vl(l), 0.5*Vl(l-1)/2^beta);` for `l = 3:L+1`, i.e. for the levels $\\ell\\ge2$.\n\nLet $x,y:\\mathbb N\\to\\mathbb R$ and $r\\ge0$. If $x_\\ell\\le y_\\ell$ for all $\\ell$ and $r\\,y_{\\ell+1}\\le y_{\\ell+2}$ for all $\\ell$, then $\\hat x_\\ell\\le y_\\ell$ for all $\\ell$, where $\\hat x$ is `floorEst` of $x$ with factor $r$.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §3.4, p. 25.",
+   "explanation": "Induction on $\\ell$. Levels $0$ and $1$ are the hypothesis $x_\\ell\\le y_\\ell$. For $\\ell+2$, $x_{\\ell+2}\\le y_{\\ell+2}$, and $r\\hat x_{\\ell+1}\\le r y_{\\ell+1}\\le y_{\\ell+2}$ by the induction hypothesis and $r\\ge0$.",
+   "tags": [
+    "algorithms"
+   ]
+  },
+  "MLMC.lsFit_le": {
+   "theorem_title": "Giles (2015), §3.4: the least-squares line minimises the sum of squared residuals over all lines",
+   "natural_language_statement": "Giles (2015), §3.4, p. 25: \"If the user has not supplied the values for $\\alpha$ and/or $\\beta$, they are now estimated by linear regression\": `x = [(1:L)' ones(L,1)] \\ log2(ml(2:end))'; alpha = max(0.5,-x(1));` (and the same for `beta` with `Vl`), a least-squares fit of $\\log_2 m_\\ell$ against $\\ell=1,\\dots,L$ with an intercept, `x(1)` being the fitted slope.\n\nLet $s$ be a finite index set and $t,y:s\\to\\mathbb R$ with $\\sum_{i\\in s}(t_i-\\bar t)^2\\ne0$. For all $a,b\\in\\mathbb R$,\n$$\n\\sum_{i\\in s}\\big(y_i-(\\hat a\\,t_i+\\hat b)\\big)^2\\le\\sum_{i\\in s}\\big(y_i-(a\\,t_i+b)\\big)^2,\n$$\nwhere $\\hat a$ is `lsSlope` and $\\hat b$ is `lsIntercept`.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §3.4, p. 25.",
+   "explanation": "Let $r_i=y_i-(\\hat at_i+\\hat b)=(y_i-\\bar y)-\\hat a(t_i-\\bar t)$. The normal equations hold: $\\sum_i r_i=0$, because $\\sum_i(t_i-\\bar t)=\\sum_i(y_i-\\bar y)=0$, and $\\sum_i r_i(t_i-\\bar t)=S_{ty}-\\hat aS_{tt}=0$ by the definition of $\\hat a$. Writing $y_i-(at_i+b)=r_i+d_i$ with $d_i=(\\hat a-a)(t_i-\\bar t)+c$ for a constant $c$, the cross terms $2\\sum_ir_id_i$ vanish, so the right-hand side is $\\sum_ir_i^2+\\sum_id_i^2\\ge\\sum_ir_i^2$.",
+   "tags": [
+    "algorithms",
+    "optimization"
+   ]
+  },
+  "MLMC.lsSlope_affine": {
+   "theorem_title": "Giles (2015), §3.4: linear regression recovers the slope of exactly affine data",
+   "natural_language_statement": "Giles (2015), §3.4, p. 25: \"If the user has not supplied the values for $\\alpha$ and/or $\\beta$, they are now estimated by linear regression\": `x = [(1:L)' ones(L,1)] \\ log2(ml(2:end))'; alpha = max(0.5,-x(1));` (and the same for `beta` with `Vl`), a least-squares fit of $\\log_2 m_\\ell$ against $\\ell=1,\\dots,L$ with an intercept, `x(1)` being the fitted slope.\n\nLet $s$ be a finite index set and $t:s\\to\\mathbb R$ with $\\sum_{i\\in s}(t_i-\\bar t)^2\\ne0$. For all $c,a\\in\\mathbb R$, the least-squares slope (`lsSlope`) of the points $(t_i,\\;c+a\\,t_i)$ is $a$.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §3.4, p. 25.",
+   "explanation": "The mean of $y_i=c+at_i$ is $c+a\\bar t$, so $y_i-\\bar y=a(t_i-\\bar t)$ and $\\sum_i(t_i-\\bar t)(y_i-\\bar y)=a\\sum_i(t_i-\\bar t)^2$.",
+   "tags": [
+    "algorithms"
+   ]
+  },
+  "MLMC.lsSlope_log_geometric": {
+   "theorem_title": "Giles (2015), §3.4: for exactly geometric corrections $c\\,2^{-\\alpha\\ell}$ the regression of $\\log_2$ of the means on $\\ell$ has slope $-\\alpha$",
+   "natural_language_statement": "Giles (2015), §3.4, p. 25: \"If the user has not supplied the values for $\\alpha$ and/or $\\beta$, they are now estimated by linear regression\": `x = [(1:L)' ones(L,1)] \\ log2(ml(2:end))'; alpha = max(0.5,-x(1));` (and the same for `beta` with `Vl`), a least-squares fit of $\\log_2 m_\\ell$ against $\\ell=1,\\dots,L$ with an intercept, `x(1)` being the fitted slope.\n\nLet $s\\subset\\mathbb N$ be a finite set of levels containing two different levels, $c>0$ and $\\alpha\\in\\mathbb R$. The least-squares slope (`lsSlope`) of the points\n$$\n\\Big(\\ell,\\;\\log_2\\big(c\\,2^{-\\alpha\\ell}\\big)\\Big),\\qquad \\ell\\in s,\n$$\nis $-\\alpha$. Hence the driver's estimate `max(0.5,-x(1))` is $\\max(\\tfrac12,\\alpha)$ when the corrections decay exactly geometrically.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §3.4, p. 25.",
+   "explanation": "$\\log_2(c\\,2^{-\\alpha\\ell})=\\log_2c-\\alpha\\ell$ is affine in $\\ell$, so `lsSlope_affine` applies; the levels are not all equal, so $\\sum_{\\ell\\in s}(\\ell-\\bar\\ell)^2\\ne0$.",
+   "tags": [
+    "algorithms"
+   ]
+  },
+  "MLMC.gaussian_tail_three": {
+   "theorem_title": "Giles (2015), §3.3: for a standard normal variable $Z$, $\\mathbb P(|Z|>3)<0.003$",
+   "natural_language_statement": "Giles (2015), §3.3, p. 22: for the estimates $a$, $b$, $c$ of $\\mathbb E[P^f_{\\ell-1}]$, $\\mathbb E[P^f_\\ell]$ and $\\mathbb E[Y_\\ell]$, the test routine \"computes and plots the ratio $|a-b+c|\\,/\\,\\big(3(\\sqrt{V_a}+\\sqrt{V_b}+\\sqrt{V_c})\\big)$ where $V_a,V_b,V_c$ are empirical estimates for the variances of $a,b,c$. The probability of this ratio being greater than unity is less than 0.3%. Hence, if it is, it indicates a likely programming error, or a mathematical error in the formulation which violates the crucial identity (2.4).\" \n\nLet $\\gamma=N(0,1)$ be the standard normal distribution on $\\mathbb R$ (Mathlib's `gaussianReal 0 1`). Then\n$$\n\\gamma\\big(\\{x\\in\\mathbb R:|x|>3\\}\\big)<0.003 .\n$$\n(The exact value is $2(1-\\Phi(3))\\approx0.0027$.)",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §3.3, p. 22.",
+   "explanation": "With the density $\\varphi(x)=(2\\pi)^{-1/2}e^{-x^2/2}$, the Mills-ratio bound gives\n$$\n\\int_3^\\infty\\varphi\\le\\int_3^\\infty\\frac x3\\varphi(x)\\,dx=\\frac{\\varphi(3)}3,\n$$\nwhere the last integral is computed from the antiderivative $-e^{-x^2/2}$ (improper fundamental theorem of calculus). The left tail equals the right tail because $\\varphi$ is even. So the probability is at most $2e^{-9/2}/(3\\sqrt{2\\pi})$. Finally $\\sqrt{2\\pi}\\ge2.505$ (from $\\pi>3.14$) and $e^{9/2}\\ge90$ (from $e>2.7182818283$, so $e^9>8100$), and $2/(3\\cdot2.505\\cdot90)<0.003$.",
+   "tags": [
+    "probability"
+   ]
+  },
+  "MLMC.consistency_check_gaussian": {
+   "theorem_title": "Giles (2015), §3.3: under a normal model with mean zero, the consistency check $|a-b+c|>3(\\sqrt{V_a}+\\sqrt{V_b}+\\sqrt{V_c})$ fails with probability $<0.3\\%$",
+   "natural_language_statement": "Giles (2015), §3.3, p. 22: for the estimates $a$, $b$, $c$ of $\\mathbb E[P^f_{\\ell-1}]$, $\\mathbb E[P^f_\\ell]$ and $\\mathbb E[Y_\\ell]$, the test routine \"computes and plots the ratio $|a-b+c|\\,/\\,\\big(3(\\sqrt{V_a}+\\sqrt{V_b}+\\sqrt{V_c})\\big)$ where $V_a,V_b,V_c$ are empirical estimates for the variances of $a,b,c$. The probability of this ratio being greater than unity is less than 0.3%. Hence, if it is, it indicates a likely programming error, or a mathematical error in the formulation which violates the crucial identity (2.4).\" \n\nLet $(\\Omega,\\mathcal F,\\mu)$ be a probability space and $a,b,c:\\Omega\\to\\mathbb R$ square-integrable. Suppose $a-b+c$ has the normal law $N(0,v)$ with $v>0$. (Its mean is $0$ when (2.4) holds, `consistency_mean`; normality is the paper's implicit assumption.) Then\n$$\n\\mu\\Big(|a-b+c|>3\\big(\\sqrt{\\mathbb V[a]}+\\sqrt{\\mathbb V[b]}+\\sqrt{\\mathbb V[c]}\\big)\\Big)<0.003 .\n$$",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §3.3, p. 22.",
+   "explanation": "$\\mathbb V[a-b+c]=v$, and $\\sqrt v\\le\\sqrt{\\mathbb V[a]}+\\sqrt{\\mathbb V[b]}+\\sqrt{\\mathbb V[c]}$ by `consistency_sd`. So the event is contained in $\\{|a-b+c|/\\sqrt v>3\\}$. The variable $(a-b+c)/\\sqrt v$ has law $N(0,1)$ (`gaussianReal_div_const`), so the probability is less than $0.003$ by `gaussian_tail_three`.",
+   "tags": [
+    "probability",
+    "multilevel-monte-carlo"
+   ]
+  },
+  "MLMC.consistency_check_chebyshev": {
+   "theorem_title": "Giles (2015), §3.3: without normality, the consistency ratio reaches $1$ with probability at most $1/9$ (Chebyshev)",
+   "natural_language_statement": "Giles (2015), §3.3, p. 22: for the estimates $a$, $b$, $c$ of $\\mathbb E[P^f_{\\ell-1}]$, $\\mathbb E[P^f_\\ell]$ and $\\mathbb E[Y_\\ell]$, the test routine \"computes and plots the ratio $|a-b+c|\\,/\\,\\big(3(\\sqrt{V_a}+\\sqrt{V_b}+\\sqrt{V_c})\\big)$ where $V_a,V_b,V_c$ are empirical estimates for the variances of $a,b,c$. The probability of this ratio being greater than unity is less than 0.3%. Hence, if it is, it indicates a likely programming error, or a mathematical error in the formulation which violates the crucial identity (2.4).\" \n\nLet $(\\Omega,\\mathcal F,\\mu)$ be a probability space and $a,b,c:\\Omega\\to\\mathbb R$ square-integrable, with $\\mathbb E[a-b+c]=0$ and $s=\\sqrt{\\mathbb V[a]}+\\sqrt{\\mathbb V[b]}+\\sqrt{\\mathbb V[c]}>0$. Then\n$$\n\\mu\\big(|a-b+c|\\ge3s\\big)\\le\\frac19,\n$$\nwhatever the joint distribution. The paper's $0.3\\%$ needs normality (`consistency_check_gaussian`).",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §3.3, p. 22.",
+   "explanation": "$\\mathbb V[a-b+c]\\le s^2$ by `consistency_sd`. Chebyshev's inequality (`meas_ge_le_variance_div_sq`) gives $\\mu(|a-b+c|\\ge3s)\\le\\mathbb V[a-b+c]/(9s^2)\\le1/9$.",
+   "tags": [
+    "probability",
+    "multilevel-monte-carlo"
+   ]
+  },
+  "MLMC.sampleVariance_relative_sd_le_iff": {
+   "theorem_title": "Giles (2015), §3.3: $O(\\kappa)$ samples: the relative standard deviation $\\sqrt{(\\kappa-1)/N}$ of the sample variance is at most $r$ iff $N\\ge(\\kappa-1)/r^2$",
+   "natural_language_statement": "Giles (2015), §3.3, p. 23: \"the standard deviation of the sample variance for a random variable $X$ with zero mean is approximately $\\sqrt{(\\kappa-1)/N}\\,\\mathbb E[X^2]$ … Hence $O(\\kappa)$ samples are required to obtain a reasonable estimate for the variance.\"\n\nFor all $\\kappa\\in\\mathbb R$, $r>0$ and every integer $N\\ge1$,\n$$\n\\sqrt{\\frac{\\kappa-1}N}\\le r\\iff\\frac{\\kappa-1}{r^2}\\le N .\n$$\nBy `sampleVariance_sd`, $\\sqrt{(\\kappa-1)/N}$ is exactly the relative standard deviation of the sample variance with known mean.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §3.3, p. 23.",
+   "explanation": "$\\sqrt u\\le r$ iff $u\\le r^2$ for $r\\ge0$; then multiply out the positive denominators $N$ and $r^2$.",
+   "tags": [
+    "probability",
+    "monte-carlo"
+   ]
+  },
+  "MLMC.integral_ternary": {
+   "theorem_title": "Giles (2015), §3.3: a correction with values $1,-1,0$ and probabilities $p,q,1-p-q$ has mean $p-q$",
+   "natural_language_statement": "Giles (2015), §3.3, p. 23: \"An extreme, but important, example is when $P$ always takes the value 0 or 1. In this case we have $X\\equiv P_\\ell-P_{\\ell-1}=1$ with probability $p$, $-1$ with probability $q$, $0$ with probability $1-p-q$. If $p,q\\ll1$, then $\\mathbb E[X]\\approx0$, and $\\kappa\\approx(p+q)^{-1}\\gg1$. Therefore, many samples are required for a good estimate of $V_\\ell$; otherwise, we may get all $X^{(n)}=0$, which will give an estimated variance of zero.\" \n\nLet $(\\Omega,\\mathcal F,\\mu)$ be a probability space and $X:\\Omega\\to\\mathbb R$ measurable with values in $\\{-1,0,1\\}$. Then\n$$\n\\mathbb E[X]=\\mu(X=1)-\\mu(X=-1).\n$$",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §3.3, p. 23.",
+   "explanation": "$X=\\mathbf 1_{\\{X=1\\}}-\\mathbf 1_{\\{X=-1\\}}$ pointwise; integrate.",
+   "tags": [
+    "probability"
+   ]
+  },
+  "MLMC.measureReal_ternary_zero": {
+   "theorem_title": "Giles (2015), §3.3: a correction with values $1,-1,0$ vanishes with probability $1-p-q$",
+   "natural_language_statement": "Giles (2015), §3.3, p. 23: \"An extreme, but important, example is when $P$ always takes the value 0 or 1. In this case we have $X\\equiv P_\\ell-P_{\\ell-1}=1$ with probability $p$, $-1$ with probability $q$, $0$ with probability $1-p-q$. If $p,q\\ll1$, then $\\mathbb E[X]\\approx0$, and $\\kappa\\approx(p+q)^{-1}\\gg1$. Therefore, many samples are required for a good estimate of $V_\\ell$; otherwise, we may get all $X^{(n)}=0$, which will give an estimated variance of zero.\" \n\nLet $(\\Omega,\\mathcal F,\\mu)$ be a probability space and $X:\\Omega\\to\\mathbb R$ measurable with values in $\\{-1,0,1\\}$. Then\n$$\n\\mu(X=0)=1-\\mu(X=1)-\\mu(X=-1).\n$$",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §3.3, p. 23.",
+   "explanation": "$\\{X=0\\}$ is the complement of the disjoint union $\\{X=1\\}\\cup\\{X=-1\\}$.",
+   "tags": [
+    "probability"
+   ]
+  },
+  "MLMC.prob_all_zero": {
+   "theorem_title": "Giles (2015), §3.3: all $N$ independent samples vanish with probability $\\mathbb P(X=0)^N$ (for a ternary correction, $(1-p-q)^N$)",
+   "natural_language_statement": "Giles (2015), §3.3, p. 23: \"An extreme, but important, example is when $P$ always takes the value 0 or 1. In this case we have $X\\equiv P_\\ell-P_{\\ell-1}=1$ with probability $p$, $-1$ with probability $q$, $0$ with probability $1-p-q$. If $p,q\\ll1$, then $\\mathbb E[X]\\approx0$, and $\\kappa\\approx(p+q)^{-1}\\gg1$. Therefore, many samples are required for a good estimate of $V_\\ell$; otherwise, we may get all $X^{(n)}=0$, which will give an estimated variance of zero.\" \n\nLet $(\\Omega,\\mathcal F,\\mu)$ be a probability space, $\\omega^{(0)},\\omega^{(1)},\\dots:\\Omega\\to\\Omega_0$ independent random inputs, each with law $\\nu$, and $X:\\Omega_0\\to\\mathbb R$ measurable. For every $N\\in\\mathbb N$,\n$$\n\\mu\\big(X(\\omega^{(n)})=0\\text{ for all }n<N\\big)=\\nu(X=0)^N .\n$$\nFor a correction with values $1,-1,0$ and probabilities $p,q,1-p-q$ this is $(1-p-q)^N$ (`measureReal_ternary_zero`).",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §3.3, p. 23.",
+   "explanation": "The event is $\\bigcap_{n<N}(\\omega^{(n)})^{-1}\\{X=0\\}$. By independence its probability is the product of the probabilities $\\mu\\big((\\omega^{(n)})^{-1}\\{X=0\\}\\big)=\\nu(X=0)$ (measure preservation).",
+   "tags": [
+    "probability"
+   ]
+  },
+  "MLMC.powerSum_variance_of_zero": {
+   "theorem_title": "Giles (2015), §3.3: if all samples vanish, the driver's variance estimate is zero",
+   "natural_language_statement": "Giles (2015), §3.3, p. 23: \"An extreme, but important, example is when $P$ always takes the value 0 or 1. In this case we have $X\\equiv P_\\ell-P_{\\ell-1}=1$ with probability $p$, $-1$ with probability $q$, $0$ with probability $1-p-q$. If $p,q\\ll1$, then $\\mathbb E[X]\\approx0$, and $\\kappa\\approx(p+q)^{-1}\\gg1$. Therefore, many samples are required for a good estimate of $V_\\ell$; otherwise, we may get all $X^{(n)}=0$, which will give an estimated variance of zero.\" \n\nFor every sequence $x:\\mathbb N\\to\\mathbb R$ and $N\\in\\mathbb N$ with $x_n=0$ for all $n<N$,\n$$\n\\frac1N\\sum_{n<N}x_n^2-\\Big(\\frac1N\\sum_{n<N}x_n\\Big)^2=0 .\n$$",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §3.3, p. 23; §3.4, p. 25.",
+   "explanation": "Both sums vanish.",
+   "tags": [
+    "monte-carlo",
+    "algorithms"
+   ]
+  },
+  "MLMC.mlqmc_doubling_level": {
+   "theorem_title": "Giles (2015), §3.5, (3.3): the greatest variance reduction per unit cost comes from doubling $N_\\ell$ on a level that maximises $V_\\ell/(N_\\ell C_\\ell)$",
+   "natural_language_statement": "Giles (2015), §3.5, p. 27, for multilevel quasi-Monte Carlo: \"Doubling $N_\\ell$ will usually eliminate a large fraction of the variance, so the greatest reduction in total variance relative to the additional computational effort is achieved by doubling $N_\\ell$ on the level $\\ell^*$ given by $\\ell^*=\\arg\\max_\\ell\\frac{V_\\ell}{N_\\ell C_\\ell}$. (3.3)\" The exact statement behind this assumes that doubling removes the same fraction of the variance on every level.\n\nLet $s$ be a nonempty finite set of levels, $V,N,C:s\\to\\mathbb R$ and $f>0$. Doubling $N_\\ell$ removes $fV_\\ell$ from the total variance at the additional cost $N_\\ell C_\\ell$. Then:\n1. there is a level $\\ell^*\\in s$ maximising $V_\\ell/(N_\\ell C_\\ell)$;\n2. for every $\\ell\\in s$, the reduction per unit cost $fV_\\ell/(N_\\ell C_\\ell)$ is maximal at $\\ell$ if and only if $V_\\ell/(N_\\ell C_\\ell)$ is maximal at $\\ell$.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §3.5, p. 27, eq. (3.3).",
+   "explanation": "Part 1: a finite nonempty set has a maximiser of any function (`Finset.exists_max_image`). Part 2: $fV_\\ell/(N_\\ell C_\\ell)=f\\cdot V_\\ell/(N_\\ell C_\\ell)$, and multiplying by $f>0$ preserves order.",
+   "tags": [
+    "multilevel-monte-carlo",
+    "algorithms",
+    "optimization"
+   ]
   }
  },
  "definitions": {
@@ -3035,6 +3207,15 @@
     "multilevel-monte-carlo",
     "numerical-analysis",
     "probability"
+   ]
+  },
+  "MLMC_Implementation": {
+   "definition_title": "Giles (2015), §3.4: the floored estimates of the MLMC driver and the least-squares line used to estimate the rates",
+   "natural_language_statement": "Giles (2015), §3.4, the driver routine `mlmc.m` of the MLMC algorithm.\n\n**`floorEst`**. The driver does not let the estimates of the means and variances of the level corrections drop too fast: \"the estimated $V_\\ell$ … is not allowed to decrease by more than factor ½ relative to this anticipated value\"; the code sets `ml(l) = max(ml(l), 0.5*ml(l-1)/2^alpha)` and `Vl(l) = max(Vl(l), 0.5*Vl(l-1)/2^beta)` for `l = 3:L+1` (levels $\\ell\\ge2$). For a sequence $x:\\mathbb N\\to\\mathbb R$ and a factor $r\\in\\mathbb R$ (in the code $r=\\tfrac12 2^{-\\alpha}$ or $\\tfrac12 2^{-\\beta}$),\n$$\n\\hat x_0=x_0,\\qquad \\hat x_1=x_1,\\qquad \\hat x_{\\ell+2}=\\max\\big(x_{\\ell+2},\\;r\\,\\hat x_{\\ell+1}\\big).\n$$\n\n**`lsSlope`**, **`lsIntercept`**. The rates $\\alpha$ and $\\beta$ are \"estimated by linear regression\". For a finite index set $s$ and points $(t_i,y_i)_{i\\in s}$ with means $\\bar t=|s|^{-1}\\sum_{i\\in s}t_i$ and $\\bar y=|s|^{-1}\\sum_{i\\in s}y_i$,\n$$\n\\mathrm{lsSlope}=\\frac{\\sum_{i\\in s}(t_i-\\bar t)(y_i-\\bar y)}{\\sum_{i\\in s}(t_i-\\bar t)^2},\\qquad \\mathrm{lsIntercept}=\\bar y-\\mathrm{lsSlope}\\cdot\\bar t .\n$$\n\n**Formalization Note** Division by zero is $0$ in Lean; the theorems about the least-squares line assume $\\sum_{i\\in s}(t_i-\\bar t)^2\\ne0$, i.e. that not all $t_i$ are equal.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §3.4, pp. 23–26 of the author's version (the MATLAB driver `mlmc.m`).",
+   "tags": [
+    "multilevel-monte-carlo",
+    "algorithms"
    ]
   }
  }
