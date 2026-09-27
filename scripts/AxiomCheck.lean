@@ -289,6 +289,26 @@ import MlmcLean
 #print axioms MLMC.tauLeaping_level
 #print axioms MLMC.tauLeaping_complexity
 #print axioms MLMC.fixed_levels_cost
+#print axioms MLMC.levelCost34_le_levelCost33
+#print axioms MLMC.levelCost33_le_sqrt_mul
+#print axioms MLMC.levelCost33_le_add_mul
+#print axioms MLMC.totalCost32_bounds
+#print axioms MLMC.lagrangian_le_of_eq35
+#print axioms MLMC.vIndepR_le_of_eq35
+#print axioms MLMC.sepCost_le_of_eq35
+#print axioms MLMC.exists_eq35_isMin
+#print axioms MLMC.eq35_of_isLocalMinOn
+#print axioms MLMC.marginalRatio_eq_of_isLocalMinOn
+#print axioms MLMC.eq37_iff
+#print axioms MLMC.lambda37_pos
+#print axioms MLMC.eq37_of_eq35
+#print axioms MLMC.vIndepR_sub_update_add_one
+#print axioms MLMC.sepCost_update_add_one_sub
+#print axioms MLMC.rpow_four_sub_add_one
+#print axioms MLMC.errorBound_succ
+#print axioms MLMC.errorBound_eq_div_pow
+#print axioms MLMC.errorShare_succ
+#print axioms MLMC.variance_extended_le_two_mul
 -- helper lemmas that the prove2.me generator promotes to nodes
 #print axioms MLMC.sqrt_Vb_mul_Cb
 #print axioms MLMC.two_rpow_levelL_le
