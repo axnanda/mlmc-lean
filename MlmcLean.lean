@@ -24,6 +24,8 @@
 -- * `MlmcLean.RectangularMIMC` — Giles §2.4: MIMC on a rectangular index set (η < 0, ∑ γ/α ≤ 2)
 -- * `MlmcLean.Algorithm` — Giles §3.1: Algorithm 1 (robust test, termination, MSE, cost)
 -- * `MlmcLean.ApproxNormal` — Haas–Giles §3: approximate normals, (14)–(19), the coupling (17)
+-- * `MlmcLean.CostComparison` — Giles §1.3, §2.1–§2.2: standard MC cost, the MLMC saving, the MSE
+--   split, the randomised estimator's half cost
 import MlmcLean.Allocation
 import MlmcLean.Estimator
 import MlmcLean.LevelDiff
@@ -48,3 +50,4 @@ import MlmcLean.GeometricRates
 import MlmcLean.RectangularMIMC
 import MlmcLean.Algorithm
 import MlmcLean.ApproxNormal
+import MlmcLean.CostComparison

@@ -196,6 +196,20 @@ import MlmcLean
 #print axioms MLMC.alternating_stationary
 #print axioms MLMC.dyadic_index
 #print axioms MLMC.affine_fit_exact
+#print axioms MLMC.mc_cost
+#print axioms MLMC.mc_cost_lower
+#print axioms MLMC.mc_complexity
+#print axioms MLMC.mlmc_vs_mc_increasing
+#print axioms MLMC.mlmc_vs_mc_decreasing
+#print axioms MLMC.coarsest_level_dominant
+#print axioms MLMC.finest_cost_le
+#print axioms MLMC.equal_cost_per_level
+#print axioms MLMC.split_cost
+#print axioms MLMC.equal_split_cost_le
+#print axioms MLMC.summable_sqrt_Vb_mul_Cb
+#print axioms MLMC.tendsto_equal_split_cost
+#print axioms MLMC.tendsto_split_cost
+#print axioms MLMC.randomised_half_cost
 -- helper lemmas that the prove2.me generator promotes to nodes
 #print axioms MLMC.sqrt_Vb_mul_Cb
 #print axioms MLMC.two_rpow_levelL_le
