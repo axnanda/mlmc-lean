@@ -3552,6 +3552,335 @@
     "multilevel-monte-carlo",
     "complexity"
    ]
+  },
+  "MLMC.backIter_add": {
+   "theorem_title": "Giles (2015), §10.1: the level $\\ell$ path is the level $\\ell-1$ path started from the point reached after the first $N_\\ell-N_{\\ell-1}$ steps",
+   "natural_language_statement": "Giles (2015), §10.1, p. 61: \"the Markov chain $\\{X_n\\}$ in a metric space with metric $d$ is defined by $X_0=x$, $X_{n+1}=\\varphi_n(X_n)$, $n\\ge0$, where $\\{\\varphi_n\\}$ is a sequence of iid random functions. Furthermore, it is assumed that the $\\varphi$'s are contracting on average in the sense that $\\sup_{x\\ne y}\\mathbb E\\big[(d(\\varphi_n(x),\\varphi_n(y))/d(x,y))^{2\\gamma}\\big]<1$ for some $\\gamma\\in(0,1)$ … $f$ is Hölder continuous with exponent $\\gamma$, so that $|f(y)-f(x)|\\le d(x,y)^\\gamma$. … Glynn and Rhee (2014) circumvent this problem by making $N$ increase with level, starting a level $\\ell$ simulation at $n=-N_\\ell$ and terminating it at $n=0$ … the level $\\ell$ and $\\ell-1$ simulations share the same random $\\varphi_n$ for $n\\ge-N_{\\ell-1}$. Because of the contraction property, the effect of the initial evolution of the level $\\ell$ path for $n<-N_{\\ell-1}$ decays exponentially. This gives a coupling with a multilevel correction variance which decays as $\\ell$ increases.\" \n\nFor all $\\varphi:\\alpha\\to E\\to\\alpha$, $n,m\\in\\mathbb N$, $e:\\mathbb N\\to E$ and $x\\in\\alpha$,\n$$\n\\mathrm{backIter}(\\varphi,n+m,e,x)=\\mathrm{backIter}\\big(\\varphi,m,e,\\ \\mathrm{backIter}(\\varphi,n,(e_{k+m})_k,x)\\big).\n$$\nThe last $m$ steps use the noises $e_0,\\dots,e_{m-1}$, and the first $n$ steps only the noises $e_m,e_{m+1},\\dots$.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §10.1, p. 61 (after P.W. Glynn and C.-H. Rhee, Exact estimation for Markov chain equilibrium expectations, 2014).",
+   "explanation": "Induction on $m$, splitting off the last step $\\varphi(\\cdot,e_0)$ of both sides.",
+   "tags": [
+    "probability",
+    "multilevel-monte-carlo"
+   ]
+  },
+  "MLMC.lintegral_dist_backIter_le": {
+   "theorem_title": "Giles (2015), §10.1: chains sharing $n$ noises contract the $p$-th moment of their distance by $\\rho^n$, from starting points independent of the shared noises",
+   "natural_language_statement": "Giles (2015), §10.1, p. 61: \"the Markov chain $\\{X_n\\}$ in a metric space with metric $d$ is defined by $X_0=x$, $X_{n+1}=\\varphi_n(X_n)$, $n\\ge0$, where $\\{\\varphi_n\\}$ is a sequence of iid random functions. Furthermore, it is assumed that the $\\varphi$'s are contracting on average in the sense that $\\sup_{x\\ne y}\\mathbb E\\big[(d(\\varphi_n(x),\\varphi_n(y))/d(x,y))^{2\\gamma}\\big]<1$ for some $\\gamma\\in(0,1)$ … $f$ is Hölder continuous with exponent $\\gamma$, so that $|f(y)-f(x)|\\le d(x,y)^\\gamma$. … Glynn and Rhee (2014) circumvent this problem by making $N$ increase with level, starting a level $\\ell$ simulation at $n=-N_\\ell$ and terminating it at $n=0$ … the level $\\ell$ and $\\ell-1$ simulations share the same random $\\varphi_n$ for $n\\ge-N_{\\ell-1}$. Because of the contraction property, the effect of the initial evolution of the level $\\ell$ path for $n<-N_{\\ell-1}$ decays exponentially. This gives a coupling with a multilevel correction variance which decays as $\\ell$ increases.\" \n\nLet $(\\alpha,d)$ be a second-countable pseudometric space whose σ-algebra contains the open sets, $E$ a measurable space, $(\\Omega,\\mathcal F,\\mu)$ a probability space and $\\nu$ a measure on $E$. Let $\\varphi:\\alpha\\times E\\to\\alpha$ be jointly measurable, and let $\\xi_0,\\xi_1,\\dots:\\Omega\\to E$ be measurable, independent, each with law $\\nu$. Write $\\int^-$ for the Lebesgue integral of $[0,\\infty]$-valued functions and $\\overline{t}=\\max(t,0)\\in[0,\\infty)$. Assume the contraction on average $\\int^-\\overline{d(\\varphi(x,e),\\varphi(y,e))^{p}}\\,d\\nu(e)\\le\\overline{\\rho}\\;\\overline{d(x,y)^{p}}$ for all $x,y\\in\\alpha$.\n\nThen for all $n,m\\in\\mathbb N$ and all $U,V:\\Omega\\to\\alpha$ that are measurable with respect to $\\mathrm{noiseFrom}(\\xi,m+n)$,\n$$\n\\int^-\\overline{d\\big(X_U(\\omega),X_V(\\omega)\\big)^{p}}\\,d\\mu(\\omega)\\le\\overline{\\rho}^{\\,n}\\int^-\\overline{d\\big(U(\\omega),V(\\omega)\\big)^{p}}\\,d\\mu(\\omega),\n$$\nwhere $X_W(\\omega)=\\mathrm{backIter}\\big(\\varphi,n,(\\xi_{k+m}(\\omega))_k,W(\\omega)\\big)$: the two chains share the $n$ noises $\\xi_m,\\dots,\\xi_{m+n-1}$ and start from points determined by the later noises.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §10.1, p. 61 (after P.W. Glynn and C.-H. Rhee, Exact estimation for Markov chain equilibrium expectations, 2014).",
+   "explanation": "Induction on $n$. The last shared step applies $\\varphi(\\cdot,\\xi_m)$ to the pair after $n$ steps, which is measurable with respect to $\\bigvee_{i\\ge m+1}\\sigma(\\xi_i)$ and hence independent of $\\xi_m$. So the joint law is a product, Tonelli applies, the contraction hypothesis bounds the inner integral by $\\overline\\rho\\,\\overline{d^p}$, and the induction hypothesis finishes.",
+   "tags": [
+    "probability",
+    "multilevel-monte-carlo"
+   ]
+  },
+  "MLMC.lintegral_dist_start_le": {
+   "theorem_title": "Giles (2015), §10.1: the distance travelled from the start by the contracting chain has $2\\gamma$-th moment at most $4c/(1-\\rho)^2$, uniformly in the number of steps",
+   "natural_language_statement": "Giles (2015), §10.1, p. 61: \"the Markov chain $\\{X_n\\}$ in a metric space with metric $d$ is defined by $X_0=x$, $X_{n+1}=\\varphi_n(X_n)$, $n\\ge0$, where $\\{\\varphi_n\\}$ is a sequence of iid random functions. Furthermore, it is assumed that the $\\varphi$'s are contracting on average in the sense that $\\sup_{x\\ne y}\\mathbb E\\big[(d(\\varphi_n(x),\\varphi_n(y))/d(x,y))^{2\\gamma}\\big]<1$ for some $\\gamma\\in(0,1)$ … $f$ is Hölder continuous with exponent $\\gamma$, so that $|f(y)-f(x)|\\le d(x,y)^\\gamma$. … Glynn and Rhee (2014) circumvent this problem by making $N$ increase with level, starting a level $\\ell$ simulation at $n=-N_\\ell$ and terminating it at $n=0$ … the level $\\ell$ and $\\ell-1$ simulations share the same random $\\varphi_n$ for $n\\ge-N_{\\ell-1}$. Because of the contraction property, the effect of the initial evolution of the level $\\ell$ path for $n<-N_{\\ell-1}$ decays exponentially. This gives a coupling with a multilevel correction variance which decays as $\\ell$ increases.\" \n\nLet $(\\alpha,d)$ be a second-countable pseudometric space whose σ-algebra contains the open sets, $E$ a measurable space, $(\\Omega,\\mathcal F,\\mu)$ a probability space and $\\nu$ a measure on $E$. Let $\\varphi:\\alpha\\times E\\to\\alpha$ be jointly measurable, and let $\\xi_0,\\xi_1,\\dots:\\Omega\\to E$ be measurable, independent, each with law $\\nu$. Write $\\int^-$ for the Lebesgue integral of $[0,\\infty]$-valued functions and $\\overline{t}=\\max(t,0)\\in[0,\\infty)$. Let $0<\\gamma\\le1$ and $0\\le\\rho<1$, and assume the contraction on average with exponent $p=2\\gamma$: $\\int^-\\overline{d(\\varphi(x,e),\\varphi(y,e))^{2\\gamma}}\\,d\\nu(e)\\le\\overline{\\rho}\\;\\overline{d(x,y)^{2\\gamma}}$ for all $x,y\\in\\alpha$.\n\nThen for all $x_0\\in\\alpha$ and $k,m\\in\\mathbb N$,\n$$\n\\int^-\\overline{d\\big(x_0,\\ \\mathrm{backIter}(\\varphi,k,(\\xi_{j+m}(\\omega))_j,x_0)\\big)^{2\\gamma}}\\,d\\mu(\\omega)\\le\\overline{\\frac{4}{(1-\\rho)^2}}\\;\\int^-\\overline{d\\big(x_0,\\varphi(x_0,e)\\big)^{2\\gamma}}\\,d\\nu(e).\n$$",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §10.1, p. 61 (after P.W. Glynn and C.-H. Rhee, Exact estimation for Markov chain equilibrium expectations, 2014).",
+   "explanation": "With $Y_j$ the chain after $j$ steps, $d(x_0,Y_k)\\le\\sum_{j<k}D_j$, $D_j=d(Y_j,Y_{j+1})$, and $\\mathbb E[D_j^{2\\gamma}]\\le\\rho^jc$ by `lintegral_dist_backIter_le` ($Y_{j+1}$ is $Y_j$ started from $\\varphi(x_0,\\xi_{j+m})$). Since $t\\mapsto t^\\gamma$ is subadditive and by Cauchy–Schwarz with weights $r^j$, $r=(1+\\rho)/2$: $d^{2\\gamma}\\le(1-r)^{-1}\\sum_jr^{-j}D_j^{2\\gamma}$, and $\\sum_j(1-r)^{-1}r^{-j}\\rho^j\\le(1-r)^{-2}=4/(1-\\rho)^2$ because $\\rho\\le r^2$.",
+   "tags": [
+    "probability",
+    "multilevel-monte-carlo"
+   ]
+  },
+  "MLMC.lintegral_dist_levels_le": {
+   "theorem_title": "Giles (2015), §10.1: the level $\\ell$ and $\\ell-1$ samples, sharing $N_{\\ell-1}$ noises, are within $\\rho^{N_{\\ell-1}}\\cdot4c/(1-\\rho)^2$ in the $2\\gamma$-th moment",
+   "natural_language_statement": "Giles (2015), §10.1, p. 61: \"the Markov chain $\\{X_n\\}$ in a metric space with metric $d$ is defined by $X_0=x$, $X_{n+1}=\\varphi_n(X_n)$, $n\\ge0$, where $\\{\\varphi_n\\}$ is a sequence of iid random functions. Furthermore, it is assumed that the $\\varphi$'s are contracting on average in the sense that $\\sup_{x\\ne y}\\mathbb E\\big[(d(\\varphi_n(x),\\varphi_n(y))/d(x,y))^{2\\gamma}\\big]<1$ for some $\\gamma\\in(0,1)$ … $f$ is Hölder continuous with exponent $\\gamma$, so that $|f(y)-f(x)|\\le d(x,y)^\\gamma$. … Glynn and Rhee (2014) circumvent this problem by making $N$ increase with level, starting a level $\\ell$ simulation at $n=-N_\\ell$ and terminating it at $n=0$ … the level $\\ell$ and $\\ell-1$ simulations share the same random $\\varphi_n$ for $n\\ge-N_{\\ell-1}$. Because of the contraction property, the effect of the initial evolution of the level $\\ell$ path for $n<-N_{\\ell-1}$ decays exponentially. This gives a coupling with a multilevel correction variance which decays as $\\ell$ increases.\" \n\nLet $(\\alpha,d)$ be a second-countable pseudometric space whose σ-algebra contains the open sets, $E$ a measurable space, $(\\Omega,\\mathcal F,\\mu)$ a probability space and $\\nu$ a measure on $E$. Let $\\varphi:\\alpha\\times E\\to\\alpha$ be jointly measurable, and let $\\xi_0,\\xi_1,\\dots:\\Omega\\to E$ be measurable, independent, each with law $\\nu$. Write $\\int^-$ for the Lebesgue integral of $[0,\\infty]$-valued functions and $\\overline{t}=\\max(t,0)\\in[0,\\infty)$. Let $0<\\gamma\\le1$ and $0\\le\\rho<1$, and assume the contraction on average with exponent $p=2\\gamma$: $\\int^-\\overline{d(\\varphi(x,e),\\varphi(y,e))^{2\\gamma}}\\,d\\nu(e)\\le\\overline{\\rho}\\;\\overline{d(x,y)^{2\\gamma}}$ for all $x,y\\in\\alpha$.\n\nThen for all $x_0\\in\\alpha$ and $N'\\le N$,\n$$\n\\int^-\\overline{d\\big(\\mathrm{backIter}(\\varphi,N,\\xi(\\omega),x_0),\\ \\mathrm{backIter}(\\varphi,N',\\xi(\\omega),x_0)\\big)^{2\\gamma}}\\,d\\mu(\\omega)\\le\\overline{\\rho}^{\\,N'}\\Big(\\overline{\\frac{4}{(1-\\rho)^2}}\\int^-\\overline{d\\big(x_0,\\varphi(x_0,e)\\big)^{2\\gamma}}\\,d\\nu(e)\\Big),\n$$\nwhere $\\xi(\\omega)=(\\xi_k(\\omega))_k$: the level $\\ell$ path starts $N=N_\\ell$ steps and the level $\\ell-1$ path $N'=N_{\\ell-1}$ steps in the past, both at $x_0$, and they share the noises $\\xi_0,\\dots,\\xi_{N'-1}$.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §10.1, p. 61 (after P.W. Glynn and C.-H. Rhee, Exact estimation for Markov chain equilibrium expectations, 2014).",
+   "explanation": "By `backIter_add` the level $\\ell$ sample is the level $\\ell-1$ chain started from $Y=\\mathrm{backIter}(\\varphi,N-N',(\\xi_{k+N'})_k,x_0)$, which depends only on $\\xi_{N'},\\xi_{N'+1},\\dots$. Apply `lintegral_dist_backIter_le` with $n=N'$, and bound $\\mathbb E[d(Y,x_0)^{2\\gamma}]$ by `lintegral_dist_start_le`.",
+   "tags": [
+    "probability",
+    "multilevel-monte-carlo"
+   ]
+  },
+  "MLMC.variance_levels_le": {
+   "theorem_title": "Giles (2015), §10.1: for $\\gamma$-Hölder $f$ the multilevel correction variance is at most $4c/(1-\\rho)^2\\cdot\\rho^{N_{\\ell-1}}$, so it decays as $\\ell$ increases",
+   "natural_language_statement": "Giles (2015), §10.1, p. 61: \"the Markov chain $\\{X_n\\}$ in a metric space with metric $d$ is defined by $X_0=x$, $X_{n+1}=\\varphi_n(X_n)$, $n\\ge0$, where $\\{\\varphi_n\\}$ is a sequence of iid random functions. Furthermore, it is assumed that the $\\varphi$'s are contracting on average in the sense that $\\sup_{x\\ne y}\\mathbb E\\big[(d(\\varphi_n(x),\\varphi_n(y))/d(x,y))^{2\\gamma}\\big]<1$ for some $\\gamma\\in(0,1)$ … $f$ is Hölder continuous with exponent $\\gamma$, so that $|f(y)-f(x)|\\le d(x,y)^\\gamma$. … Glynn and Rhee (2014) circumvent this problem by making $N$ increase with level, starting a level $\\ell$ simulation at $n=-N_\\ell$ and terminating it at $n=0$ … the level $\\ell$ and $\\ell-1$ simulations share the same random $\\varphi_n$ for $n\\ge-N_{\\ell-1}$. Because of the contraction property, the effect of the initial evolution of the level $\\ell$ path for $n<-N_{\\ell-1}$ decays exponentially. This gives a coupling with a multilevel correction variance which decays as $\\ell$ increases.\" \n\nLet $(\\alpha,d)$ be a second-countable pseudometric space whose σ-algebra contains the open sets, $E$ a measurable space, $(\\Omega,\\mathcal F,\\mu)$ a probability space and $\\nu$ a measure on $E$. Let $\\varphi:\\alpha\\times E\\to\\alpha$ be jointly measurable, and let $\\xi_0,\\xi_1,\\dots:\\Omega\\to E$ be measurable, independent, each with law $\\nu$. Write $\\int^-$ for the Lebesgue integral of $[0,\\infty]$-valued functions and $\\overline{t}=\\max(t,0)\\in[0,\\infty)$. Let $0<\\gamma\\le1$ and $0\\le\\rho<1$, and assume the contraction on average with exponent $p=2\\gamma$: $\\int^-\\overline{d(\\varphi(x,e),\\varphi(y,e))^{2\\gamma}}\\,d\\nu(e)\\le\\overline{\\rho}\\;\\overline{d(x,y)^{2\\gamma}}$ for all $x,y\\in\\alpha$. Let $x_0\\in\\alpha$ with $c=\\int^-\\overline{d(x_0,\\varphi(x_0,e))^{2\\gamma}}\\,d\\nu(e)<\\infty$, and let $f:\\alpha\\to\\mathbb R$ be measurable with $|f(x)-f(y)|\\le d(x,y)^\\gamma$ for all $x,y$.\n\nThen for all $N'\\le N$,\n$$\n\\mathbb V\\Big[f\\big(\\mathrm{backIter}(\\varphi,N,\\xi,x_0)\\big)-f\\big(\\mathrm{backIter}(\\varphi,N',\\xi,x_0)\\big)\\Big]\\le\\frac{4}{(1-\\rho)^2}\\,c\\,\\rho^{N'} .\n$$\nThe multilevel correction $P_\\ell-P_{\\ell-1}$, with $N=N_\\ell$ and $N'=N_{\\ell-1}$, has variance decaying exponentially in the number $N_{\\ell-1}$ of shared steps (the paper says $N_\\ell-N_{\\ell-1}$); with $N_\\ell$ linear in $\\ell$ it decays geometrically.\n\n**Formalization Note** $\\mathbb V$ is Mathlib's `variance`, which is $\\le\\mathbb E[X^2]$ for every measurable $X$.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §10.1, p. 61 (after P.W. Glynn and C.-H. Rhee, Exact estimation for Markov chain equilibrium expectations, 2014).",
+   "explanation": "$\\mathbb V[Z]\\le\\mathbb E[Z^2]$ and $Z^2\\le d^{2\\gamma}$ pointwise by the Hölder condition; then `lintegral_dist_levels_le`, converted from $[0,\\infty]$ to $\\mathbb R$.",
+   "tags": [
+    "probability",
+    "multilevel-monte-carlo"
+   ]
+  },
+  "MLMC.lintegral_dist_halfStep": {
+   "theorem_title": "Giles (2015), §10.1, the example $X_{n+1}=X_n/2+\\xi_n$: it contracts on average, $\\mathbb E[|\\varphi(x,\\xi)-\\varphi(y,\\xi)|^p]=2^{-p}|x-y|^p$",
+   "natural_language_statement": "Giles (2015), §10.1, p. 61: \"An example they offer of a chain satisfying the required conditions is $X_0=0$, $X_{n+1}=\\tfrac12X_n+\\xi_n$, $n\\ge0$ where $\\mathbb P(\\xi_n=0)=\\mathbb P(\\xi_n=1)=\\tfrac12$. The invariant distribution in this case is the uniform distribution on $[0,2]$.\" \n\nFor all $p,x,y\\in\\mathbb R$,\n$$\n\\int^-\\overline{\\big|\\mathrm{halfStep}(x,e)-\\mathrm{halfStep}(y,e)\\big|^{p}}\\,d\\,\\mathrm{fairCoin}(e)=\\overline{(1/2)^{p}}\\;\\overline{|x-y|^{p}} ,\n$$\nwith $\\int^-$ the Lebesgue integral of $[0,\\infty]$-valued functions and $\\overline t=\\max(t,0)$. So the contraction condition holds with $\\rho=2^{-2\\gamma}$.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §10.1, p. 61 (after P.W. Glynn and C.-H. Rhee, Exact estimation for Markov chain equilibrium expectations, 2014).",
+   "explanation": "$|(x/2+e)-(y/2+e)|=|x-y|/2$ for every $e$, and $\\mathrm{fairCoin}$ is a probability measure.",
+   "tags": [
+    "probability",
+    "multilevel-monte-carlo"
+   ]
+  },
+  "MLMC.half_rpow_lt_one": {
+   "theorem_title": "Giles (2015), §10.1, the example $X_{n+1}=X_n/2+\\xi_n$: its contraction rate $2^{-2\\gamma}$ is less than $1$ for every $\\gamma>0$",
+   "natural_language_statement": "Giles (2015), §10.1, p. 61: \"An example they offer of a chain satisfying the required conditions is $X_0=0$, $X_{n+1}=\\tfrac12X_n+\\xi_n$, $n\\ge0$ where $\\mathbb P(\\xi_n=0)=\\mathbb P(\\xi_n=1)=\\tfrac12$. The invariant distribution in this case is the uniform distribution on $[0,2]$.\" \n\nFor every real $\\gamma>0$, $(1/2)^{2\\gamma}<1$.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §10.1, p. 61 (after P.W. Glynn and C.-H. Rhee, Exact estimation for Markov chain equilibrium expectations, 2014).",
+   "explanation": "$0\\le1/2<1$ and $2\\gamma>0$.",
+   "tags": [
+    "real-analysis"
+   ]
+  },
+  "MLMC.halfStep_invariant": {
+   "theorem_title": "Giles (2015), §10.1: the uniform distribution on $[0,2]$ is invariant for $X_{n+1}=X_n/2+\\xi_n$ (as an identity between measures)",
+   "natural_language_statement": "Giles (2015), §10.1, p. 61: \"An example they offer of a chain satisfying the required conditions is $X_0=0$, $X_{n+1}=\\tfrac12X_n+\\xi_n$, $n\\ge0$ where $\\mathbb P(\\xi_n=0)=\\mathbb P(\\xi_n=1)=\\tfrac12$. The invariant distribution in this case is the uniform distribution on $[0,2]$.\" \n\nAs measures on $\\mathbb R$,\n$$\n\\tfrac12\\,\\big(\\mathrm{uniform02}\\circ h_0^{-1}\\big)+\\tfrac12\\,\\big(\\mathrm{uniform02}\\circ h_1^{-1}\\big)=\\mathrm{uniform02},\\qquad h_b(x)=\\mathrm{halfStep}(x,b)=x/2+b,\n$$\nwhere $\\mathrm{uniform02}\\circ h^{-1}$ is the image measure: mixing the images of $U[0,2]$ under $x\\mapsto x/2$ and $x\\mapsto x/2+1$ with weights $\\tfrac12,\\tfrac12$ gives back $U[0,2]$.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §10.1, p. 61 (after P.W. Glynn and C.-H. Rhee, Exact estimation for Markov chain equilibrium expectations, 2014).",
+   "explanation": "The image of $\\tfrac12\\lambda|_{(0,2]}$ under $x\\mapsto x/2+b$ is $\\lambda|_{(b,b+1]}$ (Lebesgue measure scales by $2$ under $x\\mapsto x/2$ and is translation invariant), and $\\tfrac12\\lambda|_{(0,1]}+\\tfrac12\\lambda|_{(1,2]}=\\tfrac12\\lambda|_{(0,2]}$.",
+   "tags": [
+    "probability"
+   ]
+  },
+  "MLMC.map_halfStep": {
+   "theorem_title": "Giles (2015), §10.1: if $X\\sim U[0,2]$ and an independent fair coin $\\xi\\in\\{0,1\\}$, then $X/2+\\xi\\sim U[0,2]$",
+   "natural_language_statement": "Giles (2015), §10.1, p. 61: \"An example they offer of a chain satisfying the required conditions is $X_0=0$, $X_{n+1}=\\tfrac12X_n+\\xi_n$, $n\\ge0$ where $\\mathbb P(\\xi_n=0)=\\mathbb P(\\xi_n=1)=\\tfrac12$. The invariant distribution in this case is the uniform distribution on $[0,2]$.\" \n\nLet $(\\Omega,\\mathcal F,\\mu)$ be a probability space and $X,\\xi:\\Omega\\to\\mathbb R$ measurable, with $\\xi$ independent of $X$, $X$ of law $\\mathrm{uniform02}$ and $\\xi$ of law $\\mathrm{fairCoin}$. Then $\\mathrm{halfStep}(X,\\xi)=X/2+\\xi$ has law $\\mathrm{uniform02}$: the uniform distribution on $[0,2]$ is invariant for the chain $X_{n+1}=\\tfrac12X_n+\\xi_n$.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §10.1, p. 61 (after P.W. Glynn and C.-H. Rhee, Exact estimation for Markov chain equilibrium expectations, 2014).",
+   "explanation": "The joint law of $(\\xi,X)$ is $\\mathrm{fairCoin}\\otimes\\mathrm{uniform02}=\\tfrac12\\delta_0\\otimes U+\\tfrac12\\delta_1\\otimes U$; its image under $(e,x)\\mapsto x/2+e$ is $\\tfrac12U\\circ h_0^{-1}+\\tfrac12U\\circ h_1^{-1}=U$ by `halfStep_invariant`.",
+   "tags": [
+    "probability"
+   ]
+  },
+  "MLMC.rates_of_pathwise": {
+   "theorem_title": "Giles (2015), §7.1: a pathwise error $|P-P_\\ell|\\le K2^{-p\\ell}$ gives the weak rate $\\alpha=p$ and the variance rate $\\beta=2p$",
+   "natural_language_statement": "Giles (2015), §7.1, p. 49 (a 1D elliptic PDE with random coefficients and forcing): \"Level $\\ell$ uses a uniform grid with spacing $h_\\ell=2^{-(\\ell+1)}$ … The uniform second order accuracy means that there is a constant $K$ such that $|P-P_\\ell|<Kh_\\ell^2$ and therefore we have $\\alpha=2$, $\\beta=4$ and $\\gamma=1$, resulting in an $O(\\varepsilon^{-2})$ complexity.\" \n\nLet $(\\Omega,\\mathcal F,\\mathbb P)$ be a probability space, $P:\\Omega\\to\\mathbb R$ any function and $P_0,P_1,\\dots:\\Omega\\to\\mathbb R$ integrable. Let $K,p\\in\\mathbb R$ with $|P(\\omega)-P_\\ell(\\omega)|\\le K\\,2^{-p\\ell}$ for all $\\ell\\in\\mathbb N$ and $\\omega\\in\\Omega$. Then for all $\\ell\\in\\mathbb N$,\n$$\n\\big|\\mathbb E[P_\\ell-P]\\big|\\le K\\,2^{-p\\ell},\\qquad \\mathbb V[P_{\\ell+1}-P_\\ell]\\le(1+2^p)^2K^2\\,2^{-2p(\\ell+1)} .\n$$\nThese are conditions (i) and (iii) of Giles' Theorem 1 with $\\alpha=p$ and $\\beta=2p$.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §7.1, pp. 49–51.",
+   "explanation": "$|\\mathbb E[P_\\ell-P]|\\le\\mathbb E|P_\\ell-P|$; and $|P_{\\ell+1}-P_\\ell|\\le|P-P_{\\ell+1}|+|P-P_\\ell|\\le(1+2^p)K2^{-p(\\ell+1)}$ pointwise, while $\\mathbb V[X]\\le\\mathbb E[X^2]$.",
+   "tags": [
+    "probability",
+    "multilevel-monte-carlo",
+    "numerical-analysis"
+   ]
+  },
+  "MLMC.elliptic_rates": {
+   "theorem_title": "Giles (2015), §7.1, the elliptic example: $|P-P_\\ell|<Kh_\\ell^2$ with $h_\\ell=2^{-(\\ell+1)}$ gives $\\alpha=2$ and $\\beta=4$",
+   "natural_language_statement": "Giles (2015), §7.1, p. 49 (a 1D elliptic PDE with random coefficients and forcing): \"Level $\\ell$ uses a uniform grid with spacing $h_\\ell=2^{-(\\ell+1)}$ … The uniform second order accuracy means that there is a constant $K$ such that $|P-P_\\ell|<Kh_\\ell^2$ and therefore we have $\\alpha=2$, $\\beta=4$ and $\\gamma=1$, resulting in an $O(\\varepsilon^{-2})$ complexity.\" \n\nLet $(\\Omega,\\mathcal F,\\mathbb P)$ be a probability space, $P:\\Omega\\to\\mathbb R$ any function and $P_0,P_1,\\dots:\\Omega\\to\\mathbb R$ integrable. Let $K\\in\\mathbb R$ with $|P(\\omega)-P_\\ell(\\omega)|\\le K\\,h_\\ell^2$ for all $\\ell,\\omega$, where $h_\\ell=2^{-(\\ell+1)}$. Then for all $\\ell\\in\\mathbb N$,\n$$\n\\big|\\mathbb E[P_\\ell-P]\\big|\\le\\frac K4\\,2^{-2\\ell},\\qquad \\mathbb V[P_{\\ell+1}-P_\\ell]\\le\\frac{25}{16}K^2\\,2^{-4(\\ell+1)} .\n$$",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §7.1, pp. 49–51.",
+   "explanation": "$Kh_\\ell^2=\\frac K4\\,2^{-2\\ell}$; apply `rates_of_pathwise` with $p=2$, where $(1+2^2)^2(K/4)^2=\\frac{25}{16}K^2$.",
+   "tags": [
+    "probability",
+    "multilevel-monte-carlo",
+    "numerical-analysis"
+   ]
+  },
+  "MLMC.abs_heatStep_le": {
+   "theorem_title": "Giles (2015), §7.1: for $\\lambda=k/h^2\\le\\frac12$ the explicit heat-equation step satisfies the discrete maximum principle",
+   "natural_language_statement": "Giles (2015), §7.1, p. 51 (a 1D parabolic SPDE): \"An Euler-Maruyama time discretisation with timestep $k$, combined with a second order space discretisation with uniform grid spacing $h$, gives the discrete approximation $u^{n+1}_j=u^n_j+\\frac{k}{h^2}(u^n_{j+1}-2u^n_j+u^n_{j-1})+10\\,\\Delta W_n$. The level $\\ell$ approximation uses $h_\\ell=2^{-(\\ell+1)}$, $k_\\ell=\\frac14h_\\ell^2$. Keeping $k_\\ell/h_\\ell^2=\\frac14$ ensures the explicit numerical discretisation is stable on all levels. Since the number of grid points doubles on each level, and the number of timesteps increases by factor 4, the cost per sample increases by factor 8, giving $\\gamma=3$. Because the stochastic forcing is additive, i.e. the volatility does not depend on $u(x,t)$, the Euler-Maruyama discretisation is actually equivalent to a Milstein discretisation … the solution error is $O(2^{-2\\ell})$ and hence $\\alpha=2$ and $\\beta=4$. This leads to the optimal complexity of $O(\\varepsilon^{-2})$.\" \n\nLet $0\\le\\lambda\\le\\frac12$, $M\\in\\mathbb R$ and $u:\\mathbb Z\\to\\mathbb R$ with $|u_j|\\le M$ for all $j$. Then $|\\mathrm{heatStep}(\\lambda,u)_j|\\le M$ for all $j\\in\\mathbb Z$: the step is the convex combination $\\lambda u_{j-1}+(1-2\\lambda)u_j+\\lambda u_{j+1}$ and does not increase the maximum norm. With $\\lambda=k_\\ell/h_\\ell^2=\\frac14$ the scheme is stable on all levels.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §7.1, pp. 49–51.",
+   "explanation": "$|\\lambda u_{j-1}+(1-2\\lambda)u_j+\\lambda u_{j+1}|\\le\\lambda M+(1-2\\lambda)M+\\lambda M=M$ since all three weights are nonnegative.",
+   "tags": [
+    "numerical-analysis"
+   ]
+  },
+  "MLMC.heatStep_sub": {
+   "theorem_title": "Giles (2015), §7.1: with additive noise, the difference of two solutions of the explicit scheme follows the noise-free step",
+   "natural_language_statement": "Giles (2015), §7.1, p. 51 (a 1D parabolic SPDE): \"An Euler-Maruyama time discretisation with timestep $k$, combined with a second order space discretisation with uniform grid spacing $h$, gives the discrete approximation $u^{n+1}_j=u^n_j+\\frac{k}{h^2}(u^n_{j+1}-2u^n_j+u^n_{j-1})+10\\,\\Delta W_n$. The level $\\ell$ approximation uses $h_\\ell=2^{-(\\ell+1)}$, $k_\\ell=\\frac14h_\\ell^2$. Keeping $k_\\ell/h_\\ell^2=\\frac14$ ensures the explicit numerical discretisation is stable on all levels. Since the number of grid points doubles on each level, and the number of timesteps increases by factor 4, the cost per sample increases by factor 8, giving $\\gamma=3$. Because the stochastic forcing is additive, i.e. the volatility does not depend on $u(x,t)$, the Euler-Maruyama discretisation is actually equivalent to a Milstein discretisation … the solution error is $O(2^{-2\\ell})$ and hence $\\alpha=2$ and $\\beta=4$. This leads to the optimal complexity of $O(\\varepsilon^{-2})$.\" \n\nFor all $\\lambda\\in\\mathbb R$, $u,v,w:\\mathbb Z\\to\\mathbb R$ and $j\\in\\mathbb Z$,\n$$\n\\big(\\mathrm{heatStep}(\\lambda,u)_j+w_j\\big)-\\big(\\mathrm{heatStep}(\\lambda,v)_j+w_j\\big)=\\mathrm{heatStep}(\\lambda,u-v)_j ,\n$$\nso by `abs_heatStep_le` the maximum difference of two solutions driven by the same additive noise $w=10\\Delta W_n$ does not grow when $\\lambda\\le\\frac12$.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §7.1, pp. 49–51.",
+   "explanation": "The step is linear in $u$.",
+   "tags": [
+    "numerical-analysis"
+   ]
+  },
+  "MLMC.heatStep_alternating": {
+   "theorem_title": "Giles (2015), §7.1: the explicit step multiplies the mode $(-1)^j$ by $1-4\\lambda$, which exceeds $1$ in modulus when $\\lambda>\\frac12$",
+   "natural_language_statement": "Giles (2015), §7.1, p. 51 (a 1D parabolic SPDE): \"An Euler-Maruyama time discretisation with timestep $k$, combined with a second order space discretisation with uniform grid spacing $h$, gives the discrete approximation $u^{n+1}_j=u^n_j+\\frac{k}{h^2}(u^n_{j+1}-2u^n_j+u^n_{j-1})+10\\,\\Delta W_n$. The level $\\ell$ approximation uses $h_\\ell=2^{-(\\ell+1)}$, $k_\\ell=\\frac14h_\\ell^2$. Keeping $k_\\ell/h_\\ell^2=\\frac14$ ensures the explicit numerical discretisation is stable on all levels. Since the number of grid points doubles on each level, and the number of timesteps increases by factor 4, the cost per sample increases by factor 8, giving $\\gamma=3$. Because the stochastic forcing is additive, i.e. the volatility does not depend on $u(x,t)$, the Euler-Maruyama discretisation is actually equivalent to a Milstein discretisation … the solution error is $O(2^{-2\\ell})$ and hence $\\alpha=2$ and $\\beta=4$. This leads to the optimal complexity of $O(\\varepsilon^{-2})$.\" \n\nFor all $\\lambda\\in\\mathbb R$ and $j\\in\\mathbb Z$,\n$$\n\\mathrm{heatStep}\\big(\\lambda,(-1)^{(\\cdot)}\\big)_j=(1-4\\lambda)\\,(-1)^j ,\n$$\nand (`one_lt_abs_one_sub_four_mul`) $|1-4\\lambda|>1$ for $\\lambda>\\frac12$: without the restriction $\\lambda\\le\\frac12$ the explicit scheme is unstable.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §7.1, pp. 49–51.",
+   "explanation": "$(-1)^{j\\pm1}=-(-1)^j$, so the bracket is $-4(-1)^j$.",
+   "tags": [
+    "numerical-analysis"
+   ]
+  },
+  "MLMC.one_lt_abs_one_sub_four_mul": {
+   "theorem_title": "Giles (2015), §7.1: the amplification factor $1-4\\lambda$ of the explicit heat-equation step has modulus greater than $1$ for $\\lambda>\\frac12$",
+   "natural_language_statement": "Giles (2015), §7.1, p. 51 (a 1D parabolic SPDE): \"An Euler-Maruyama time discretisation with timestep $k$, combined with a second order space discretisation with uniform grid spacing $h$, gives the discrete approximation $u^{n+1}_j=u^n_j+\\frac{k}{h^2}(u^n_{j+1}-2u^n_j+u^n_{j-1})+10\\,\\Delta W_n$. The level $\\ell$ approximation uses $h_\\ell=2^{-(\\ell+1)}$, $k_\\ell=\\frac14h_\\ell^2$. Keeping $k_\\ell/h_\\ell^2=\\frac14$ ensures the explicit numerical discretisation is stable on all levels. Since the number of grid points doubles on each level, and the number of timesteps increases by factor 4, the cost per sample increases by factor 8, giving $\\gamma=3$. Because the stochastic forcing is additive, i.e. the volatility does not depend on $u(x,t)$, the Euler-Maruyama discretisation is actually equivalent to a Milstein discretisation … the solution error is $O(2^{-2\\ell})$ and hence $\\alpha=2$ and $\\beta=4$. This leads to the optimal complexity of $O(\\varepsilon^{-2})$.\" \n\nFor every real $\\lambda>\\frac12$, $|1-4\\lambda|>1$.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §7.1, pp. 49–51.",
+   "explanation": "$1-4\\lambda<-1<0$, so $|1-4\\lambda|=4\\lambda-1>1$.",
+   "tags": [
+    "numerical-analysis"
+   ]
+  },
+  "MLMC.parabolic_ratio": {
+   "theorem_title": "Giles (2015), §7.1: with $h_\\ell=2^{-(\\ell+1)}$ and $k_\\ell=\\frac14h_\\ell^2$ the ratio $k_\\ell/h_\\ell^2$ is $\\frac14$ on every level",
+   "natural_language_statement": "Giles (2015), §7.1, p. 51 (a 1D parabolic SPDE): \"An Euler-Maruyama time discretisation with timestep $k$, combined with a second order space discretisation with uniform grid spacing $h$, gives the discrete approximation $u^{n+1}_j=u^n_j+\\frac{k}{h^2}(u^n_{j+1}-2u^n_j+u^n_{j-1})+10\\,\\Delta W_n$. The level $\\ell$ approximation uses $h_\\ell=2^{-(\\ell+1)}$, $k_\\ell=\\frac14h_\\ell^2$. Keeping $k_\\ell/h_\\ell^2=\\frac14$ ensures the explicit numerical discretisation is stable on all levels. Since the number of grid points doubles on each level, and the number of timesteps increases by factor 4, the cost per sample increases by factor 8, giving $\\gamma=3$. Because the stochastic forcing is additive, i.e. the volatility does not depend on $u(x,t)$, the Euler-Maruyama discretisation is actually equivalent to a Milstein discretisation … the solution error is $O(2^{-2\\ell})$ and hence $\\alpha=2$ and $\\beta=4$. This leads to the optimal complexity of $O(\\varepsilon^{-2})$.\" \n\nFor every $\\ell\\in\\mathbb N$, with $h_\\ell=2^{-(\\ell+1)}$ and $k_\\ell=h_\\ell^2/4$, $k_\\ell/h_\\ell^2=\\frac14$.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §7.1, pp. 49–51.",
+   "explanation": "$h_\\ell\\ne0$.",
+   "tags": [
+    "numerical-analysis"
+   ]
+  },
+  "MLMC.parabolic_cost": {
+   "theorem_title": "Giles (2015), §7.1: grid points times timesteps is $32T\\,2^{3\\ell}$, so the cost per sample grows by the factor $8$ and $\\gamma=3$",
+   "natural_language_statement": "Giles (2015), §7.1, p. 51 (a 1D parabolic SPDE): \"An Euler-Maruyama time discretisation with timestep $k$, combined with a second order space discretisation with uniform grid spacing $h$, gives the discrete approximation $u^{n+1}_j=u^n_j+\\frac{k}{h^2}(u^n_{j+1}-2u^n_j+u^n_{j-1})+10\\,\\Delta W_n$. The level $\\ell$ approximation uses $h_\\ell=2^{-(\\ell+1)}$, $k_\\ell=\\frac14h_\\ell^2$. Keeping $k_\\ell/h_\\ell^2=\\frac14$ ensures the explicit numerical discretisation is stable on all levels. Since the number of grid points doubles on each level, and the number of timesteps increases by factor 4, the cost per sample increases by factor 8, giving $\\gamma=3$. Because the stochastic forcing is additive, i.e. the volatility does not depend on $u(x,t)$, the Euler-Maruyama discretisation is actually equivalent to a Milstein discretisation … the solution error is $O(2^{-2\\ell})$ and hence $\\alpha=2$ and $\\beta=4$. This leads to the optimal complexity of $O(\\varepsilon^{-2})$.\" \n\nFor $T\\in\\mathbb R$ and $\\ell\\in\\mathbb N$, with $h_\\ell=2^{-(\\ell+1)}$ and $k_\\ell=h_\\ell^2/4$,\n$$\n\\frac1{h_\\ell}\\cdot\\frac{T}{k_\\ell}=32\\,T\\,2^{3\\ell} ,\n$$\nthe number of grid intervals times the number of timesteps on $[0,T]$.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §7.1, pp. 49–51.",
+   "explanation": "$1/h_\\ell=2\\cdot2^\\ell$ and $T/k_\\ell=4T\\,(2\\cdot2^\\ell)^2$.",
+   "tags": [
+    "numerical-analysis",
+    "complexity"
+   ]
+  },
+  "MLMC.milsteinStep_eq_emStep": {
+   "theorem_title": "Giles (2015), §7.1: with additive noise (volatility independent of the state) the Milstein step equals the Euler–Maruyama step",
+   "natural_language_statement": "Giles (2015), §7.1, p. 51 (a 1D parabolic SPDE): \"An Euler-Maruyama time discretisation with timestep $k$, combined with a second order space discretisation with uniform grid spacing $h$, gives the discrete approximation $u^{n+1}_j=u^n_j+\\frac{k}{h^2}(u^n_{j+1}-2u^n_j+u^n_{j-1})+10\\,\\Delta W_n$. The level $\\ell$ approximation uses $h_\\ell=2^{-(\\ell+1)}$, $k_\\ell=\\frac14h_\\ell^2$. Keeping $k_\\ell/h_\\ell^2=\\frac14$ ensures the explicit numerical discretisation is stable on all levels. Since the number of grid points doubles on each level, and the number of timesteps increases by factor 4, the cost per sample increases by factor 8, giving $\\gamma=3$. Because the stochastic forcing is additive, i.e. the volatility does not depend on $u(x,t)$, the Euler-Maruyama discretisation is actually equivalent to a Milstein discretisation … the solution error is $O(2^{-2\\ell})$ and hence $\\alpha=2$ and $\\beta=4$. This leads to the optimal complexity of $O(\\varepsilon^{-2})$.\" \n\nFor all $a:\\mathbb R\\to\\mathbb R$ and $\\sigma,h,S,\\Delta W\\in\\mathbb R$, with the constant volatility $b\\equiv\\sigma$,\n$$\n\\mathrm{milsteinStep}(a,b,h,S,\\Delta W)=\\mathrm{emStep}(a,b,h,S,\\Delta W) .\n$$",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §7.1, pp. 49–51.",
+   "explanation": "$b'\\equiv0$, so the Milstein correction $\\frac12bb'(\\Delta W^2-h)$ vanishes.",
+   "tags": [
+    "numerical-analysis"
+   ]
+  },
+  "MLMC.pde_complexity": {
+   "theorem_title": "Giles (2015), §7.1: the elliptic $(\\alpha,\\beta,\\gamma)=(2,4,1)$ and parabolic $(2,4,3)$ examples both have the optimal complexity $O(\\varepsilon^{-2})$",
+   "natural_language_statement": "Giles (2015), §7.1, p. 49 (a 1D elliptic PDE with random coefficients and forcing): \"Level $\\ell$ uses a uniform grid with spacing $h_\\ell=2^{-(\\ell+1)}$ … The uniform second order accuracy means that there is a constant $K$ such that $|P-P_\\ell|<Kh_\\ell^2$ and therefore we have $\\alpha=2$, $\\beta=4$ and $\\gamma=1$, resulting in an $O(\\varepsilon^{-2})$ complexity.\" \n\nGiles (2015), §7.1, p. 51 (a 1D parabolic SPDE): \"An Euler-Maruyama time discretisation with timestep $k$, combined with a second order space discretisation with uniform grid spacing $h$, gives the discrete approximation $u^{n+1}_j=u^n_j+\\frac{k}{h^2}(u^n_{j+1}-2u^n_j+u^n_{j-1})+10\\,\\Delta W_n$. The level $\\ell$ approximation uses $h_\\ell=2^{-(\\ell+1)}$, $k_\\ell=\\frac14h_\\ell^2$. Keeping $k_\\ell/h_\\ell^2=\\frac14$ ensures the explicit numerical discretisation is stable on all levels. Since the number of grid points doubles on each level, and the number of timesteps increases by factor 4, the cost per sample increases by factor 8, giving $\\gamma=3$. Because the stochastic forcing is additive, i.e. the volatility does not depend on $u(x,t)$, the Euler-Maruyama discretisation is actually equivalent to a Milstein discretisation … the solution error is $O(2^{-2\\ell})$ and hence $\\alpha=2$ and $\\beta=4$. This leads to the optimal complexity of $O(\\varepsilon^{-2})$.\" \n\nFor every $\\varepsilon\\in\\mathbb R$, $\\mathrm{complexityBound}(2,4,1,\\varepsilon)=\\varepsilon^{-2}$ and $\\mathrm{complexityBound}(2,4,3,\\varepsilon)=\\varepsilon^{-2}$, where $\\mathrm{complexityBound}(\\alpha,\\beta,\\gamma,\\varepsilon)$ is the bound of Giles' Theorem 1 ($\\varepsilon^{-2}$ if $\\beta>\\gamma$).",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §7.1, pp. 49–51.",
+   "explanation": "$\\beta=4>\\gamma$ in both cases.",
+   "tags": [
+    "multilevel-monte-carlo",
+    "complexity"
+   ]
+  },
+  "MLMC.timestep_rate": {
+   "theorem_title": "Giles (2015), §5.1: with $h_\\ell=h_02^{-k\\ell}$ a bound $c\\,h_\\ell^q$ decays at the rate $kq$ and the cost $1/h_\\ell$ grows at the rate $k$",
+   "natural_language_statement": "Giles (2015), §5.1, pp. 29–30: \"the strong error for the Euler discretisation with timestep $h$ is $O(h^{1/2})$ … and hence $V_\\ell=O(h_\\ell)$. If $h_\\ell=4^{-\\ell}h_0$ … then this gives $\\alpha=2$, $\\beta=2$ and $\\gamma=2$. Alternatively, if $h_\\ell=2^{-\\ell}h_0$ … then $\\alpha=1$, $\\beta=1$ and $\\gamma=1$.\" \n\nFor all $h_0>0$, $k,q\\in\\mathbb R$ and $\\ell\\in\\mathbb N$,\n$$\n\\big(h_02^{-k\\ell}\\big)^q=h_0^q\\,2^{-kq\\ell},\\qquad\\big(h_02^{-k\\ell}\\big)^{-1}=h_0^{-1}\\,2^{k\\ell}.\n$$\nWith the weak order $1$, $V_\\ell=O(h_\\ell)$ and the cost $\\propto h_\\ell^{-1}$ of Euler–Maruyama this gives $\\alpha=\\beta=\\gamma=k$: $k=2$ for $h_\\ell=4^{-\\ell}h_0$ and $k=1$ for $h_\\ell=2^{-\\ell}h_0$.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §5.1, pp. 29–30.",
+   "explanation": "Laws of real powers of positive numbers.",
+   "tags": [
+    "multilevel-monte-carlo",
+    "numerical-analysis"
+   ]
+  },
+  "MLMC.kurtosis_const_mul": {
+   "theorem_title": "Giles (2015), §5.1: the kurtosis of a multilevel correction does not depend on its scale",
+   "natural_language_statement": "Giles (2015), §5.1, p. 33, the digital option with payoff $P(S)\\equiv10\\exp(-rT)H(S_T-K)$: \"there is therefore an $O(h_\\ell^{1/2})$ fraction of the samples with the coarse and fine paths on either side of the strike, with $P_\\ell-P_{\\ell-1}=\\pm1$. This gives $V_\\ell=O(h^{1/2})$ … Furthermore, $\\mathbb E[(P_\\ell-P_{\\ell-1})^4]=O(h_\\ell^{1/2})$ and so the kurtosis is $O(h_\\ell^{-1/2})$ … Consequently, this application has $\\alpha=1$, $\\beta=\\frac12$, $\\gamma=1$, leading to the MLMC complexity being $O(\\varepsilon^{-2.5})$.\" \n\nLet $\\nu$ be a measure on a measurable space $\\Omega_0$, $X:\\Omega_0\\to\\mathbb R$ and $c\\ne0$. Then $\\mathrm{kurtosis}(cX,\\nu)=\\mathrm{kurtosis}(X,\\nu)$, where $\\mathrm{kurtosis}(X,\\nu)=\\int X^4\\,d\\nu\\big/\\big(\\int X^2\\,d\\nu\\big)^2$. So the correction $\\pm10e^{-rT}$ of the digital option has the kurtosis of the $\\{-1,0,1\\}$-valued correction.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §5.1, p. 33.",
+   "explanation": "Both integrals scale by $c^4$.",
+   "tags": [
+    "probability",
+    "multilevel-monte-carlo"
+   ]
+  },
+  "MLMC.digital_em_complexity": {
+   "theorem_title": "Giles (2015), §5.1: the digital option with Euler–Maruyama, $\\alpha=1$, $\\beta=\\frac12$, $\\gamma=1$, has the MLMC complexity $O(\\varepsilon^{-5/2})$",
+   "natural_language_statement": "Giles (2015), §5.1, p. 33, the digital option with payoff $P(S)\\equiv10\\exp(-rT)H(S_T-K)$: \"there is therefore an $O(h_\\ell^{1/2})$ fraction of the samples with the coarse and fine paths on either side of the strike, with $P_\\ell-P_{\\ell-1}=\\pm1$. This gives $V_\\ell=O(h^{1/2})$ … Furthermore, $\\mathbb E[(P_\\ell-P_{\\ell-1})^4]=O(h_\\ell^{1/2})$ and so the kurtosis is $O(h_\\ell^{-1/2})$ … Consequently, this application has $\\alpha=1$, $\\beta=\\frac12$, $\\gamma=1$, leading to the MLMC complexity being $O(\\varepsilon^{-2.5})$.\" \n\nFor every $\\varepsilon\\in\\mathbb R$, $\\mathrm{complexityBound}(1,\\frac12,1,\\varepsilon)=\\varepsilon^{-5/2}$, where $\\mathrm{complexityBound}(\\alpha,\\beta,\\gamma,\\varepsilon)$ is the bound of Giles' Theorem 1 ($\\varepsilon^{-2-(\\gamma-\\beta)/\\alpha}$ if $\\beta<\\gamma$).",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §5.1, p. 33.",
+   "explanation": "$\\beta<\\gamma$ and $-2-(1-\\frac12)/1=-\\frac52$.",
+   "tags": [
+    "multilevel-monte-carlo",
+    "complexity"
+   ]
+  },
+  "MLMC.milstein_complexity": {
+   "theorem_title": "Giles (2015), §5.2: $(\\alpha,\\beta,\\gamma)=(1,2,1)$ (Milstein) and $(1,\\frac32,1)$ (conditional expectation) have the complexity $O(\\varepsilon^{-2})$",
+   "natural_language_statement": "Giles (2015), §5.2, pp. 35–36: for the Milstein discretisation \"$V_\\ell$ is now $O(h_\\ell^2)$, leading to $\\alpha=1$, $\\beta=2$, $\\gamma=1$\"; for the conditional expectation treatment of the digital option \"This leads to $\\alpha=1$, $\\beta=3/2$ and $\\gamma=1$. Since $\\beta>\\gamma$, the MLMC complexity is $O(\\varepsilon^{-2})$.\" \n\nFor every $\\varepsilon\\in\\mathbb R$, $\\mathrm{complexityBound}(1,2,1,\\varepsilon)=\\varepsilon^{-2}$ and $\\mathrm{complexityBound}(1,\\frac32,1,\\varepsilon)=\\varepsilon^{-2}$ (the bound of Giles' Theorem 1 is $\\varepsilon^{-2}$ when $\\beta>\\gamma$).",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §5.2, pp. 35–36.",
+   "explanation": "$\\beta>\\gamma$ in both cases.",
+   "tags": [
+    "multilevel-monte-carlo",
+    "complexity"
+   ]
+  },
+  "MLMC.integral_condExp_eq_of_map_eq": {
+   "theorem_title": "Giles (2015), §5.2: conditional-expectation payoffs of two terminal values with the same law have the same mean, so (2.4) holds",
+   "natural_language_statement": "Giles (2015), §5.2, p. 36: \"It is very important in this conditional expectation formulation that $\\mathbb E[P^c_{\\ell-1}]=\\mathbb E[P^f_{\\ell-1}]$ so that the numerical payoff approximation on level $\\ell-1$ has the same expected value regardless of whether it is the coarser or finer of the two levels. This ensures that the identity in Equation (2.4) is respected so that the telescoping summation remains valid.\" \n\nLet $(\\Omega,\\mathcal F_0,\\mu)$ be a finite measure space with sub-σ-algebras $\\mathcal F,\\mathcal G\\subseteq\\mathcal F_0$, let $S,S':\\Omega\\to\\alpha$ be measurable with the same law, $\\mu\\circ S^{-1}=\\mu\\circ S'^{-1}$, and let $g:\\alpha\\to\\mathbb R$ be strongly measurable. Then\n$$\n\\int_\\Omega\\mathbb E_\\mu[g\\circ S\\mid\\mathcal F]\\,d\\mu=\\int_\\Omega\\mathbb E_\\mu[g\\circ S'\\mid\\mathcal G]\\,d\\mu .\n$$\nWith $S$ the fine terminal value on level $\\ell-1$ and $S'$ the coarse terminal value on level $\\ell$, the payoffs $P^f_{\\ell-1}$ and $P^c_{\\ell-1}$ have the same mean.\n\n**Formalization Note** $\\mathbb E_\\mu[\\cdot\\mid\\cdot]$ is Mathlib's conditional expectation `μ[·|·]`, which is $0$ for non-integrable functions; the identity holds in that case too.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §5.2, p. 36.",
+   "explanation": "The conditional expectation preserves the integral (`integral_condExp`), and $\\int g(S)\\,d\\mu=\\int g\\,d(\\mu\\circ S^{-1})=\\int g\\,d(\\mu\\circ S'^{-1})=\\int g(S')\\,d\\mu$.",
+   "tags": [
+    "probability",
+    "multilevel-monte-carlo"
+   ]
+  },
+  "MLMC.bridgeInterp_midpoint": {
+   "theorem_title": "Giles (2015), §5.2: the coarse Brownian-bridge interpolant at the fine time $t_n+h$ is $\\frac12(\\hat S^c_n+\\hat S^c_{n+2})+\\frac12b^c_n((W_{n+1}-W_n)-(W_{n+2}-W_{n+1}))$",
+   "natural_language_statement": "Giles (2015), §5.2, pp. 38–39: \"For the fine path, the interpolant for timestep $[t_n,t_n+h]$ is $\\hat S^f(t)=\\hat S^f_n+\\lambda(\\hat S^f_{n+1}-\\hat S^f_n)+b^f_n(W(t)-W_n-\\lambda(W_{n+1}-W_n))$ where $\\lambda=(t-t_n)/h$ … the interpolant for the time interval $[t_n,t_n+2h]$ is $\\hat S^c(t)=\\hat S^c_n+\\lambda(\\hat S^c_{n+2}-\\hat S^c_n)+b^c_n(W(t)-W_n-\\lambda(W_{n+2}-W_n))$ where $\\lambda=(t-t_n)/(2h)$ … We can now evaluate this interpolant at time $t_n+h$, obtaining $\\hat S^c(t_{n+1})=\\frac12(\\hat S^c_n+\\hat S^c_{n+2})+\\frac12b^c_n((W_{n+1}-W_n)-(W_{n+2}-W_{n+1}))$ using the Brownian increments … already generated for the fine path.\" \n\nFor all $S_n,S_{n+2},b,W_n,W_{n+1},W_{n+2}\\in\\mathbb R$,\n$$\n\\mathrm{bridgeInterp}\\big(S_n,S_{n+2},b,W_n,W_{n+2},W_{n+1},\\tfrac12\\big)=\\tfrac12(S_n+S_{n+2})+\\tfrac12b\\big((W_{n+1}-W_n)-(W_{n+2}-W_{n+1})\\big):\n$$\nthe coarse interpolant on $[t_n,t_n+2h]$ evaluated at $t_n+h$, where $\\lambda=\\frac12$.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §5.2, pp. 38–39.",
+   "explanation": "Substitute $\\lambda=\\frac12$ and expand.",
+   "tags": [
+    "numerical-analysis"
+   ]
+  },
+  "MLMC.measurePreserving_swapIncrements": {
+   "theorem_title": "Giles (2015), §5.3: exchanging the two fine increments within each coarse timestep preserves the law of i.i.d. increments",
+   "natural_language_statement": "Giles (2015), §5.3, p. 42: \"The estimator which is used is $Y_\\ell=N_\\ell^{-1}\\sum_i\\frac12(P_\\ell(\\omega_i)+P_\\ell(\\omega^a_i))-P_{\\ell-1}(\\omega_i)$. Here $\\omega_i$ represents the driving Brownian path, and $\\omega^a_i$ is an antithetic counterpart defined by a time-reversal of the Brownian path within each coarse timestep. This results in the Brownian increments for the antithetic fine path being swapped relative to the original path. Lengthy analysis proves that the average of the fine and antithetic paths is within $O(h)$ of the coarse path, and hence the multilevel variance is $O(h^2)$ for smooth payoffs\" \n\nFor every probability measure $P$ on $\\mathbb R$, the map $\\mathrm{swapIncrements}:\\mathbb R^{\\mathbb N}\\to\\mathbb R^{\\mathbb N}$ is measurable and preserves the product measure $P^{\\otimes\\mathbb N}$ (the law of independent increments with law $P$, for instance $N(0,1)^{\\otimes\\mathbb N}$). So the antithetic path has the law of the original path, which is the hypothesis on the antithetic map in Giles' Theorem 1 for antithetic estimators (`giles_theorem1_antithetic`).",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §5.3, p. 42.",
+   "explanation": "$\\mathrm{pairSwap}$ is an involution, hence injective, and reindexing the coordinates of an i.i.d. sequence by an injective map preserves the product measure.",
+   "tags": [
+    "probability",
+    "multilevel-monte-carlo"
+   ]
+  },
+  "MLMC.abs_antithetic_le": {
+   "theorem_title": "Giles (2015), §5.3: the antithetic correction of a smooth payoff is bounded by the distance of the fine/antithetic average from the coarse value, plus squares",
+   "natural_language_statement": "Giles (2015), §5.3, p. 42: \"The estimator which is used is $Y_\\ell=N_\\ell^{-1}\\sum_i\\frac12(P_\\ell(\\omega_i)+P_\\ell(\\omega^a_i))-P_{\\ell-1}(\\omega_i)$. Here $\\omega_i$ represents the driving Brownian path, and $\\omega^a_i$ is an antithetic counterpart defined by a time-reversal of the Brownian path within each coarse timestep. This results in the Brownian increments for the antithetic fine path being swapped relative to the original path. Lengthy analysis proves that the average of the fine and antithetic paths is within $O(h)$ of the coarse path, and hence the multilevel variance is $O(h^2)$ for smooth payoffs\" \n\nLet $f,f':\\mathbb R\\to\\mathbb R$ with $f'$ the derivative of $f$ everywhere and $|f'(y)-f'(x)|\\le K(y-x)$ for $x\\le y$ (for instance $|f''|\\le K$). Then for all $a,b,c\\in\\mathbb R$,\n$$\n\\Big|\\frac{f(a)+f(b)}2-f(c)\\Big|\\le|f'(c)|\\,\\Big|\\frac{a+b}2-c\\Big|+\\frac K4\\big((a-c)^2+(b-c)^2\\big).\n$$",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §5.3, p. 42.",
+   "explanation": "First-order Taylor expansions of $f(a)$ and $f(b)$ about $c$ with the remainder bound $\\frac K2(\\cdot-c)^2$ (`abs_taylor_first_le`); the linear terms combine into $f'(c)(\\frac{a+b}2-c)$.",
+   "tags": [
+    "real-analysis",
+    "multilevel-monte-carlo"
+   ]
+  },
+  "MLMC.variance_antithetic_le": {
+   "theorem_title": "Giles (2015), §5.3: if the fine/antithetic average is within $O(h)$ of the coarse value, the antithetic multilevel variance is $O(h^2)$ for smooth payoffs",
+   "natural_language_statement": "Giles (2015), §5.3, p. 42: \"The estimator which is used is $Y_\\ell=N_\\ell^{-1}\\sum_i\\frac12(P_\\ell(\\omega_i)+P_\\ell(\\omega^a_i))-P_{\\ell-1}(\\omega_i)$. Here $\\omega_i$ represents the driving Brownian path, and $\\omega^a_i$ is an antithetic counterpart defined by a time-reversal of the Brownian path within each coarse timestep. This results in the Brownian increments for the antithetic fine path being swapped relative to the original path. Lengthy analysis proves that the average of the fine and antithetic paths is within $O(h)$ of the coarse path, and hence the multilevel variance is $O(h^2)$ for smooth payoffs\" \n\nLet $(\\Omega,\\mathcal F,\\mathbb P)$ be a probability space, $A,B,C:\\Omega\\to\\mathbb R$ measurable (the fine, antithetic and coarse terminal values), and $f,f':\\mathbb R\\to\\mathbb R$ with $f'$ the derivative of $f$ everywhere, $|f'(y)-f'(x)|\\le K(y-x)$ for $x\\le y$ and $|f'(x)|\\le L$ for all $x$. Let $D_1,D_2,h\\in\\mathbb R$ and assume $((A+B)/2-C)^2$, $(A-C)^4$ and $(B-C)^4$ integrable with\n$$\n\\mathbb E\\big[((A+B)/2-C)^2\\big]\\le D_1h^2,\\qquad\\mathbb E[(A-C)^4]\\le D_2h^2,\\qquad\\mathbb E[(B-C)^4]\\le D_2h^2 .\n$$\nThen\n$$\n\\mathbb V\\Big[\\frac{f(A)+f(B)}2-f(C)\\Big]\\le\\Big(2L^2D_1+\\frac{K^2D_2}2\\Big)h^2 .\n$$",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §5.3, p. 42.",
+   "explanation": "Square the bound of `abs_antithetic_le`: $Y^2\\le2L^2(\\frac{A+B}2-C)^2+\\frac{K^2}4((A-C)^4+(B-C)^4)$, then take expectations and use $\\mathbb V[Y]\\le\\mathbb E[Y^2]$.",
+   "tags": [
+    "probability",
+    "multilevel-monte-carlo"
+   ]
+  },
+  "MLMC.emMeanRevert_iterate": {
+   "theorem_title": "Giles (2015), §5.6: $n$ explicit Euler steps for the drift $(\\theta-S)/\\tau$ multiply the distance to $\\theta$ by $(1-h/\\tau)^n$",
+   "natural_language_statement": "Giles (2015), §5.6, pp. 43–44: \"If the drift term has a characteristic time-scale of $\\tau$, as in a mean-reverting drift $(\\theta-S_t)/\\tau$, then when using the explicit Euler-Maruyama discretisation the timestep $h_0$ on the coarsest level cannot be much larger than $\\tau$ without encountering severe numerical stability problems.\" \n\nFor all $\\theta,\\tau,h,S\\in\\mathbb R$ and $n\\in\\mathbb N$, with $\\phi=\\mathrm{emMeanRevert}(\\theta,\\tau,h,\\cdot)$,\n$$\n\\phi^{[n]}(S)-\\theta=(1-h/\\tau)^n\\,(S-\\theta),\n$$\nwhere $\\phi^{[n]}$ is the $n$-fold iterate.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §5.6, pp. 43–44.",
+   "explanation": "$\\phi(S)-\\theta=(1-h/\\tau)(S-\\theta)$; induction on $n$.",
+   "tags": [
+    "numerical-analysis"
+   ]
+  },
+  "MLMC.emMeanRevert_bounded": {
+   "theorem_title": "Giles (2015), §5.6: for $0\\le h\\le2\\tau$ the explicit Euler step for a mean-reverting drift is stable",
+   "natural_language_statement": "Giles (2015), §5.6, pp. 43–44: \"If the drift term has a characteristic time-scale of $\\tau$, as in a mean-reverting drift $(\\theta-S_t)/\\tau$, then when using the explicit Euler-Maruyama discretisation the timestep $h_0$ on the coarsest level cannot be much larger than $\\tau$ without encountering severe numerical stability problems.\" \n\nLet $\\tau>0$ and $0\\le h\\le2\\tau$. Then for all $\\theta,S\\in\\mathbb R$ and $n\\in\\mathbb N$, $\\big|\\phi^{[n]}(S)-\\theta\\big|\\le|S-\\theta|$, where $\\phi=\\mathrm{emMeanRevert}(\\theta,\\tau,h,\\cdot)$.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §5.6, pp. 43–44.",
+   "explanation": "$|1-h/\\tau|\\le1$ and `emMeanRevert_iterate`.",
+   "tags": [
+    "numerical-analysis"
+   ]
+  },
+  "MLMC.emMeanRevert_unbounded": {
+   "theorem_title": "Giles (2015), §5.6: for $h>2\\tau$ the explicit Euler step for a mean-reverting drift is unstable, the distance to $\\theta$ grows geometrically",
+   "natural_language_statement": "Giles (2015), §5.6, pp. 43–44: \"If the drift term has a characteristic time-scale of $\\tau$, as in a mean-reverting drift $(\\theta-S_t)/\\tau$, then when using the explicit Euler-Maruyama discretisation the timestep $h_0$ on the coarsest level cannot be much larger than $\\tau$ without encountering severe numerical stability problems.\" \n\nLet $\\tau>0$, $h>2\\tau$ and $S\\ne\\theta$. Then $\\big|\\phi^{[n]}(S)-\\theta\\big|\\to\\infty$ as $n\\to\\infty$, where $\\phi=\\mathrm{emMeanRevert}(\\theta,\\tau,h,\\cdot)$.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §5.6, pp. 43–44.",
+   "explanation": "$|1-h/\\tau|>1$, so $|1-h/\\tau|^n|S-\\theta|\\to\\infty$ by `emMeanRevert_iterate`.",
+   "tags": [
+    "numerical-analysis",
+    "convergence"
+   ]
+  },
+  "MLMC.smooth_step_eventually": {
+   "theorem_title": "Giles (2015), §5.7: as $\\delta\\to0^+$, $g(y/\\delta)$ is eventually the Heaviside value $H(y)$ for every $y\\ne0$",
+   "natural_language_statement": "Giles (2015), §5.7, p. 46: \"Pointwise values of the CDF … correspond to expected values of an indicator function, $C(x)\\equiv\\mathbb E[\\mathbf 1_{P<x}]\\equiv\\mathbb E[H(x-P)]$, where $H(x)$ is the Heaviside step function. To improve the multilevel variance, this is smoothed to give $C_\\delta(x)=\\mathbb E[g((x-P)/\\delta)]$, where $g(x)$ is a continuous function with $g(x)=0$ for $x<-1$, and $g(x)=1$ for $x>1$. The parameter $\\delta$ controls the degree of smoothing. As $\\delta\\to0$, $g(x/\\delta)\\to H(x)$, and the accuracy improves but the variance of the multilevel estimator increases.\" \n\nLet $g:\\mathbb R\\to\\mathbb R$ with $g(y)=0$ for $y<-1$ and $g(y)=1$ for $y>1$, and let $y\\ne0$. Then for all sufficiently small $\\delta>0$, $g(y/\\delta)=H(y)$, where $H(y)=1$ if $y>0$ and $0$ otherwise.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §5.7, p. 46.",
+   "explanation": "For $0<\\delta<|y|$, $y/\\delta>1$ if $y>0$ and $y/\\delta<-1$ if $y<0$.",
+   "tags": [
+    "real-analysis",
+    "convergence"
+   ]
+  },
+  "MLMC.abs_smoothCDF_sub_le": {
+   "theorem_title": "Giles (2015), §5.7: the smoothed CDF $C_\\delta(x)=\\mathbb E[g((x-P)/\\delta)]$ differs from $C(x)=\\mathbb P(P<x)$ by at most $\\mathbb P(|P-x|\\le\\delta)$",
+   "natural_language_statement": "Giles (2015), §5.7, p. 46: \"Pointwise values of the CDF … correspond to expected values of an indicator function, $C(x)\\equiv\\mathbb E[\\mathbf 1_{P<x}]\\equiv\\mathbb E[H(x-P)]$, where $H(x)$ is the Heaviside step function. To improve the multilevel variance, this is smoothed to give $C_\\delta(x)=\\mathbb E[g((x-P)/\\delta)]$, where $g(x)$ is a continuous function with $g(x)=0$ for $x<-1$, and $g(x)=1$ for $x>1$. The parameter $\\delta$ controls the degree of smoothing. As $\\delta\\to0$, $g(x/\\delta)\\to H(x)$, and the accuracy improves but the variance of the multilevel estimator increases.\" \n\nLet $(\\Omega,\\mathcal F,\\mathbb P)$ be a probability space, $P:\\Omega\\to\\mathbb R$ measurable, and $g:\\mathbb R\\to\\mathbb R$ measurable with $0\\le g\\le1$, $g(y)=0$ for $y<-1$ and $g(y)=1$ for $y>1$. Then for all $\\delta>0$ and $x\\in\\mathbb R$,\n$$\n\\big|\\mathrm{smoothCDF}(\\mathbb P,P,g,\\delta,x)-\\mathbb P(P<x)\\big|\\le\\mathbb P(|P-x|\\le\\delta).\n$$",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §5.7, p. 46.",
+   "explanation": "Pointwise, $g((x-P)/\\delta)=\\mathbf 1_{P<x}$ where $|P-x|>\\delta$, and the two differ by at most $1$ elsewhere.",
+   "tags": [
+    "probability"
+   ]
+  },
+  "MLMC.tendsto_smoothCDF": {
+   "theorem_title": "Giles (2015), §5.7: as $\\delta\\to0^+$ the smoothed CDF converges to the CDF, $C_\\delta(x)\\to\\mathbb P(P<x)$, when $P$ has no atom at $x$",
+   "natural_language_statement": "Giles (2015), §5.7, p. 46: \"Pointwise values of the CDF … correspond to expected values of an indicator function, $C(x)\\equiv\\mathbb E[\\mathbf 1_{P<x}]\\equiv\\mathbb E[H(x-P)]$, where $H(x)$ is the Heaviside step function. To improve the multilevel variance, this is smoothed to give $C_\\delta(x)=\\mathbb E[g((x-P)/\\delta)]$, where $g(x)$ is a continuous function with $g(x)=0$ for $x<-1$, and $g(x)=1$ for $x>1$. The parameter $\\delta$ controls the degree of smoothing. As $\\delta\\to0$, $g(x/\\delta)\\to H(x)$, and the accuracy improves but the variance of the multilevel estimator increases.\" \n\nWith the hypotheses of `abs_smoothCDF_sub_le`, let $x\\in\\mathbb R$ with $\\mathbb P(P=x)=0$. Then $\\mathrm{smoothCDF}(\\mathbb P,P,g,\\delta,x)\\to\\mathbb P(P<x)$ as $\\delta\\to0^+$.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §5.7, p. 46.",
+   "explanation": "$\\mathbb P(|P-x|\\le\\delta)\\to\\mathbb P(P=x)=0$ by continuity of measure along the decreasing sets, and `abs_smoothCDF_sub_le`.",
+   "tags": [
+    "probability",
+    "convergence"
+   ]
   }
  },
  "definitions": {
@@ -3787,6 +4116,34 @@
    "tags": [
     "multilevel-monte-carlo",
     "complexity"
+   ]
+  },
+  "MLMC_MarkovChain": {
+   "definition_title": "Giles (2015), §10.1: the Markov chain started in the past, the σ-algebras of its noises, and the example $X_{n+1}=X_n/2+\\xi_n$",
+   "natural_language_statement": "Giles (2015), §10.1, p. 61: \"the Markov chain $\\{X_n\\}$ in a metric space with metric $d$ is defined by $X_0=x$, $X_{n+1}=\\varphi_n(X_n)$, $n\\ge0$, where $\\{\\varphi_n\\}$ is a sequence of iid random functions. Furthermore, it is assumed that the $\\varphi$'s are contracting on average in the sense that $\\sup_{x\\ne y}\\mathbb E\\big[(d(\\varphi_n(x),\\varphi_n(y))/d(x,y))^{2\\gamma}\\big]<1$ for some $\\gamma\\in(0,1)$ … $f$ is Hölder continuous with exponent $\\gamma$, so that $|f(y)-f(x)|\\le d(x,y)^\\gamma$. … Glynn and Rhee (2014) circumvent this problem by making $N$ increase with level, starting a level $\\ell$ simulation at $n=-N_\\ell$ and terminating it at $n=0$ … the level $\\ell$ and $\\ell-1$ simulations share the same random $\\varphi_n$ for $n\\ge-N_{\\ell-1}$. Because of the contraction property, the effect of the initial evolution of the level $\\ell$ path for $n<-N_{\\ell-1}$ decays exponentially. This gives a coupling with a multilevel correction variance which decays as $\\ell$ increases.\" \n\n**`backIter`**. For $\\varphi:\\alpha\\to E\\to\\alpha$, $n\\in\\mathbb N$, noises $e:\\mathbb N\\to E$ and $x\\in\\alpha$:\n$$\n\\mathrm{backIter}(\\varphi,0,e,x)=x,\\qquad \\mathrm{backIter}(\\varphi,n+1,e,x)=\\varphi\\big(\\mathrm{backIter}(\\varphi,n,(e_{k+1})_k,x),\\,e_0\\big),\n$$\nthat is $\\varphi(\\cdot,e_0)\\circ\\varphi(\\cdot,e_1)\\circ\\dots\\circ\\varphi(\\cdot,e_{n-1})$ applied to $x$: the value at time $0$ of the chain started at time $-n$ at $x$ whose step ending at time $-k$ applies $\\varphi(\\cdot,e_k)$. The level $\\ell$ sample of Giles is $\\mathrm{backIter}(\\varphi,N_\\ell,e,x_0)$.\n\n**`noiseFrom`**. For $\\xi:\\mathbb N\\to\\Omega\\to E$ and $m\\in\\mathbb N$, the σ-algebra on $\\Omega$ generated by $\\xi_m,\\xi_{m+1},\\dots$:\n$$\n\\mathrm{noiseFrom}(\\xi,m)=\\bigvee_{i\\ge m}\\sigma(\\xi_i).\n$$\n\n**`halfStep`**. For $x,e\\in\\mathbb R$, $\\mathrm{halfStep}(x,e)=x/2+e$ (the example chain $X_{n+1}=\\tfrac12X_n+\\xi_n$).\n\n**`fairCoin`**. The measure $\\tfrac12\\delta_0+\\tfrac12\\delta_1$ on $\\mathbb R$, the law of $\\xi_n$ in the example ($\\mathbb P(\\xi_n=0)=\\mathbb P(\\xi_n=1)=\\tfrac12$).\n\n**`uniform02`**. The measure $\\tfrac12\\,\\lambda|_{(0,2]}$ on $\\mathbb R$ ($\\lambda$ Lebesgue measure), the uniform distribution on $[0,2]$.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §10.1, p. 61 (after P.W. Glynn and C.-H. Rhee, Exact estimation for Markov chain equilibrium expectations, 2014).",
+   "tags": [
+    "probability",
+    "multilevel-monte-carlo"
+   ]
+  },
+  "MLMC_PDEExamples": {
+   "definition_title": "Giles (2015), §7.1: the explicit step of the heat-equation scheme, and the Euler–Maruyama and Milstein steps",
+   "natural_language_statement": "Giles (2015), §7.1, p. 51 (a 1D parabolic SPDE): \"An Euler-Maruyama time discretisation with timestep $k$, combined with a second order space discretisation with uniform grid spacing $h$, gives the discrete approximation $u^{n+1}_j=u^n_j+\\frac{k}{h^2}(u^n_{j+1}-2u^n_j+u^n_{j-1})+10\\,\\Delta W_n$. The level $\\ell$ approximation uses $h_\\ell=2^{-(\\ell+1)}$, $k_\\ell=\\frac14h_\\ell^2$. Keeping $k_\\ell/h_\\ell^2=\\frac14$ ensures the explicit numerical discretisation is stable on all levels. Since the number of grid points doubles on each level, and the number of timesteps increases by factor 4, the cost per sample increases by factor 8, giving $\\gamma=3$. Because the stochastic forcing is additive, i.e. the volatility does not depend on $u(x,t)$, the Euler-Maruyama discretisation is actually equivalent to a Milstein discretisation … the solution error is $O(2^{-2\\ell})$ and hence $\\alpha=2$ and $\\beta=4$. This leads to the optimal complexity of $O(\\varepsilon^{-2})$.\" \n\n**`heatStep`**. For $\\lambda\\in\\mathbb R$, a grid function $u:\\mathbb Z\\to\\mathbb R$ and $j\\in\\mathbb Z$, the noise-free explicit step\n$$\n\\mathrm{heatStep}(\\lambda,u)_j=u_j+\\lambda\\,(u_{j+1}-2u_j+u_{j-1}),\\qquad\\lambda=k/h^2 .\n$$\n\n**`emStep`**. For $a,b:\\mathbb R\\to\\mathbb R$ and $h,S,\\Delta W\\in\\mathbb R$, the Euler–Maruyama step $\\mathrm{emStep}(a,b,h,S,\\Delta W)=S+a(S)h+b(S)\\Delta W$.\n\n**`milsteinStep`**. The Milstein step of Giles (2015), §5.2, $\\mathrm{milsteinStep}(a,b,h,S,\\Delta W)=S+a(S)h+b(S)\\Delta W+\\tfrac12\\,b(S)\\,b'(S)\\,(\\Delta W^2-h)$, where $b'$ is the derivative of $b$.\n\n**Formalization Note** $b'(S)$ is Mathlib's `deriv b S` (zero where $b$ is not differentiable).",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §7.1, pp. 49–51. The Milstein step: §5.2, p. 35.",
+   "tags": [
+    "numerical-analysis",
+    "multilevel-monte-carlo"
+   ]
+  },
+  "MLMC_SDEExtras": {
+   "definition_title": "Giles (2015), §5: the Brownian-bridge interpolant, the antithetic swap of increments, the explicit mean-reverting step and the smoothed CDF",
+   "natural_language_statement": "Giles (2015), §5.2, pp. 38–39: \"For the fine path, the interpolant for timestep $[t_n,t_n+h]$ is $\\hat S^f(t)=\\hat S^f_n+\\lambda(\\hat S^f_{n+1}-\\hat S^f_n)+b^f_n(W(t)-W_n-\\lambda(W_{n+1}-W_n))$ where $\\lambda=(t-t_n)/h$ … the interpolant for the time interval $[t_n,t_n+2h]$ is $\\hat S^c(t)=\\hat S^c_n+\\lambda(\\hat S^c_{n+2}-\\hat S^c_n)+b^c_n(W(t)-W_n-\\lambda(W_{n+2}-W_n))$ where $\\lambda=(t-t_n)/(2h)$ … We can now evaluate this interpolant at time $t_n+h$, obtaining $\\hat S^c(t_{n+1})=\\frac12(\\hat S^c_n+\\hat S^c_{n+2})+\\frac12b^c_n((W_{n+1}-W_n)-(W_{n+2}-W_{n+1}))$ using the Brownian increments … already generated for the fine path.\" \n\nGiles (2015), §5.3, p. 42: \"The estimator which is used is $Y_\\ell=N_\\ell^{-1}\\sum_i\\frac12(P_\\ell(\\omega_i)+P_\\ell(\\omega^a_i))-P_{\\ell-1}(\\omega_i)$. Here $\\omega_i$ represents the driving Brownian path, and $\\omega^a_i$ is an antithetic counterpart defined by a time-reversal of the Brownian path within each coarse timestep. This results in the Brownian increments for the antithetic fine path being swapped relative to the original path. Lengthy analysis proves that the average of the fine and antithetic paths is within $O(h)$ of the coarse path, and hence the multilevel variance is $O(h^2)$ for smooth payoffs\" \n\nGiles (2015), §5.6, pp. 43–44: \"If the drift term has a characteristic time-scale of $\\tau$, as in a mean-reverting drift $(\\theta-S_t)/\\tau$, then when using the explicit Euler-Maruyama discretisation the timestep $h_0$ on the coarsest level cannot be much larger than $\\tau$ without encountering severe numerical stability problems.\" \n\nGiles (2015), §5.7, p. 46: \"Pointwise values of the CDF … correspond to expected values of an indicator function, $C(x)\\equiv\\mathbb E[\\mathbf 1_{P<x}]\\equiv\\mathbb E[H(x-P)]$, where $H(x)$ is the Heaviside step function. To improve the multilevel variance, this is smoothed to give $C_\\delta(x)=\\mathbb E[g((x-P)/\\delta)]$, where $g(x)$ is a continuous function with $g(x)=0$ for $x<-1$, and $g(x)=1$ for $x>1$. The parameter $\\delta$ controls the degree of smoothing. As $\\delta\\to0$, $g(x/\\delta)\\to H(x)$, and the accuracy improves but the variance of the multilevel estimator increases.\" \n\n**`bridgeInterp`**. For $S_0,S_1,b,W_0,W_1,W_t,\\lambda\\in\\mathbb R$, $\\mathrm{bridgeInterp}(S_0,S_1,b,W_0,W_1,W_t,\\lambda)=S_0+\\lambda(S_1-S_0)+b\\,(W_t-W_0-\\lambda(W_1-W_0))$.\n\n**`pairSwap`**. For $i\\in\\mathbb N$, $\\mathrm{pairSwap}(i)=i+1$ if $i$ is even and $i-1$ if $i$ is odd: the permutation $2k\\leftrightarrow2k+1$.\n\n**`swapIncrements`**. For $z:\\mathbb N\\to\\mathbb R$, $\\mathrm{swapIncrements}(z)_i=z_{\\mathrm{pairSwap}(i)}$: the two fine increments of each coarse timestep exchanged.\n\n**`emMeanRevert`**. For $\\theta,\\tau,h,S\\in\\mathbb R$, $\\mathrm{emMeanRevert}(\\theta,\\tau,h,S)=S+\\frac{\\theta-S}{\\tau}h$, the explicit Euler step for the drift $(\\theta-S)/\\tau$.\n\n**`smoothCDF`**. For a measure $\\mu$ on $\\Omega$, $P:\\Omega\\to\\mathbb R$, $g:\\mathbb R\\to\\mathbb R$ and $\\delta,x\\in\\mathbb R$, $\\mathrm{smoothCDF}(\\mu,P,g,\\delta,x)=\\int_\\Omega g\\big((x-P(\\omega))/\\delta\\big)\\,d\\mu(\\omega)$.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §5.2–§5.7, pp. 35–46.",
+   "tags": [
+    "numerical-analysis",
+    "multilevel-monte-carlo",
+    "probability"
    ]
   }
  }

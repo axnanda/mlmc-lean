@@ -42,6 +42,15 @@
 --   (39)–(41) of its variables, the accumulation of rounding errors
 -- * `MlmcLean.ML2RComplexity` — Giles §2.3: uniform bounds on the ML2R weights, the number of
 --   levels, the costs O(ε⁻²|log ε|) (β = γ) and O(ε⁻² 2^{(γ−β)√(2 log₂(1/ε)/α)}) (β < γ)
+-- * `MlmcLean.MarkovChain` — Giles §10.1: Markov chains started in the past, the contraction of
+--   the coupled chains, the variance decay V_ℓ ≤ C ρ^{N_{ℓ−1}}, the example X_{n+1} = X_n/2 + ξ_n
+--   and its uniform invariant law
+-- * `MlmcLean.PDEExamples` — Giles §7.1: pathwise errors give α and β = 2α, the discrete maximum
+--   principle and the stability condition k/h² ≤ ½, the cost factor 8 (γ = 3), Euler–Maruyama =
+--   Milstein for additive noise
+-- * `MlmcLean.SDEExtras` — Giles §5: the rates from the timestep, the kurtosis scale, conditional
+--   expectations and (2.4), the Brownian-bridge midpoint, the antithetic swap and variance, the
+--   stability of the explicit step for mean reversion, the smoothed CDF
 import MlmcLean.Allocation
 import MlmcLean.Estimator
 import MlmcLean.LevelDiff
@@ -75,3 +84,6 @@ import MlmcLean.PoissonCoupling
 import MlmcLean.LagrangeBitWidth
 import MlmcLean.FixedPointPath
 import MlmcLean.ML2RComplexity
+import MlmcLean.MarkovChain
+import MlmcLean.PDEExamples
+import MlmcLean.SDEExtras
