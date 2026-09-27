@@ -140,7 +140,13 @@
     "MLMC.hasDerivAt_levelCost",
     "MLMC.levelCost_stationary_iff",
     "MLMC.vIndepR_antitone",
-    "MLMC.greedy_rounding_feasible"
+    "MLMC.greedy_rounding_feasible",
+    "MLMC.lagrangeN_geometric",
+    "MLMC.complexityBound_of_two_mul",
+    "MLMC.cost_of_beta_eq_two_alpha",
+    "MLMC.randomised_infinite_cost",
+    "MLMC.singleTermN_eq_sum_levels",
+    "MLMC.integral_levelCount"
   ],
   "bundlePrefix": "MLMC_",
   "paperNamed": [],

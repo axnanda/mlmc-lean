@@ -139,7 +139,7 @@ theorem levelwise_optimisation {X : Type*} (L : ℕ) (S : ℕ → Set X) (g : �
   constructor
   · intro h ℓ hℓ x hx
     by_contra hlt
-    push_neg at hlt
+    rw [not_le] at hlt
     have hd' : ∀ ℓ', Function.update d ℓ x ℓ' ∈ S ℓ' := by
       intro ℓ'
       rcases eq_or_ne ℓ' ℓ with rfl | h'
@@ -183,7 +183,7 @@ theorem vIndepR_natCast (s : Finset ι) (E : ι → ℝ) (e : ι → ℤ) (d : �
   simp only [vIndepR, vIndep]
   congr 1
   refine Finset.sum_congr rfl fun i _ => ?_
-  rw [show (e i : ℝ) - (d i : ℝ) = ((e i - d i : ℤ) : ℝ) by push_cast, Real.rpow_intCast]
+  rw [show (e i : ℝ) - (d i : ℝ) = ((e i - d i : ℤ) : ℝ) by push_cast; rfl, Real.rpow_intCast]
 
 /-- **(35) is uncoupled: the variance part** (Haas–Giles 2025, §6.1, p. 12: "because of the form
 of the variance bound (26) and cost (31), equation (35) gives a set of uncoupled nonlinear scalar
@@ -209,8 +209,7 @@ theorem hasDerivAt_vIndepR_update [DecidableEq ι] (s : Finset ι) (E : ι → �
     ((hasDerivAt_id' (x := t)).const_sub (e i : ℝ)).const_rpow (by norm_num)
   have h2 := ((h1.const_mul (E i)).add_const
     (∑ j ∈ s.erase i, E j * (4 : ℝ) ^ ((e j : ℝ) - d j))).const_mul (1 / 12)
-  convert h2 using 1
-  ring
+  exact h2.congr_deriv (by ring)
 
 /-- **(35) is uncoupled: the cost part** (Haas–Giles 2025, §6.1, p. 12).  As a function of one
 bit-width `d_i` (the others fixed), the cost (31) has `∂C̃/∂d_i = M_i d_i + M'_i`, which depends on
@@ -239,8 +238,7 @@ theorem hasDerivAt_sepCost_update [DecidableEq ι] (vars : Finset ι) (M M' : ι
     (1 / 2)
   have hl := ((hasDerivAt_id' (x := t)).const_mul (M' i)).add_const
     (∑ j ∈ vars.erase i, M' j * d j)
-  convert hq.add hl using 1
-  ring
+  exact (hq.add hl).congr_deriv (by ring)
 
 /-- **Each equation (35) has exactly one solution** (Haas–Giles 2025, §6.1, p. 12: (35) "gives a
 set of uncoupled nonlinear scalar equations for each pair `i, ℓ`, which are easily solved to obtain
@@ -342,18 +340,18 @@ theorem hasDerivAt_levelCost {Ct Vd : ℝ → ℝ} {Ct' Vd' V C t : ℝ} (hV : 0
       ((Real.sqrt (C / Vd t) * Vd' + Real.sqrt (V / Ct t) * Ct') / 2) t := by
   have h1 := (hdC.const_mul V).sqrt (mul_pos hV hCt).ne'
   have h2 := (hdV.mul_const C).sqrt (mul_pos hVd hC).ne'
-  convert h1.add h2 using 1
+  refine (h1.add h2).congr_deriv ?_
   rw [mul_div_two_sqrt_mul hV hCt, mul_comm (Vd t) C, mul_comm Vd' C,
     mul_div_two_sqrt_mul hC hVd]
   ring
 
 /-- **(36) is (35) with `λ = √(V_ℓ V^Δ_ℓ / (C_ℓ C̃_ℓ))`** (Haas–Giles 2025, §6.1, p. 12: "so it is
 again of the form (35), where `λ = √(V_ℓ V^Δ_ℓ(d) / C_ℓ C̃_ℓ(d))` gives the optimal trade-off
-between cost and variance").  For positive `V, C, C̃, V^Δ`, the derivative of the level cost in
+between cost and variance").  For positive `C, C̃, V^Δ`, the derivative of the level cost in
 `hasDerivAt_levelCost` vanishes if and only if `V^Δ' + λ C̃' = 0` with
 `λ = √(V V^Δ / (C C̃))`. -/
-theorem levelCost_stationary_iff {V C Ct Vd Ct' Vd' : ℝ} (hV : 0 < V) (hC : 0 < C)
-    (hCt : 0 < Ct) (hVd : 0 < Vd) :
+theorem levelCost_stationary_iff {V C Ct Vd Ct' Vd' : ℝ} (hC : 0 < C) (hCt : 0 < Ct)
+    (hVd : 0 < Vd) :
     (Real.sqrt (C / Vd) * Vd' + Real.sqrt (V / Ct) * Ct') / 2 = 0 ↔
       Vd' + Real.sqrt (V * Vd / (C * Ct)) * Ct' = 0 := by
   have ha : 0 < Real.sqrt (C / Vd) := Real.sqrt_pos.2 (div_pos hC hVd)

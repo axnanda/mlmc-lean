@@ -421,6 +421,29 @@ theorem randomised_necessary (hK : Measurable K) (hPlm : ∀ ℓ, Measurable (Pl
   have h := (integral_cost_level hK hκm hκ0 hκi hκind hp).1.1 hcost
   exact h.congr fun ℓ => by rw [hC ℓ]
 
+/-- **Infinite expected cost when `β ≤ γ`** (Giles 2015, §2.2, p. 10: "for these cases the
+estimators constructed by Rhee and Glynn (2013) have infinite expected cost").  If the rates are
+attained, `V_ℓ = V[P_ℓ − P_{ℓ−1}] ≥ c₂ 2^{−βℓ}` and `C_ℓ ≥ c₃ 2^{γℓ}` with `β ≤ γ`, then every
+single-term estimator whose sample `Y` has finite variance has infinite expected cost: the cost
+`κ_K ≥ 0` of a sample (with `E[κ_ℓ] = C_ℓ`, independent of the level `K`) has
+`E[κ_K] = ∫ κ_K dμ = ∞`. -/
+theorem randomised_infinite_cost (hK : Measurable K) (hPlm : ∀ ℓ, Measurable (Pl ℓ))
+    (hPl : ∀ ℓ, MemLp (Pl ℓ) 2 μ) (hp : ∀ ℓ, μ.real {ω | K ω = ℓ} = p ℓ) (hp0 : ∀ ℓ, 0 < p ℓ)
+    (hind : ∀ ℓ, IndepFun K (levelDiff Pl ℓ) μ) {κ : ℕ → Ω → ℝ} {C : ℕ → ℝ}
+    (hκm : ∀ ℓ, Measurable (κ ℓ)) (hκ0 : ∀ ℓ ω, 0 ≤ κ ℓ ω) (hκi : ∀ ℓ, Integrable (κ ℓ) μ)
+    (hκind : ∀ ℓ, IndepFun K (κ ℓ) μ) (hC : ∀ ℓ, ∫ ω, κ ℓ ω ∂μ = C ℓ)
+    {β γ c₂ c₃ : ℝ} (hβγ : β ≤ γ) (hc₂ : 0 < c₂) (hc₃ : 0 < c₃)
+    (hV : ∀ ℓ : ℕ, c₂ * (2 : ℝ) ^ (-(β * (ℓ : ℝ))) ≤ variance (levelDiff Pl ℓ) μ)
+    (hCb : ∀ ℓ : ℕ, c₃ * (2 : ℝ) ^ (γ * (ℓ : ℝ)) ≤ C ℓ) (hY : MemLp (singleTerm Pl K p) 2 μ) :
+    ∫⁻ ω, ENNReal.ofReal (κ (K ω) ω) ∂μ = ⊤ := by
+  by_contra hfin
+  have hm : Measurable fun ω => κ (K ω) ω := measurable_comp_level hK hκm
+  have hcost : Integrable (fun ω => κ (K ω) ω) μ :=
+    ⟨hm.aestronglyMeasurable, (hasFiniteIntegral_iff_ofReal
+      (Eventually.of_forall fun ω => hκ0 (K ω) ω)).2 (lt_top_iff_ne_top.2 hfin)⟩
+  exact randomised_not_summable hβγ hc₂ hc₃ hp0 hV hCb
+    (randomised_necessary hK hPlm hPl hp hp0 hind hκm hκ0 hκi hκind hC hY hcost)
+
 end levelSelection
 
 /-! ### The single-term estimator with `N` samples -/
@@ -475,6 +498,59 @@ theorem singleTermN_mean_variance [IsProbabilityMeasure μ] [IsProbabilityMeasur
       (fun n => hY2.comp_measurePreserving (hξ n))
       (fun n => (hξ n).variance_fun_comp hYm.aemeasurable)
       (fun a _ b _ hab => hX.indepFun hab)
+
+omit [MeasurableSpace Ω] [MeasurableSpace Ω'] in
+/-- **The single-term estimator grouped by level** (Giles 2015, §2.2, p. 9: "Another way of
+describing it is `Y = ∑_ℓ (p_ℓ N)⁻¹ ∑_{n=1}^{N_ℓ} (P_ℓ^{(n)} − P_{ℓ−1}^{(n)})` where `N_ℓ` is the
+number of samples on level `ℓ`, with `∑_ℓ N_ℓ = N`").  For every outcome `x` and every finite set
+`S` of levels containing the levels `K(ξ_n x)` of the `N` samples, the `N`-sample estimator is
+`∑_{ℓ ∈ S} (p_ℓ N)⁻¹ ∑_{n : K(ξ_n x) = ℓ} (P_ℓ − P_{ℓ−1})(ξ_n x)`, and the level counts
+`N_ℓ = #{n < N : K(ξ_n x) = ℓ}` add up to `N`. -/
+theorem singleTermN_eq_sum_levels (Pl : ℕ → Ω → ℝ) (K : Ω → ℕ) (p : ℕ → ℝ)
+    (ξ : ℕ → Ω' → Ω) (N : ℕ) (x : Ω') {S : Finset ℕ} (hS : ∀ n ∈ range N, K (ξ n x) ∈ S) :
+    singleTermN Pl K p ξ N x = ∑ ℓ ∈ S, (p ℓ * N)⁻¹ *
+        ∑ n ∈ (range N).filter (fun n => K (ξ n x) = ℓ), levelDiff Pl ℓ (ξ n x) ∧
+      ∑ ℓ ∈ S, (((range N).filter (fun n => K (ξ n x) = ℓ)).card : ℝ) = N := by
+  constructor
+  · unfold singleTermN singleTerm
+    rw [← Finset.sum_fiberwise_of_maps_to hS, Finset.mul_sum]
+    refine Finset.sum_congr rfl fun ℓ _ => ?_
+    rw [Finset.mul_sum, Finset.mul_sum]
+    refine Finset.sum_congr rfl fun n hn => ?_
+    rw [(Finset.mem_filter.1 hn).2, mul_inv]
+    ring
+  · rw [← Nat.cast_sum, ← Finset.card_eq_sum_card_fiberwise (fun n hn => hS n hn),
+      Finset.card_range]
+
+/-- **The expected level counts** (Giles 2015, §2.2, p. 9: "`E[N_ℓ] = p_ℓ N`").  If the `N`
+samples `ξ_n` each have law `μ`, under which the level `K` takes the value `ℓ` with probability
+`p_ℓ = μ(K = ℓ)`, then the number `N_ℓ = #{n < N : K(ξ_n) = ℓ}` of samples on level `ℓ` has
+expectation `N p_ℓ`. -/
+theorem integral_levelCount [IsProbabilityMeasure μ'] {K : Ω → ℕ} (hK : Measurable K)
+    {ξ : ℕ → Ω' → Ω} (hξ : ∀ n, MeasurePreserving (ξ n) μ' μ) (N ℓ : ℕ) :
+    ∫ x, (((range N).filter (fun n => K (ξ n x) = ℓ)).card : ℝ) ∂μ' =
+      N * μ.real {ω | K ω = ℓ} := by
+  have hset : ∀ n, MeasurableSet {x | K (ξ n x) = ℓ} := fun n =>
+    (hK.comp (hξ n).measurable) (measurableSet_singleton ℓ)
+  have hind : ∀ n, (fun x => if K (ξ n x) = ℓ then (1 : ℝ) else 0) =
+      Set.indicator {x | K (ξ n x) = ℓ} 1 := fun n => by
+    funext x
+    by_cases h : K (ξ n x) = ℓ <;> simp [Set.indicator, h]
+  have hint : ∀ n ∈ range N, Integrable (fun x => if K (ξ n x) = ℓ then (1 : ℝ) else 0) μ' :=
+    fun n _ => by
+      rw [hind n]
+      exact (integrable_const (1 : ℝ)).indicator (hset n)
+  have hterm : ∀ n, ∫ x, (if K (ξ n x) = ℓ then (1 : ℝ) else 0) ∂μ' = μ.real {ω | K ω = ℓ} :=
+    fun n => by
+      rw [hind n, integral_indicator_one (hset n)]
+      exact congrArg ENNReal.toReal
+        ((hξ n).measure_preimage (hK (measurableSet_singleton ℓ)).nullMeasurableSet)
+  have hcard : ∀ x, (((range N).filter (fun n => K (ξ n x) = ℓ)).card : ℝ) =
+      ∑ n ∈ range N, (if K (ξ n x) = ℓ then (1 : ℝ) else 0) := fun x =>
+    Finset.natCast_card_filter _ _
+  simp_rw [hcard]
+  rw [integral_finsetSum _ hint]
+  simp only [hterm, Finset.sum_const, Finset.card_range, nsmul_eq_mul]
 
 end Nsamples
 

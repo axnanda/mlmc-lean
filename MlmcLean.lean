@@ -20,6 +20,7 @@
 -- * `MlmcLean.MultiOutput` — Giles §2.5: several outputs, Hilbert-space outputs, Theorem 1
 -- * `MlmcLean.RoundingError` — Haas–Giles §4: fixed-point rounding, the error-variance model
 -- * `MlmcLean.BitWidth` — Haas–Giles §5–§6: the cost model, the bit-width optimisation
+-- * `MlmcLean.GeometricRates` — Giles §2.1: allocation under geometric rates, the case β = 2α
 import MlmcLean.Allocation
 import MlmcLean.Estimator
 import MlmcLean.LevelDiff
@@ -40,3 +41,4 @@ import MlmcLean.Richardson
 import MlmcLean.MultiOutput
 import MlmcLean.RoundingError
 import MlmcLean.BitWidth
+import MlmcLean.GeometricRates

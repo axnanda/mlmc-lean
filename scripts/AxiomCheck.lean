@@ -143,6 +143,12 @@ import MlmcLean
 #print axioms MLMC.levelCost_stationary_iff
 #print axioms MLMC.vIndepR_antitone
 #print axioms MLMC.greedy_rounding_feasible
+#print axioms MLMC.lagrangeN_geometric
+#print axioms MLMC.complexityBound_of_two_mul
+#print axioms MLMC.cost_of_beta_eq_two_alpha
+#print axioms MLMC.randomised_infinite_cost
+#print axioms MLMC.singleTermN_eq_sum_levels
+#print axioms MLMC.integral_levelCount
 -- helper lemmas that the prove2.me generator promotes to nodes
 #print axioms MLMC.sqrt_Vb_mul_Cb
 #print axioms MLMC.two_rpow_levelL_le
