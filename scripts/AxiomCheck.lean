@@ -116,6 +116,21 @@ import MlmcLean
 #print axioms MLMC.mlmc_mse_hilbert
 #print axioms MLMC.giles_theorem1_hilbert
 #print axioms MLMC.sq_norm_add_of_indepFun_fails_sup
+#print axioms MLMC.abs_sub_roundFixed_le
+#print axioms MLMC.roundFixed_mantissa
+#print axioms MLMC.integral_sq_roundError_le
+#print axioms MLMC.integral_sq_of_isUniform
+#print axioms MLMC.integral_sq_uniform_roundError
+#print axioms MLMC.variance_sum_eq
+#print axioms MLMC.variance_le_integral_sq
+#print axioms MLMC.variance_sum_mul_le_of_indep
+#print axioms MLMC.variance_linearised_indep
+#print axioms MLMC.variance_sum_le_sq_sum_sqrt
+#print axioms MLMC.sqrt_variance_mul_le
+#print axioms MLMC.variance_linearised_corr
+#print axioms MLMC.vIndep_le_vCorr
+#print axioms MLMC.variance_extended_indep
+#print axioms MLMC.variance_extended_corr
 -- helper lemmas that the prove2.me generator promotes to nodes
 #print axioms MLMC.sqrt_Vb_mul_Cb
 #print axioms MLMC.two_rpow_levelL_le

@@ -155,6 +155,7 @@ theorem allocation_eq_3_1 (L : ℕ) {V C : ℕ → ℝ} (hV : ∀ ℓ, 0 < V ℓ
     rw [hτinv] at h
     exact h
 
+omit [IsProbabilityMeasure μ] in
 /-- **The remaining error** (Giles 2015, §3.1, p. 21): "If `E[P_ℓ − P_{ℓ−1}] ∝ 2^{−αℓ}` then the
 remaining error is `E[P − P_L] = ∑_{ℓ=L+1}^{∞} E[P_ℓ − P_{ℓ−1}] = E[P_L − P_{L−1}]/(2^α − 1)`."
 If `E[P_ℓ − P_{ℓ−1}] = a 2^{−αℓ}` for all `ℓ ≥ L` (with `α > 0`, `P_{−1} ≡ 0`) and
@@ -239,6 +240,7 @@ theorem convergence_test_mse {Y P : Ω → ℝ} {Pl : ℕ → Ω → ℝ} {α a 
 
 /-! ### §3.3: the consistency check -/
 
+omit [IsProbabilityMeasure μ] in
 /-- The expected consistency check vanishes (Giles 2015, §3.3, p. 22): "If `a, b, c` are estimates
 for `E[P^f_{ℓ−1}]`, `E[P^f_ℓ]`, `E[Y_ℓ]`, respectively, then it should be true that
 `a − b + c ≈ 0`."  For unbiased estimates of these three quantities, with
@@ -388,6 +390,7 @@ theorem sampleVariance_sd (ω : ℕ → Ω → Ω₀)
 
 end sampleVariance
 
+omit [IsProbabilityMeasure μ] in
 /-- **The kurtosis of a `{−1, 0, 1}`-valued correction** (Giles 2015, §3.3, p. 23): "An extreme,
 but important, example is when `P` always takes the value 0 or 1.  In this case we have
 `X ≡ P_ℓ − P_{ℓ−1} = 1` with probability `p`, `−1` with probability `q`, `0` with probability

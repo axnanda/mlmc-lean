@@ -29,7 +29,7 @@ Reference: M.B. Giles, *Multilevel Monte Carlo methods*, Acta Numerica 24 (2015)
 -/
 
 open MeasureTheory ProbabilityTheory Finset
-open scoped RealInnerProductSpace
+open scoped InnerProductSpace
 
 namespace MLMC
 

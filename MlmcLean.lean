@@ -18,6 +18,7 @@
 -- * `MlmcLean.Corrections` — Giles §2.1: (2.4) and antithetic estimators, Theorem 1 for them
 -- * `MlmcLean.Richardson` — Giles §2.3: Richardson extrapolation, ML2R weights, bias, estimator
 -- * `MlmcLean.MultiOutput` — Giles §2.5: several outputs, Hilbert-space outputs, Theorem 1
+-- * `MlmcLean.RoundingError` — Haas–Giles §4: fixed-point rounding, the error-variance model
 import MlmcLean.Allocation
 import MlmcLean.Estimator
 import MlmcLean.LevelDiff
@@ -36,3 +37,4 @@ import MlmcLean.LevelDropping
 import MlmcLean.Corrections
 import MlmcLean.Richardson
 import MlmcLean.MultiOutput
+import MlmcLean.RoundingError

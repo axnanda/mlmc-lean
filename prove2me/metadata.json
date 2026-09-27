@@ -1038,7 +1038,7 @@
   },
   "MLMC.remaining_error": {
    "theorem_title": "Giles (2015), §3.1: if $\\mathbb E[P_\\ell-P_{\\ell-1}]\\propto2^{-\\alpha\\ell}$, the remaining error is $\\mathbb E[P-P_L]=\\mathbb E[P_L-P_{L-1}]/(2^\\alpha-1)$",
-   "natural_language_statement": "Giles (2015), §3.1: \"If $\\mathbb E[P_\\ell-P_{\\ell-1}]\\propto2^{-\\alpha\\ell}$ then the remaining error is\n\n$$\n\\mathbb E[P-P_L]=\\sum_{\\ell=L+1}^{\\infty}\\mathbb E[P_\\ell-P_{\\ell-1}]=\\mathbb E[P_L-P_{L-1}]/(2^\\alpha-1).\\text{\"}\n$$\n\nLet $(\\Omega,\\mathcal F,\\mu)$ be a probability space, $P,P_\\ell:\\Omega\\to\\mathbb R$ ($\\ell\\in\\mathbb N$), $\\alpha,a\\in\\mathbb R$ and $L\\in\\mathbb N$; write $\\Delta P_0=P_0$ and $\\Delta P_\\ell=P_\\ell-P_{\\ell-1}$ for $\\ell\\ge1$. Assume\n\n1. $\\alpha>0$, and $P$ and every $P_\\ell$ are integrable;\n2. $\\mathbb E[P_\\ell]\\to\\mathbb E[P]$ as $\\ell\\to\\infty$;\n3. $\\mathbb E[\\Delta P_\\ell]=a\\,2^{-\\alpha\\ell}$ for every $\\ell\\ge L$.\n\nThen the series $\\sum_{k=0}^{\\infty}\\mathbb E[\\Delta P_{L+1+k}]$ converges (absolutely) with sum $\\mathbb E[P-P_L]$, and\n\n$$\n\\mathbb E[P-P_L]=\\frac{\\mathbb E[\\Delta P_L]}{2^\\alpha-1}.\n$$\n\n**Formalization Note** The series is a `HasSum` (unconditional summation, which for real series is absolute convergence); powers of $2$ are real powers. The case $L=0$ is included, with $\\Delta P_0=P_0$.",
+   "natural_language_statement": "Giles (2015), §3.1: \"If $\\mathbb E[P_\\ell-P_{\\ell-1}]\\propto2^{-\\alpha\\ell}$ then the remaining error is\n\n$$\n\\mathbb E[P-P_L]=\\sum_{\\ell=L+1}^{\\infty}\\mathbb E[P_\\ell-P_{\\ell-1}]=\\mathbb E[P_L-P_{L-1}]/(2^\\alpha-1).\\text{\"}\n$$\n\nLet $(\\Omega,\\mathcal F,\\mu)$ be a measure space (for instance a probability space), $P,P_\\ell:\\Omega\\to\\mathbb R$ ($\\ell\\in\\mathbb N$), $\\alpha,a\\in\\mathbb R$ and $L\\in\\mathbb N$; write $\\Delta P_0=P_0$ and $\\Delta P_\\ell=P_\\ell-P_{\\ell-1}$ for $\\ell\\ge1$. Assume\n\n1. $\\alpha>0$, and $P$ and every $P_\\ell$ are integrable;\n2. $\\mathbb E[P_\\ell]\\to\\mathbb E[P]$ as $\\ell\\to\\infty$;\n3. $\\mathbb E[\\Delta P_\\ell]=a\\,2^{-\\alpha\\ell}$ for every $\\ell\\ge L$.\n\nThen the series $\\sum_{k=0}^{\\infty}\\mathbb E[\\Delta P_{L+1+k}]$ converges (absolutely) with sum $\\mathbb E[P-P_L]$, and\n\n$$\n\\mathbb E[P-P_L]=\\frac{\\mathbb E[\\Delta P_L]}{2^\\alpha-1}.\n$$\n\n**Formalization Note** The series is a `HasSum` (unconditional summation, which for real series is absolute convergence); powers of $2$ are real powers. The case $L=0$ is included, with $\\Delta P_0=P_0$.",
    "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §3.1, p. 21 of the author's version (the remaining error E[P − P_L] = Σ_{ℓ>L} E[P_ℓ − P_{ℓ−1}] = E[P_L − P_{L−1}]/(2^α − 1)).",
    "explanation": "With $r=2^{-\\alpha}\\in(0,1)$, $\\mathbb E[\\Delta P_{L+1+k}]=a\\,r^{L+1}r^k$, a geometric series with sum $a\\,r^{L+1}/(1-r)$. Its partial sums telescope to $\\mathbb E[P_{n+L}]-\\mathbb E[P_L]$, which tends to $\\mathbb E[P]-\\mathbb E[P_L]$; uniqueness of limits identifies the sum with $\\mathbb E[P-P_L]$. Finally $a\\,r^{L+1}/(1-r)=a\\,r^L/(r^{-1}-1)=\\mathbb E[\\Delta P_L]/(2^\\alpha-1)$.",
    "tags": [
@@ -1059,7 +1059,7 @@
   },
   "MLMC.consistency_mean": {
    "theorem_title": "Giles (2015), §3.3: under (2.4) the consistency check has mean zero, $\\mathbb E[a-b+c]=0$",
-   "natural_language_statement": "Giles (2015), §3.3: \"If $a,b,c$ are estimates for $\\mathbb E[P^f_{\\ell-1}]$, $\\mathbb E[P^f_\\ell]$, $\\mathbb E[Y_\\ell]$, respectively, then it should be true that $a-b+c\\approx0$.\" Here $Y_\\ell=P^f_\\ell-P^c_{\\ell-1}$ is a correction with different fine and coarse approximations, and the check is meant to detect violations of the identity (2.4), $\\mathbb E[P^f_{\\ell}]=\\mathbb E[P^c_{\\ell}]$. This result is the exact statement behind \"$\\approx0$\": for unbiased estimates and under (2.4), $a-b+c$ has mean zero.\n\nLet $(\\Omega,\\mathcal F,\\mu)$ be a probability space, $a,b,c:\\Omega\\to\\mathbb R$, $P^f_k,P^c_k:\\Omega\\to\\mathbb R$ ($k\\in\\mathbb N$) and $\\ell\\in\\mathbb N$. Assume\n\n1. $a,b,c$ and all $P^f_k$, $P^c_k$ are integrable;\n2. (2.4) at level $\\ell$: $\\mathbb E[P^f_\\ell]=\\mathbb E[P^c_\\ell]$;\n3. $\\mathbb E[a]=\\mathbb E[P^f_\\ell]$, $\\mathbb E[b]=\\mathbb E[P^f_{\\ell+1}]$ and $\\mathbb E[c]=\\mathbb E[P^f_{\\ell+1}-P^c_\\ell]$.\n\nThen $\\mathbb E[a-b+c]=0$.\n\n**Formalization Note** The levels are shifted by one relative to the paper ($\\ell-1\\mapsto\\ell$), so that no subtraction of natural numbers occurs.",
+   "natural_language_statement": "Giles (2015), §3.3: \"If $a,b,c$ are estimates for $\\mathbb E[P^f_{\\ell-1}]$, $\\mathbb E[P^f_\\ell]$, $\\mathbb E[Y_\\ell]$, respectively, then it should be true that $a-b+c\\approx0$.\" Here $Y_\\ell=P^f_\\ell-P^c_{\\ell-1}$ is a correction with different fine and coarse approximations, and the check is meant to detect violations of the identity (2.4), $\\mathbb E[P^f_{\\ell}]=\\mathbb E[P^c_{\\ell}]$. This result is the exact statement behind \"$\\approx0$\": for unbiased estimates and under (2.4), $a-b+c$ has mean zero.\n\nLet $(\\Omega,\\mathcal F,\\mu)$ be a measure space (for instance a probability space), $a,b,c:\\Omega\\to\\mathbb R$, $P^f_k,P^c_k:\\Omega\\to\\mathbb R$ ($k\\in\\mathbb N$) and $\\ell\\in\\mathbb N$. Assume\n\n1. $a,b,c$ and all $P^f_k$, $P^c_k$ are integrable;\n2. (2.4) at level $\\ell$: $\\mathbb E[P^f_\\ell]=\\mathbb E[P^c_\\ell]$;\n3. $\\mathbb E[a]=\\mathbb E[P^f_\\ell]$, $\\mathbb E[b]=\\mathbb E[P^f_{\\ell+1}]$ and $\\mathbb E[c]=\\mathbb E[P^f_{\\ell+1}-P^c_\\ell]$.\n\nThen $\\mathbb E[a-b+c]=0$.\n\n**Formalization Note** The levels are shifted by one relative to the paper ($\\ell-1\\mapsto\\ell$), so that no subtraction of natural numbers occurs.",
    "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §3.3, p. 22 of the author's version (the consistency check a − b + c ≈ 0 and the identity (2.4), p. 8).",
    "explanation": "Linearity of the integral gives $\\mathbb E[a-b+c]=\\mathbb E[P^f_\\ell]-\\mathbb E[P^f_{\\ell+1}]+\\mathbb E[P^f_{\\ell+1}]-\\mathbb E[P^c_\\ell]$, which is $0$ by (2.4).",
    "tags": [
@@ -1116,7 +1116,7 @@
   },
   "MLMC.kurtosis_of_ternary": {
    "theorem_title": "Giles (2015), §3.3: a correction with values in $\\{-1,0,1\\}$ has kurtosis $\\kappa=(p+q)^{-1}$ exactly",
-   "natural_language_statement": "Giles (2015), §3.3: \"An extreme, but important, example is when $P$ always takes the value 0 or 1. In this case we have $X\\equiv P_\\ell-P_{\\ell-1}=1$ with probability $p$, $-1$ with probability $q$, $0$ with probability $1-p-q$. If $p,q\\ll1$, then $\\mathbb E[X]\\approx0$, and $\\kappa\\approx(p+q)^{-1}\\gg1$.\" With the definition $\\kappa=\\mathbb E[X^4]/(\\mathbb E[X^2])^2$ the kurtosis is exactly $(p+q)^{-1}$.\n\nLet $(\\Omega,\\mathcal F,\\mu)$ be a probability space and $X:\\Omega\\to\\mathbb R$ measurable with $X(\\omega)\\in\\{-1,0,1\\}$ for every $\\omega$, and assume $p+q=\\mu(X\\ne0)>0$. Then\n\n$$\n\\kappa(X)=\\frac{\\mathbb E[X^4]}{(\\mathbb E[X^2])^2}=\\frac{1}{\\mu(X\\ne0)}.\n$$\n\n**Formalization Note** $\\mu(X\\ne0)$ is the real number `μ.real {ω | X ω ≠ 0}`; $\\kappa$ is `kurtosis X μ`.",
+   "natural_language_statement": "Giles (2015), §3.3: \"An extreme, but important, example is when $P$ always takes the value 0 or 1. In this case we have $X\\equiv P_\\ell-P_{\\ell-1}=1$ with probability $p$, $-1$ with probability $q$, $0$ with probability $1-p-q$. If $p,q\\ll1$, then $\\mathbb E[X]\\approx0$, and $\\kappa\\approx(p+q)^{-1}\\gg1$.\" With the definition $\\kappa=\\mathbb E[X^4]/(\\mathbb E[X^2])^2$ the kurtosis is exactly $(p+q)^{-1}$.\n\nLet $(\\Omega,\\mathcal F,\\mu)$ be a measure space (for instance a probability space) and $X:\\Omega\\to\\mathbb R$ measurable with $X(\\omega)\\in\\{-1,0,1\\}$ for every $\\omega$, and assume $p+q=\\mu(X\\ne0)>0$. Then\n\n$$\n\\kappa(X)=\\frac{\\mathbb E[X^4]}{(\\mathbb E[X^2])^2}=\\frac{1}{\\mu(X\\ne0)}.\n$$\n\n**Formalization Note** $\\mu(X\\ne0)$ is the real number `μ.real {ω | X ω ≠ 0}`; $\\kappa$ is `kurtosis X μ`. The hypothesis $\\mu(X\\ne0)>0$ on this real number forces $\\mu(X\\ne0)<\\infty$.",
    "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §3.3, p. 23 of the author's version (the {−1, 0, 1}-valued correction and κ ≈ (p + q)⁻¹).",
    "explanation": "For values in $\\{-1,0,1\\}$, $X^2=X^4=\\mathbf 1_{\\{X\\ne0\\}}$ pointwise, so $\\mathbb E[X^2]=\\mathbb E[X^4]=\\mu(X\\ne0)=:s$ by `integral_indicator_one`, and $\\kappa=s/s^2=1/s$.",
    "tags": [
@@ -1404,6 +1404,162 @@
     "multilevel-monte-carlo",
     "probability"
    ]
+  },
+  "MLMC.abs_sub_roundFixed_le": {
+   "theorem_title": "Haas–Giles (2025), (20): round-to-nearest in fixed point makes an error $|x-\\tilde x|\\le2^{e-d-1}$",
+   "natural_language_statement": "Haas and Giles (2025), §4.1: \"We note the rounding error on each operation as $\\delta x_i=x_i-\\tilde x_i$ and used round-to-nearest when truncating the result of a bit-wise operation, which leads to the following bound: $|\\delta x_i|\\le2^{e_i-d_i-1}$ (20).\"\n\nFor every exponent $e\\in\\mathbb Z$, bit-width $d\\in\\mathbb N$ and $x\\in\\mathbb R$, the fixed-point rounding $\\tilde x=2^{e-d}\\,\\mathrm{round}(x/2^{e-d})$ satisfies\n\n$$\n|x-\\tilde x|\\le2^{e-d-1}.\n$$\n\n**Formalization Note** $\\tilde x$ is `roundFixed e d x`; the grid $2^{e-d}\\mathbb Z$ is unbounded, so the bound holds for every $x$ (overflow is treated separately in `roundFixed_mantissa`).",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §4.1, eq. (20), p. 8.",
+   "explanation": "With $q=2^{e-d}>0$, $x-\\tilde x=q\\,(x/q-\\mathrm{round}(x/q))$ and $|y-\\mathrm{round}(y)|\\le\\tfrac12$ for every real $y$, so $|x-\\tilde x|\\le q/2=2^{e-d-1}$.",
+   "tags": [
+    "numerical-analysis"
+   ]
+  },
+  "MLMC.roundFixed_mantissa": {
+   "theorem_title": "Haas–Giles (2025), §4.1: without overflow the rounded value has the fixed-point form $2^{e-d}k$ with an integer $|k|<2^d$",
+   "natural_language_statement": "Haas and Giles (2025), §4.1: \"The fixed-point equivalent of variable $x_i$ is defined as $\\tilde x_i=(-1)^s2^{e_i-d_i}n$, where $n$ is a non negative integer smaller than $2^{d_i}$.\" This result checks that round-to-nearest lands in this format when there is no overflow.\n\nLet $e\\in\\mathbb Z$, $d\\in\\mathbb N$ and $x\\in\\mathbb R$ with $|x|<2^e-2^{e-d-1}$. Then there is an integer $k$ with $|k|<2^d$ and\n\n$$\n\\tilde x=2^{e-d}\\,k,\n$$\n\nthat is, $\\tilde x=(-1)^s2^{e-d}n$ with $n=|k|<2^d$.\n\n**Formalization Note** $\\tilde x$ is `roundFixed e d x`, and $k=\\mathrm{round}(x/2^{e-d})$. The bound $|x|<2^e-2^{e-d-1}$ excludes the values that would round up to $\\pm2^e$.",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §4.1, p. 8 (the fixed-point format).",
+   "explanation": "With $q=2^{e-d}$ we have $2^e=q\\,2^d$ and $2^{e-d-1}=q/2$, so $|x/q|<2^d-\\tfrac12$. Since $|\\mathrm{round}(y)-y|\\le\\tfrac12$, $|\\mathrm{round}(x/q)|<2^d$.",
+   "tags": [
+    "numerical-analysis"
+   ]
+  },
+  "MLMC.integral_sq_roundError_le": {
+   "theorem_title": "Haas–Giles (2025), (21) corrected: for any random input the rounding error satisfies $\\mathbb E[\\delta x^2]\\le4^{e-d-1}$ (printed with \"$=$\")",
+   "natural_language_statement": "Haas and Giles (2025), §4.1: \"Without making any assumption on the distribution of the errors we then have that $\\mathbb E[\\delta x_i^2]=4^{e_i-d_i-1}$ (21).\" Without an assumption on the distribution only an upper bound follows from (20); the paper itself calls (21) a bound. This result is the corrected statement.\n\nLet $(\\Omega,\\mathcal F,\\mu)$ be a probability space. For every exponent $e\\in\\mathbb Z$, bit-width $d\\in\\mathbb N$ and every function $X:\\Omega\\to\\mathbb R$ (the exact value), the rounding error $\\delta=X-\\tilde X$ with $\\tilde X=2^{e-d}\\,\\mathrm{round}(X/2^{e-d})$ satisfies\n\n$$\n\\mathbb E\\big[\\delta^2\\big]\\le4^{e-d-1}.\n$$\n\n**Formalization Note** $\\tilde X(\\omega)$ is `roundFixed e d (X ω)`. No measurability of $X$ is assumed: if $\\delta^2$ is not integrable its Bochner integral is $0$, and the bound holds trivially.",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §4.1, eq. (21), p. 8.",
+   "explanation": "By (20) (`abs_sub_roundFixed_le`) $|\\delta|\\le2^{e-d-1}$ everywhere, so $\\delta^2\\le4^{e-d-1}$ and the expectation under a probability measure is at most $4^{e-d-1}$.",
+   "tags": [
+    "numerical-analysis",
+    "probability"
+   ]
+  },
+  "MLMC.integral_sq_of_isUniform": {
+   "theorem_title": "The second moment of the uniform distribution on $[-a,a]$ is $a^2/3$",
+   "natural_language_statement": "Haas and Giles (2025), §4.1, eq. (22), uses the second moment of a uniform distribution; this result is that fact.\n\nLet $\\mu$ be a measure on a measurable space $\\Omega$, $a>0$, and $X:\\Omega\\to\\mathbb R$ uniformly distributed on $[-a,a]$, i.e. the image of $\\mu$ under $X$ is Lebesgue measure on $[-a,a]$ divided by $2a$. Then\n\n$$\n\\int_\\Omega X^2\\,d\\mu=\\frac{a^2}{3}.\n$$\n\n**Formalization Note** \"Uniform\" is Mathlib's `MeasureTheory.pdf.IsUniform X (Set.Icc (-a) a) μ` with respect to Lebesgue measure `volume`; it forces $\\mu$ to be a probability measure.",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §4.1, eq. (22), p. 8.",
+   "explanation": "Transport the integral to the law of $X$ (`integral_map`), which is $(2a)^{-1}$ times Lebesgue measure on $[-a,a]$, and compute $\\int_{-a}^{a}x^2\\,dx=2a^3/3$ (`integral_pow`).",
+   "tags": [
+    "probability",
+    "real-analysis"
+   ]
+  },
+  "MLMC.integral_sq_uniform_roundError": {
+   "theorem_title": "Haas–Giles (2025), (22): a rounding error uniform on $[-2^{e-d-1},2^{e-d-1}]$ has $\\mathbb E[\\delta x^2]=4^{e-d}/12$",
+   "natural_language_statement": "Haas and Giles (2025), §4.1: \"If additionally we assume that the rounding errors $\\delta x_i$ are uniform variables over $[-2^{e_i-d_i-1},2^{e_i-d_i-1}]$ we get the expected squared rounding error $\\mathbb E[\\delta x_i^2]=4^{e_i-d_i}/12$ (22).\"\n\nLet $\\mu$ be a measure on $\\Omega$, $e\\in\\mathbb Z$, $d\\in\\mathbb N$, and $\\delta:\\Omega\\to\\mathbb R$ uniformly distributed on $[-2^{e-d-1},2^{e-d-1}]$. Then\n\n$$\n\\int_\\Omega\\delta^2\\,d\\mu=\\frac{4^{e-d}}{12}.\n$$\n\n**Formalization Note** \"Uniform\" is Mathlib's `pdf.IsUniform` with respect to Lebesgue measure.",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §4.1, eq. (22), p. 8.",
+   "explanation": "By `integral_sq_of_isUniform` with $a=2^{e-d-1}$ the second moment is $a^2/3=4^{e-d-1}/3=4^{e-d}/12$.",
+   "tags": [
+    "numerical-analysis",
+    "probability"
+   ]
+  },
+  "MLMC.variance_sum_eq": {
+   "theorem_title": "Haas–Giles (2025), (25) corrected: $\\mathbb V[\\sum_iX_i]=\\sum_i\\mathbb V[X_i]+\\sum_{i\\ne j}\\mathrm{Cov}(X_i,X_j)$ (printed with an extra factor 2)",
+   "natural_language_statement": "Haas and Giles (2025), §4.2: \"Then the variance of the overall error is $\\mathbb V[P-\\tilde P]=\\sum_{i=1}^{m}\\mathbb V[\\bar x_i\\delta x_i]+2\\sum_{i\\ne j\\in[1,m]}\\mathrm{Cov}(\\bar x_i\\delta x_i,\\bar x_j\\delta x_j)$ (25)\", for the linearised error $P-\\tilde P\\approx\\sum_i\\bar x_i\\delta x_i$. The sum over $i\\ne j$ already contains every unordered pair twice, so the factor $2$ counts each covariance twice. This result is the correct identity.\n\nLet $(\\Omega,\\mathcal F,\\mu)$ be a probability space. Let $s$ be a finite index set and $X_i:\\Omega\\to\\mathbb R$ ($i\\in s$) square-integrable. Then\n\n$$\n\\mathbb V\\Big[\\sum_{i\\in s}X_i\\Big]=\\sum_{i\\in s}\\mathbb V[X_i]+\\sum_{i\\in s}\\sum_{j\\in s,\\,j\\ne i}\\mathrm{Cov}(X_i,X_j).\n$$\n\nWith $X_i=\\bar x_i\\delta x_i$ this is the corrected (25).",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §4.2, eq. (25), p. 9.",
+   "explanation": "Mathlib's `variance_fun_sum'` gives $\\mathbb V[\\sum_iX_i]=\\sum_i\\sum_j\\mathrm{Cov}(X_i,X_j)$; split off the diagonal term $j=i$ of each inner sum, where $\\mathrm{Cov}(X_i,X_i)=\\mathbb V[X_i]$.",
+   "tags": [
+    "multilevel-monte-carlo",
+    "probability",
+    "numerical-analysis"
+   ]
+  },
+  "MLMC.variance_le_integral_sq": {
+   "theorem_title": "Haas–Giles (2025), §4.2: $\\mathbb V[\\bar x_i\\delta x_i]\\le\\mathbb E[\\bar x_i^2\\delta x_i^2]$",
+   "natural_language_statement": "Haas and Giles (2025), §4.2: \"It always holds that $\\mathbb V[\\bar x_i\\delta x_i]\\le\\mathbb E[\\bar x_i^2\\delta x_i^2]$.\"\n\nLet $(\\Omega,\\mathcal F,\\mu)$ be a probability space. Let $\\bar x,\\delta:\\Omega\\to\\mathbb R$ be almost everywhere strongly measurable. Then\n\n$$\n\\mathbb V[\\bar x\\,\\delta]\\le\\mathbb E\\big[\\bar x^2\\delta^2\\big].\n$$\n\n**Formalization Note** $\\mathbb V$ is Mathlib's `variance` (which is $0$ for a function that is not square-integrable, so the inequality also holds then).",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §4.2, p. 9.",
+   "explanation": "This is Mathlib's `variance_le_expectation_sq`, $\\mathbb V[Y]\\le\\mathbb E[Y^2]$, for $Y=\\bar x\\,\\delta$, with $Y^2=\\bar x^2\\delta^2$.",
+   "tags": [
+    "multilevel-monte-carlo",
+    "probability",
+    "numerical-analysis"
+   ]
+  },
+  "MLMC.variance_sum_mul_le_of_indep": {
+   "theorem_title": "Haas–Giles (2025), §4.2–4.3: for pairwise independent terms with $s_k\\perp\\varepsilon_k$, $\\mathbb V[\\sum_ks_k\\varepsilon_k]\\le\\sum_k\\mathbb E[s_k^2]\\,\\mathbb E[\\varepsilon_k^2]$",
+   "natural_language_statement": "Haas and Giles (2025), §4.2, bound the variance of the linearised error $\\sum_i\\bar x_i\\delta x_i$ assuming \"that the sensitivities $\\bar x_i$ and the rounding errors $\\delta x_i$ are independent\" and \"that the individual errors $\\bar x_i\\delta x_i$ are independent\". This result is the bound common to their (26) and (28).\n\nLet $(\\Omega,\\mathcal F,\\mu)$ be a probability space. Let $s$ be a finite index set and, for $k\\in s$, $s_k,\\varepsilon_k:\\Omega\\to\\mathbb R$ (a sensitivity and an error) almost everywhere strongly measurable, with $s_k\\varepsilon_k$ square-integrable. Assume\n\n1. $s_k$ and $\\varepsilon_k$ are independent for every $k\\in s$;\n2. the products $s_k\\varepsilon_k$, $k\\in s$, are pairwise independent.\n\nThen\n\n$$\n\\mathbb V\\Big[\\sum_{k\\in s}s_k\\varepsilon_k\\Big]\\le\\sum_{k\\in s}\\mathbb E\\big[s_k^2\\big]\\,\\mathbb E\\big[\\varepsilon_k^2\\big].\n$$",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §4.2–4.3, pp. 9 (the derivation of (26) and (28)).",
+   "explanation": "Pairwise independence makes the variance of the sum the sum of the variances (`IndepFun.variance_sum`); each is at most $\\mathbb E[s_k^2\\varepsilon_k^2]$ (`variance_le_integral_sq`), and this equals $\\mathbb E[s_k^2]\\,\\mathbb E[\\varepsilon_k^2]$ because $s_k^2$ and $\\varepsilon_k^2$ are independent.",
+   "tags": [
+    "multilevel-monte-carlo",
+    "probability",
+    "numerical-analysis"
+   ]
+  },
+  "MLMC.variance_linearised_indep": {
+   "theorem_title": "Haas–Giles (2025), (26): with independent errors and uniform rounding, $\\mathbb V[\\sum_i\\bar x_i\\delta x_i]\\le\\frac1{12}\\sum_i\\mathbb E[\\bar x_i^2]4^{e_i-d_i}=V_{indep}$",
+   "natural_language_statement": "Haas and Giles (2025), §4.2: \"If we assume that the individual errors $\\bar x_i\\delta x_i$ are independent and use (22) we get the optimistic upper bound on the path error variance: $\\mathbb V[P-\\tilde P]\\le\\frac1{12}\\sum_{i=1}^{m}\\mathbb E[\\bar x_i^2]\\,4^{e_i-d_i}\\triangleq V_{indep}(d_1,\\dots,d_m)$ (26)\", with the standing assumption that the sensitivities $\\bar x_i$ and the rounding errors $\\delta x_i$ are independent. As in the paper, $P-\\tilde P$ is replaced by its linearisation $\\sum_i\\bar x_i\\delta x_i$.\n\nLet $(\\Omega,\\mathcal F,\\mu)$ be a probability space. Let $s$ be a finite set of variables with exponents $e_i\\in\\mathbb Z$ and bit-widths $d_i\\in\\mathbb N$, and let $\\bar x_i,\\delta x_i:\\Omega\\to\\mathbb R$ ($i\\in s$). Assume\n\n1. every $\\bar x_i$ is square-integrable;\n2. (22): every $\\delta x_i$ is uniformly distributed on $[-2^{e_i-d_i-1},2^{e_i-d_i-1}]$ (its law is normalised Lebesgue measure on that interval);\n3. $\\bar x_i$ and $\\delta x_i$ are independent for every $i$;\n4. the individual errors $\\bar x_i\\delta x_i$, $i\\in s$, are pairwise independent.\n\nThen\n\n$$\n\\mathbb V\\Big[\\sum_{i\\in s}\\bar x_i\\,\\delta x_i\\Big]\\le\\frac1{12}\\sum_{i\\in s}\\mathbb E\\big[\\bar x_i^2\\big]\\,4^{e_i-d_i}=V_{indep}(d).\n$$\n\n**Formalization Note** The right-hand side is `vIndep s (fun i => ∫ ω, xbar i ω ^ 2 ∂μ) e d`; uniformity is Mathlib's `pdf.IsUniform`.",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §4.2, eq. (26), p. 9.",
+   "explanation": "A uniform $\\delta x_i$ is bounded, so $\\bar x_i\\delta x_i$ is square-integrable. `variance_sum_mul_le_of_indep` gives $\\mathbb V\\le\\sum_i\\mathbb E[\\bar x_i^2]\\,\\mathbb E[\\delta x_i^2]$, and $\\mathbb E[\\delta x_i^2]=4^{e_i-d_i}/12$ by (22) (`integral_sq_uniform_roundError`).",
+   "tags": [
+    "multilevel-monte-carlo",
+    "probability",
+    "numerical-analysis"
+   ]
+  },
+  "MLMC.variance_sum_le_sq_sum_sqrt": {
+   "theorem_title": "$\\mathbb V[\\sum_iY_i]\\le(\\sum_i\\sqrt{\\mathbb V[Y_i]})^2$ for any square-integrable $Y_i$ — the bound behind Haas–Giles (27) and (29)",
+   "natural_language_statement": "Haas and Giles (2025), §4.2, obtain their \"pessimistic\" bound (27) by assuming \"perfect correlation between errors, ie. $\\mathrm{Cov}(\\bar x_i\\delta x_i,\\bar x_j\\delta x_j)=\\sqrt{\\mathbb V[\\bar x_i\\delta x_i]\\mathbb V[\\bar x_j\\delta x_j]}$\". This result shows that the resulting bound holds with no assumption on the joint law.\n\nLet $(\\Omega,\\mathcal F,\\mu)$ be a probability space. Let $s$ be a finite index set and $Y_i:\\Omega\\to\\mathbb R$ ($i\\in s$) square-integrable. Then\n\n$$\n\\mathbb V\\Big[\\sum_{i\\in s}Y_i\\Big]\\le\\Big(\\sum_{i\\in s}\\sqrt{\\mathbb V[Y_i]}\\Big)^2.\n$$",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §4.2, eq. (27), p. 9.",
+   "explanation": "$\\mathbb V[\\sum_iY_i]=\\sum_i\\sum_j\\mathrm{Cov}(Y_i,Y_j)$, and by the Cauchy–Schwarz inequality for covariances (`covariance_sq_le`) $\\mathrm{Cov}(Y_i,Y_j)\\le\\sqrt{\\mathbb V[Y_i]}\\sqrt{\\mathbb V[Y_j]}$; the double sum of the right-hand sides is $(\\sum_i\\sqrt{\\mathbb V[Y_i]})^2$.",
+   "tags": [
+    "multilevel-monte-carlo",
+    "probability",
+    "numerical-analysis"
+   ]
+  },
+  "MLMC.sqrt_variance_mul_le": {
+   "theorem_title": "Haas–Giles (2025), §4.2: if $|\\delta|\\le B$ a.s. then $\\sqrt{\\mathbb V[\\bar x\\delta]}\\le\\sqrt{\\mathbb E[\\bar x^2]}\\,B$ — the term bound of $V_{corr}$",
+   "natural_language_statement": "Haas and Giles (2025), §4.2: \"It always holds that $\\mathbb V[\\bar x_i\\delta x_i]\\le\\mathbb E[\\bar x_i^2\\delta x_i^2]$\"; with the rounding bound (20) this gives the terms $\\sqrt{\\mathbb E[\\bar x_i^2]}\\,2^{e_i-d_i-1}$ of their (27).\n\nLet $(\\Omega,\\mathcal F,\\mu)$ be a probability space. Let $B\\ge0$, $\\bar x:\\Omega\\to\\mathbb R$ square-integrable, and $\\delta:\\Omega\\to\\mathbb R$ almost everywhere strongly measurable with $|\\delta|\\le B$ almost surely. Then\n\n$$\n\\sqrt{\\mathbb V[\\bar x\\,\\delta]}\\le\\sqrt{\\mathbb E\\big[\\bar x^2\\big]}\\;B.\n$$",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §4.2, p. 9 (the terms of (27)).",
+   "explanation": "$\\mathbb V[\\bar x\\delta]\\le\\mathbb E[\\bar x^2\\delta^2]\\le\\mathbb E[\\bar x^2]B^2$ because $\\delta^2\\le B^2$ almost surely; take square roots.",
+   "tags": [
+    "multilevel-monte-carlo",
+    "probability",
+    "numerical-analysis"
+   ]
+  },
+  "MLMC.variance_linearised_corr": {
+   "theorem_title": "Haas–Giles (2025), (27): if $|\\delta x_i|\\le2^{e_i-d_i-1}$ a.s. then $\\mathbb V[\\sum_i\\bar x_i\\delta x_i]\\le(\\sum_i\\sqrt{\\mathbb E[\\bar x_i^2]}2^{e_i-d_i-1})^2=V_{corr}$, for any joint law",
+   "natural_language_statement": "Haas and Giles (2025), §4.2: \"if we assume perfect correlation between errors … and use the more general bound (21) then we obtain a pessimistic upper bound: $\\mathbb V[P-\\tilde P]\\le\\big(\\sum_{i=1}^{m}\\sqrt{\\mathbb E[\\bar x_i^2]}\\,2^{e_i-d_i-1}\\big)^2\\triangleq V_{corr}(d_1,\\dots,d_m)$ (27).\" As in the paper, $P-\\tilde P$ is replaced by its linearisation $\\sum_i\\bar x_i\\delta x_i$. This result holds without the correlation assumption.\n\nLet $(\\Omega,\\mathcal F,\\mu)$ be a probability space. Let $s$ be a finite set of variables with exponents $e_i\\in\\mathbb Z$ and bit-widths $d_i\\in\\mathbb N$, and let $\\bar x_i,\\delta x_i:\\Omega\\to\\mathbb R$ ($i\\in s$). Assume every $\\bar x_i$ is square-integrable, every $\\delta x_i$ is almost everywhere strongly measurable, and (20) holds: $|\\delta x_i|\\le2^{e_i-d_i-1}$ almost surely. Then\n\n$$\n\\mathbb V\\Big[\\sum_{i\\in s}\\bar x_i\\,\\delta x_i\\Big]\\le\\Big(\\sum_{i\\in s}\\sqrt{\\mathbb E\\big[\\bar x_i^2\\big]}\\,2^{e_i-d_i-1}\\Big)^2=V_{corr}(d).\n$$\n\n**Formalization Note** The right-hand side is `vCorr s (fun i => ∫ ω, xbar i ω ^ 2 ∂μ) e d`. Rounding errors $\\delta x_i(\\omega)=x_i(\\omega)-\\tilde x_i(\\omega)$ satisfy (20) by `abs_sub_roundFixed_le`.",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §4.2, eq. (27), p. 9.",
+   "explanation": "`variance_sum_le_sq_sum_sqrt` bounds the variance by $(\\sum_i\\sqrt{\\mathbb V[\\bar x_i\\delta x_i]})^2$, and each term is at most $\\sqrt{\\mathbb E[\\bar x_i^2]}\\,2^{e_i-d_i-1}$ by `sqrt_variance_mul_le`.",
+   "tags": [
+    "multilevel-monte-carlo",
+    "probability",
+    "numerical-analysis"
+   ]
+  },
+  "MLMC.vIndep_le_vCorr": {
+   "theorem_title": "Haas–Giles (2025), §4.4: the independent-error bound is tighter, $V_{indep}(d)\\le V_{corr}(d)$",
+   "natural_language_statement": "Haas and Giles (2025), §4.4: \"we take the expression (26) to approximate the variance of the correction terms in the next sections, because this bound is tighter than (27).\"\n\nLet $s$ be a finite index set, $M_i\\ge0$, $e_i\\in\\mathbb Z$ and $d_i\\in\\mathbb N$ ($i\\in s$). Then\n\n$$\n\\frac1{12}\\sum_{i\\in s}M_i\\,4^{e_i-d_i}\\le\\Big(\\sum_{i\\in s}\\sqrt{M_i}\\,2^{e_i-d_i-1}\\Big)^2.\n$$\n\n**Formalization Note** The two sides are `vIndep s M e d` and `vCorr s M e d`.",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §4.4, p. 10.",
+   "explanation": "With $b_i=\\sqrt{M_i}\\,2^{e_i-d_i-1}\\ge0$ the left side is $\\tfrac13\\sum_ib_i^2$, and $\\sum_ib_i^2\\le(\\sum_ib_i)^2$ for nonnegative $b_i$.",
+   "tags": [
+    "numerical-analysis"
+   ]
+  },
+  "MLMC.variance_extended_indep": {
+   "theorem_title": "Haas–Giles (2025), (28) corrected: with approximate normals, $\\mathbb V\\le V_{indep}+\\sum_j\\mathbb E[\\bar Z_j^2]\\cdot\\mathrm{MSE}$ (printed with a spurious factor $\\frac1{12}$)",
+   "natural_language_statement": "Haas and Giles (2025), §4.3: \"if we consider that at each time step we use approximate random normal increments, we simply modify the previous bounds: $V'_{indep}=\\frac1{12}\\sum_{i=1}^{m'}\\mathbb E[\\bar x_i^2]4^{e_i-d_i}+\\frac1{12}\\sum_{j=1}^{N}\\mathbb E[\\bar Z_j^2]\\times\\mathrm{MSE}$ (28)\", with $\\mathrm{MSE}=\\mathbb E[|Z_j-\\tilde Z_j|^2]$. The factor $\\frac1{12}$ comes from the uniform model (22) of rounding errors and does not apply to $\\mathbb E[\\delta Z_j^2]=\\mathrm{MSE}$. This result is the corrected (28).\n\nLet $(\\Omega,\\mathcal F,\\mu)$ be a probability space. Let $s$ be a finite set of variables with exponents $e_i$ and bit-widths $d_i$, with sensitivities and rounding errors $\\bar x_i,\\delta x_i$ ($i\\in s$), and let $t$ be a finite set indexing the errors $\\delta Z_j=Z_j-\\tilde Z_j$ ($j\\in t$) of the approximate normal increments, with sensitivities $\\bar Z_j=\\partial P/\\partial Z_j$, all real-valued on $\\Omega$; let $\\mathrm{MSE}\\in\\mathbb R$. Assume\n\n1. every $\\bar x_i$ is square-integrable and every $\\delta x_i$ is uniformly distributed on $[-2^{e_i-d_i-1},2^{e_i-d_i-1}]$ (its law is normalised Lebesgue measure on that interval);\n2. every $\\bar Z_j$ and $\\delta Z_j$ is almost everywhere strongly measurable, $\\bar Z_j\\delta Z_j$ is square-integrable, and $\\mathbb E[\\delta Z_j^2]=\\mathrm{MSE}$;\n3. every sensitivity is independent of its error ($\\bar x_i\\perp\\delta x_i$, $\\bar Z_j\\perp\\delta Z_j$);\n4. all the terms $\\bar x_i\\delta x_i$ and $\\bar Z_j\\delta Z_j$ are pairwise independent.\n\nThen\n\n$$\n\\mathbb V\\Big[\\sum_{i\\in s}\\bar x_i\\delta x_i+\\sum_{j\\in t}\\bar Z_j\\delta Z_j\\Big]\\le\\frac1{12}\\sum_{i\\in s}\\mathbb E\\big[\\bar x_i^2\\big]4^{e_i-d_i}+\\Big(\\sum_{j\\in t}\\mathbb E\\big[\\bar Z_j^2\\big]\\Big)\\mathrm{MSE}.\n$$\n\n**Formalization Note** The two families are indexed by the disjoint sum $s\\sqcup t$ (`s.disjSum t`, with `Sum.elim`) for the pairwise independence hypothesis. The first term is `vIndep`.",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §4.3, eq. (28), p. 9.",
+   "explanation": "Apply `variance_sum_mul_le_of_indep` to the combined family on $s\\sqcup t$; the rounding terms contribute $\\mathbb E[\\bar x_i^2]\\cdot4^{e_i-d_i}/12$ by (22), the normal-approximation terms $\\mathbb E[\\bar Z_j^2]\\cdot\\mathrm{MSE}$.",
+   "tags": [
+    "multilevel-monte-carlo",
+    "probability",
+    "numerical-analysis"
+   ]
+  },
+  "MLMC.variance_extended_corr": {
+   "theorem_title": "Haas–Giles (2025), (29): with approximate normals, $\\mathbb V\\le(\\sum_i\\sqrt{\\mathbb E[\\bar x_i^2]}2^{e_i-d_i-1}+\\sum_j\\sqrt{\\mathbb E[\\bar Z_j^2]\\,\\mathrm{MSE}})^2=V'_{corr}$",
+   "natural_language_statement": "Haas and Giles (2025), §4.3: with approximate random normal increments, \"$V'_{corr}=\\big(\\sum_{i=1}^{m'}\\sqrt{\\mathbb E[\\bar x_i^2]}\\,2^{e_i-d_i-1}+\\sum_{j=1}^{N}\\sqrt{\\mathbb E[\\bar Z_j^2]\\times\\mathrm{MSE}}\\big)^2$ (29)\", with $\\mathrm{MSE}=\\mathbb E[|Z_j-\\tilde Z_j|^2]$.\n\nLet $(\\Omega,\\mathcal F,\\mu)$ be a probability space. Let $s$ be a finite set of variables with exponents $e_i$ and bit-widths $d_i$, with sensitivities and rounding errors $\\bar x_i,\\delta x_i$ ($i\\in s$), and let $t$ be a finite set indexing the errors $\\delta Z_j=Z_j-\\tilde Z_j$ ($j\\in t$) of the approximate normal increments, with sensitivities $\\bar Z_j=\\partial P/\\partial Z_j$, all real-valued on $\\Omega$; let $\\mathrm{MSE}\\in\\mathbb R$. Assume\n\n1. every $\\bar x_i$ is square-integrable, every $\\delta x_i$ is almost everywhere strongly measurable, and (20) holds: $|\\delta x_i|\\le2^{e_i-d_i-1}$ almost surely;\n2. every $\\bar Z_j$ and $\\delta Z_j$ is almost everywhere strongly measurable, $\\bar Z_j\\delta Z_j$ is square-integrable, $\\mathbb E[\\delta Z_j^2]=\\mathrm{MSE}$, and $\\bar Z_j$ is independent of $\\delta Z_j$.\n\nThen\n\n$$\n\\mathbb V\\Big[\\sum_{i\\in s}\\bar x_i\\delta x_i+\\sum_{j\\in t}\\bar Z_j\\delta Z_j\\Big]\\le\\Big(\\sum_{i\\in s}\\sqrt{\\mathbb E\\big[\\bar x_i^2\\big]}\\,2^{e_i-d_i-1}+\\sum_{j\\in t}\\sqrt{\\mathbb E\\big[\\bar Z_j^2\\big]\\,\\mathrm{MSE}}\\Big)^2.\n$$\n\nNo assumption is made on the joint law of different terms.",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §4.3, eq. (29), p. 9.",
+   "explanation": "`variance_sum_le_sq_sum_sqrt` on the combined family over $s\\sqcup t$; the rounding terms are bounded by `sqrt_variance_mul_le`, and for the others $\\mathbb V[\\bar Z_j\\delta Z_j]\\le\\mathbb E[\\bar Z_j^2\\delta Z_j^2]=\\mathbb E[\\bar Z_j^2]\\,\\mathrm{MSE}$ by independence.",
+   "tags": [
+    "multilevel-monte-carlo",
+    "probability",
+    "numerical-analysis"
+   ]
   }
  },
  "definitions": {
@@ -1538,6 +1694,15 @@
     "multilevel-monte-carlo",
     "numerical-analysis",
     "polynomial-interpolation"
+   ]
+  },
+  "MLMC_RoundingError": {
+   "definition_title": "Haas–Giles (2025), §4: fixed-point round-to-nearest $\\tilde x=2^{e-d}\\,\\mathrm{round}(x/2^{e-d})$ and the error-variance bounds $V_{indep}$ (26) and $V_{corr}$ (27)",
+   "natural_language_statement": "Haas and Giles (2025), §4, model the rounding error of a low-precision fixed-point path simulation. A variable with exponent $e\\in\\mathbb Z$ and bit-width $d\\in\\mathbb N$ is stored as $\\tilde x=(-1)^s2^{e-d}n$ with $0\\le n<2^d$; results are rounded to nearest.\n\n**`roundFixed`.** For $e\\in\\mathbb Z$, $d\\in\\mathbb N$ and $x\\in\\mathbb R$,\n\n$$\n\\tilde x=2^{e-d}\\,\\mathrm{round}\\big(x/2^{e-d}\\big),\n$$\n\nthe nearest point of the grid $2^{e-d}\\mathbb Z$ (Mathlib's `round`, which rounds half-integers up).\n\n**`vIndep`.** For a finite index set $s$ of variables with mean-square sensitivities $M_i$ ($M_i=\\mathbb E[\\bar x_i^2]$ in the paper), exponents $e_i\\in\\mathbb Z$ and bit-widths $d_i\\in\\mathbb N$,\n\n$$\nV_{indep}(d)=\\frac1{12}\\sum_{i\\in s}M_i\\,4^{e_i-d_i}\\qquad\\text{(26)}.\n$$\n\n**`vCorr`.** With the same data,\n\n$$\nV_{corr}(d)=\\Big(\\sum_{i\\in s}\\sqrt{M_i}\\,2^{e_i-d_i-1}\\Big)^2\\qquad\\text{(27)}.\n$$\n\n**Formalization Note** Powers with integer exponents are `zpow`; $\\sqrt{\\cdot}$ is `Real.sqrt` (which is $0$ on negative numbers; the theorems use $M_i=\\mathbb E[\\bar x_i^2]\\ge0$).",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §4.1–4.2, pp. 8–9 (the fixed-point format, (20), (26), (27)).",
+   "tags": [
+    "numerical-analysis",
+    "multilevel-monte-carlo"
    ]
   }
  }
