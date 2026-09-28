@@ -69,9 +69,8 @@ lemma integral_mul_exp_mul_gaussian (a : ℝ) :
     funext t
     simp
   rw [hm] at h1
-  have hp : HasDerivAt (fun t : ℝ => t ^ 2 / 2) a a := by
-    convert (hasDerivAt_pow 2 a).div_const 2 using 1
-    norm_num
+  have hp : HasDerivAt (fun t : ℝ => t ^ 2 / 2) a a :=
+    ((hasDerivAt_pow 2 a).div_const 2).congr_deriv (by norm_num)
   exact (h1.unique hp.exp).trans (mul_comm _ _)
 
 /-- `Z` is integrable for `Z ~ N(0,1)`. -/
@@ -548,7 +547,7 @@ lemma gbm_moment_combo_le (r σ : ℝ) {h : ℝ} (hh : 0 ≤ h) (n : ℕ) :
     rw [hMn] at h1
     have h2 := mul_le_mul_of_nonneg_left (add_le_add hab hcb) (mul_nonneg hn hE.le)
     linarith [mul_nonneg (mul_nonneg hE.le hq) hh]
-  · push_neg at hs
+  · have hs : 1 < (|r| + σ ^ 2) * h := not_le.mp hs
     have h1 := pow_sub_two_mul_pow_add_pow_le_four ha hb hc n
     rw [hMn] at h1
     linarith [mul_nonneg (mul_nonneg hE.le hn) (sq_nonneg ((|r| + σ ^ 2) * h)),
@@ -657,14 +656,23 @@ lemma memLp_two_comp_of_abs_sub_le {Ω : Type*} [MeasurableSpace Ω] {μ : Measu
     [IsFiniteMeasure μ] {g : ℝ → ℝ} {K : ℝ} (hg : ∀ x y, |g x - g y| ≤ K * |x - y|)
     {X : Ω → ℝ} (hX : MemLp X 2 μ) : MemLp (fun ω => g (X ω)) 2 μ := by
   obtain ⟨hK, hgc⟩ := continuous_of_abs_sub_le hg
-  have hG : MemLp (fun ω => |g 0| + K * ‖X ω‖) 2 μ := (memLp_const _).add (hX.norm.const_mul K)
-  refine hG.of_le (hgc.comp_aestronglyMeasurable hX.1) (Filter.Eventually.of_forall fun ω => ?_)
+  have hm : AEStronglyMeasurable (fun ω => g (X ω)) μ := hgc.comp_aestronglyMeasurable hX.1
+  have hX2 : Integrable (fun ω => X ω ^ 2) μ := hX.integrable_sq
+  have hb : Integrable (fun ω => 2 * g 0 ^ 2 + 2 * K ^ 2 * X ω ^ 2) μ :=
+    (integrable_const (2 * g 0 ^ 2)).add (hX2.const_mul (2 * K ^ 2))
+  refine (memLp_two_iff_integrable_sq hm).2
+    (hb.mono' (hm.pow 2) (Filter.Eventually.of_forall fun ω => ?_))
   have h1 := hg (X ω) 0
   rw [sub_zero] at h1
-  have h3 := abs_sub_abs_le_abs_sub (g (X ω)) (g 0)
-  simp only [Real.norm_eq_abs]
-  rw [abs_of_nonneg (by positivity : (0 : ℝ) ≤ |g 0| + K * |X ω|)]
-  linarith
+  have hKX : K * |X ω| = |K * X ω| := by rw [abs_mul, abs_of_nonneg hK]
+  have h2 : |g (X ω)| ≤ |g 0| + |K * X ω| := by
+    have := abs_sub_abs_le_abs_sub (g (X ω)) (g 0)
+    linarith
+  have h3 : g (X ω) ^ 2 ≤ (|g 0| + |K * X ω|) ^ 2 := by
+    rw [← sq_abs (g (X ω))]
+    exact pow_le_pow_left₀ (abs_nonneg _) h2 2
+  rw [Real.norm_of_nonneg (sq_nonneg _)]
+  linarith [sq_nonneg (|g 0| - |K * X ω|), sq_abs (g 0), sq_abs (K * X ω)]
 
 /-- `(E[X])² ≤ E[X²]` on a probability space. -/
 lemma sq_integral_le_integral_sq_of_memLp {Ω : Type*} [MeasurableSpace Ω] {μ : Measure Ω}
