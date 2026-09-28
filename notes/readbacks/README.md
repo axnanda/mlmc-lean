@@ -249,3 +249,28 @@ the paper or deliberate:
 - The strong-error constant is loose (the exact values never exceeded about 0.10 of the bound, and
   for `r < 0` the bound contains `e^{2|r|t}` where the error behaves like `e^{2rt}`); only the order
   `h` matters for Theorem 1.
+
+**Ninth round (2026-09-28).** One blind read-back, of the Milstein module: `gbm_milstein.md`
+(Giles §5.2: `milsteinPath_gbm`, `integral_sq_prod_sub_prod_of`,
+`abs_pow_sub_two_mul_pow_add_pow_le`, `gbm_mil_strong_error`, `gbm_mil_strong_error_level`,
+`gbm_mil_weak_error_le`, `gbm_mil_correction_variance_le`, `gbm_mil_mlmc_theorem1`, with
+`gbmMilFactor`, `milsteinPath`, `gbmMil` and `gbmMilStrongConst`).  All eight theorems read back
+as true, none is vacuous, and none holds only because of a junk value; the auditor confirmed them
+numerically (about 29 000 exact high-precision strong-error cases with the ratio to the bound at
+most `1/120`, 92 768 exact rational tests of the power inequality, quadrature and Monte Carlo for
+the moments, the weak error, the correction variance and the MLMC mean square error).  Points
+recorded, all consistent with the paper or deliberate:
+
+- As for Euler–Maruyama, the exact solution is the closed form of geometric Brownian motion driven
+  by the increments `√h Z_i`; `deriv` is applied only to `S ↦ σS`, whose derivative is `σ`
+  everywhere, so each Milstein step is the multiplication by `1 + rh + σ√h Z + ½σ²(hZ² − h)`.
+- The strong bound is on the mean square error at each grid time (`E[(S_{t_n} − Ŝ_n)²] ≤ C h²`),
+  not on the maximum over the grid; the rate `h²` is attained, and the constant is conservative
+  (by a factor of at least about 120, and by `e^{4|r|T}` more when `r < 0`).
+- The weak error compares with the level-0 exact sample `s₀e^{(r−σ²/2)T+σ√T z₀}`, which has the law
+  of `S_T`, so the statement is exactly `|E g(Ŝ_ℓ) − E g(S_T)|`.
+- In `gbm_mil_mlmc_theorem1` the constant `c₄` is existential (as in Theorem 1) and the cost counts
+  `2^ℓ` per level-`ℓ` sample; the coarse path changes the cost by at most a factor `3/2`.
+- `hFG` in `integral_sq_prod_sub_prod_of` follows from `hF2` and `hG2` (`|FG| ≤ (F² + G²)/2`) and is
+  kept for a shorter proof; `0 ≤ T` is needed for the strong and weak bounds but not for the
+  variance and MLMC statements (for `T < 0` everything is deterministic).
