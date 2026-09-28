@@ -56,6 +56,10 @@
 --   as a limit, splitting
 -- * `MlmcLean.MLQMC` — Giles §3.5: Algorithm 2 (MLQMC) with exact variances, the greedy doubling
 --   (3.3) terminates, the variance target (3.2) and the MSE at exit
+-- * `MlmcLean.LUTLimits` — Haas–Giles §3.4: the MSE of the lookup tables as d → ∞ (uniform
+--   intervals: → 0 for monotone f; dyadic intervals: bounded away from 0)
+-- * `MlmcLean.MarkovLimit` — Giles §10.1: the chain started in the past converges almost surely
+--   and the distribution of X_n converges weakly to that of X_∞
 import MlmcLean.Allocation
 import MlmcLean.Estimator
 import MlmcLean.LevelDiff
@@ -93,3 +97,5 @@ import MlmcLean.MarkovChain
 import MlmcLean.PDEExamples
 import MlmcLean.SDEExtras
 import MlmcLean.MLQMC
+import MlmcLean.LUTLimits
+import MlmcLean.MarkovLimit

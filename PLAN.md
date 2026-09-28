@@ -41,7 +41,7 @@ table and `notes/statement-audit.md`, which compares every statement with the pa
   checks), the pure steps of the applications in §5, §7, §8 (the Poisson coupling), §9 and §10,
   and Haas–Giles §2–§6 (the Euler–Maruyama coupling, approximate normals, the rounding-error
   model, the fixed-point path, the cost model and the bit-width optimisation). The README table
-  lists the modules; `scripts/AxiomCheck.lean` lists the 396 audited theorems.
+  lists the modules; `scripts/AxiomCheck.lean` lists the 403 audited theorems.
 
 ## Setup and verification (Linux / cloud session)
 
@@ -136,11 +136,16 @@ items listed under "Not formalised" below.
   rounding-error model (20)–(29) (with the corrections recorded in `notes/statement-audit.md`),
   Algorithm 1 and the error accumulation, the cost model and the bit-width optimisation
   (30)–(41).
+- ✅ The weak convergence of the contracting chain to `X_∞` (§10.1, `MarkovLimit.lean`) and the
+  MSE of the lookup tables as `d → ∞` (Haas–Giles §3.4, `LUTLimits.lean`: `→ 0` for uniform
+  intervals, bounded below by a positive constant for dyadic intervals).
 - Not formalised: the convergence orders of the discretisations (Itô calculus, not in Mathlib)
-  and of QMC; the weak convergence of the contracting chain to `X_∞` (§10.1, a cited result of
-  Diaconis–Freedman); Algorithm 3 with path-dependent timesteps (§5.6, needs Brownian motion and
-  stopping times); the limits of the MSE of the lookup tables as `d → ∞` (Haas–Giles §3.3); the
-  remaining claims are numerical or empirical (tables, figures, run times).
+  and of QMC; for tau-leaping (§8), the weak rate `α = 1` against the exact chain and the exact
+  (SSA) coupling on the finest level, which need the continuous-time chain itself; Algorithm 3
+  with path-dependent timesteps (§5.6, needs Brownian motion at stopping times); the value of the
+  dyadic limit `C` and the rate "MSE halves per bit" (Haas–Giles §3.4, need the asymptotics of
+  `Φ⁻¹`); the floating-point remark of §10.2; the remaining claims are numerical or empirical
+  (tables, figures, run times).
 
 **M4: Research, needs Alex's sign-off before formalising: nested MLMC with level-dependent
 precision.**

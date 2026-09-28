@@ -4081,6 +4081,77 @@
     "probability",
     "multilevel-monte-carlo"
    ]
+  },
+  "MLMC.tendsto_method1MSE": {
+   "theorem_title": "Haas–Giles (2025), §3.4: with uniform intervals the mean-square error of method 1 tends to $0$ as $d\\to\\infty$, for $f$ monotone on $(0,1)$ as $\\Phi^{-1}$ is",
+   "natural_language_statement": "Haas–Giles (2025), §3.4, p. 7: \"As illustrated by Figure 1 and the convergence analysis from [12], as $d$ tends to infinity, the uniform intervals give MSE$\\to0$ and the dyadic intervals give MSE$\\to C$, for some positive constant $C$. The latter is because with our simple dyadic segmentation, when $d$ increases by 1 the MSE is reduced only in the interval closest to 0, so the error due to the other intervals remains the same.\"\n\nLet $f:\\mathbb R\\to\\mathbb R$ (standing for $\\Phi^{-1}$) be such that $f$ and $f^2$ are integrable on $[0,1]$. For $d\\in\\mathbb N$ let $u_j=2^{-d}j$ and $\\mathcal I_j=[u_j,u_{j+1}]$ ($j<2^d$) be the uniform intervals, and $Z_j=2^d\\int_{u_j}^{u_{j+1}}f(u)\\,du$ the LUT values (15) of method 1. If $f$ is monotone (non-decreasing) on $(0,1)$, then\n$$\n\\sum_{j<2^d}\\int_{u_j}^{u_{j+1}}\\big(Z_j-f(u)\\big)^2du\\ \\longrightarrow\\ 0\\qquad(d\\to\\infty).\n$$",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §3.3–§3.4, pp. 6–8, (15), (18)–(19).",
+   "explanation": "On an interval inside $(0,1)$ both $f$ and its mean $Z_j$ lie between the values of $f$ at the ends, so the error there is at most $2^{-d}(f(u_{j+1})-f(u_j))^2$; summing and telescoping, the interior intervals contribute at most $2^{-d}(f(1-2^{-d})-f(2^{-d}))^2$ (`method1MSE_le`). Each end interval contributes at most $\\int f^2$ over it, which tends to $0$ by continuity of the primitive of $f^2$. By monotonicity, $2^{-d}f(2^{-d})^2\\le\\int_0^{2^{-d}}f^2+2^{-d}f(1/2)^2$ and similarly at $1$ (`mul_sq_le_left`, `mul_sq_le_right`).",
+   "tags": [
+    "numerical-analysis",
+    "real-analysis",
+    "convergence"
+   ]
+  },
+  "MLMC.dyadic_mse_ge": {
+   "theorem_title": "Haas–Giles (2025), §3.4: on a dyadic interval where $f$ is strongly concave, the method-3 error with values $a+bj$ is at least a constant $c>0$ for all $d$, $a$, $b$",
+   "natural_language_statement": "Haas–Giles (2025), §3.4, p. 7: \"As illustrated by Figure 1 and the convergence analysis from [12], as $d$ tends to infinity, the uniform intervals give MSE$\\to0$ and the dyadic intervals give MSE$\\to C$, for some positive constant $C$. The latter is because with our simple dyadic segmentation, when $d$ increases by 1 the MSE is reduced only in the interval closest to 0, so the error due to the other intervals remains the same.\"\n\nLet $f:\\mathbb R\\to\\mathbb R$ (standing for $\\Phi^{-1}$) be such that $f$ and $f^2$ are integrable on $[0,1]$. For $d\\in\\mathbb N$ let $u_j=2^{-d}j$ and $\\mathcal I_j=[u_j,u_{j+1}]$ ($j<2^d$) be the uniform intervals, and $Z_j=2^d\\int_{u_j}^{u_{j+1}}f(u)\\,du$ the LUT values (15) of method 1. Let $k\\in\\mathbb N$ and $\\mu>0$ be such that $f$ is strongly concave on the dyadic interval $[2^{-(k+1)},2^{-k}]$ in the form\n$$\n\\mu s^2\\le 2f(u+s)-f(u)-f(u+2s)\\qquad\\text{whenever }2^{-(k+1)}\\le u,\\ s\\ge0,\\ u+2s\\le2^{-k}.\n$$\n(For $\\Phi^{-1}$ this holds on $[2^{-(k+1)},2^{-k}]$ for $k\\ge2$, where $(\\Phi^{-1})''=\\Phi^{-1}/\\varphi(\\Phi^{-1})^2\\le2\\pi\\,\\Phi^{-1}(1/4)<0$.) For $d\\ge k+3$ the intervals $\\mathcal I_j$ inside the dyadic interval are those with $2^{d-k-1}\\le j<2^{d-k}$; method 3 takes the values $a+bj$ on them. Then there is $c>0$ such that for every $d\\ge k+3$ and all $a,b\\in\\mathbb R$,\n$$\n\\sum_{2^{d-k-1}\\le j<2^{d-k}}\\int_{u_j}^{u_{j+1}}\\big(a+bj-f(u)\\big)^2du\\ \\ge\\ c ,\n$$\nnamely $c=\\mu^2\\,2^{-5(k+3)}/6$.",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §3.3–§3.4, pp. 6–8, (15), (18)–(19).",
+   "explanation": "By (18) the error on $\\mathcal I_j$ is at least $2^{-d}r_j^2$ with $r_j=a+bj-Z_j$. With the spacing $m=2^{d-k-3}$ and $s=u_m=2^{-(k+3)}$, an affine sequence has zero second differences, so $r_j-2r_{j+m}+r_{j+2m}=2Z_{j+m}-Z_j-Z_{j+2m}$, and by the concavity, averaged over $\\mathcal I_j$, this is at least $\\mu s^2$ (`lutValue_second_diff_ge`). Then $(\\mu s^2)^2\\le6(r_j^2+r_{j+m}^2+r_{j+2m}^2)$; summing over the first quarter of the dyadic interval gives $m(\\mu s^2)^2\\le6\\sum_jr_j^2$, and $2^{-d}m=s$.",
+   "tags": [
+    "numerical-analysis",
+    "real-analysis"
+   ]
+  },
+  "MLMC.method3_mse_ge": {
+   "theorem_title": "Haas–Giles (2025), §3.4: the mean-square error of method 3 (affine values on a dyadic interval where $f$ is strongly concave) is at least a constant $c>0$ for every $d\\ge k+3$",
+   "natural_language_statement": "Haas–Giles (2025), §3.4, p. 8: \"Also with dyadic intervals, the MSE value cannot be arbitrarily small, which might limit the number of levels where this method is relevant.\"\n\nLet $f:\\mathbb R\\to\\mathbb R$ (standing for $\\Phi^{-1}$) be such that $f$ and $f^2$ are integrable on $[0,1]$. For $d\\in\\mathbb N$ let $u_j=2^{-d}j$ and $\\mathcal I_j=[u_j,u_{j+1}]$ ($j<2^d$) be the uniform intervals, and $Z_j=2^d\\int_{u_j}^{u_{j+1}}f(u)\\,du$ the LUT values (15) of method 1. Let $k\\in\\mathbb N$ and $\\mu>0$ be such that $f$ is strongly concave on the dyadic interval $[2^{-(k+1)},2^{-k}]$ in the form\n$$\n\\mu s^2\\le 2f(u+s)-f(u)-f(u+2s)\\qquad\\text{whenever }2^{-(k+1)}\\le u,\\ s\\ge0,\\ u+2s\\le2^{-k}.\n$$\n(For $\\Phi^{-1}$ this holds on $[2^{-(k+1)},2^{-k}]$ for $k\\ge2$, where $(\\Phi^{-1})''=\\Phi^{-1}/\\varphi(\\Phi^{-1})^2\\le2\\pi\\,\\Phi^{-1}(1/4)<0$.) For $d\\ge k+3$ the intervals $\\mathcal I_j$ inside the dyadic interval are those with $2^{d-k-1}\\le j<2^{d-k}$; method 3 takes the values $a+bj$ on them. Then there is $c>0$ such that for every $d\\ge k+3$ and every $w:\\mathbb N\\to\\mathbb R$ which is affine on the indices of the dyadic interval ($w_j=a+bj$ for $2^{d-k-1}\\le j<2^{d-k}$, for some $a,b$),\n$$\n\\sum_{j<2^d}\\int_{u_j}^{u_{j+1}}\\big(w_j-f(u)\\big)^2du\\ \\ge\\ c .\n$$",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §3.3–§3.4, pp. 6–8, (15), (18)–(19).",
+   "explanation": "The terms of the sum are nonnegative, so it is at least the sum over the intervals of the dyadic interval, where $w_j=a+bj$; apply `dyadic_mse_ge`.",
+   "tags": [
+    "numerical-analysis",
+    "real-analysis"
+   ]
+  },
+  "MLMC.method3_mse_not_tendsto_zero": {
+   "theorem_title": "Haas–Giles (2025), §3.4: with dyadic intervals the MSE cannot be arbitrarily small — the method-3 mean-square error does not tend to $0$ as $d\\to\\infty$",
+   "natural_language_statement": "Haas–Giles (2025), §3.4, p. 8: \"Also with dyadic intervals, the MSE value cannot be arbitrarily small, which might limit the number of levels where this method is relevant.\"\n\nLet $f:\\mathbb R\\to\\mathbb R$ (standing for $\\Phi^{-1}$) be such that $f$ and $f^2$ are integrable on $[0,1]$. For $d\\in\\mathbb N$ let $u_j=2^{-d}j$ and $\\mathcal I_j=[u_j,u_{j+1}]$ ($j<2^d$) be the uniform intervals, and $Z_j=2^d\\int_{u_j}^{u_{j+1}}f(u)\\,du$ the LUT values (15) of method 1. Let $k\\in\\mathbb N$ and $\\mu>0$ be such that $f$ is strongly concave on the dyadic interval $[2^{-(k+1)},2^{-k}]$ in the form\n$$\n\\mu s^2\\le 2f(u+s)-f(u)-f(u+2s)\\qquad\\text{whenever }2^{-(k+1)}\\le u,\\ s\\ge0,\\ u+2s\\le2^{-k}.\n$$\n(For $\\Phi^{-1}$ this holds on $[2^{-(k+1)},2^{-k}]$ for $k\\ge2$, where $(\\Phi^{-1})''=\\Phi^{-1}/\\varphi(\\Phi^{-1})^2\\le2\\pi\\,\\Phi^{-1}(1/4)<0$.) For $d\\ge k+3$ the intervals $\\mathcal I_j$ inside the dyadic interval are those with $2^{d-k-1}\\le j<2^{d-k}$; method 3 takes the values $a+bj$ on them. Let $w_d:\\mathbb N\\to\\mathbb R$, for each $d$, be affine on the indices $2^{d-k-1}\\le j<2^{d-k}$ ($w_d(j)=a_d+b_dj$ there). Then\n$$\n\\sum_{j<2^d}\\int_{u_j}^{u_{j+1}}\\big(w_d(j)-f(u)\\big)^2du\\ \\not\\longrightarrow\\ 0\\qquad(d\\to\\infty).\n$$",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §3.3–§3.4, pp. 6–8, (15), (18)–(19).",
+   "explanation": "By `method3_mse_ge` the error is at least $c>0$ for every $d\\ge k+3$, so it cannot eventually be below $c$.",
+   "tags": [
+    "numerical-analysis",
+    "real-analysis",
+    "convergence"
+   ]
+  },
+  "MLMC.map_backIter_eq_map_fwdIter": {
+   "theorem_title": "Giles (2015), §10.1: the chain started $n$ steps in the past has the law of the chain after $n$ steps, $Z_n\\overset{d}{=}X_n$",
+   "natural_language_statement": "Giles (2015), §10.1, p. 61: \"the Markov chain $\\{X_n\\}$ in a metric space with metric $d$ is defined by $X_0=x$, $X_{n+1}=\\phi_n(X_n)$, $n\\ge0$ where $\\{\\phi_n\\}$ is a sequence of iid random functions. Furthermore, it is assumed that the $\\phi$'s are contracting on average in the sense that $\\sup_{x\\ne y}\\mathbb E\\big[(d(\\phi_n(x),\\phi_n(y))/d(x,y))^{2\\gamma}\\big]<1$ for some $\\gamma\\in(0,1)$. Under these conditions, it is known that the distribution of $X_n$ converges weakly to that of a limit random variable $X_\\infty$\".\n\nLet $(\\alpha,d)$ be a complete separable metric space with its Borel $\\sigma$-algebra, $E$ a measurable space, $\\varphi:\\alpha\\times E\\to\\alpha$ jointly measurable, and $\\xi_0,\\xi_1,\\dots$ independent random variables with values in $E$ and common law $\\nu$, on a probability space $(\\Omega,\\mathbb P)$. Let $x_0\\in\\alpha$, let $X_0=x_0$, $X_{n+1}=\\varphi(X_n,\\xi_n)$ be the chain, and let $Z_n=\\varphi(\\cdot,\\xi_0)\\circ\\varphi(\\cdot,\\xi_1)\\circ\\cdots\\circ\\varphi(\\cdot,\\xi_{n-1})(x_0)$ be the chain started $n$ steps in the past (the level samples of Glynn and Rhee). Then for every $n\\in\\mathbb N$, $Z_n$ and $X_n$ have the same law.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §10.1, p. 61 (after P.W. Glynn and C.-H. Rhee, Exact estimation for Markov chain equilibrium expectations, 2014).",
+   "explanation": "$Z_n$ is the forward chain driven by the noises in reverse order, $(\\xi_{n-1},\\dots,\\xi_0)$ (`backIter_eq_fwdIter_rev`). The joint law of the i.i.d. noises is the product measure $\\nu^{\\mathbb N}$, which is invariant under reindexing by a permutation of $\\mathbb N$ (`map_revPerm_infinitePi`).",
+   "tags": [
+    "probability"
+   ]
+  },
+  "MLMC.ae_tendsto_backIter": {
+   "theorem_title": "Giles (2015), §10.1: for a chain contracting on average, the chains started in the past converge almost surely",
+   "natural_language_statement": "Giles (2015), §10.1, p. 61: \"the Markov chain $\\{X_n\\}$ in a metric space with metric $d$ is defined by $X_0=x$, $X_{n+1}=\\phi_n(X_n)$, $n\\ge0$ where $\\{\\phi_n\\}$ is a sequence of iid random functions. Furthermore, it is assumed that the $\\phi$'s are contracting on average in the sense that $\\sup_{x\\ne y}\\mathbb E\\big[(d(\\phi_n(x),\\phi_n(y))/d(x,y))^{2\\gamma}\\big]<1$ for some $\\gamma\\in(0,1)$. Under these conditions, it is known that the distribution of $X_n$ converges weakly to that of a limit random variable $X_\\infty$\".\n\nLet $(\\alpha,d)$ be a complete separable metric space with its Borel $\\sigma$-algebra, $E$ a measurable space, $\\varphi:\\alpha\\times E\\to\\alpha$ jointly measurable, and $\\xi_0,\\xi_1,\\dots$ independent random variables with values in $E$ and common law $\\nu$, on a probability space $(\\Omega,\\mathbb P)$. Let $x_0\\in\\alpha$, let $X_0=x_0$, $X_{n+1}=\\varphi(X_n,\\xi_n)$ be the chain, and let $Z_n=\\varphi(\\cdot,\\xi_0)\\circ\\varphi(\\cdot,\\xi_1)\\circ\\cdots\\circ\\varphi(\\cdot,\\xi_{n-1})(x_0)$ be the chain started $n$ steps in the past (the level samples of Glynn and Rhee). Let $p>0$ and $0\\le\\rho<1$ with $\\int d(\\varphi(x,e),\\varphi(y,e))^p\\,\\nu(de)\\le\\rho\\,d(x,y)^p$ for all $x,y$ (Giles' condition with $p=2\\gamma$), and $\\int d(x_0,\\varphi(x_0,e))^p\\,\\nu(de)<\\infty$. Then for almost every $\\omega$ the sequence $Z_n(\\omega)$ converges in $\\alpha$.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §10.1, p. 61 (after P.W. Glynn and C.-H. Rhee, Exact estimation for Markov chain equilibrium expectations, 2014).",
+   "explanation": "By the contraction, $\\mathbb E[d(Z_n,Z_{n+1})^p]\\le\\rho^n\\,\\mathbb E[d(x_0,\\varphi(x_0,\\xi))^p]$ (`lintegral_dist_backIter_succ_le`). For $\\theta=(1+\\rho)/2$, $W=\\sum_n\\theta^{-n}d(Z_n,Z_{n+1})^p$ has a finite mean, so it is finite almost surely; then $d(Z_n,Z_{n+1})\\le W^{1/p}(\\theta^{1/p})^n$ is summable, the sequence is Cauchy, and the space is complete.",
+   "tags": [
+    "probability",
+    "convergence"
+   ]
+  },
+  "MLMC.tendstoInDistribution_fwdIter": {
+   "theorem_title": "Giles (2015), §10.1: for a chain contracting on average, the distribution of $X_n$ converges weakly to that of a limit random variable $X_\\infty$",
+   "natural_language_statement": "Giles (2015), §10.1, p. 61: \"the Markov chain $\\{X_n\\}$ in a metric space with metric $d$ is defined by $X_0=x$, $X_{n+1}=\\phi_n(X_n)$, $n\\ge0$ where $\\{\\phi_n\\}$ is a sequence of iid random functions. Furthermore, it is assumed that the $\\phi$'s are contracting on average in the sense that $\\sup_{x\\ne y}\\mathbb E\\big[(d(\\phi_n(x),\\phi_n(y))/d(x,y))^{2\\gamma}\\big]<1$ for some $\\gamma\\in(0,1)$. Under these conditions, it is known that the distribution of $X_n$ converges weakly to that of a limit random variable $X_\\infty$\".\n\nLet $(\\alpha,d)$ be a complete separable metric space with its Borel $\\sigma$-algebra, $E$ a measurable space, $\\varphi:\\alpha\\times E\\to\\alpha$ jointly measurable, and $\\xi_0,\\xi_1,\\dots$ independent random variables with values in $E$ and common law $\\nu$, on a probability space $(\\Omega,\\mathbb P)$. Let $x_0\\in\\alpha$, let $X_0=x_0$, $X_{n+1}=\\varphi(X_n,\\xi_n)$ be the chain, and let $Z_n=\\varphi(\\cdot,\\xi_0)\\circ\\varphi(\\cdot,\\xi_1)\\circ\\cdots\\circ\\varphi(\\cdot,\\xi_{n-1})(x_0)$ be the chain started $n$ steps in the past (the level samples of Glynn and Rhee). Let $p>0$ and $0\\le\\rho<1$ with $\\int d(\\varphi(x,e),\\varphi(y,e))^p\\,\\nu(de)\\le\\rho\\,d(x,y)^p$ for all $x,y$ (Giles' condition with $p=2\\gamma$), and $\\int d(x_0,\\varphi(x_0,e))^p\\,\\nu(de)<\\infty$. Then there is an (almost everywhere measurable) random variable $X_\\infty$ such that $Z_n\\to X_\\infty$ almost surely and $X_n\\to X_\\infty$ in distribution: the laws of $X_n$ converge weakly to the law of $X_\\infty$.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §10.1, p. 61 (after P.W. Glynn and C.-H. Rhee, Exact estimation for Markov chain equilibrium expectations, 2014).",
+   "explanation": "Take $X_\\infty=\\lim_nZ_n$ where the limit exists (`ae_tendsto_backIter`); it is a.e.-measurable. Almost sure convergence implies convergence in distribution, and $X_n$ has the law of $Z_n$ for every $n$ (`map_backIter_eq_map_fwdIter`).",
+   "tags": [
+    "probability",
+    "convergence"
+   ]
   }
  },
  "definitions": {
@@ -4363,6 +4434,23 @@
     "multilevel-monte-carlo",
     "algorithms",
     "monte-carlo"
+   ]
+  },
+  "MLMC_LUTLimits": {
+   "definition_title": "Haas–Giles (2025), §3.4: the mean-square error of method 1 with $2^d$ uniform intervals",
+   "natural_language_statement": "**`method1MSE`.** For $f:\\mathbb R\\to\\mathbb R$ and $d\\in\\mathbb N$, the real number\n$$\n\\mathrm{method1MSE}(f,d)=\\sum_{j<2^d}\\int_{u_j}^{u_{j+1}}\\big(Z_j-f(u)\\big)^2\\,du,\\qquad u_j=2^{-d}j,\\quad Z_j=2^d\\int_{u_j}^{u_{j+1}}f(u)\\,du,\n$$\nthe mean-square error (14) of method 1 summed over the uniform intervals $[u_j,u_{j+1}]$ of $[0,1]$ (interval integrals are Bochner integrals, $0$ for a non-integrable integrand).",
+   "source": "I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §3.1, p. 5, (14)–(15), and §3.4, p. 7.",
+   "tags": [
+    "numerical-analysis",
+    "real-analysis"
+   ]
+  },
+  "MLMC_MarkovLimit": {
+   "definition_title": "Giles (2015), §10.1: the forward chain $X_{n+1}=\\varphi(X_n,e_n)$ and the reversal of the first $n$ noises",
+   "natural_language_statement": "**`fwdIter`.** For $\\varphi:\\alpha\\to E\\to\\alpha$, $n\\in\\mathbb N$, a noise sequence $e:\\mathbb N\\to E$ and $x\\in\\alpha$: $\\mathrm{fwdIter}(\\varphi,0,e,x)=x$ and $\\mathrm{fwdIter}(\\varphi,n+1,e,x)=\\varphi(\\mathrm{fwdIter}(\\varphi,n,e,x),e_n)$, the chain $X_0=x$, $X_{n+1}=\\varphi(X_n,e_n)$ after $n$ steps.\n\n**`revFun`.** For $n,i\\in\\mathbb N$: $\\mathrm{revFun}(n,i)=n-1-i$ if $i<n$, and $i$ otherwise (the reversal of the first $n$ indices).\n\n**`revPerm`.** The permutation of $\\mathbb N$ given by the involution $\\mathrm{revFun}(n,\\cdot)$.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §10.1, p. 61.",
+   "tags": [
+    "probability"
    ]
   }
  }

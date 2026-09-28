@@ -382,6 +382,13 @@ import MlmcLean
 #print axioms MLMC.coupledChain_sq_le
 #print axioms MLMC.variance_coupledChain_le
 #print axioms MLMC.tauLeaping_level_variance
+#print axioms MLMC.tendsto_method1MSE
+#print axioms MLMC.dyadic_mse_ge
+#print axioms MLMC.method3_mse_ge
+#print axioms MLMC.method3_mse_not_tendsto_zero
+#print axioms MLMC.map_backIter_eq_map_fwdIter
+#print axioms MLMC.ae_tendsto_backIter
+#print axioms MLMC.tendstoInDistribution_fwdIter
 -- helper lemmas that the prove2.me generator promotes to nodes
 #print axioms MLMC.sqrt_Vb_mul_Cb
 #print axioms MLMC.two_rpow_levelL_le
