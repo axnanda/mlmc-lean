@@ -4152,6 +4152,58 @@
     "probability",
     "convergence"
    ]
+  },
+  "MLMC.lintegral_sq_tauChain_lt_top": {
+   "theorem_title": "Giles (2015), §8: with a bounded propensity the tau-leaping chain has a finite second moment after any number of steps",
+   "natural_language_statement": "Giles (2015), §8, p. 55: \"the 'tau-leaping' method … gives the discrete equation $x_{n+1}=x_n+P(h\\lambda(x_n))$, where $h$ is the timestep, $\\lambda(x_n)$ is the reaction rate (or propensity function), and $P(t)$ represents a unit-rate Poisson random variable over time interval $[0,t]$.\"\n\nLet $\\lambda\\le\\Lambda$. For every time step $h\\ge0$, initial state $x_0\\in\\mathbb N$ and number of steps $n$, the chain $x_0$, $x_{k+1}=x_k+P(h\\lambda(x_k))$ (law `tauChain`) satisfies $\\mathbb E[x_n^2]<\\infty$ (as a lower Lebesgue integral: $\\int^{-}x^2\\,d\\,\\mathrm{tauChain}(\\lambda,h,x_0,n)<\\infty$).",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §8, pp. 55–56, and §2.1, Theorem 1 with (2.4) (after D.F. Anderson and D.J. Higham, Multilevel Monte Carlo for continuous time Markov chains, with applications in biochemical kinetics, Multiscale Model. Simul. 10 (2012) 146–179).",
+   "explanation": "$(x+P)^2\\le2x^2+2P^2$ and $\\mathbb E[P(r)^2]=r+r^2\\le h\\Lambda+(h\\Lambda)^2$ for $r=h\\lambda(x)$, so $\\mathbb E[x_{n+1}^2]\\le2\\,\\mathbb E[x_n^2]+2(h\\Lambda+(h\\Lambda)^2)$; induction on $n$.",
+   "tags": [
+    "probability",
+    "multilevel-monte-carlo"
+   ]
+  },
+  "MLMC.integral_tauFine": {
+   "theorem_title": "Giles (2015), §8: the fine payoff of level $\\ell$ of tau-leaping MLMC has the mean of $2^\\ell$ tau-leaping steps of size $T2^{-\\ell}$",
+   "natural_language_statement": "Giles (2015), §8, p. 55: \"the 'tau-leaping' method … gives the discrete equation $x_{n+1}=x_n+P(h\\lambda(x_n))$, where $h$ is the timestep, $\\lambda(x_n)$ is the reaction rate (or propensity function), and $P(t)$ represents a unit-rate Poisson random variable over time interval $[0,t]$.\"\n\nLet $\\lambda:\\mathbb N\\to[0,\\infty)$ be the propensity, $T\\ge0$ the final time and $x_0\\in\\mathbb N$ the initial state. Level $\\ell$ uses the time step $h_\\ell=T2^{-\\ell}$: its fine path makes $2^\\ell$ tau-leaping steps of size $h_\\ell$ from $x_0$; for $\\ell\\ge1$ its coarse path makes $2^{\\ell-1}$ steps of size $h_{\\ell-1}$, coupled with the fine path by the Poisson coupling (`coupledChain`); on level $0$ there is no coarse path. An input $y=(y_\\ell)_{\\ell\\in\\mathbb N}$ of the estimator has independent coordinates, $y_\\ell=(y_\\ell^{f},y_\\ell^{c})\\in\\mathbb N^2$ the terminal states of level $\\ell$ (for $\\ell=0$, $y_0^{c}=y_0^{f}$); its law is `tauInputLaw`. For $\\Phi:\\mathbb N\\to\\mathbb R$, the fine payoff of level $\\ell$ is $P^f_\\ell(y)=\\Phi(y_\\ell^{f})$ (`tauFine`) and the coarse payoff paired with it by (2.4) is $P^c_\\ell(y)=\\Phi(y_{\\ell+1}^{c})$ (`tauCoarse`); the level corrections are $Y_0=P^f_0$ and $Y_{\\ell+1}=P^f_{\\ell+1}-P^c_\\ell$ (`fineCoarseDiff`). Then for every $\\ell$,\n$$\n\\mathbb E\\big[P^f_\\ell\\big]=\\mathbb E\\big[\\Phi(x^{h_\\ell}_{2^\\ell})\\big],\n$$\nwhere $x^{h}_n$ is the tau-leaping chain with step $h$ from $x_0$ (Bochner integrals, $0$ for a non-integrable payoff).",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §8, pp. 55–56, and §2.1, Theorem 1 with (2.4) (after D.F. Anderson and D.J. Higham, Multilevel Monte Carlo for continuous time Markov chains, with applications in biochemical kinetics, Multiscale Model. Simul. 10 (2012) 146–179).",
+   "explanation": "The coordinate $y_\\ell$ of an input has the law of level $\\ell$ (`measurePreserving_tauInput`). On level $0$ this is one step of size $T$; on level $\\ell+1$ the fine component of the coupled pair has the law of $2^{\\ell+1}$ steps of size $T2^{-(\\ell+1)}$ (`tauLeaping_level`).",
+   "tags": [
+    "probability",
+    "multilevel-monte-carlo"
+   ]
+  },
+  "MLMC.integral_tauCoarse": {
+   "theorem_title": "Giles (2015), §8, (2.4): the coarse payoff of level $\\ell+1$ of tau-leaping MLMC has the mean of the fine payoff of level $\\ell$",
+   "natural_language_statement": "Giles (2015), §8, p. 55: \"the 'tau-leaping' method … gives the discrete equation $x_{n+1}=x_n+P(h\\lambda(x_n))$, where $h$ is the timestep, $\\lambda(x_n)$ is the reaction rate (or propensity function), and $P(t)$ represents a unit-rate Poisson random variable over time interval $[0,t]$.\"\n\nLet $\\lambda:\\mathbb N\\to[0,\\infty)$ be the propensity, $T\\ge0$ the final time and $x_0\\in\\mathbb N$ the initial state. Level $\\ell$ uses the time step $h_\\ell=T2^{-\\ell}$: its fine path makes $2^\\ell$ tau-leaping steps of size $h_\\ell$ from $x_0$; for $\\ell\\ge1$ its coarse path makes $2^{\\ell-1}$ steps of size $h_{\\ell-1}$, coupled with the fine path by the Poisson coupling (`coupledChain`); on level $0$ there is no coarse path. An input $y=(y_\\ell)_{\\ell\\in\\mathbb N}$ of the estimator has independent coordinates, $y_\\ell=(y_\\ell^{f},y_\\ell^{c})\\in\\mathbb N^2$ the terminal states of level $\\ell$ (for $\\ell=0$, $y_0^{c}=y_0^{f}$); its law is `tauInputLaw`. For $\\Phi:\\mathbb N\\to\\mathbb R$, the fine payoff of level $\\ell$ is $P^f_\\ell(y)=\\Phi(y_\\ell^{f})$ (`tauFine`) and the coarse payoff paired with it by (2.4) is $P^c_\\ell(y)=\\Phi(y_{\\ell+1}^{c})$ (`tauCoarse`); the level corrections are $Y_0=P^f_0$ and $Y_{\\ell+1}=P^f_{\\ell+1}-P^c_\\ell$ (`fineCoarseDiff`). Then for every $\\ell$,\n$$\n\\mathbb E\\big[P^c_\\ell\\big]=\\mathbb E\\big[\\Phi(x^{h_\\ell}_{2^\\ell})\\big]=\\mathbb E\\big[P^f_\\ell\\big],\n$$\nthe identity (2.4) $\\mathbb E[P^f_\\ell]=\\mathbb E[P^c_\\ell]$ of Giles (2015), §2.1.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §8, pp. 55–56, and §2.1, Theorem 1 with (2.4) (after D.F. Anderson and D.J. Higham, Multilevel Monte Carlo for continuous time Markov chains, with applications in biochemical kinetics, Multiscale Model. Simul. 10 (2012) 146–179).",
+   "explanation": "The coarse component of the coupled pair of level $\\ell+1$ has the law of $2^\\ell$ steps of size $2\\cdot T2^{-(\\ell+1)}=T2^{-\\ell}$ (`tauLeaping_level`), which is the law of the fine path of level $\\ell$ (`integral_tauFine`).",
+   "tags": [
+    "probability",
+    "multilevel-monte-carlo"
+   ]
+  },
+  "MLMC.variance_tauCorrection_le": {
+   "theorem_title": "Giles (2015), §8: the correction variance of tau-leaping MLMC with the Poisson coupling is at most $c_2 2^{-\\ell}$ on every level ($\\beta=1$)",
+   "natural_language_statement": "Giles (2015), §8, p. 56: \"This elegant approach naturally gives a small difference in the Poisson variates when the difference in rates is small, and leads to a very effective multilevel algorithm with a correction variance which is $O(h)$, leading to an $O(\\varepsilon^{-2}(\\log\\varepsilon)^2)$ complexity.\"\n\nLet $\\lambda:\\mathbb N\\to[0,\\infty)$ be the propensity, $T\\ge0$ the final time and $x_0\\in\\mathbb N$ the initial state. Level $\\ell$ uses the time step $h_\\ell=T2^{-\\ell}$: its fine path makes $2^\\ell$ tau-leaping steps of size $h_\\ell$ from $x_0$; for $\\ell\\ge1$ its coarse path makes $2^{\\ell-1}$ steps of size $h_{\\ell-1}$, coupled with the fine path by the Poisson coupling (`coupledChain`); on level $0$ there is no coarse path. An input $y=(y_\\ell)_{\\ell\\in\\mathbb N}$ of the estimator has independent coordinates, $y_\\ell=(y_\\ell^{f},y_\\ell^{c})\\in\\mathbb N^2$ the terminal states of level $\\ell$ (for $\\ell=0$, $y_0^{c}=y_0^{f}$); its law is `tauInputLaw`. For $\\Phi:\\mathbb N\\to\\mathbb R$, the fine payoff of level $\\ell$ is $P^f_\\ell(y)=\\Phi(y_\\ell^{f})$ (`tauFine`) and the coarse payoff paired with it by (2.4) is $P^c_\\ell(y)=\\Phi(y_{\\ell+1}^{c})$ (`tauCoarse`); the level corrections are $Y_0=P^f_0$ and $Y_{\\ell+1}=P^f_{\\ell+1}-P^c_\\ell$ (`fineCoarseDiff`). Let $|\\lambda(x)-\\lambda(y)|\\le K|x-y|$ and $\\lambda(x)\\le\\Lambda$ for all $x,y\\in\\mathbb N$, and $|\\Phi(x)-\\Phi(y)|\\le L_\\Phi|x-y|$. Then there is $c_2>0$ such that for every level $\\ell$,\n$$\n\\mathbb V[Y_\\ell]\\le c_2\\,2^{-\\ell}\n$$\n(variance with respect to `tauInputLaw`).",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §8, pp. 55–56, and §2.1, Theorem 1 with (2.4) (after D.F. Anderson and D.J. Higham, Multilevel Monte Carlo for continuous time Markov chains, with applications in biochemical kinetics, Multiscale Model. Simul. 10 (2012) 146–179).",
+   "explanation": "For the levels with $h_\\ell\\le1$ this is `tauLeaping_level_variance` (the coupled paths are $O(h)$ apart in mean square); the finitely many other levels are absorbed into the constant.",
+   "tags": [
+    "probability",
+    "multilevel-monte-carlo",
+    "complexity"
+   ]
+  },
+  "MLMC.tauLeaping_mlmc_theorem1": {
+   "theorem_title": "Giles (2015), §8, Theorem 1: tau-leaping MLMC with the Poisson coupling has mean square error $<\\varepsilon^2$ at cost $O(\\varepsilon^{-2}(\\log\\varepsilon)^2)$ if the weak rate is $\\alpha\\ge\\tfrac12$",
+   "natural_language_statement": "Giles (2015), §8, p. 56: \"This elegant approach naturally gives a small difference in the Poisson variates when the difference in rates is small, and leads to a very effective multilevel algorithm with a correction variance which is $O(h)$, leading to an $O(\\varepsilon^{-2}(\\log\\varepsilon)^2)$ complexity.\"\n\nLet $\\lambda:\\mathbb N\\to[0,\\infty)$ be the propensity, $T\\ge0$ the final time and $x_0\\in\\mathbb N$ the initial state. Level $\\ell$ uses the time step $h_\\ell=T2^{-\\ell}$: its fine path makes $2^\\ell$ tau-leaping steps of size $h_\\ell$ from $x_0$; for $\\ell\\ge1$ its coarse path makes $2^{\\ell-1}$ steps of size $h_{\\ell-1}$, coupled with the fine path by the Poisson coupling (`coupledChain`); on level $0$ there is no coarse path. An input $y=(y_\\ell)_{\\ell\\in\\mathbb N}$ of the estimator has independent coordinates, $y_\\ell=(y_\\ell^{f},y_\\ell^{c})\\in\\mathbb N^2$ the terminal states of level $\\ell$ (for $\\ell=0$, $y_0^{c}=y_0^{f}$); its law is `tauInputLaw`. For $\\Phi:\\mathbb N\\to\\mathbb R$, the fine payoff of level $\\ell$ is $P^f_\\ell(y)=\\Phi(y_\\ell^{f})$ (`tauFine`) and the coarse payoff paired with it by (2.4) is $P^c_\\ell(y)=\\Phi(y_{\\ell+1}^{c})$ (`tauCoarse`); the level corrections are $Y_0=P^f_0$ and $Y_{\\ell+1}=P^f_{\\ell+1}-P^c_\\ell$ (`fineCoarseDiff`). Let $|\\lambda(x)-\\lambda(y)|\\le K|x-y|$ and $\\lambda(x)\\le\\Lambda$ for all $x,y\\in\\mathbb N$, and $|\\Phi(x)-\\Phi(y)|\\le L_\\Phi|x-y|$. Let $P\\in\\mathbb R$ (the quantity of interest, $\\mathbb E[\\Phi(x_T)]$ for the exact chain) and $c_1>0$, $\\alpha\\ge\\frac12$ with the weak error bound\n$$\n\\big|\\mathbb E[\\Phi(x^{h_\\ell}_{2^\\ell})]-P\\big|\\le c_1\\,2^{-\\alpha\\ell}\\qquad(\\ell\\in\\mathbb N).\n$$\nLet the samples $y^{(\\ell,n)}$, $(\\ell,n)\\in\\mathbb N^2$, be the coordinates of the product space $(\\mathbb N^2)^{\\mathbb N\\times\\mathbb N}$ with the product of copies of `tauInputLaw` (independent inputs), and let a level-$\\ell$ sample cost $2^\\ell$. Then there is $c_4>0$ such that for every $0<\\varepsilon<e^{-1}$ there are $L\\in\\mathbb N$ and $N_\\ell\\ge1$ with\n$$\n\\mathbb E\\Big[\\Big(\\sum_{\\ell=0}^{L}\\frac1{N_\\ell}\\sum_{n<N_\\ell}Y_\\ell(y^{(\\ell,n)})-P\\Big)^2\\Big]<\\varepsilon^2,\\qquad\\sum_{\\ell=0}^{L}N_\\ell\\,2^\\ell\\le c_4\\,\\varepsilon^{-2}(\\log\\varepsilon)^2.\n$$\nThe weak rate (for tau-leaping $\\alpha=1$) compares with the exact continuous-time chain, which is not formalised, and is a hypothesis; $\\beta=1$ and $\\gamma=1$ are proved.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §8, pp. 55–56, and §2.1, Theorem 1 with (2.4) (after D.F. Anderson and D.J. Higham, Multilevel Monte Carlo for continuous time Markov chains, with applications in biochemical kinetics, Multiscale Model. Simul. 10 (2012) 146–179).",
+   "explanation": "Theorem 1 for fine/coarse corrections (`giles_theorem1_fineCoarse`) with $\\beta=\\gamma=1$: the payoffs are square integrable (`memLp_tauFine`, `memLp_tauCoarse`, from `lintegral_sq_tauChain_lt_top`), (2.4) holds (`integral_tauFine`, `integral_tauCoarse`), the variances are $O(2^{-\\ell})$ (`variance_tauCorrection_le`), the inputs are independent (`exists_iid_inputs`), and the bound of Theorem 1 for $\\beta=\\gamma$ is $\\varepsilon^{-2}(\\log\\varepsilon)^2$.",
+   "tags": [
+    "multilevel-monte-carlo",
+    "complexity",
+    "probability"
+   ]
   }
  },
  "definitions": {
@@ -4451,6 +4503,15 @@
    "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §10.1, p. 61.",
    "tags": [
     "probability"
+   ]
+  },
+  "MLMC_TauLeapingMLMC": {
+   "definition_title": "Giles (2015), §8: the levels of tau-leaping MLMC — the laws of the terminal states, the inputs of the estimator and the fine and coarse payoffs",
+   "natural_language_statement": "Giles (2015), §8, p. 55: \"the 'tau-leaping' method … gives the discrete equation $x_{n+1}=x_n+P(h\\lambda(x_n))$, where $h$ is the timestep, $\\lambda(x_n)$ is the reaction rate (or propensity function), and $P(t)$ represents a unit-rate Poisson random variable over time interval $[0,t]$.\"\n\nThroughout, $\\lambda:\\mathbb N\\to[0,\\infty)$ is the propensity, $T\\ge0$ the final time and $x_0\\in\\mathbb N$ the initial state; `tauChain`$(\\lambda,h,x_0,n)$ is the law of the tau-leaping chain with step $h$ after $n$ steps and `coupledChain`$(\\lambda,h,x_0,k)$ the law of the Poisson-coupled pair (fine path with step $h$ after $2k$ steps, coarse path with step $2h$ after $k$ steps).\n\n**`tauLevelLaw`.** The law on $\\mathbb N^2$ of level $\\ell$: for $\\ell=0$ the image of `tauChain`$(\\lambda,T,x_0,1)$ under $x\\mapsto(x,x)$; for $\\ell+1$, `coupledChain`$(\\lambda,T/2^{\\ell+1},x_0,2^\\ell)$.\n\n**`tauInputLaw`.** The law on $(\\mathbb N^2)^{\\mathbb N}$ of one input: the infinite product of the `tauLevelLaw`$(\\lambda,T,x_0,\\ell)$, $\\ell\\in\\mathbb N$.\n\n**`tauFine`.** For $\\Phi:\\mathbb N\\to\\mathbb R$, $\\ell\\in\\mathbb N$ and an input $y$: $\\Phi(y_\\ell^{(1)})$, the payoff of the fine terminal state of level $\\ell$.\n\n**`tauCoarse`.** For $\\Phi$, $\\ell$ and $y$: $\\Phi(y_{\\ell+1}^{(2)})$, the payoff of the coarse terminal state of level $\\ell+1$.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §8, p. 55, and §2.1, (2.2) and (2.4).",
+   "tags": [
+    "probability",
+    "multilevel-monte-carlo"
    ]
   }
  }

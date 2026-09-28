@@ -389,6 +389,11 @@ import MlmcLean
 #print axioms MLMC.map_backIter_eq_map_fwdIter
 #print axioms MLMC.ae_tendsto_backIter
 #print axioms MLMC.tendstoInDistribution_fwdIter
+#print axioms MLMC.lintegral_sq_tauChain_lt_top
+#print axioms MLMC.integral_tauFine
+#print axioms MLMC.integral_tauCoarse
+#print axioms MLMC.variance_tauCorrection_le
+#print axioms MLMC.tauLeaping_mlmc_theorem1
 -- helper lemmas that the prove2.me generator promotes to nodes
 #print axioms MLMC.sqrt_Vb_mul_Cb
 #print axioms MLMC.two_rpow_levelL_le

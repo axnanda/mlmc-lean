@@ -60,6 +60,8 @@
 --   intervals: → 0 for monotone f; dyadic intervals: bounded away from 0)
 -- * `MlmcLean.MarkovLimit` — Giles §10.1: the chain started in the past converges almost surely
 --   and the distribution of X_n converges weakly to that of X_∞
+-- * `MlmcLean.TauLeapingMLMC` — Giles §8: Theorem 1 for tau-leaping MLMC with the Poisson
+--   coupling (square-integrable payoffs, (2.4), β = 1 on every level, MSE and cost)
 import MlmcLean.Allocation
 import MlmcLean.Estimator
 import MlmcLean.LevelDiff
@@ -99,3 +101,4 @@ import MlmcLean.SDEExtras
 import MlmcLean.MLQMC
 import MlmcLean.LUTLimits
 import MlmcLean.MarkovLimit
+import MlmcLean.TauLeapingMLMC
