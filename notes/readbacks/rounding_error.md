@@ -1,7 +1,7 @@
 # Read-back audit: packet 14 (round 4)
 
 - **Date:** 2026-09-27
-- **Packet:** `/tmp/claude-0/-home-user-mlmc-lean/8f263d87-ec2c-550e-ae99-ab3862cfe2e3/scratchpad/readback/round4/packet14.lean`. It has 18 declarations: 3 definitions and 15 theorems, with proofs replaced by `sorry`.
+- **Packet:** `readback/round4/packet14.lean`. It has 18 declarations: 3 definitions and 15 theorems, with proofs replaced by `sorry`.
 - **Auditor:** an independent, blind sub-agent.
 - **Rules followed:**
   - **Files read.** I read only the packet, `references/mission_auditor.md`, and Mathlib sources. I used Mathlib only to confirm the definitions and conventions of the constants the statements use. I did not open the project's Lean sources, `docs/`, `notes/`, README, PLAN, metadata, scripts, git history, any paper, or the web.

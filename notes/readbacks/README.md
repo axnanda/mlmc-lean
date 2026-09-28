@@ -183,3 +183,37 @@ deliberate:
   propensity and the payoff: `V_ℓ = O(h_ℓ)` for a given model, as in the paper.
 - `tauLeaping_level_variance` covers the levels with `h_ℓ ≤ 1`, all but finitely many; the claim
   of the paper is asymptotic.
+
+**Seventh round (2026-09-28).** Three blind read-backs of the modules added in the same round:
+`lut_limits.md` (Haas–Giles §3.4: `tendsto_method1MSE`, `dyadic_mse_ge`, `method3_mse_ge`,
+`method3_mse_not_tendsto_zero`, with `gridPt`, `lutValue`, `method1MSE`), `markov_limit.md`
+(Giles §10.1: `map_backIter_eq_map_fwdIter`, `ae_tendsto_backIter`,
+`tendstoInDistribution_fwdIter`, with `fwdIter`, `revFun`, `revPerm`, `backIter`) and
+`tau_leaping_mlmc.md` (Giles §8: `lintegral_sq_tauChain_lt_top`, `integral_tauFine`,
+`integral_tauCoarse`, `variance_tauCorrection_le`, `tauLeaping_mlmc_theorem1`, with the level laws
+and the input law).  All twelve theorems read back as true, none is vacuous, and none holds only
+because of a junk value; the auditors confirmed them numerically (exact rational arithmetic, closed
+forms for `Φ⁻¹`, exact truncated Poisson laws, Monte Carlo).  Points recorded, all consistent with
+the papers or deliberate:
+
+- Packet G was cut before the fix that indexes the dyadic cells of `dyadic_mse_ge` by `ℕ`
+  (`Ico (2 ^ (d - k - 1) : ℕ) (2 ^ (d - k))`); the auditor read the index set as natural numbers,
+  which is what the statement now says explicitly.
+- `tendsto_method1MSE` is qualitative (no rate); the auditor shows that no uniform rate exists for
+  monotone square-integrable `f` (a rate of order `1/d` is possible), which is why the paper's
+  "halves per bit" heuristic is not formalised.  `hf2` is essential; `hmono` is not needed for the
+  limit (it is the setting of the paper).
+- In the three dyadic theorems the concavity hypothesis `hconc` is imposed on one block
+  `[2^{−(k+1)}, 2^{−k}]` only; for `Φ⁻¹` it holds with `k ≥ 2`, and the explicit constant is of order
+  `μ² 2^{−5k}`.  Either `hf` or `hf2` alone would suffice.
+- `map_backIter_eq_map_fwdIter` equates the laws at each fixed `n` (not the joint laws), as in
+  §10.1; `tendstoInDistribution_fwdIter` gives the weak convergence of `X_n` to a limit `X∞` stated
+  in §10.1.  Stationarity of the limit law is not stated for the general chain (the paper states the
+  invariant law only for its example, `halfStep_invariant` in `MarkovChain.lean`); the scope is a
+  complete separable metric space with its Borel σ-algebra.
+- `tauInputLaw` is an infinite product and would be the zero measure if a factor failed to be a
+  probability measure; `isProbabilityMeasure_tauLevelLaw` and `isProbabilityMeasure_tauInputLaw`
+  (not in the packet) prove that every factor is one.  On `ℕ` a bounded propensity is automatically
+  Lipschitz, so `hK` is implied by `hΛ` (with `K = Λ`); it is kept because it is the paper's
+  condition.  The weak rate `α` of tau-leaping is a hypothesis (it compares with the exact chain,
+  which needs a continuous-time Markov chain).
