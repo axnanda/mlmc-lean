@@ -65,6 +65,9 @@
 -- * `MlmcLean.GBMEulerMaruyama` — Giles §5.1: the Euler–Maruyama MLMC estimator for geometric
 --   Brownian motion end to end (strong error O(h), α = ½, β = 1, Theorem 1 with no
 --   assumed rate)
+-- * `MlmcLean.GBMMilstein` — Giles §5.2: the Milstein MLMC estimator for geometric Brownian
+--   motion end to end (strong error O(h²) in mean square, α = 1, β = 2, Theorem 1 with
+--   cost O(ε⁻²) and no assumed rate)
 import MlmcLean.Allocation
 import MlmcLean.Estimator
 import MlmcLean.LevelDiff
@@ -106,3 +109,4 @@ import MlmcLean.LUTLimits
 import MlmcLean.MarkovLimit
 import MlmcLean.TauLeapingMLMC
 import MlmcLean.GBMEulerMaruyama
+import MlmcLean.GBMMilstein

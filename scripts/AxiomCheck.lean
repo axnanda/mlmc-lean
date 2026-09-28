@@ -404,6 +404,14 @@ import MlmcLean
 #print axioms MLMC.gbm_weak_error_le
 #print axioms MLMC.gbm_correction_variance_le
 #print axioms MLMC.gbm_mlmc_theorem1
+#print axioms MLMC.milsteinPath_gbm
+#print axioms MLMC.integral_sq_prod_sub_prod_of
+#print axioms MLMC.abs_pow_sub_two_mul_pow_add_pow_le
+#print axioms MLMC.gbm_mil_strong_error
+#print axioms MLMC.gbm_mil_strong_error_level
+#print axioms MLMC.gbm_mil_weak_error_le
+#print axioms MLMC.gbm_mil_correction_variance_le
+#print axioms MLMC.gbm_mil_mlmc_theorem1
 -- helper lemmas that the prove2.me generator promotes to nodes
 #print axioms MLMC.sqrt_Vb_mul_Cb
 #print axioms MLMC.two_rpow_levelL_le

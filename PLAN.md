@@ -146,6 +146,10 @@ items listed under "Not formalised" below.
   strong error of Euler–Maruyama `E[(S_{t_n} − Ŝ_n)²] ≤ C(t_n) h` from the exact solution, the
   weak rate `α = ½` and the variance rate `β = 1` for Lipschitz payoffs, and Theorem 1 with no
   assumed rate (MSE `< ε²` at cost `O(ε⁻²(log ε)²)`).
+- ✅ The Milstein scheme for geometric Brownian motion end to end (§5.2, Figure 5.5,
+  `GBMMilstein.lean`): first-order strong convergence `E[(S_{t_n} − Ŝ_n)²] ≤ C(t_n) h²`, the weak
+  rate `α = 1` and the variance rate `β = 2` for Lipschitz payoffs, and Theorem 1 with cost
+  `O(ε⁻²)` and no assumed rate.
 - Not formalised: the convergence orders of the discretisations for general SDEs (Itô calculus,
   not in Mathlib; proved for geometric Brownian motion from its exact solution)
   and of QMC; for tau-leaping (§8), the weak rate `α = 1` against the exact chain and the exact
@@ -165,9 +169,10 @@ precision.**
 
 ## Out of scope
 
-- **Proving the rate assumptions (α, β, γ) for Euler–Maruyama or Milstein.** This needs Itô
-  calculus, which Mathlib doesn't have. The theorems stay conditional on assumptions (i)–(iv),
-  exactly as in the papers.
+- **Proving the rate assumptions (α, β, γ) for Euler–Maruyama or Milstein for general SDEs.**
+  This needs Itô calculus, which Mathlib doesn't have. The theorems stay conditional on
+  assumptions (i)–(iv), exactly as in the papers. (For geometric Brownian motion the rates are
+  proved from the explicit solution: `GBMEulerMaruyama.lean`, `GBMMilstein.lean`.)
 - **Hardware and benchmark work** (see `notes/research-notes.md` §5).
 
 ## prove2.me

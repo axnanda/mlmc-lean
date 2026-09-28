@@ -220,3 +220,32 @@ the papers or deliberate:
 - After the read-back, the lemma `revFun_involutive` cited by the packet was inlined into
   `revPerm` (the prove2.me generator does not allow a definition to cite a theorem); the
   definition is unchanged.
+
+**Eighth round (2026-09-28).** One blind read-back, of the geometric Brownian motion module:
+`gbm_euler_maruyama.md` (Giles §5.1: `emPath_gbm`, `gbmExp_eq_prod`, `integral_sq_prod_sub_prod`,
+`gbm_em_strong_error`, `gbm_strong_error`, `gbmExact_pairAvg`, `map_gbmExact`, `gbm_weak_error_le`,
+`gbm_correction_variance_le`, `gbm_mlmc_theorem1`, with the one-step factors, `gbmExact`, `gbmEM`,
+`gbmStrongConst` and `europeanPayoff`).  All ten theorems read back as true, none is vacuous, and
+none holds only because of a junk value; the auditor confirmed them numerically (quadrature, exact
+110-digit evaluation of the moment formula, Monte Carlo).  Points recorded, all consistent with
+the paper or deliberate:
+
+- The sign hypotheses `0 ≤ h` and `0 ≤ T` are needed: Mathlib's `√x = 0` for `x < 0` would switch
+  the noise off.  `gbmExact_pairAvg` and `map_gbmExact` hold for every `T` (degenerately for
+  `T < 0`).
+- The exact solution is the closed form `S_0 exp((r − σ²/2)T + σW_T)` of geometric Brownian motion,
+  with `W_T` the sum of the increments `√h Z_i`; there is no SDE or Itô integral in the
+  development (Mathlib has neither).
+- `pairAvg` is the normalised sum `(Z_{2k} + Z_{2k+1})/√2` (the coarse Brownian increment divided
+  by `√(2h)`), not an average, as its docstring says.
+- The weak rate proved is `α = ½`, from the strong rate.  §5.1 quotes `α = 1` for Euler–Maruyama
+  with `h_ℓ = 2^{−ℓ}h₀`, which needs weak-convergence theory and is not formalised; Theorem 1 needs
+  only `α ≥ ½ min(β, γ) = ½`, so the complexity `O(ε⁻²(log ε)²)` of §5.1 is unaffected.  (The
+  Milstein module of the next round proves `α = 1` from its first-order strong rate.)
+- In `gbm_mlmc_theorem1` the constant `c₄` is existential (as in Theorem 1), the cost model is
+  `C_ℓ = 2^ℓ` (`γ = 1`; counting the coarse path as well changes the cost by at most a factor
+  `3/2`), and the target `E[g(S_T)]` is undiscounted: the discount factor of the paper's call payoff
+  `e^{−rT} max(S_T − K, 0)` is part of the Lipschitz `g`.
+- The strong-error constant is loose (the exact values never exceeded about 0.10 of the bound, and
+  for `r < 0` the bound contains `e^{2|r|t}` where the error behaves like `e^{2rt}`); only the order
+  `h` matters for Theorem 1.

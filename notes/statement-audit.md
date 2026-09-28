@@ -227,4 +227,7 @@ Not paper statements; they are the steps of the proof sketch on p. 7 ("L is chos
 ## Out of scope (as in PLAN.md)
 
 The rate conditions (i)–(iv) are hypotheses, exactly as in the papers; proving them for
-Euler–Maruyama or Milstein needs Itô calculus.
+Euler–Maruyama or Milstein for a general SDE needs Itô calculus.  For geometric Brownian motion,
+whose solution is explicit, they are proved (`GBMEulerMaruyama.lean`: strong error `O(h)` in mean
+square, `α = ½`, `β = 1`; `GBMMilstein.lean`: strong error `O(h²)` in mean square, `α = 1`,
+`β = 2`), and Theorem 1 holds with no assumed rate.

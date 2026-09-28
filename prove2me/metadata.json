@@ -4315,6 +4315,96 @@
     "probability",
     "numerical-analysis"
    ]
+  },
+  "MLMC.milsteinPath_gbm": {
+   "theorem_title": "Giles (2015), §5.2: the Milstein path of geometric Brownian motion is $s_0\\prod_{i<n}\\big(1+rh+\\sigma\\Delta W_i+\\tfrac12\\sigma^2(\\Delta W_i^2-h)\\big)$",
+   "natural_language_statement": "Giles (2015), §5.2: \"For Lipschitz payoffs, the variance $V_\\ell$ for the natural multilevel estimator converges at twice the order of the strong convergence of the numerical approximation of the SDE. This immediately suggests that it would be better to replace the Euler-Maruyama discretisation by the Milstein discretisation … since it gives first order strong convergence under certain conditions … For a scalar SDE the Milstein discretisation is $\\hat S_{n+1}=\\hat S_n+a(\\hat S_n,t_n)h+b(\\hat S_n,t_n)\\Delta W_n+\\tfrac12 b(\\hat S_n,t_n)\\frac{\\partial b}{\\partial S}(\\hat S_n,t_n)(\\Delta W_n^2-h)$\".\n\nFor all $r,\\sigma,h,s_0\\in\\mathbb R$, every sequence $z:\\mathbb N\\to\\mathbb R$ and every $n$, the Milstein recursion (`milsteinPath`, whose step is `milsteinStep`) with $a(S)=rS$ and $b(S)=\\sigma S$ and increments $\\Delta W_i=\\sqrt h\\,z_i$ gives\n$$\n\\hat S_n=s_0\\prod_{i<n}\\Big(1+rh+\\sigma\\sqrt h\\,z_i+\\tfrac{\\sigma^2}{2}\\big((\\sqrt h\\,z_i)^2-h\\big)\\Big)\n$$\n(each factor is `gbmMilFactor`).",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §5.2 \"Milstein discretisation\", pp. 32–35, and the Geometric Brownian Motion example of Figure 5.5; §2.1, Theorem 1 with (2.4).",
+   "explanation": "Induction on $n$: with $b'(S)=\\sigma$, one Milstein step multiplies $\\hat S_i$ by $1+rh+\\sigma\\Delta W_i+\\frac{\\sigma^2}2(\\Delta W_i^2-h)$.",
+   "tags": [
+    "numerical-analysis",
+    "multilevel-monte-carlo"
+   ]
+  },
+  "MLMC.integral_sq_prod_sub_prod_of": {
+   "theorem_title": "Giles (2015), §5.1–5.2: the mean square difference of two products of i.i.d. factors is $s_0^2(a^n-2b^n+c^n)$ with $a=\\mathbb E[F^2]$, $b=\\mathbb E[FG]$, $c=\\mathbb E[G^2]$",
+   "natural_language_statement": "Giles (2015), §5.2: \"For Lipschitz payoffs, the variance $V_\\ell$ for the natural multilevel estimator converges at twice the order of the strong convergence of the numerical approximation of the SDE. This immediately suggests that it would be better to replace the Euler-Maruyama discretisation by the Milstein discretisation … since it gives first order strong convergence under certain conditions … For a scalar SDE the Milstein discretisation is $\\hat S_{n+1}=\\hat S_n+a(\\hat S_n,t_n)h+b(\\hat S_n,t_n)\\Delta W_n+\\tfrac12 b(\\hat S_n,t_n)\\frac{\\partial b}{\\partial S}(\\hat S_n,t_n)(\\Delta W_n^2-h)$\".\n\nLet $Z_0,Z_1,\\dots$ be the coordinates of $(\\mathbb R^{\\mathbb N},N(0,1)^{\\otimes\\mathbb N})$ (`stdNormalSeq`): independent standard normal variables. Let $F,G:\\mathbb R\\to\\mathbb R$ be measurable with $F(Z_0)^2$, $G(Z_0)^2$ and $F(Z_0)G(Z_0)$ integrable. Then for all $s_0\\in\\mathbb R$ and $n\\in\\mathbb N$,\n$$\n\\mathbb E\\Big[\\Big(s_0\\prod_{i<n}F(Z_i)-s_0\\prod_{i<n}G(Z_i)\\Big)^2\\Big]=s_0^2\\big(a^n-2b^n+c^n\\big),\n$$\nwhere $a=\\mathbb E[F(Z_0)^2]$, $b=\\mathbb E[F(Z_0)G(Z_0)]$ and $c=\\mathbb E[G(Z_0)^2]$. (Applied with $F$ the exact one-step factor of geometric Brownian motion and $G$ the Milstein step.)",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §5.2 \"Milstein discretisation\", pp. 32–35, and the Geometric Brownian Motion example of Figure 5.5; §2.1, Theorem 1 with (2.4).",
+   "explanation": "Expand the square; each of the three products is a product of independent factors, so its mean is the $n$-th power of the one-step mean.",
+   "tags": [
+    "probability",
+    "multilevel-monte-carlo"
+   ]
+  },
+  "MLMC.abs_pow_sub_two_mul_pow_add_pow_le": {
+   "theorem_title": "Second differences of powers: $|a^n-2b^n+c^n|\\le n^2M^n|a-b||b-c|+nM^n|a-2b+c|$ for $|a|,|b|,|c|\\le M$, $M\\ge1$ (for the Milstein strong error)",
+   "natural_language_statement": "Giles (2015), §5.2: \"For Lipschitz payoffs, the variance $V_\\ell$ for the natural multilevel estimator converges at twice the order of the strong convergence of the numerical approximation of the SDE. This immediately suggests that it would be better to replace the Euler-Maruyama discretisation by the Milstein discretisation … since it gives first order strong convergence under certain conditions … For a scalar SDE the Milstein discretisation is $\\hat S_{n+1}=\\hat S_n+a(\\hat S_n,t_n)h+b(\\hat S_n,t_n)\\Delta W_n+\\tfrac12 b(\\hat S_n,t_n)\\frac{\\partial b}{\\partial S}(\\hat S_n,t_n)(\\Delta W_n^2-h)$\".\n\nFor all real $a,b,c,M$ with $|a|,|b|,|c|\\le M$ and $M\\ge1$, and every $n\\in\\mathbb N$,\n$$\n\\big|a^n-2b^n+c^n\\big|\\le n^2M^n\\,|a-b|\\,|b-c|+n\\,M^n\\,|a-2b+c| .\n$$\n(With $a,b,c$ the one-step second moments of the exact and the Milstein steps, $|a-b|$ and $|b-c|$ are $O(h^2)$ and $|a-2b+c|$ is $O(h^3)$, which gives the strong error $O(h^2)$ in mean square.)",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §5.2 \"Milstein discretisation\", pp. 32–35, and the Geometric Brownian Motion example of Figure 5.5; §2.1, Theorem 1 with (2.4).",
+   "explanation": "Induction on $n$ with $a^{n+1}-2b^{n+1}+c^{n+1}=a(a^n-2b^n+c^n)+2(a-b)(b^n-c^n)+(a-2b+c)c^n$ and $|b^n-c^n|\\le n|b-c|M^{n-1}$.",
+   "tags": [
+    "algebra",
+    "numerical-analysis"
+   ]
+  },
+  "MLMC.gbm_mil_strong_error": {
+   "theorem_title": "Giles (2015), §5.2: the Milstein scheme for geometric Brownian motion has first-order strong convergence: $\\mathbb E[(S_{t_n}-\\hat S_n)^2]\\le C(t_n)\\,h^2$",
+   "natural_language_statement": "Giles (2015), §5.2: \"For Lipschitz payoffs, the variance $V_\\ell$ for the natural multilevel estimator converges at twice the order of the strong convergence of the numerical approximation of the SDE. This immediately suggests that it would be better to replace the Euler-Maruyama discretisation by the Milstein discretisation … since it gives first order strong convergence under certain conditions … For a scalar SDE the Milstein discretisation is $\\hat S_{n+1}=\\hat S_n+a(\\hat S_n,t_n)h+b(\\hat S_n,t_n)\\Delta W_n+\\tfrac12 b(\\hat S_n,t_n)\\frac{\\partial b}{\\partial S}(\\hat S_n,t_n)(\\Delta W_n^2-h)$\".\n\nLet $Z_0,Z_1,\\dots$ be the coordinates of $(\\mathbb R^{\\mathbb N},N(0,1)^{\\otimes\\mathbb N})$ (`stdNormalSeq`): independent standard normal variables. For a timestep $h\\ge0$ the Brownian increments are $\\Delta W_i=\\sqrt h\\,Z_i$, so $W_{t_n}=\\sqrt h\\sum_{i<n}Z_i$ at $t_n=nh$. The exact solution of $dS_t=rS_t\\,dt+\\sigma S_t\\,dW_t$, $S_0=s_0$, at $t_n$ is $S_{t_n}=s_0\\exp\\big((r-\\sigma^2/2)t_n+\\sigma W_{t_n}\\big)$, and the Milstein value $\\hat S_n$ is `milsteinPath` with $a(S)=rS$ and $b(S)=\\sigma S$: $\\hat S_0=s_0$, $\\hat S_{i+1}=\\hat S_i+r\\hat S_ih+\\sigma\\hat S_i\\Delta W_i+\\tfrac12\\sigma^2\\hat S_i(\\Delta W_i^2-h)$; both are driven by the same $Z_i$. Let $C(t)=s_0^2\\,e^{(2|r|+\\sigma^2)t}\\,(|r|+\\sigma^2)^2\\,\\big(30(|r|+\\sigma^2)^2t^2+16(|r|+\\sigma^2)t+4\\big)$ (`gbmMilStrongConst`). Then for all $r,\\sigma,s_0\\in\\mathbb R$, $h\\ge0$ and $n\\in\\mathbb N$,\n$$\n\\mathbb E\\big[(S_{t_n}-\\hat S_n)^2\\big]\\le C(nh)\\,h^2 .\n$$",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §5.2 \"Milstein discretisation\", pp. 32–35, and the Geometric Brownian Motion example of Figure 5.5; §2.1, Theorem 1 with (2.4).",
+   "explanation": "By `integral_sq_prod_sub_prod_of` the mean square error is $s_0^2(a^n-2b^n+c^n)$ with $a=e^{(2r+\\sigma^2)h}$, $b=e^{rh}(1+rh+\\sigma^2h+\\sigma^4h^2/2)$, $c=(1+rh)^2+\\sigma^2h+\\sigma^4h^2/2$ (Gaussian moments up to $\\mathbb E[Z^4]=3$ and $\\mathbb E[Z^2e^{aZ}]=(1+a^2)e^{a^2/2}$, from the moment generating function). With $w=(|r|+\\sigma^2)h\\le1$: $|a-b|\\le5w^2$, $|b-c|\\le6w^2$ and $|a-2b+c|\\le16w^3$ (Taylor bounds for $e^x$), and `abs_pow_sub_two_mul_pow_add_pow_le` with $M=e^{(2|r|+\\sigma^2)h}$ gives the bound; for $w>1$, $a^n-2b^n+c^n\\le4M^n\\le4M^nw^2$.",
+   "tags": [
+    "probability",
+    "numerical-analysis",
+    "convergence",
+    "multilevel-monte-carlo"
+   ]
+  },
+  "MLMC.gbm_mil_strong_error_level": {
+   "theorem_title": "Giles (2015), §5.2: on level $\\ell$ the Milstein value of geometric Brownian motion has $\\mathbb E[(S_T-\\hat S_\\ell)^2]\\le C(T)\\,(T2^{-\\ell})^2$",
+   "natural_language_statement": "Giles (2015), §5.2: \"For Lipschitz payoffs, the variance $V_\\ell$ for the natural multilevel estimator converges at twice the order of the strong convergence of the numerical approximation of the SDE. This immediately suggests that it would be better to replace the Euler-Maruyama discretisation by the Milstein discretisation … since it gives first order strong convergence under certain conditions … For a scalar SDE the Milstein discretisation is $\\hat S_{n+1}=\\hat S_n+a(\\hat S_n,t_n)h+b(\\hat S_n,t_n)\\Delta W_n+\\tfrac12 b(\\hat S_n,t_n)\\frac{\\partial b}{\\partial S}(\\hat S_n,t_n)(\\Delta W_n^2-h)$\".\n\nLet $Z_0,Z_1,\\dots$ be the coordinates of $(\\mathbb R^{\\mathbb N},N(0,1)^{\\otimes\\mathbb N})$ (`stdNormalSeq`): independent standard normal variables. Let $r,\\sigma,s_0\\in\\mathbb R$ and $T\\ge0$. Level $\\ell$ uses the timestep $h_\\ell=T2^{-\\ell}$: $S_T^{(\\ell)}$ = `gbmExact`$(r,\\sigma,T,s_0,\\ell)$ $=s_0\\exp\\big((r-\\sigma^2/2)T+\\sigma\\sqrt{h_\\ell}\\sum_{i<2^\\ell}Z_i\\big)$ is the exact solution at $T$ and $\\hat S_\\ell$ = `gbmMil`$(r,\\sigma,T,s_0,\\ell)$ the Milstein value after $2^\\ell$ steps of size $h_\\ell$, driven by the same $Z_i$. The coarse increments are `pairAvg`$(Z)_k=(Z_{2k}+Z_{2k+1})/\\sqrt2$. Let $C(t)=s_0^2\\,e^{(2|r|+\\sigma^2)t}\\,(|r|+\\sigma^2)^2\\,\\big(30(|r|+\\sigma^2)^2t^2+16(|r|+\\sigma^2)t+4\\big)$ (`gbmMilStrongConst`). Then for every $\\ell$,\n$$\n\\mathbb E\\big[(S_T^{(\\ell)}-\\hat S_\\ell)^2\\big]\\le C(T)\\,\\Big(\\frac{T}{2^\\ell}\\Big)^2=C(T)\\,h_\\ell^2 .\n$$",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §5.2 \"Milstein discretisation\", pp. 32–35, and the Geometric Brownian Motion example of Figure 5.5; §2.1, Theorem 1 with (2.4).",
+   "explanation": "`gbm_mil_strong_error` with $h=T2^{-\\ell}$ and $n=2^\\ell$, $nh=T$.",
+   "tags": [
+    "probability",
+    "numerical-analysis",
+    "convergence",
+    "multilevel-monte-carlo"
+   ]
+  },
+  "MLMC.gbm_mil_weak_error_le": {
+   "theorem_title": "Giles (2015), §5.2: with a $K$-Lipschitz payoff the Milstein estimate of $\\mathbb E[g(S_T)]$ for GBM has weak error at most $K\\sqrt{C(T)T^2}\\,2^{-\\ell}$ ($\\alpha=1$)",
+   "natural_language_statement": "Giles (2015), §5.2: \"Figure 5.5 demonstrates the improved results obtained for the call option based on a single underlying GBM asset. $V_\\ell$ is now $O(h_\\ell^2)$, leading to $\\alpha=1$, $\\beta=2$, $\\gamma=1$ … Because $\\beta>\\gamma$, the dominant computational cost is on the coarsest levels.\"\n\nLet $Z_0,Z_1,\\dots$ be the coordinates of $(\\mathbb R^{\\mathbb N},N(0,1)^{\\otimes\\mathbb N})$ (`stdNormalSeq`): independent standard normal variables. Let $r,\\sigma,s_0\\in\\mathbb R$ and $T\\ge0$. Level $\\ell$ uses the timestep $h_\\ell=T2^{-\\ell}$: $S_T^{(\\ell)}$ = `gbmExact`$(r,\\sigma,T,s_0,\\ell)$ $=s_0\\exp\\big((r-\\sigma^2/2)T+\\sigma\\sqrt{h_\\ell}\\sum_{i<2^\\ell}Z_i\\big)$ is the exact solution at $T$ and $\\hat S_\\ell$ = `gbmMil`$(r,\\sigma,T,s_0,\\ell)$ the Milstein value after $2^\\ell$ steps of size $h_\\ell$, driven by the same $Z_i$. The coarse increments are `pairAvg`$(Z)_k=(Z_{2k}+Z_{2k+1})/\\sqrt2$. Let $g:\\mathbb R\\to\\mathbb R$ satisfy $|g(x)-g(y)|\\le K|x-y|$ for all $x,y$. Let $C(t)=s_0^2\\,e^{(2|r|+\\sigma^2)t}\\,(|r|+\\sigma^2)^2\\,\\big(30(|r|+\\sigma^2)^2t^2+16(|r|+\\sigma^2)t+4\\big)$ (`gbmMilStrongConst`). Then for every $\\ell$,\n$$\n\\Big|\\mathbb E\\big[g(\\hat S_\\ell)-g(S_T^{(0)})\\big]\\Big|\\le K\\sqrt{C(T)\\,T^2}\\;2^{-\\ell},\n$$\nwhere $\\mathbb E[g(S_T^{(0)})]=\\mathbb E[g(S_T)]$ is the quantity of interest (the law of $S_T^{(\\ell)}$ does not depend on $\\ell$).",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §5.2 \"Milstein discretisation\", pp. 32–35, and the Geometric Brownian Motion example of Figure 5.5; §2.1, Theorem 1 with (2.4).",
+   "explanation": "$\\mathbb E[g(S_T^{(0)})]=\\mathbb E[g(S_T^{(\\ell)})]$ (`map_gbmExact`), then $|\\mathbb E[X]|^2\\le\\mathbb E[X^2]$, the Lipschitz bound and the strong error `gbm_mil_strong_error_level`.",
+   "tags": [
+    "probability",
+    "numerical-analysis",
+    "convergence",
+    "multilevel-monte-carlo"
+   ]
+  },
+  "MLMC.gbm_mil_correction_variance_le": {
+   "theorem_title": "Giles (2015), §5.2: the level correction of the Milstein MLMC estimator for GBM has variance at most $10K^2C(T)T^2\\,4^{-(\\ell+1)}$ ($\\beta=2$)",
+   "natural_language_statement": "Giles (2015), §5.2: \"Figure 5.5 demonstrates the improved results obtained for the call option based on a single underlying GBM asset. $V_\\ell$ is now $O(h_\\ell^2)$, leading to $\\alpha=1$, $\\beta=2$, $\\gamma=1$ … Because $\\beta>\\gamma$, the dominant computational cost is on the coarsest levels.\"\n\nLet $Z_0,Z_1,\\dots$ be the coordinates of $(\\mathbb R^{\\mathbb N},N(0,1)^{\\otimes\\mathbb N})$ (`stdNormalSeq`): independent standard normal variables. Let $r,\\sigma,s_0\\in\\mathbb R$ and $T\\ge0$. Level $\\ell$ uses the timestep $h_\\ell=T2^{-\\ell}$: $S_T^{(\\ell)}$ = `gbmExact`$(r,\\sigma,T,s_0,\\ell)$ $=s_0\\exp\\big((r-\\sigma^2/2)T+\\sigma\\sqrt{h_\\ell}\\sum_{i<2^\\ell}Z_i\\big)$ is the exact solution at $T$ and $\\hat S_\\ell$ = `gbmMil`$(r,\\sigma,T,s_0,\\ell)$ the Milstein value after $2^\\ell$ steps of size $h_\\ell$, driven by the same $Z_i$. The coarse increments are `pairAvg`$(Z)_k=(Z_{2k}+Z_{2k+1})/\\sqrt2$. Let $g:\\mathbb R\\to\\mathbb R$ satisfy $|g(x)-g(y)|\\le K|x-y|$ for all $x,y$. Let $C(t)=s_0^2\\,e^{(2|r|+\\sigma^2)t}\\,(|r|+\\sigma^2)^2\\,\\big(30(|r|+\\sigma^2)^2t^2+16(|r|+\\sigma^2)t+4\\big)$ (`gbmMilStrongConst`). The correction of level $\\ell+1$ is the payoff of the fine path minus the payoff of the coarse path, which takes $2^\\ell$ Milstein steps of size $h_\\ell$ driven by the summed increments: $Y_{\\ell+1}=g(\\hat S_{\\ell+1}(Z))-g(\\hat S_\\ell(\\mathrm{pairAvg}(Z)))$. Then for every $\\ell$,\n$$\n\\mathbb V\\big[Y_{\\ell+1}\\big]\\le10K^2\\,C(T)\\,T^2\\,4^{-(\\ell+1)} .\n$$",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §5.2 \"Milstein discretisation\", pp. 32–35, and the Geometric Brownian Motion example of Figure 5.5; §2.1, Theorem 1 with (2.4).",
+   "explanation": "$\\mathbb V[Y]\\le\\mathbb E[Y^2]$, $|Y|\\le K|\\hat S_{\\ell+1}(Z)-\\hat S_\\ell(\\mathrm{pairAvg}(Z))|$, and $S_T^{(\\ell)}(\\mathrm{pairAvg}(Z))=S_T^{(\\ell+1)}(Z)$ (`gbmExact_pairAvg`), so $Y^2\\le2K^2(S_T^{(\\ell+1)}-\\hat S_{\\ell+1})^2+2K^2(S_T^{(\\ell)}-\\hat S_\\ell)^2\\circ\\mathrm{pairAvg}$; `pairAvg` preserves the law and `gbm_mil_strong_error_level` bounds the two terms by $C(T)h_{\\ell+1}^2$ and $C(T)h_\\ell^2=4C(T)h_{\\ell+1}^2$.",
+   "tags": [
+    "probability",
+    "numerical-analysis",
+    "convergence",
+    "multilevel-monte-carlo"
+   ]
+  },
+  "MLMC.gbm_mil_mlmc_theorem1": {
+   "theorem_title": "Giles (2015), §5.2, Theorem 1: the Milstein MLMC estimator of $\\mathbb E[g(S_T)]$ for geometric Brownian motion has MSE $<\\varepsilon^2$ at cost $O(\\varepsilon^{-2})$",
+   "natural_language_statement": "Giles (2015), §5.2: \"Figure 5.5 demonstrates the improved results obtained for the call option based on a single underlying GBM asset. $V_\\ell$ is now $O(h_\\ell^2)$, leading to $\\alpha=1$, $\\beta=2$, $\\gamma=1$ … Because $\\beta>\\gamma$, the dominant computational cost is on the coarsest levels.\"\n\nLet $r,\\sigma,s_0\\in\\mathbb R$, $T\\ge0$, and $g:\\mathbb R\\to\\mathbb R$ satisfy $|g(x)-g(y)|\\le K|x-y|$ for all $x,y$. Level $\\ell$ uses $2^\\ell$ Milstein steps of size $h_\\ell=T2^{-\\ell}$ for $dS=rS\\,dt+\\sigma S\\,dW$, $S_0=s_0$ (`gbmMil`), driven by independent standard normal increments $z\\in\\mathbb R^{\\mathbb N}$. The fine payoff is $P^f_\\ell(z)=g(\\hat S_\\ell(z))$ and the coarse payoff $P^c_\\ell(z)=g(\\hat S_\\ell(\\mathrm{pairAvg}(z)))$ (the coarse path uses the summed increments); the corrections are $Y_0=P^f_0$, $Y_{\\ell+1}=P^f_{\\ell+1}-P^c_\\ell$ (`fineCoarseDiff`). The samples $z^{(\\ell,n)}$, $(\\ell,n)\\in\\mathbb N^2$, are the coordinates of the product of copies of $N(0,1)^{\\otimes\\mathbb N}$ (independent), and a level-$\\ell$ sample costs $2^\\ell$. Then there is $c_4>0$ such that for every $0<\\varepsilon<e^{-1}$ there are $L\\in\\mathbb N$ and $N_\\ell\\ge1$ with\n$$\n\\mathbb E\\Big[\\Big(\\sum_{\\ell=0}^{L}\\frac1{N_\\ell}\\sum_{n<N_\\ell}Y_\\ell(z^{(\\ell,n)})-\\mathbb E\\big[g\\big(s_0e^{(r-\\sigma^2/2)T+\\sigma\\sqrt T\\,W}\\big)\\big]\\Big)^2\\Big]<\\varepsilon^2,\\qquad\\sum_{\\ell=0}^{L}N_\\ell\\,2^\\ell\\le c_4\\,\\varepsilon^{-2},\n$$\nwhere $W\\sim N(0,1)$, i.e. the target is $\\mathbb E[g(S_T)]$ for the exact solution. No rate is assumed.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §5.2 \"Milstein discretisation\", pp. 32–35, and the Geometric Brownian Motion example of Figure 5.5; §2.1, Theorem 1 with (2.4).",
+   "explanation": "`giles_theorem1_fineCoarse` (Theorem 1 with (2.4), which holds because `pairAvg` preserves the law) with $\\alpha=1$ (`gbm_mil_weak_error_le`), $\\beta=2$ (`gbm_mil_correction_variance_le`; level $0$ is absorbed into $c_2$), $\\gamma=1$, square-integrable payoffs, independent inputs (`exists_iid_inputs`), and the bound of Theorem 1 for $\\beta>\\gamma$, $\\varepsilon^{-2}$; $\\mathbb E[g(S_T^{(0)})]$ is the Gaussian integral in the statement.",
+   "tags": [
+    "multilevel-monte-carlo",
+    "complexity",
+    "probability",
+    "numerical-analysis"
+   ]
   }
  },
  "definitions": {
@@ -4629,6 +4719,16 @@
    "definition_title": "Giles (2015), §5.1: geometric Brownian motion — the exact and Euler–Maruyama one-step factors, the drift and volatility, the level-ℓ exact and Euler–Maruyama values, the strong-error constant and European payoffs",
    "natural_language_statement": "Giles (2015), §5.1: \"The original multilevel path simulation paper (Giles 2008b) treated stochastic differential equations $dS_t=a(S_t,t)\\,dt+b(S_t,t)\\,dW$, using the simple Euler–Maruyama discretisation with a uniform timestep $h$ and Brownian increments $\\Delta W_n$, $\\hat S_{n+1}=\\hat S_n+a(\\hat S_n,t_n)h+b(\\hat S_n,t_n)\\Delta W_n$.\" Figure 5.3: \"a financial call option with a single underlying asset satisfying Geometric Brownian Motion SDE, $dS_t=rS_t\\,dt+\\sigma S_t\\,dW$\".\n\n**`gbmExpFactor`.** For $r,\\sigma,h,x\\in\\mathbb R$: $e^{(r-\\sigma^2/2)h+\\sigma\\sqrt h\\,x}$, one step of the exact solution with Brownian increment $\\sqrt h\\,x$ ($\\sqrt h=0$ for $h<0$).\n\n**`gbmEMFactor`.** For $r,\\sigma,h,x$: $1+rh+\\sigma\\sqrt h\\,x$, one Euler–Maruyama step.\n\n**`gbmDrift`, `gbmVol`.** $a(S,t)=rS$ and $b(S,t)=\\sigma S$.\n\n**`gbmExact`.** For $r,\\sigma,T,s_0\\in\\mathbb R$, $\\ell\\in\\mathbb N$ and $z:\\mathbb N\\to\\mathbb R$: $s_0\\exp\\big((r-\\sigma^2/2)T+\\sigma\\sqrt{T/2^\\ell}\\sum_{i<2^\\ell}z_i\\big)$, the exact solution at $T$ with $W_T$ sampled on the level-$\\ell$ grid.\n\n**`gbmEM`.** For the same data: `emPath`$(a,b,T/2^\\ell,s_0,z)(2^\\ell)$ with $a,b$ as above, the Euler–Maruyama value after $2^\\ell$ steps of size $T/2^\\ell$.\n\n**`gbmStrongConst`.** For $r,\\sigma,t,s_0$: $s_0^2e^{(2|r|+\\sigma^2)t}(|r|+\\sigma^2)(5(|r|+\\sigma^2)t+4)$.\n\n**`europeanPayoff`.** For $g:\\mathbb R\\to\\mathbb R$: the payoff $(\\ell,\\text{path})\\mapsto g(\\text{path}(2^\\ell))$ of the value at the final time of a path with $2^\\ell$ steps.",
    "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §5.1, pp. 29–30, and Figure 5.3.",
+   "tags": [
+    "probability",
+    "numerical-analysis",
+    "multilevel-monte-carlo"
+   ]
+  },
+  "MLMC_GBMMilstein": {
+   "definition_title": "Giles (2015), §5.2: geometric Brownian motion — the Milstein step and path, the level-ℓ Milstein value and the Milstein strong-error constant",
+   "natural_language_statement": "Giles (2015), §5.2: \"For Lipschitz payoffs, the variance $V_\\ell$ for the natural multilevel estimator converges at twice the order of the strong convergence of the numerical approximation of the SDE. This immediately suggests that it would be better to replace the Euler-Maruyama discretisation by the Milstein discretisation … since it gives first order strong convergence under certain conditions … For a scalar SDE the Milstein discretisation is $\\hat S_{n+1}=\\hat S_n+a(\\hat S_n,t_n)h+b(\\hat S_n,t_n)\\Delta W_n+\\tfrac12 b(\\hat S_n,t_n)\\frac{\\partial b}{\\partial S}(\\hat S_n,t_n)(\\Delta W_n^2-h)$\".\n\n**`gbmMilFactor`.** For $r,\\sigma,h,x\\in\\mathbb R$: $1+rh+\\sigma\\sqrt h\\,x+\\frac{\\sigma^2}{2}\\big((\\sqrt h\\,x)^2-h\\big)$, one Milstein step of $dS=rS\\,dt+\\sigma S\\,dW$ with Brownian increment $\\sqrt h\\,x$ ($\\sqrt h=0$ for $h<0$).\n\n**`milsteinPath`.** For $a,b:\\mathbb R\\to\\mathbb R$, $h,S_0\\in\\mathbb R$ and $z:\\mathbb N\\to\\mathbb R$: the sequence $\\hat S_0=S_0$, $\\hat S_{i+1}=\\mathrm{milsteinStep}(a,b,h,\\hat S_i,\\sqrt h\\,z_i)$, i.e. $\\hat S_{i+1}=\\hat S_i+a(\\hat S_i)h+b(\\hat S_i)\\Delta W_i+\\frac12b(\\hat S_i)b'(\\hat S_i)(\\Delta W_i^2-h)$ with $\\Delta W_i=\\sqrt h\\,z_i$.\n\n**`gbmMil`.** For $r,\\sigma,T,s_0\\in\\mathbb R$, $\\ell\\in\\mathbb N$ and $z$: `milsteinPath`$(S\\mapsto rS,\\ S\\mapsto\\sigma S,\\ T/2^\\ell,\\ s_0,\\ z)(2^\\ell)$, the Milstein value after $2^\\ell$ steps of size $T/2^\\ell$.\n\n**`gbmMilStrongConst`.** For $r,\\sigma,t,s_0$: $s_0^2e^{(2|r|+\\sigma^2)t}(|r|+\\sigma^2)^2(30(|r|+\\sigma^2)^2t^2+16(|r|+\\sigma^2)t+4)$.\n\n**Formalization Note** $b'$ is Mathlib's `deriv b` (for $b(S)=\\sigma S$ it is $\\sigma$).",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §5.2, pp. 32–35, and Figure 5.5.",
    "tags": [
     "probability",
     "numerical-analysis",
