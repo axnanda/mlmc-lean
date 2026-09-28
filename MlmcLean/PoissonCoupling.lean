@@ -627,9 +627,9 @@ lemma lintegral_sq_coupledIncr_le (a b : ℝ≥0) (x y : ℕ) :
         lintegral_poly_poissonMeasure _ (sq_nonneg _) (by positivity) zero_le_one
 
 /-- The polynomial bound behind one coupled fine step at a frozen coarse rate (Giles 2015, §8): if
-`0 ≤ R ≤ κ (|d| + j)`, `j ≥ 0` and `|d| ≤ d²`, then
+`0 ≤ R ≤ κ (|d| + j)` and `|d| ≤ d²`, then
 `d² + 2|d| R + R + R² ≤ (1 + 4κ + 2κ²) d² + (κ + 2κ²) j² + κ j`. -/
-lemma coupled_step_bound {d j R κ : ℝ} (hj : 0 ≤ j) (hκ : 0 ≤ κ) (hR0 : 0 ≤ R)
+lemma coupled_step_bound {d j R κ : ℝ} (hκ : 0 ≤ κ) (hR0 : 0 ≤ R)
     (hR : R ≤ κ * (|d| + j)) (hd : |d| ≤ d ^ 2) :
     d ^ 2 + 2 * |d| * R + 1 * (R + R ^ 2) ≤
       (1 + 4 * κ + 2 * κ ^ 2) * d ^ 2 + (κ + 2 * κ ^ 2) * j ^ 2 + κ * j := by
@@ -724,8 +724,7 @@ theorem lintegral_sq_coupledTwoStep_le {lam : ℕ → ℝ≥0} {h : ℝ≥0} {κ
     rw [lintegral_map Measurable.of_discrete Measurable.of_discrete]
     refine (lintegral_sq_coupledIncr_le _ _ (s.1 + ij.1) (s.2 + ij.2)).trans
       (ENNReal.ofReal_le_ofReal ?_)
-    refine coupled_step_bound (Nat.cast_nonneg _) hκ (abs_nonneg _) ?_
-      (abs_natCast_sub_le_sq _ _)
+    refine coupled_step_bound hκ (abs_nonneg _) ?_ (abs_natCast_sub_le_sq _ _)
     refine (hr _ _).trans (mul_le_mul_of_nonneg_left ?_ hκ)
     have e : ((s.1 + ij.1 : ℕ) : ℝ) - (s.2 : ℝ) =
         (((s.1 + ij.1 : ℕ) : ℝ) - ((s.2 + ij.2 : ℕ) : ℝ)) + ij.2 := by
@@ -739,7 +738,7 @@ theorem lintegral_sq_coupledTwoStep_le {lam : ℕ → ℝ≥0} {h : ℝ≥0} {κ
       ENNReal.ofReal ((1 + 4 * κ + 2 * κ ^ 2) * ((s.1 : ℝ) - s.2) ^ 2) := by
     refine (lintegral_sq_coupledIncr_le _ _ s.1 s.2).trans (ENNReal.ofReal_le_ofReal ?_)
     have h0 := coupled_step_bound (d := (s.1 : ℝ) - s.2) (j := 0)
-      (R := |((h * lam s.1 : ℝ≥0) : ℝ) - ((h * lam s.2 : ℝ≥0) : ℝ)|) le_rfl hκ (abs_nonneg _)
+      (R := |((h * lam s.1 : ℝ≥0) : ℝ) - ((h * lam s.2 : ℝ≥0) : ℝ)|) hκ (abs_nonneg _)
       (by rw [add_zero]; exact hr _ _) (abs_natCast_sub_le_sq _ _)
     linarith
   have hj2 : ∫⁻ ij, ENNReal.ofReal ((ij.2 : ℝ) ^ 2) ∂(coupledIncr (h * lam s.1) (h * lam s.2)) ≤
@@ -906,7 +905,7 @@ theorem coupledChain_sq_le {lam : ℕ → ℝ≥0} {K Λ : ℝ≥0}
           gcongr
       _ = (h : ℝ) ^ 2 * (((K : ℝ) + 2 * (K : ℝ) ^ 2) * ((Λ : ℝ) + (Λ : ℝ) ^ 2) + (K : ℝ) * Λ) := by
           ring
-  have hΣ0 : 0 ≤ ∑ i ∈ Finset.range k, ((1 + 4 * ((h : ℝ) * K) + 2 * ((h : ℝ) * K) ^ 2) ^ 2) ^ i :=
+  have hS0 : 0 ≤ ∑ i ∈ Finset.range k, ((1 + 4 * ((h : ℝ) * K) + 2 * ((h : ℝ) * K) ^ 2) ^ 2) ^ i :=
     Finset.sum_nonneg fun i _ => by positivity
   have hkh : (k : ℝ) * h ≤ T := by
     have := mul_nonneg (Nat.cast_nonneg k : (0 : ℝ) ≤ k) hh0
@@ -921,7 +920,7 @@ theorem coupledChain_sq_le {lam : ℕ → ℝ≥0} {K Λ : ℝ≥0}
             ∑ i ∈ Finset.range k, ((1 + 4 * ((h : ℝ) * K) + 2 * ((h : ℝ) * K) ^ 2) ^ 2) ^ i
         ≤ ((h : ℝ) ^ 2 * (((K : ℝ) + 2 * (K : ℝ) ^ 2) * ((Λ : ℝ) + (Λ : ℝ) ^ 2) + (K : ℝ) * Λ)) *
             (k * Real.exp (T * (4 * (K : ℝ) + 2 * (K : ℝ) ^ 2))) :=
-          mul_le_mul hBh (hsum.trans (mul_le_mul_of_nonneg_left hAk (Nat.cast_nonneg k))) hΣ0
+          mul_le_mul hBh (hsum.trans (mul_le_mul_of_nonneg_left hAk (Nat.cast_nonneg k))) hS0
             (by positivity)
       _ = (((K : ℝ) + 2 * (K : ℝ) ^ 2) * ((Λ : ℝ) + (Λ : ℝ) ^ 2) + (K : ℝ) * Λ) * ((k : ℝ) * h) *
             Real.exp (T * (4 * (K : ℝ) + 2 * (K : ℝ) ^ 2)) * h := by
@@ -955,7 +954,7 @@ theorem variance_coupledChain_le {lam : ℕ → ℝ≥0} {K Λ : ℝ≥0}
   obtain ⟨c, hc, hbd⟩ := coupledChain_sq_le hK hΛ hT
   refine ⟨L ^ 2 * c, by positivity, fun h k x₀ hh1 hkT => ?_⟩
   obtain ⟨hint, hle⟩ := hbd h k x₀ hh1 hkT
-  haveI : IsProbabilityMeasure (coupledChain lam h x₀ k) := ⟨coupledChain_univ lam h x₀ k⟩
+  have : IsProbabilityMeasure (coupledChain lam h x₀ k) := ⟨coupledChain_univ lam h x₀ k⟩
   have hpt : ∀ q : ℕ × ℕ, (Φ q.1 - Φ q.2) ^ 2 ≤ L ^ 2 * ((q.1 : ℝ) - q.2) ^ 2 := fun q => by
     have h1 := hΦ q.1 q.2
     calc (Φ q.1 - Φ q.2) ^ 2 = |Φ q.1 - Φ q.2| ^ 2 := (sq_abs _).symm
