@@ -563,7 +563,7 @@ lemma mil_one_step_diff {u v w : ℝ} (hv : 0 ≤ v) (huv : |u| + v ≤ w) (hw :
     obtain ⟨k3a, k3b⟩ := abs_le.1 k3
     obtain ⟨k4a, k4b⟩ := abs_le.1 k4
     rw [e3, abs_le]
-    constructor <;> linarith
+    constructor <;> linarith only [k1, k1', k2, k2', k3a, k3b, k4a, k4b, k5, k5', hw3, hw4, hw5]
 
 /-- The combination of the one-step bounds: with `|a|, |b|, |c| ≤ M`, `M ≥ 1`, and the one-step
 bounds of `mil_one_step_diff` when `qh ≤ 1`,
@@ -907,12 +907,15 @@ theorem gbm_mil_mlmc_theorem1 (r σ s₀ : ℝ) {T : ℝ} (hT : 0 ≤ T) {g : �
   -- (iv): a level-`ℓ` sample costs `2^ℓ`
   have h_iv : ∀ ℓ : ℕ, (2 : ℝ) ^ ℓ ≤ 1 * (2 : ℝ) ^ ((1 : ℝ) * (ℓ : ℝ)) := fun ℓ => by
     rw [one_mul, one_mul, Real.rpow_natCast]
+  have hαβγ : min (2 : ℝ) 1 / 2 ≤ 1 := by
+    rw [min_eq_right (by norm_num : (1 : ℝ) ≤ 2)]
+    norm_num
   obtain ⟨c₄, hc₄, h⟩ := giles_theorem1_fineCoarse
     (μ := Measure.infinitePi fun _ : ℕ × ℕ => stdNormalSeq)
     (fun z => g (gbmExact r σ T s₀ 0 z)) (fun ℓ z => g (gbmMil r σ T s₀ ℓ z))
     (fun ℓ z => g (gbmMil r σ T s₀ ℓ (pairAvg z))) (fun p x => x p) (fun ℓ _ _ => (2 : ℝ) ^ ℓ)
     (fun ℓ => (2 : ℝ) ^ ℓ) (α := 1) (β := 2) (γ := 1) one_pos two_pos one_pos hc₁ hc₂ one_pos
-    (by norm_num) hω hind (hP.integrable one_le_two) hPfm hPcm hPf hPc h24
+    hαβγ hω hind (hP.integrable one_le_two) hPfm hPcm hPf hPc h24
     (fun _ _ => integrable_const _)
     (fun _ _ => by simp only [integral_const, probReal_univ, one_smul]) h_i h_iii h_iv
   refine ⟨c₄, hc₄, fun ε hε hε1 => ?_⟩
