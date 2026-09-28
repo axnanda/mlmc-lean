@@ -363,6 +363,19 @@ import MlmcLean
 #print axioms MLMC.smooth_step_eventually
 #print axioms MLMC.abs_smoothCDF_sub_le
 #print axioms MLMC.tendsto_smoothCDF
+#print axioms MLMC.crossDiff_two
+#print axioms MLMC.randomised_optimal_cost
+#print axioms MLMC.subsetCost_eq
+#print axioms MLMC.sum_subsetCorr
+#print axioms MLMC.subset_optimal_cost
+#print axioms MLMC.card_levelSubsets
+#print axioms MLMC.exists_optimal_subset
+#print axioms MLMC.mlqmc_inner_terminates
+#print axioms MLMC.mlqmc_algorithm
+#print axioms MLMC.mlqmc_mse
+#print axioms MLMC.tendsto_kernel_integral_signed
+#print axioms MLMC.tendsto_density
+#print axioms MLMC.splitting_mean_variance
 -- helper lemmas that the prove2.me generator promotes to nodes
 #print axioms MLMC.sqrt_Vb_mul_Cb
 #print axioms MLMC.two_rpow_levelL_le

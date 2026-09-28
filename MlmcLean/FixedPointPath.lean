@@ -1,5 +1,6 @@
 import MlmcLean.RoundingError
 import Mathlib.Probability.Independence.Integration
+import Mathlib.MeasureTheory.Function.Floor
 
 /-!
 # Haas–Giles §4.1 and §6.3: the GBM path of Algorithm 1, the size of its variables, and the
@@ -320,6 +321,20 @@ theorem abs_perturbed_sub_le (m ρ S St : ℕ → ℝ) (hS : ∀ k, S (k + 1) = 
   rw [abs_mul]
   exact mul_le_mul_of_nonneg_right (hρ k) (abs_nonneg _)
 
+/-- Rounding to nearest in the fixed-point format (Haas–Giles 2025, §4.1, (20)) is measurable:
+`round_{e,d}(x) = 2^{e−d} ⌊x/2^{e−d} + 1/2⌋`. -/
+lemma measurable_roundFixed (e : ℤ) (d : ℕ) : Measurable (roundFixed e d) := by
+  have h : roundFixed e d =
+      fun x => (2 : ℝ) ^ (e - d) * ((⌊x / (2 : ℝ) ^ (e - d) + 1 / 2⌋ : ℤ) : ℝ) := by
+    funext x
+    rw [roundFixed, round_eq]
+  have hfl : Measurable fun x : ℝ => ⌊x / (2 : ℝ) ^ (e - d) + 1 / 2⌋ :=
+    ((measurable_id.div_const _).add_const _).floor
+  have hcast : Measurable fun x : ℝ => ((⌊x / (2 : ℝ) ^ (e - d) + 1 / 2⌋ : ℤ) : ℝ) :=
+    measurable_from_top.comp hfl
+  rw [h]
+  exact measurable_const.mul hcast
+
 section accumulation
 
 variable {Ω : Type*} [MeasurableSpace Ω] {μ : Measure Ω} [IsProbabilityMeasure μ]
@@ -327,18 +342,19 @@ variable {Ω : Type*} [MeasurableSpace Ω] {μ : Measure Ω} [IsProbabilityMeasu
 
 /-- **Haas–Giles (2025), §6.3, p. 14: rounding errors accumulate like `O(h⁻¹ 2^{e−d})`.**  Let the
 increments `Z̃_i` be independent, of mean 0 and second moment at most 1, and `0 ≤ h ≤ 1`.  Let `S̃`
-be a path of Algorithm 1 perturbed at every step by an error of size at most `u`,
-`S̃_{k+1} = S̃_k (1 + rh + √h σ Z̃_k) + ρ_k`, `|ρ_k| ≤ u`, `S̃_0 = S_0`.  Then after `n` steps
-`E|S̃_n − S_n| ≤ u n e^{(2|r| + r² + σ²) n h}`: the error grows linearly in the number
-`n = T/h` of time steps. -/
+be a path of Algorithm 1 perturbed at every step by a measurable error of size at most `u`,
+`S̃_{k+1} = S̃_k (1 + rh + √h σ Z̃_k) + ρ_k`, `|ρ_k| ≤ u`, `S̃_0 = S_0`.  Then after `n` steps the
+error `|S̃_n − S_n|` is integrable and `E|S̃_n − S_n| ≤ u n e^{(2|r| + r² + σ²) n h}`: the error
+grows linearly in the number `n = T/h` of time steps. -/
 theorem integral_abs_perturbed_sub_le (hZ : iIndepFun Z μ) (hm : ∀ i, Measurable (Z i))
     (hZ2 : ∀ i, MemLp (Z i) 2 μ) (hmean : ∀ i, ∫ ω, Z i ω ∂μ = 0)
     (hvar : ∀ i, ∫ ω, Z i ω ^ 2 ∂μ ≤ 1) {r σ h u : ℝ} (hh0 : 0 ≤ h) (hh1 : h ≤ 1)
     (hu : 0 ≤ u) (s₀ : ℝ) (St ρ : ℕ → Ω → ℝ) (hSt0 : ∀ ω, St 0 ω = s₀)
     (hSt : ∀ k ω, St (k + 1) ω = St k ω * (1 + r * h + Real.sqrt h * σ * Z k ω) + ρ k ω)
-    (hρ : ∀ k ω, |ρ k ω| ≤ u) (n : ℕ) :
-    ∫ ω, |St n ω - gbmPath r σ h s₀ (fun j => Z j ω) n| ∂μ ≤
-      u * n * Real.exp ((2 * |r| + r ^ 2 + σ ^ 2) * (n * h)) := by
+    (hρ : ∀ k ω, |ρ k ω| ≤ u) (hρm : ∀ k, Measurable (ρ k)) (n : ℕ) :
+    Integrable (fun ω => |St n ω - gbmPath r σ h s₀ (fun j => Z j ω) n|) μ ∧
+      ∫ ω, |St n ω - gbmPath r σ h s₀ (fun j => Z j ω) n| ∂μ ≤
+        u * n * Real.exp ((2 * |r| + r ^ 2 + σ ^ 2) * (n * h)) := by
   have hg : Measurable fun z : ℝ => (1 + r * h + Real.sqrt h * σ * z) ^ 2 := by fun_prop
   have hWm : ∀ j, Measurable fun ω => (1 + r * h + Real.sqrt h * σ * Z j ω) ^ 2 :=
     fun j => hg.comp (hm j)
@@ -377,6 +393,27 @@ theorem integral_abs_perturbed_sub_le (hZ : iIndepFun Z μ) (hm : ∀ i, Measura
   have hgi : Integrable (fun ω => u * ∑ k ∈ range n,
       (1 + ∏ j ∈ Ico (k + 1) n, (1 + r * h + Real.sqrt h * σ * Z j ω) ^ 2) / 2) μ :=
     (integrable_finsetSum _ hterm).const_mul u
+  -- the perturbed and the exact paths are measurable, so the error is integrable
+  have hStm : ∀ k, Measurable (St k) := by
+    intro k
+    induction k with
+    | zero =>
+      rw [show St 0 = fun _ => s₀ from funext hSt0]
+      exact measurable_const
+    | succ k ih =>
+      rw [show St (k + 1) = fun ω => St k ω * (1 + r * h + Real.sqrt h * σ * Z k ω) + ρ k ω
+        from funext (hSt k)]
+      exact (ih.mul (measurable_const.add (measurable_const.mul (hm k)))).add (hρm k)
+  have hSm : Measurable fun ω => gbmPath r σ h s₀ (fun j => Z j ω) n := by
+    simp_rw [gbmPath_eq_prod]
+    exact measurable_const.mul
+      (Finset.measurable_prod _ fun i _ => measurable_const.add (measurable_const.mul (hm i)))
+  have hint : Integrable (fun ω => |St n ω - gbmPath r σ h s₀ (fun j => Z j ω) n|) μ :=
+    hgi.mono' (continuous_abs.measurable.comp ((hStm n).sub hSm)).aestronglyMeasurable
+      (Filter.Eventually.of_forall fun ω => by
+        rw [Real.norm_eq_abs, abs_abs]
+        exact hpt ω)
+  refine ⟨hint, ?_⟩
   calc ∫ ω, |St n ω - gbmPath r σ h s₀ (fun j => Z j ω) n| ∂μ
       ≤ ∫ ω, u * ∑ k ∈ range n,
           (1 + ∏ j ∈ Ico (k + 1) n, (1 + r * h + Real.sqrt h * σ * Z j ω) ^ 2) / 2 ∂μ :=
@@ -403,7 +440,7 @@ rounding error at each time step of the Euler-Maruyama scheme is of order
 `O(h⁻¹ 2^{e_{S,ℓ} − d_{S,ℓ}})`".  If the path of Algorithm 1 rounds `S` to nearest in the
 fixed-point format with exponent `e` and bit-width `d` after every step (`roundFixed`, error at
 most `2^{e−d−1}` by (20)), then after `n = T/h` steps (`0 < h ≤ 1`), with independent increments of
-mean 0 and second moment at most 1,
+mean 0 and second moment at most 1, the error `|S̃_n − S_n|` is integrable and
 `E|S̃_n − S_n| ≤ (T/h) 2^{e−d−1} e^{(2|r| + r² + σ²) T}`. -/
 theorem integral_abs_roundFixed_path_sub_le (hZ : iIndepFun Z μ) (hm : ∀ i, Measurable (Z i))
     (hZ2 : ∀ i, MemLp (Z i) 2 μ) (hmean : ∀ i, ∫ ω, Z i ω ∂μ = 0)
@@ -411,8 +448,9 @@ theorem integral_abs_roundFixed_path_sub_le (hZ : iIndepFun Z μ) (hm : ∀ i, M
     (e : ℤ) (d : ℕ) (St : ℕ → Ω → ℝ) (hSt0 : ∀ ω, St 0 ω = s₀)
     (hSt : ∀ k ω, St (k + 1) ω = roundFixed e d (gbmStep r σ h (St k ω) (Z k ω))) {n : ℕ}
     (hT : (n : ℝ) * h = T) :
-    ∫ ω, |St n ω - gbmPath r σ h s₀ (fun j => Z j ω) n| ∂μ ≤
-      T / h * (2 : ℝ) ^ (e - d - 1) * Real.exp ((2 * |r| + r ^ 2 + σ ^ 2) * T) := by
+    Integrable (fun ω => |St n ω - gbmPath r σ h s₀ (fun j => Z j ω) n|) μ ∧
+      ∫ ω, |St n ω - gbmPath r σ h s₀ (fun j => Z j ω) n| ∂μ ≤
+        T / h * (2 : ℝ) ^ (e - d - 1) * Real.exp ((2 * |r| + r ^ 2 + σ ^ 2) * T) := by
   have hSt' : ∀ k ω, St (k + 1) ω = St k ω * (1 + r * h + Real.sqrt h * σ * Z k ω) +
       (St (k + 1) ω - St k ω * (1 + r * h + Real.sqrt h * σ * Z k ω)) := fun k ω => by ring
   have hρ : ∀ k ω, |St (k + 1) ω - St k ω * (1 + r * h + Real.sqrt h * σ * Z k ω)| ≤
@@ -424,12 +462,28 @@ theorem integral_abs_roundFixed_path_sub_le (hZ : iIndepFun Z μ) (hm : ∀ i, M
       ring
     rw [hSt k ω, hstep, abs_sub_comm]
     exact abs_sub_roundFixed_le e d _
-  have hacc := integral_abs_perturbed_sub_le hZ hm hZ2 hmean hvar hh0.le hh1
-    (zpow_pos two_pos _).le s₀ St _ hSt0 hSt' hρ n
+  -- the rounded path is measurable, so the local errors are
+  have hStm : ∀ k, Measurable (St k) := by
+    intro k
+    induction k with
+    | zero =>
+      rw [show St 0 = fun _ => s₀ from funext hSt0]
+      exact measurable_const
+    | succ k ih =>
+      rw [show St (k + 1) = fun ω => roundFixed e d (gbmStep r σ h (St k ω) (Z k ω))
+        from funext (hSt k)]
+      simp_rw [gbmStep_eq]
+      exact (measurable_roundFixed e d).comp ((ih.add ((measurable_const.mul ih).mul_const _)).add
+        (((measurable_const.mul ih).mul_const _).mul (hm k)))
+  have hρm : ∀ k, Measurable fun ω =>
+      St (k + 1) ω - St k ω * (1 + r * h + Real.sqrt h * σ * Z k ω) := fun k =>
+    (hStm (k + 1)).sub ((hStm k).mul (measurable_const.add (measurable_const.mul (hm k))))
+  obtain ⟨hint, hacc⟩ := integral_abs_perturbed_sub_le hZ hm hZ2 hmean hvar hh0.le hh1
+    (zpow_pos two_pos _).le s₀ St _ hSt0 hSt' hρ hρm n
   have hn : (n : ℝ) = T / h := by
     rw [← hT, mul_div_cancel_right₀ _ hh0.ne']
   rw [hT, hn] at hacc
-  exact hacc.trans_eq (by ring)
+  exact ⟨hint, hacc.trans_eq (by ring)⟩
 
 end accumulation
 

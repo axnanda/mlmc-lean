@@ -2,6 +2,10 @@ import MlmcLean.EulerMaruyama
 import MlmcLean.NestedSimulation
 import MlmcLean.ErrorAnalysis
 import Mathlib.MeasureTheory.Function.ConditionalExpectation.Basic
+import Mathlib.MeasureTheory.Integral.PeakFunction
+import Mathlib.MeasureTheory.Integral.Bochner.ContinuousLinearMap
+import Mathlib.MeasureTheory.Function.LocallyIntegrable
+import Mathlib.MeasureTheory.Measure.WithDensity
 
 /-!
 # The SDE applications of Giles 2015, §5: the parts that do not need SDE theory
@@ -22,6 +26,9 @@ formalised here is every step of the section that follows from them by probabili
   formulation that `E[P^c_{ℓ−1}] = E[P^f_{ℓ−1}]`" — conditional expectations of the payoff of two
   terminal values with the same law have the same mean, so (2.4) holds;
   `bridgeInterp_midpoint`: the coarse Brownian-bridge interpolant at the fine time `t_n + h`.
+* **§5.2, splitting** (`splitting_mean_variance`): averaging `M` sub-samples of the final
+  increment in place of the conditional expectation gives the same mean and adds the variance
+  `E[v]/M`, `v` the conditional variance.
 * **§5.3** (`measurePreserving_swapIncrements`): the antithetic path, whose fine Brownian
   increments are swapped within each coarse step, has the law of the original path, so
   `giles_theorem1_antithetic` applies; `abs_antithetic_le`, `variance_antithetic_le`: "the
@@ -33,7 +40,9 @@ formalised here is every step of the section that follows from them by probabili
   numerical stability problems".
 * **§5.7** (`abs_smoothCDF_sub_le`, `tendsto_smoothCDF`): the smoothed CDF
   `C_δ(x) = E[g((x − P)/δ)]` differs from `C(x) = P(P < x)` by at most `P(|P − x| ≤ δ)`, and
-  "as `δ → 0` … the accuracy improves": `C_δ(x) → C(x)` when `P` has no atom at `x`.
+  "as `δ → 0` … the accuracy improves": `C_δ(x) → C(x)` when `P` has no atom at `x`;
+  `tendsto_density`: "the density `ρ(x)` of the scalar output `P` is given by
+  `ρ(x) = lim_{δ→0} E[δ⁻¹ g((x − P)/δ)]`" when the density is continuous at `x`.
 -/
 
 open MeasureTheory ProbabilityTheory Filter Topology
@@ -379,5 +388,367 @@ theorem tendsto_smoothCDF {P : Ω → ℝ} (hP : Measurable P) {g : ℝ → ℝ}
   exact abs_smoothCDF_sub_le hP hgm hg0 hg1 hgb hδ x
 
 end cdf
+
+/-! ### Splitting (§5.2) -/
+
+section splitting
+
+variable {Ω₁ Ω₂ : Type*} [MeasurableSpace Ω₁] [MeasurableSpace Ω₂] {μ : Measure Ω₁}
+  [IsProbabilityMeasure μ] {ν : Measure Ω₂} [IsProbabilityMeasure ν]
+
+/-- The `j`-th sub-sample, `(x, z) ↦ (x, z_j)`, pushes `μ ⊗ ν^ℕ` forward to `μ ⊗ ν`. -/
+lemma measurePreserving_subsample (j : ℕ) :
+    MeasurePreserving (fun q : Ω₁ × (ℕ → Ω₂) => (q.1, q.2 j))
+      (μ.prod (Measure.infinitePi fun _ => ν)) (μ.prod ν) := by
+  refine ⟨measurable_fst.prodMk ((measurable_pi_apply j).comp measurable_snd), ?_⟩
+  have h := Measure.map_prod_map μ (Measure.infinitePi fun _ : ℕ => ν) measurable_id
+    (measurable_pi_apply j)
+  rw [Measure.map_id, Measure.infinitePi_map_eval] at h
+  exact h.symm
+
+/-- Two distinct sub-samples, `(x, z) ↦ (x, (z_j, z_k))`, push `μ ⊗ ν^ℕ` forward to
+`μ ⊗ (ν ⊗ ν)`. -/
+lemma measurePreserving_subsample_pair {j k : ℕ} (hjk : j ≠ k) :
+    MeasurePreserving (fun q : Ω₁ × (ℕ → Ω₂) => (q.1, (q.2 j, q.2 k)))
+      (μ.prod (Measure.infinitePi fun _ => ν)) (μ.prod (ν.prod ν)) := by
+  refine ⟨measurable_fst.prodMk (((measurable_pi_apply j).prodMk
+    (measurable_pi_apply k)).comp measurable_snd), ?_⟩
+  have h := Measure.map_prod_map μ (Measure.infinitePi fun _ : ℕ => ν) measurable_id
+    ((measurable_pi_apply j).prodMk (measurable_pi_apply k))
+  rw [Measure.map_id, Measure.infinitePi_map_eval_prod hjk] at h
+  exact h.symm
+
+/-- A function of one sub-sample: integrability and integral transfer from `μ ⊗ ν`. -/
+lemma integrable_integral_subsample (j : ℕ) {F : Ω₁ × Ω₂ → ℝ} (hF : Integrable F (μ.prod ν)) :
+    Integrable (fun q : Ω₁ × (ℕ → Ω₂) => F (q.1, q.2 j)) (μ.prod (Measure.infinitePi fun _ => ν)) ∧
+      ∫ q, F (q.1, q.2 j) ∂(μ.prod (Measure.infinitePi fun _ => ν)) = ∫ w, F w ∂(μ.prod ν) := by
+  have hmp := measurePreserving_subsample (μ := μ) (ν := ν) j
+  have hF' : Integrable F (Measure.map (fun q : Ω₁ × (ℕ → Ω₂) => (q.1, q.2 j))
+      (μ.prod (Measure.infinitePi fun _ => ν))) := by
+    rw [hmp.map_eq]
+    exact hF
+  refine ⟨hF'.comp_measurable hmp.measurable, ?_⟩
+  have h := integral_map hmp.measurable.aemeasurable hF'.aestronglyMeasurable
+  rw [hmp.map_eq] at h
+  exact h.symm
+
+/-- **Splitting** (Giles 2015, §5.2, pp. 36–38: "the conditional expectation is replaced by a
+numerical estimate, averaging over a number of sub-samples. i.e. for each set of Brownian
+increments up to one fine timestep before the end, one uses a number of samples of the final
+Brownian increment to produce an average payoff.  If the number of sub-samples is chosen
+appropriately, the variance is the same, to leading order, without any increase in the
+computational cost").  Let `x ∼ μ` be the outer sample, `z_0, z_1, … ∼ ν` independent sub-samples
+of the final increment, independent of `x`, and `g(x, z)` a square-integrable payoff.  The average
+of `M ≥ 1` sub-samples, `S = M⁻¹ ∑_{j<M} g(x, z_j)`, has the mean of the conditional expectation
+`m(x) = ∫ g(x, z) dν(z)`, and `V[S] = V[m] + E[v]/M`, where `v(x) = ∫ (g(x, z) − m(x))² dν(z)` is
+the conditional variance: against the exact conditional expectation, splitting adds the variance
+`E[v]/M`, which the choice of `M` makes as small as required. -/
+theorem splitting_mean_variance {g : Ω₁ → Ω₂ → ℝ} (hg : Measurable (Function.uncurry g))
+    (hg2 : Integrable (fun q : Ω₁ × Ω₂ => g q.1 q.2 ^ 2) (μ.prod ν)) {M : ℕ} (hM : 0 < M) :
+    ∫ q, (∑ j ∈ Finset.range M, g q.1 (q.2 j)) / M ∂(μ.prod (Measure.infinitePi fun _ => ν)) =
+        ∫ x, ∫ z, g x z ∂ν ∂μ ∧
+      variance (fun q : Ω₁ × (ℕ → Ω₂) => (∑ j ∈ Finset.range M, g q.1 (q.2 j)) / M)
+          (μ.prod (Measure.infinitePi fun _ => ν)) =
+        variance (fun x => ∫ z, g x z ∂ν) μ +
+          (∫ x, ∫ z, (g x z - ∫ z', g x z' ∂ν) ^ 2 ∂ν ∂μ) / M := by
+  have hM' : (M : ℝ) ≠ 0 := Nat.cast_ne_zero.2 hM.ne'
+  have hgm : Measurable fun q : Ω₁ × Ω₂ => g q.1 q.2 := hg
+  -- `g` is integrable on `μ ⊗ ν`
+  have hint : Integrable (fun q : Ω₁ × Ω₂ => g q.1 q.2) (μ.prod ν) := by
+    refine Integrable.mono' ((hg2.add (integrable_const (1 : ℝ))).div_const 2)
+      hgm.aestronglyMeasurable (Eventually.of_forall fun q => ?_)
+    show ‖g q.1 q.2‖ ≤ (g q.1 q.2 ^ 2 + 1) / 2
+    rw [Real.norm_eq_abs]
+    nlinarith [sq_nonneg (|g q.1 q.2| - 1), sq_abs (g q.1 q.2)]
+  -- the moments of `g` along the sub-samples
+  obtain ⟨A, hA⟩ : ∃ A, A = ∫ x, ∫ z, g x z ^ 2 ∂ν ∂μ := ⟨_, rfl⟩
+  obtain ⟨B, hB⟩ : ∃ B, B = ∫ x, (∫ z, g x z ∂ν) ^ 2 ∂μ := ⟨_, rfl⟩
+  obtain ⟨C, hC⟩ : ∃ C, C = ∫ x, ∫ z, g x z ∂ν ∂μ := ⟨_, rfl⟩
+  have hgj : ∀ j, Integrable (fun q : Ω₁ × (ℕ → Ω₂) => g q.1 (q.2 j))
+      (μ.prod (Measure.infinitePi fun _ => ν)) := fun j => (integrable_integral_subsample j hint).1
+  have hgj2 : ∀ j, Integrable (fun q : Ω₁ × (ℕ → Ω₂) => g q.1 (q.2 j) ^ 2)
+      (μ.prod (Measure.infinitePi fun _ => ν)) := fun j => (integrable_integral_subsample j hg2).1
+  have hmean_j : ∀ j : ℕ, ∫ q, g q.1 (q.2 j) ∂(μ.prod (Measure.infinitePi fun _ => ν)) = C := by
+    intro j
+    have h := (integrable_integral_subsample j hint).2
+    rw [integral_prod _ hint] at h
+    rw [hC]
+    exact h
+  have hsq_j : ∀ j : ℕ, ∫ q, g q.1 (q.2 j) ^ 2 ∂(μ.prod (Measure.infinitePi fun _ => ν)) = A := by
+    intro j
+    have h := (integrable_integral_subsample j hg2).2
+    rw [integral_prod _ hg2] at h
+    rw [hA]
+    exact h
+  have hcross : ∀ {j k : ℕ}, j ≠ k →
+      Integrable (fun q : Ω₁ × (ℕ → Ω₂) => g q.1 (q.2 j) * g q.1 (q.2 k))
+        (μ.prod (Measure.infinitePi fun _ => ν)) ∧
+      ∫ q, g q.1 (q.2 j) * g q.1 (q.2 k) ∂(μ.prod (Measure.infinitePi fun _ => ν)) = B := by
+    intro j k hjk
+    have hi : Integrable (fun q : Ω₁ × (ℕ → Ω₂) => g q.1 (q.2 j) * g q.1 (q.2 k))
+        (μ.prod (Measure.infinitePi fun _ => ν)) := by
+      refine Integrable.mono' (((hgj2 j).add (hgj2 k)).div_const 2)
+        ((hgj j).aestronglyMeasurable.mul (hgj k).aestronglyMeasurable)
+        (Eventually.of_forall fun q => ?_)
+      show ‖g q.1 (q.2 j) * g q.1 (q.2 k)‖ ≤ (g q.1 (q.2 j) ^ 2 + g q.1 (q.2 k) ^ 2) / 2
+      rw [Real.norm_eq_abs, abs_mul]
+      nlinarith [sq_nonneg (|g q.1 (q.2 j)| - |g q.1 (q.2 k)|), sq_abs (g q.1 (q.2 j)),
+        sq_abs (g q.1 (q.2 k))]
+    refine ⟨hi, ?_⟩
+    have hmp := measurePreserving_subsample_pair (μ := μ) (ν := ν) hjk
+    have hFm : Measurable fun w : Ω₁ × (Ω₂ × Ω₂) => g w.1 w.2.1 * g w.1 w.2.2 :=
+      (hgm.comp (measurable_fst.prodMk measurable_snd.fst)).mul
+        (hgm.comp (measurable_fst.prodMk measurable_snd.snd))
+    have hF : Integrable (fun w : Ω₁ × (Ω₂ × Ω₂) => g w.1 w.2.1 * g w.1 w.2.2)
+        (μ.prod (ν.prod ν)) := by
+      rw [← hmp.map_eq]
+      exact (integrable_map_measure hFm.aestronglyMeasurable hmp.measurable.aemeasurable).2 hi
+    have h1 := integral_map (μ := μ.prod (Measure.infinitePi fun _ : ℕ => ν))
+      (f := fun w : Ω₁ × (Ω₂ × Ω₂) => g w.1 w.2.1 * g w.1 w.2.2)
+      hmp.measurable.aemeasurable hFm.aestronglyMeasurable
+    rw [hmp.map_eq, integral_prod _ hF] at h1
+    have h2 : ∫ x, ∫ y, g x y.1 * g x y.2 ∂(ν.prod ν) ∂μ = B := by
+      rw [hB]
+      refine integral_congr_ae (Eventually.of_forall fun x => ?_)
+      show ∫ y, g x y.1 * g x y.2 ∂(ν.prod ν) = (∫ z, g x z ∂ν) ^ 2
+      rw [integral_prod_mul (g x) (g x), sq]
+    rw [← h2]
+    exact h1.symm
+  have hjk : ∀ j k, Integrable (fun q : Ω₁ × (ℕ → Ω₂) => g q.1 (q.2 j) * g q.1 (q.2 k))
+        (μ.prod (Measure.infinitePi fun _ => ν)) ∧
+      ∫ q, g q.1 (q.2 j) * g q.1 (q.2 k) ∂(μ.prod (Measure.infinitePi fun _ => ν)) =
+        if j = k then A else B := by
+    intro j k
+    by_cases h : j = k
+    · rw [if_pos h, ← h]
+      have e : (fun q : Ω₁ × (ℕ → Ω₂) => g q.1 (q.2 j) * g q.1 (q.2 j)) =
+          fun q => g q.1 (q.2 j) ^ 2 := funext fun q => (sq _).symm
+      rw [e]
+      exact ⟨hgj2 j, hsq_j j⟩
+    · rw [if_neg h]
+      exact hcross h
+  -- the mean of the splitting estimator
+  have hES : ∫ q, (∑ j ∈ Finset.range M, g q.1 (q.2 j)) / M
+      ∂(μ.prod (Measure.infinitePi fun _ => ν)) = C := by
+    rw [integral_div, integral_finsetSum (Finset.range M) fun j _ => hgj j,
+      Finset.sum_congr rfl fun j _ => hmean_j j, Finset.sum_const, Finset.card_range,
+      nsmul_eq_mul, mul_div_cancel_left₀ _ hM']
+  -- its second moment
+  have hpt : ∀ q : Ω₁ × (ℕ → Ω₂), ((∑ j ∈ Finset.range M, g q.1 (q.2 j)) / M) ^ 2 =
+      (∑ j ∈ Finset.range M, ∑ k ∈ Finset.range M, g q.1 (q.2 j) * g q.1 (q.2 k)) /
+        (M : ℝ) ^ 2 := by
+    intro q
+    rw [div_pow, sq, Finset.sum_mul_sum]
+  have hcount : ∀ j ∈ Finset.range M,
+      ∑ k ∈ Finset.range M, (if j = k then A else B) = A + ((M : ℝ) - 1) * B := by
+    intro j hj
+    have e : ∀ k, (if j = k then A else B) = B + if j = k then A - B else 0 := fun k => by
+      split_ifs <;> ring
+    rw [Finset.sum_congr rfl fun k _ => e k, Finset.sum_add_distrib, Finset.sum_const,
+      Finset.card_range, Finset.sum_ite_eq, if_pos hj, nsmul_eq_mul]
+    ring
+  have hES2 : ∫ q, ((∑ j ∈ Finset.range M, g q.1 (q.2 j)) / M) ^ 2
+      ∂(μ.prod (Measure.infinitePi fun _ => ν)) =
+      ((M : ℝ) * A + (M : ℝ) * ((M : ℝ) - 1) * B) / (M : ℝ) ^ 2 := by
+    rw [integral_congr_ae (Eventually.of_forall hpt), integral_div,
+      integral_finsetSum (Finset.range M) fun j _ =>
+        integrable_finsetSum (Finset.range M) fun k _ => (hjk j k).1,
+      Finset.sum_congr rfl fun j _ => integral_finsetSum (Finset.range M) fun k _ => (hjk j k).1,
+      Finset.sum_congr rfl fun j _ => Finset.sum_congr rfl fun k _ => (hjk j k).2,
+      Finset.sum_congr rfl hcount, Finset.sum_const, Finset.card_range, nsmul_eq_mul]
+    ring
+  have hSint : Integrable (fun q : Ω₁ × (ℕ → Ω₂) => (∑ j ∈ Finset.range M, g q.1 (q.2 j)) / M)
+      (μ.prod (Measure.infinitePi fun _ => ν)) :=
+    (integrable_finsetSum (Finset.range M) fun j _ => hgj j).div_const (M : ℝ)
+  have hS2int : Integrable (fun q : Ω₁ × (ℕ → Ω₂) =>
+      ((∑ j ∈ Finset.range M, g q.1 (q.2 j)) / M) ^ 2) (μ.prod (Measure.infinitePi fun _ => ν)) :=
+    ((integrable_finsetSum (Finset.range M) fun j _ =>
+      integrable_finsetSum (Finset.range M) fun k _ => (hjk j k).1).div_const
+      ((M : ℝ) ^ 2)).congr (Eventually.of_forall fun q => (hpt q).symm)
+  have hSmem : MemLp (fun q : Ω₁ × (ℕ → Ω₂) => (∑ j ∈ Finset.range M, g q.1 (q.2 j)) / M) 2
+      (μ.prod (Measure.infinitePi fun _ => ν)) :=
+    (memLp_two_iff_integrable_sq hSint.aestronglyMeasurable).2 hS2int
+  have hVS : variance (fun q : Ω₁ × (ℕ → Ω₂) => (∑ j ∈ Finset.range M, g q.1 (q.2 j)) / M)
+      (μ.prod (Measure.infinitePi fun _ => ν)) =
+      ∫ q, ((∑ j ∈ Finset.range M, g q.1 (q.2 j)) / M) ^ 2
+        ∂(μ.prod (Measure.infinitePi fun _ => ν)) -
+      (∫ q, (∑ j ∈ Finset.range M, g q.1 (q.2 j)) / M
+        ∂(μ.prod (Measure.infinitePi fun _ => ν))) ^ 2 :=
+    variance_eq_sub hSmem
+  -- the conditional mean and the conditional variance
+  have hae : ∀ᵐ x ∂μ, (∫ z, g x z ∂ν) ^ 2 ≤ ∫ z, g x z ^ 2 ∂ν ∧
+      ∫ z, (g x z - ∫ z', g x z' ∂ν) ^ 2 ∂ν = ∫ z, g x z ^ 2 ∂ν - (∫ z, g x z ∂ν) ^ 2 := by
+    filter_upwards [hg2.prod_right_ae] with x hx
+    have hgx : Measurable fun z => g x z := hgm.comp (measurable_const.prodMk measurable_id)
+    have hmx : MemLp (fun z => g x z) 2 ν :=
+      (memLp_two_iff_integrable_sq hgx.aestronglyMeasurable).2 hx
+    have h1 : variance (fun z => g x z) ν = ∫ z, g x z ^ 2 ∂ν - (∫ z, g x z ∂ν) ^ 2 :=
+      variance_eq_sub hmx
+    have h2 : variance (fun z => g x z) ν = ∫ z, (g x z - ∫ z', g x z' ∂ν) ^ 2 ∂ν :=
+      variance_eq_integral (hgx.aemeasurable (μ := ν))
+    have h3 := variance_nonneg (fun z => g x z) ν
+    exact ⟨by linarith, h2.symm.trans h1⟩
+  have hAint : Integrable (fun x => ∫ z, g x z ^ 2 ∂ν) μ := hg2.integral_prod_left
+  have hmm : StronglyMeasurable fun x => ∫ z, g x z ∂ν :=
+    hgm.stronglyMeasurable.integral_prod_right'
+  have hm2 : Integrable (fun x => (∫ z, g x z ∂ν) ^ 2) μ := by
+    refine hAint.mono' (hmm.aestronglyMeasurable.pow 2) (hae.mono fun x hx => ?_)
+    rw [Real.norm_eq_abs, abs_of_nonneg (sq_nonneg _)]
+    exact hx.1
+  have hmMem : MemLp (fun x => ∫ z, g x z ∂ν) 2 μ :=
+    (memLp_two_iff_integrable_sq hmm.aestronglyMeasurable).2 hm2
+  have hVm : variance (fun x => ∫ z, g x z ∂ν) μ =
+      ∫ x, (∫ z, g x z ∂ν) ^ 2 ∂μ - (∫ x, ∫ z, g x z ∂ν ∂μ) ^ 2 :=
+    variance_eq_sub hmMem
+  have hv : ∫ x, ∫ z, (g x z - ∫ z', g x z' ∂ν) ^ 2 ∂ν ∂μ =
+      ∫ x, ∫ z, g x z ^ 2 ∂ν ∂μ - ∫ x, (∫ z, g x z ∂ν) ^ 2 ∂μ := by
+    rw [← integral_sub hAint hm2]
+    exact integral_congr_ae (hae.mono fun x hx => hx.2)
+  refine ⟨hES.trans hC, ?_⟩
+  rw [hVS, hES2, hES, hVm, hv, ← hA, ← hB, ← hC]
+  have hMI : (M : ℝ) * (M : ℝ)⁻¹ = 1 := mul_inv_cancel₀ hM'
+  linear_combination (A * (M : ℝ)⁻¹ + B * ((M : ℝ) * (M : ℝ)⁻¹ + 1) - B * (M : ℝ)⁻¹) * hMI
+
+end splitting
+
+/-! ### The density as a limit (§5.7) -/
+
+section density
+
+open scoped NNReal ENNReal
+
+/-- A function that vanishes outside `[−1, 1]` has compact support. -/
+lemma hasCompactSupport_of_abs_gt {g : ℝ → ℝ} (hg0 : ∀ y, 1 < |y| → g y = 0) :
+    HasCompactSupport g :=
+  HasCompactSupport.intro (isCompact_Icc (a := -1) (b := 1)) fun y hy => hg0 y (by
+    rw [Set.mem_Icc, not_and_or, not_le, not_le] at hy
+    rcases hy with hy | hy
+    · exact lt_abs.2 (Or.inr (by linarith))
+    · exact lt_abs.2 (Or.inl hy))
+
+/-- `y ↦ c φ(c(x − y)) r(y)` is integrable for continuous `φ` with compact support and integrable
+`r`. -/
+lemma integrable_kernel_mul {φ : ℝ → ℝ} (hφc : Continuous φ) (hφs : HasCompactSupport φ)
+    {r : ℝ → ℝ} (hr : Integrable r) (c x : ℝ) :
+    Integrable (fun y => c * φ (c * (x - y)) * r y) := by
+  obtain ⟨B, hB⟩ := hφs.exists_bound_of_continuous hφc
+  refine hr.bdd_mul (c := |c| * B) ?_ (Eventually.of_forall fun y => ?_)
+  · exact (continuous_const.mul (hφc.comp (continuous_const.mul
+      (continuous_const.sub continuous_id)))).aestronglyMeasurable
+  · show ‖c * φ (c * (x - y))‖ ≤ |c| * B
+    rw [norm_mul, Real.norm_eq_abs]
+    exact mul_le_mul_of_nonneg_left (hB _) (abs_nonneg c)
+
+/-- The rescaled kernels `c φ(c(x − ·))` of a nonnegative `φ` with integral `1` vanishing outside
+`[−1, 1]` are peak functions at `x`: `∫ c φ(c(x − y)) r(y) dy → r(x)` as `c → ∞` for integrable `r`
+continuous at `x` (Mathlib's `tendsto_integral_comp_smul_smul_of_integrable'`). -/
+lemma tendsto_kernel_integral {φ : ℝ → ℝ} (hφ0 : ∀ y, 0 ≤ φ y)
+    (hφs : ∀ y, 1 < |y| → φ y = 0) (hφ1 : ∫ y, φ y = 1) {r : ℝ → ℝ} (hr : Integrable r)
+    {x : ℝ} (hrx : ContinuousAt r x) :
+    Tendsto (fun c : ℝ => ∫ y, c * φ (c * (x - y)) * r y) atTop (𝓝 (r x)) := by
+  have hdecay : Tendsto (fun y : ℝ => ‖y‖ ^ Module.finrank ℝ ℝ * φ y) (Bornology.cobounded ℝ)
+      (𝓝 0) := by
+    refine tendsto_const_nhds.congr' ?_
+    filter_upwards [tendsto_norm_cobounded_atTop.eventually_gt_atTop 1] with y hy
+    show (0 : ℝ) = ‖y‖ ^ Module.finrank ℝ ℝ * φ y
+    rw [Real.norm_eq_abs] at hy
+    rw [hφs y hy, mul_zero]
+  have h := tendsto_integral_comp_smul_smul_of_integrable' (μ := volume) hφ0 hφ1 hdecay hr hrx
+  simp only [Module.finrank_self, pow_one, smul_eq_mul] at h
+  exact h
+
+/-- The same for a kernel `g` of either sign: `g` continuous, `g = 0` outside `[−1, 1]` and
+`∫ g = 1`.  With `A = ∫ |g| ≥ 1`, `g = ((2A + 1) φ₁ − (2A − 1) φ₂)/2` for the nonnegative kernels
+`φ₁ = (2|g| + g)/(2A + 1)` and `φ₂ = (2|g| − g)/(2A − 1)`, each of integral `1`. -/
+lemma tendsto_kernel_integral_signed {g : ℝ → ℝ} (hg : Continuous g)
+    (hg0 : ∀ y, 1 < |y| → g y = 0) (hg1 : ∫ y, g y = 1) {r : ℝ → ℝ} (hr : Integrable r)
+    {x : ℝ} (hrx : ContinuousAt r x) :
+    Tendsto (fun c : ℝ => ∫ y, c * g (c * (x - y)) * r y) atTop (𝓝 (r x)) := by
+  have hgi : Integrable g := hg.integrable_of_hasCompactSupport (hasCompactSupport_of_abs_gt hg0)
+  obtain ⟨A, hA_def⟩ : ∃ A, A = ∫ t, |g t| := ⟨_, rfl⟩
+  have hA : 1 ≤ A := by
+    have h := (le_abs_self (∫ t, g t)).trans (abs_integral_le_integral_abs (f := g))
+    rwa [hg1, ← hA_def] at h
+  have hp : (0 : ℝ) < 2 * A + 1 := by linarith
+  have hm : (0 : ℝ) < 2 * A - 1 := by linarith
+  have hc₁ : Continuous fun y => (2 * |g y| + g y) / (2 * A + 1) :=
+    ((continuous_const.mul hg.abs).add hg).div_const _
+  have hc₂ : Continuous fun y => (2 * |g y| - g y) / (2 * A - 1) :=
+    ((continuous_const.mul hg.abs).sub hg).div_const _
+  have hs₁ : ∀ y, 1 < |y| → (2 * |g y| + g y) / (2 * A + 1) = 0 := fun y hy => by
+    rw [hg0 y hy, abs_zero, mul_zero, add_zero, zero_div]
+  have hs₂ : ∀ y, 1 < |y| → (2 * |g y| - g y) / (2 * A - 1) = 0 := fun y hy => by
+    rw [hg0 y hy, abs_zero, mul_zero, sub_zero, zero_div]
+  have h₁ := tendsto_kernel_integral (φ := fun y => (2 * |g y| + g y) / (2 * A + 1))
+    (fun y => div_nonneg (by linarith [abs_nonneg (g y), neg_abs_le (g y)]) hp.le) hs₁
+    (by
+      show ∫ y, (2 * |g y| + g y) / (2 * A + 1) = 1
+      rw [integral_div, integral_add (hgi.abs.const_mul 2) hgi, integral_const_mul, hg1,
+        ← hA_def]
+      exact div_self hp.ne')
+    hr hrx
+  have h₂ := tendsto_kernel_integral (φ := fun y => (2 * |g y| - g y) / (2 * A - 1))
+    (fun y => div_nonneg (by linarith [abs_nonneg (g y), le_abs_self (g y)]) hm.le) hs₂
+    (by
+      show ∫ y, (2 * |g y| - g y) / (2 * A - 1) = 1
+      rw [integral_div, integral_sub (hgi.abs.const_mul 2) hgi, integral_const_mul, hg1,
+        ← hA_def]
+      exact div_self hm.ne')
+    hr hrx
+  have hlim := ((h₁.const_mul (2 * A + 1)).sub (h₂.const_mul (2 * A - 1))).div_const 2
+  have e : ((2 * A + 1) * r x - (2 * A - 1) * r x) / 2 = r x := by ring
+  rw [e] at hlim
+  refine hlim.congr fun c => ?_
+  have hi₁ := integrable_kernel_mul hc₁ (hasCompactSupport_of_abs_gt hs₁) hr c x
+  have hi₂ := integrable_kernel_mul hc₂ (hasCompactSupport_of_abs_gt hs₂) hr c x
+  try dsimp only
+  rw [← integral_const_mul, ← integral_const_mul,
+    ← integral_sub (hi₁.const_mul _) (hi₂.const_mul _), ← integral_div]
+  refine integral_congr_ae (Eventually.of_forall fun y => ?_)
+  have e₁ : (2 * A + 1) * (2 * A + 1)⁻¹ = 1 := mul_inv_cancel₀ hp.ne'
+  have e₂ : (2 * A - 1) * (2 * A - 1)⁻¹ = 1 := mul_inv_cancel₀ hm.ne'
+  show ((2 * A + 1) * (c * ((2 * |g (c * (x - y))| + g (c * (x - y))) / (2 * A + 1)) * r y) -
+      (2 * A - 1) * (c * ((2 * |g (c * (x - y))| - g (c * (x - y))) / (2 * A - 1)) * r y)) / 2 =
+    c * g (c * (x - y)) * r y
+  linear_combination (c * (2 * |g (c * (x - y))| + g (c * (x - y))) * r y / 2) * e₁ -
+    (c * (2 * |g (c * (x - y))| - g (c * (x - y))) * r y / 2) * e₂
+
+variable {Ω : Type*} [MeasurableSpace Ω] {μ : Measure Ω} [IsProbabilityMeasure μ]
+
+/-- **The density as a limit** (Giles 2015, §5.7, p. 46: "the density `ρ(x)` of the scalar output
+`P` is given by `ρ(x) = lim_{δ→0} E[δ⁻¹ g((x − P)/δ)]`, where `g(x)` is a continuous function with
+`g(x) = 0` for `|x| > 1`, and `∫_{−1}^{1} g(x) dx = 1`").  If the law of `P` has a density `ρ` with
+respect to Lebesgue measure that is continuous at `x`, then `E[δ⁻¹ g((x − P)/δ)] → ρ(x)` as
+`δ → 0⁺`. -/
+theorem tendsto_density {P : Ω → ℝ} (hP : Measurable P) {ρ : ℝ → ℝ≥0} (hρm : Measurable ρ)
+    (hlaw : μ.map P = volume.withDensity fun y => (ρ y : ℝ≥0∞)) {x : ℝ}
+    (hρx : ContinuousAt (fun y => (ρ y : ℝ)) x) {g : ℝ → ℝ} (hg : Continuous g)
+    (hg0 : ∀ y, 1 < |y| → g y = 0) (hg1 : ∫ y, g y = 1) :
+    Tendsto (fun δ => ∫ ω, δ⁻¹ * g ((x - P ω) / δ) ∂μ) (𝓝[>] 0) (𝓝 (ρ x : ℝ)) := by
+  -- the density has total mass one, so it is integrable
+  have hmass : ∫⁻ y, (ρ y : ℝ≥0∞) = 1 := by
+    have h := congrArg (fun m : Measure ℝ => m Set.univ) hlaw
+    simp only [Measure.map_apply hP MeasurableSet.univ, Set.preimage_univ, measure_univ,
+      withDensity_apply _ MeasurableSet.univ, Measure.restrict_univ] at h
+    exact h.symm
+  have hr : Integrable (fun y => (ρ y : ℝ)) :=
+    (integrable_toReal_of_lintegral_ne_top hρm.coe_nnreal_ennreal.aemeasurable
+      (by rw [hmass]; exact ENNReal.one_ne_top)).congr (Eventually.of_forall fun _ => rfl)
+  -- the expectation is an integral against the density
+  have hE : ∀ δ : ℝ, ∫ ω, δ⁻¹ * g ((x - P ω) / δ) ∂μ =
+      ∫ y, δ⁻¹ * g (δ⁻¹ * (x - y)) * (ρ y : ℝ) := by
+    intro δ
+    have hmeas : Measurable fun y : ℝ => δ⁻¹ * g ((x - y) / δ) :=
+      measurable_const.mul (hg.measurable.comp ((measurable_const.sub measurable_id).div_const δ))
+    rw [← integral_map hP.aemeasurable hmeas.aestronglyMeasurable, hlaw,
+      integral_withDensity_eq_integral_smul hρm]
+    refine integral_congr_ae (Eventually.of_forall fun y => ?_)
+    simp only [NNReal.smul_def, smul_eq_mul]
+    rw [div_eq_inv_mul]
+    ring
+  exact ((tendsto_kernel_integral_signed hg hg0 hg1 hr hρx).comp tendsto_inv_nhdsGT_zero).congr
+    fun δ => (hE δ).symm
+
+end density
 
 end MLMC

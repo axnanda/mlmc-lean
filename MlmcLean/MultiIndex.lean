@@ -79,6 +79,19 @@ lemma crossDiff_one (p : (Fin 1 → ℕ) → ℝ) (ℓ : Fin 1 → ℕ) :
       p ℓ - if ℓ 0 = 0 then 0 else p (Fin.cons (ℓ 0 - 1) (Fin.tail ℓ)) := by
   simp only [crossDiff_succ, crossDiff_zero, Fin.cons_self_tail]
 
+/-- **Giles 2015, §2.4 and Figure 2.1: the cross-difference in two dimensions.**  For
+`ℓ₁, ℓ₂ ≥ 1`, `ΔP_{(ℓ₁,ℓ₂)} = P_{(ℓ₁,ℓ₂)} − P_{(ℓ₁−1,ℓ₂)} − P_{(ℓ₁,ℓ₂−1)} + P_{(ℓ₁−1,ℓ₂−1)}`: one
+MIMC sample on level `(ℓ₁, ℓ₂)` needs the four evaluations at the corners of the unit square below
+`(ℓ₁, ℓ₂)` shown in Figure 2.1 (here `(a, b)` is `Fin.cons a (Fin.cons b e)`). -/
+theorem crossDiff_two (p : (Fin 2 → ℕ) → ℝ) (e : Fin 0 → ℕ) {a b : ℕ} (ha : a ≠ 0) (hb : b ≠ 0) :
+    crossDiff p (Fin.cons a (Fin.cons b e)) =
+      p (Fin.cons a (Fin.cons b e)) - p (Fin.cons (a - 1) (Fin.cons b e)) -
+        p (Fin.cons a (Fin.cons (b - 1) e)) + p (Fin.cons (a - 1) (Fin.cons (b - 1) e)) := by
+  rw [crossDiff_succ, Fin.cons_zero, Fin.tail_cons, if_neg ha, crossDiff_succ, crossDiff_succ,
+    Fin.cons_zero, Fin.tail_cons, if_neg hb, if_neg hb, crossDiff_zero, crossDiff_zero,
+    crossDiff_zero, crossDiff_zero]
+  ring
+
 /-- Giles' Figure 2.1: in two dimensions `ΔP_{(5,4)}` needs the four evaluations
 `P_{(5,4)} − P_{(4,4)} − P_{(5,3)} + P_{(4,3)}` (here `(a, b)` is `Fin.cons a (Fin.cons b e)`). -/
 example (p : (Fin 2 → ℕ) → ℝ) (e : Fin 0 → ℕ) :

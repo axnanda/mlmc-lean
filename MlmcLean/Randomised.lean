@@ -705,6 +705,44 @@ theorem randomised_optimal_p_eq {V C : ℕ → ℝ} (hV : ∀ ℓ, 0 < V ℓ) (h
     rw [tsum_mul_left, tsum_div_const]
     field_simp [hZ0.ne']
 
+/-- **The sample count and the cost with the optimal level distribution** (Giles 2015, §2.2, p. 10:
+"If `E_ℓ² ≪ V_ℓ`, then the condition that the variance of the estimator is approximately equal to
+`ε²` gives `N ≈ ε⁻² ∑_ℓ V_ℓ/p_ℓ ≈ ε⁻² (∑_ℓ √(V_ℓ C_ℓ))(∑_ℓ' √(V_ℓ'/C_ℓ'))` and therefore the total
+cost is `C = N ∑_ℓ p_ℓ C_ℓ ≈ ε⁻² (∑_ℓ √(V_ℓ C_ℓ))²`").  For `p = optimalLevelProb V C` the
+identities are exact: `∑ V_ℓ/p_ℓ = (∑ √(V_ℓ C_ℓ))(∑ √(V_ℓ/C_ℓ))`, the expected cost of one sample is
+`∑ p_ℓ C_ℓ = (∑ √(V_ℓ C_ℓ)) / (∑ √(V_ℓ/C_ℓ))`, and `ε⁻² (∑ V_ℓ/p_ℓ)(∑ p_ℓ C_ℓ) = ε⁻² (∑ √(V_ℓ C_ℓ))²`.
+The approximations `≈` of the paper are the neglect of `E_ℓ²` in the variance
+(`singleTermN_mean_variance`) and the rounding of `N` to an integer. -/
+theorem randomised_optimal_cost {V C : ℕ → ℝ} (hV : ∀ ℓ, 0 < V ℓ) (hC : ∀ ℓ, 0 < C ℓ)
+    (hS : Summable fun ℓ => Real.sqrt (V ℓ * C ℓ)) (hZ : Summable fun ℓ => Real.sqrt (V ℓ / C ℓ))
+    (ε : ℝ) :
+    ∑' ℓ, V ℓ / optimalLevelProb V C ℓ =
+        (∑' ℓ, Real.sqrt (V ℓ * C ℓ)) * ∑' ℓ, Real.sqrt (V ℓ / C ℓ) ∧
+      ∑' ℓ, optimalLevelProb V C ℓ * C ℓ =
+        (∑' ℓ, Real.sqrt (V ℓ * C ℓ)) / ∑' ℓ, Real.sqrt (V ℓ / C ℓ) ∧
+      (ε ^ 2)⁻¹ * (∑' ℓ, V ℓ / optimalLevelProb V C ℓ) * ∑' ℓ, optimalLevelProb V C ℓ * C ℓ =
+        (ε ^ 2)⁻¹ * (∑' ℓ, Real.sqrt (V ℓ * C ℓ)) ^ 2 := by
+  have hprod := (randomised_optimal_p_eq hV hC hS hZ).2.2.2.2
+  set Z := ∑' k, Real.sqrt (V k / C k) with hZ_def
+  have hq : ∀ ℓ, 0 < Real.sqrt (V ℓ / C ℓ) := fun ℓ => Real.sqrt_pos.2 (div_pos (hV ℓ) (hC ℓ))
+  have e1 : ∀ ℓ, V ℓ / optimalLevelProb V C ℓ = Z * Real.sqrt (V ℓ * C ℓ) := fun ℓ => by
+    unfold optimalLevelProb
+    rw [← hZ_def, div_div_eq_mul_div, div_eq_iff (hq ℓ).ne']
+    have hid := sqrt_div_mul_sqrt_mul (hV ℓ).le (hC ℓ)
+    linear_combination (-Z) * hid
+  have e2 : ∀ ℓ, optimalLevelProb V C ℓ * C ℓ = Real.sqrt (V ℓ * C ℓ) / Z := fun ℓ => by
+    unfold optimalLevelProb
+    rw [← hZ_def, ← sqrt_div_mul (hV ℓ).le (hC ℓ)]
+    ring
+  have h1 : ∑' ℓ, V ℓ / optimalLevelProb V C ℓ = (∑' ℓ, Real.sqrt (V ℓ * C ℓ)) * Z := by
+    simp_rw [e1]
+    rw [tsum_mul_left]
+    exact mul_comm _ _
+  have h2 : ∑' ℓ, optimalLevelProb V C ℓ * C ℓ = (∑' ℓ, Real.sqrt (V ℓ * C ℓ)) / Z := by
+    simp_rw [e2]
+    rw [tsum_div_const]
+  exact ⟨h1, h2, by rw [mul_assoc, hprod]⟩
+
 /-- **The optimal level distribution** (Giles 2015, §2.2, p. 10: "the optimal choice for `p_ℓ` is
 `p_ℓ = √(V_ℓ/C_ℓ) (∑ √(V_ℓ'/C_ℓ'))⁻¹`").  For positive `V_ℓ, C_ℓ` with `∑ √(V_ℓ C_ℓ) < ∞` and
 `∑ √(V_ℓ/C_ℓ) < ∞` (the paper's proviso is `β > γ`), the least value of the product
