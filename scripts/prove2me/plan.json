@@ -497,7 +497,6 @@
     "MLMC.prod_integral_sq_factor_le",
     "MLMC.prod_ml2r_factor_gt_le",
     "MLMC.prod_ml2r_factor_lt_le",
-    "MLMC.revFun_involutive",
     "MLMC.rpow_sum_le_sum_rpow",
     "MLMC.rpow_two_mul_le_sum",
     "MLMC.sq_le_of_abs_le_add",

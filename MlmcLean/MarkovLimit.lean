@@ -79,13 +79,11 @@ lemma backIter_eq_fwdIter (φ : α → E → α) (n : ℕ) (e : ℕ → E) (x : 
 /-- The reversal `i ↦ n − 1 − i` of the first `n` indices (the other indices are fixed). -/
 def revFun (n i : ℕ) : ℕ := if i < n then n - 1 - i else i
 
-lemma revFun_involutive (n : ℕ) : Function.Involutive (revFun n) := by
-  intro i
-  unfold revFun
-  split_ifs <;> omega
-
-/-- The reversal of the first `n` indices as a permutation of `ℕ`. -/
-def revPerm (n : ℕ) : Equiv.Perm ℕ := Function.Involutive.toPerm (revFun n) (revFun_involutive n)
+/-- The reversal of the first `n` indices as a permutation of `ℕ` (`revFun n` is an involution). -/
+def revPerm (n : ℕ) : Equiv.Perm ℕ :=
+  Function.Involutive.toPerm (revFun n) fun i => by
+    unfold revFun
+    split_ifs <;> omega
 
 /-- `backIter φ n e x = fwdIter φ n (e ∘ σ_n) x`, `σ_n` the reversal of the first `n` indices. -/
 lemma backIter_eq_fwdIter_rev (φ : α → E → α) (n : ℕ) (e : ℕ → E) (x : α) :

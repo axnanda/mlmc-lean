@@ -217,3 +217,6 @@ the papers or deliberate:
   Lipschitz, so `hK` is implied by `hΛ` (with `K = Λ`); it is kept because it is the paper's
   condition.  The weak rate `α` of tau-leaping is a hypothesis (it compares with the exact chain,
   which needs a continuous-time Markov chain).
+- After the read-back, the lemma `revFun_involutive` cited by the packet was inlined into
+  `revPerm` (the prove2.me generator does not allow a definition to cite a theorem); the
+  definition is unchanged.
