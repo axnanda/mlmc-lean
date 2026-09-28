@@ -173,7 +173,8 @@ theorem abs_antithetic_le {f f' : ℝ → ℝ} {K : ℝ} (hf : ∀ x, HasDerivAt
     _ = |f' c| * |(a + b) / 2 - c| + K / 4 * ((a - c) ^ 2 + (b - c) ^ 2) := by ring
 
 /-- `|Y| ≤ a + κ(s + t)` gives `Y² ≤ 2a² + 4κ²(s² + t²)`. -/
-lemma sq_le_of_abs_le_add {Y a κ s t : ℝ} (h : |Y| ≤ a + κ * (s + t)) : Y ^ 2 ≤ 2 * a ^ 2 + 4 * κ ^ 2 * (s ^ 2 + t ^ 2) := by
+lemma sq_le_of_abs_le_add {Y a κ s t : ℝ} (h : |Y| ≤ a + κ * (s + t)) :
+    Y ^ 2 ≤ 2 * a ^ 2 + 4 * κ ^ 2 * (s ^ 2 + t ^ 2) := by
   have h1 : Y ^ 2 ≤ (a + κ * (s + t)) ^ 2 := by
     rw [← sq_abs]
     exact pow_le_pow_left₀ (abs_nonneg _) h 2

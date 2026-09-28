@@ -710,7 +710,8 @@ theorem randomised_optimal_p_eq {V C : ℕ → ℝ} (hV : ∀ ℓ, 0 < V ℓ) (h
 `ε²` gives `N ≈ ε⁻² ∑_ℓ V_ℓ/p_ℓ ≈ ε⁻² (∑_ℓ √(V_ℓ C_ℓ))(∑_ℓ' √(V_ℓ'/C_ℓ'))` and therefore the total
 cost is `C = N ∑_ℓ p_ℓ C_ℓ ≈ ε⁻² (∑_ℓ √(V_ℓ C_ℓ))²`").  For `p = optimalLevelProb V C` the
 identities are exact: `∑ V_ℓ/p_ℓ = (∑ √(V_ℓ C_ℓ))(∑ √(V_ℓ/C_ℓ))`, the expected cost of one sample is
-`∑ p_ℓ C_ℓ = (∑ √(V_ℓ C_ℓ)) / (∑ √(V_ℓ/C_ℓ))`, and `ε⁻² (∑ V_ℓ/p_ℓ)(∑ p_ℓ C_ℓ) = ε⁻² (∑ √(V_ℓ C_ℓ))²`.
+`∑ p_ℓ C_ℓ = (∑ √(V_ℓ C_ℓ)) / (∑ √(V_ℓ/C_ℓ))`, and
+`ε⁻² (∑ V_ℓ/p_ℓ)(∑ p_ℓ C_ℓ) = ε⁻² (∑ √(V_ℓ C_ℓ))²`.
 The approximations `≈` of the paper are the neglect of `E_ℓ²` in the variance
 (`singleTermN_mean_variance`) and the rounding of `N` to an integer. -/
 theorem randomised_optimal_cost {V C : ℕ → ℝ} (hV : ∀ ℓ, 0 < V ℓ) (hC : ∀ ℓ, 0 < C ℓ)
