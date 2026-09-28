@@ -62,6 +62,9 @@
 --   and the distribution of X_n converges weakly to that of X_∞
 -- * `MlmcLean.TauLeapingMLMC` — Giles §8: Theorem 1 for tau-leaping MLMC with the Poisson
 --   coupling (square-integrable payoffs, (2.4), β = 1 on every level, MSE and cost)
+-- * `MlmcLean.GBMEulerMaruyama` — Giles §5.1: the Euler–Maruyama MLMC estimator for geometric
+--   Brownian motion end to end (strong error O(h), α = ½, β = 1, Theorem 1 with no
+--   assumed rate)
 import MlmcLean.Allocation
 import MlmcLean.Estimator
 import MlmcLean.LevelDiff
@@ -102,3 +105,4 @@ import MlmcLean.MLQMC
 import MlmcLean.LUTLimits
 import MlmcLean.MarkovLimit
 import MlmcLean.TauLeapingMLMC
+import MlmcLean.GBMEulerMaruyama
