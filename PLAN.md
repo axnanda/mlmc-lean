@@ -41,7 +41,7 @@ table and `notes/statement-audit.md`, which compares every statement with the pa
   checks), the pure steps of the applications in §5, §7, §8 (the Poisson coupling), §9 and §10,
   and Haas–Giles §2–§6 (the Euler–Maruyama coupling, approximate normals, the rounding-error
   model, the fixed-point path, the cost model and the bit-width optimisation). The README table
-  lists the modules; `scripts/AxiomCheck.lean` lists the 390 audited theorems.
+  lists the modules; `scripts/AxiomCheck.lean` lists the 396 audited theorems.
 
 ## Setup and verification (Linux / cloud session)
 
@@ -129,8 +129,8 @@ items listed under "Not formalised" below.
   MSE), the driver's estimates, the consistency check, the kurtosis.
 - ✅ Applications, the parts that need no SDE/PDE theory: §5 (Euler–Maruyama coupling, rates from
   the timestep, conditional expectations, Brownian-bridge midpoint, antithetic swap, splitting,
-  explicit-step stability, smoothed CDF, density limit), §7.1, §8 (tau-leaping and the Poisson
-  coupling), §9 (nested simulation, the `−1/8` constant), §10.1 (contraction, variance decay, the
+  explicit-step stability, smoothed CDF, density limit), §7.1, §8 (tau-leaping, the Poisson
+  coupling and its correction variance `O(h)`), §9 (nested simulation, the `−1/8` constant), §10.1 (contraction, variance decay, the
   uniform invariant law).
 - ✅ Haas–Giles §2–§6: the Euler–Maruyama coupling (4)–(5), approximate normals (13)–(19), the
   rounding-error model (20)–(29) (with the corrections recorded in `notes/statement-audit.md`),
