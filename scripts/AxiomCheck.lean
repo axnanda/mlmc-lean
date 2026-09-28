@@ -394,6 +394,16 @@ import MlmcLean
 #print axioms MLMC.integral_tauCoarse
 #print axioms MLMC.variance_tauCorrection_le
 #print axioms MLMC.tauLeaping_mlmc_theorem1
+#print axioms MLMC.emPath_gbm
+#print axioms MLMC.gbmExp_eq_prod
+#print axioms MLMC.integral_sq_prod_sub_prod
+#print axioms MLMC.gbm_em_strong_error
+#print axioms MLMC.gbm_strong_error
+#print axioms MLMC.gbmExact_pairAvg
+#print axioms MLMC.map_gbmExact
+#print axioms MLMC.gbm_weak_error_le
+#print axioms MLMC.gbm_correction_variance_le
+#print axioms MLMC.gbm_mlmc_theorem1
 -- helper lemmas that the prove2.me generator promotes to nodes
 #print axioms MLMC.sqrt_Vb_mul_Cb
 #print axioms MLMC.two_rpow_levelL_le

@@ -142,7 +142,12 @@ items listed under "Not formalised" below.
 - ✅ The weak convergence of the contracting chain to `X_∞` (§10.1, `MarkovLimit.lean`) and the
   MSE of the lookup tables as `d → ∞` (Haas–Giles §3.4, `LUTLimits.lean`: `→ 0` for uniform
   intervals, bounded below by a positive constant for dyadic intervals).
-- Not formalised: the convergence orders of the discretisations (Itô calculus, not in Mathlib)
+- ✅ Geometric Brownian motion end to end (§5.1, Figure 5.3, `GBMEulerMaruyama.lean`): the
+  strong error of Euler–Maruyama `E[(S_{t_n} − Ŝ_n)²] ≤ C(t_n) h` from the exact solution, the
+  weak rate `α = ½` and the variance rate `β = 1` for Lipschitz payoffs, and Theorem 1 with no
+  assumed rate (MSE `< ε²` at cost `O(ε⁻²(log ε)²)`).
+- Not formalised: the convergence orders of the discretisations for general SDEs (Itô calculus,
+  not in Mathlib; proved for geometric Brownian motion from its exact solution)
   and of QMC; for tau-leaping (§8), the weak rate `α = 1` against the exact chain and the exact
   (SSA) coupling on the finest level, which need the continuous-time chain itself; Algorithm 3
   with path-dependent timesteps (§5.6, needs Brownian motion at stopping times); the value of the
