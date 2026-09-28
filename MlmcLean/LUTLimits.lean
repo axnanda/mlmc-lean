@@ -184,8 +184,8 @@ lemma method1MSE_le {d : ℕ} (hd : 1 ≤ d) (hmono : MonotoneOn f (Set.Ioo 0 1)
   rw [hlast]
   have hsplit : method1MSE f d =
       (∫ u in gridPt d 0..gridPt d (0 + 1), (lutValue f d 0 - f u) ^ 2) +
-        ∑ i ∈ range n, ∫ u in gridPt d (i + 1)..gridPt d (i + 1 + 1),
-          (lutValue f d (i + 1) - f u) ^ 2 +
+        (∑ i ∈ range n, ∫ u in gridPt d (i + 1)..gridPt d (i + 1 + 1),
+          (lutValue f d (i + 1) - f u) ^ 2) +
         ∫ u in gridPt d (n + 1)..gridPt d (n + 1 + 1), (lutValue f d (n + 1) - f u) ^ 2 := by
     rw [method1MSE, hn, Finset.sum_range_succ, Finset.sum_range_succ']
     ring
@@ -425,7 +425,7 @@ theorem dyadic_mse_ge (hf : IntervalIntegrable f volume 0 1)
     (hconc : ∀ u s : ℝ, ((2 : ℝ) ^ (k + 1))⁻¹ ≤ u → 0 ≤ s → u + 2 * s ≤ ((2 : ℝ) ^ k)⁻¹ →
       μ * s ^ 2 ≤ 2 * f (u + s) - f u - f (u + 2 * s)) :
     ∃ c : ℝ, 0 < c ∧ ∀ d : ℕ, k + 3 ≤ d → ∀ a b : ℝ,
-      c ≤ ∑ j ∈ Ico (2 ^ (d - k - 1)) (2 ^ (d - k)),
+      c ≤ ∑ j ∈ Ico (2 ^ (d - k - 1) : ℕ) (2 ^ (d - k)),
         ∫ u in gridPt d j..gridPt d (j + 1), (a + b * j - f u) ^ 2 := by
   refine ⟨μ ^ 2 * (((2 : ℝ) ^ (k + 3))⁻¹) ^ 5 / 6, by positivity, fun d hd a b => ?_⟩
   obtain ⟨e, rfl⟩ : ∃ e, d = k + 3 + e := ⟨d - (k + 3), by omega⟩
@@ -530,7 +530,7 @@ theorem dyadic_mse_ge (hf : IntervalIntegrable f volume 0 1)
     linarith
   -- (18) summed, and `2^{−d} 2^e = s`
   have hsum_cell : ((2 : ℝ) ^ (k + 3 + e))⁻¹ * ∑ j ∈ Ico (2 ^ (e + 2)) (2 ^ (e + 3)), r j ^ 2 ≤
-      ∑ j ∈ Ico (2 ^ (e + 2)) (2 ^ (e + 3)),
+      ∑ j ∈ Ico (2 ^ (e + 2) : ℕ) (2 ^ (e + 3)),
         ∫ u in gridPt (k + 3 + e) j..gridPt (k + 3 + e) (j + 1), (a + b * j - f u) ^ 2 := by
     rw [Finset.mul_sum]
     exact Finset.sum_le_sum hcell
@@ -567,7 +567,7 @@ theorem method3_mse_ge (hf : IntervalIntegrable f volume 0 1)
     intro j hj
     rw [Finset.mem_range]
     exact lt_of_lt_of_le (Finset.mem_Ico.1 hj).2 (Nat.pow_le_pow_right (by norm_num) (by omega))
-  calc c ≤ ∑ j ∈ Ico (2 ^ (d - k - 1)) (2 ^ (d - k)),
+  calc c ≤ ∑ j ∈ Ico (2 ^ (d - k - 1) : ℕ) (2 ^ (d - k)),
         ∫ u in gridPt d j..gridPt d (j + 1), (a + b * j - f u) ^ 2 := hbd d hd a b
     _ = ∑ j ∈ Ico (2 ^ (d - k - 1)) (2 ^ (d - k)),
         ∫ u in gridPt d j..gridPt d (j + 1), (w j - f u) ^ 2 :=
