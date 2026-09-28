@@ -106,7 +106,9 @@ lemma map_revPerm_infinitePi (ν : Measure E) [IsProbabilityMeasure ν] (n : ℕ
   have e : (fun (e : ℕ → E) (i : ℕ) => e (revPerm n i)) =
       ⇑(MeasurableEquiv.piCongrLeft (fun _ : ℕ => E) (revPerm n)).symm := by
     funext g i
-    rfl
+    first
+      | rfl
+      | exact (Equiv.piCongrLeft_symm_apply (P := fun _ : ℕ => E) (e := revPerm n) g i).symm
   rw [e]
   exact h.symm
 
