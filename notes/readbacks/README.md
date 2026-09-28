@@ -160,3 +160,63 @@ Points recorded, all consistent with the papers or deliberate:
   `integral_sq_sub_eq`, `M > 0` in `fiber_bias_le` and `integrable_innerMean_pow_four`, `c₃ > 0` in
   `nested_mlmc_complexity`, `v ≠ 0` in `consistency_check_gaussian`, `h ≤ 1` in
   `integral_sq_gbmPath_le`, `V, C > 0` in `hasDerivAt_levelCost`.
+
+**Sixth round (2026-09-28).** `poisson_variance.md` is a blind read-back of the statements added
+for the correction variance of the Poisson coupling (Giles §8): `lintegral_sq_coupledIncr_le`,
+`lintegral_sq_coupledTwoStep_le`, `lintegral_sq_coupledChain_le`, `coupledChain_sq_le`,
+`variance_coupledChain_le`, `tauLeaping_level_variance`, with the definitions `couplePair`,
+`coupledIncr`, `tauStep`, `tauChain`, `coupledTwoStep`, `coupledChain`.  No statement is false or
+vacuous, and none holds only because of a junk value (`coupledChain_sq_le` asserts integrability,
+so its Bochner integral is genuine); the auditor checked the bounds numerically on about 53,000
+cases and found the one-step bound sharp.  Points recorded, all consistent with the paper or
+deliberate:
+
+- The packet showed the first line of the equation-compiler proof of
+  `lintegral_sq_coupledChain_le` (a quirk of the packet generator, which cuts proofs at `:=`); the
+  statement is unaffected, and the proof in `PoissonCoupling.lean` is complete (CI, axiom audit).
+- The packet does not state the marginals of `coupledChain`; they are `coupledChain_fst` (the fine
+  chain with step `h` after `2k` steps) and `coupledChain_snd` (the coarse chain with step `2h`
+  after `k` steps), read back in `giles_applications.md`.
+- The coarse coordinate keeps the rate of the start of its step for both fine sub-steps: this is
+  the Anderson–Higham coupling of §8 (the coarse path takes one step of size `2h`).
+- The propensity is assumed bounded and Lipschitz, and the constant `c` is chosen after the
+  propensity and the payoff: `V_ℓ = O(h_ℓ)` for a given model, as in the paper.
+- `tauLeaping_level_variance` covers the levels with `h_ℓ ≤ 1`, all but finitely many; the claim
+  of the paper is asymptotic.
+
+**Seventh round (2026-09-28).** Three blind read-backs of the modules added in the same round:
+`lut_limits.md` (Haas–Giles §3.4: `tendsto_method1MSE`, `dyadic_mse_ge`, `method3_mse_ge`,
+`method3_mse_not_tendsto_zero`, with `gridPt`, `lutValue`, `method1MSE`), `markov_limit.md`
+(Giles §10.1: `map_backIter_eq_map_fwdIter`, `ae_tendsto_backIter`,
+`tendstoInDistribution_fwdIter`, with `fwdIter`, `revFun`, `revPerm`, `backIter`) and
+`tau_leaping_mlmc.md` (Giles §8: `lintegral_sq_tauChain_lt_top`, `integral_tauFine`,
+`integral_tauCoarse`, `variance_tauCorrection_le`, `tauLeaping_mlmc_theorem1`, with the level laws
+and the input law).  All twelve theorems read back as true, none is vacuous, and none holds only
+because of a junk value; the auditors confirmed them numerically (exact rational arithmetic, closed
+forms for `Φ⁻¹`, exact truncated Poisson laws, Monte Carlo).  Points recorded, all consistent with
+the papers or deliberate:
+
+- Packet G was cut before the fix that indexes the dyadic cells of `dyadic_mse_ge` by `ℕ`
+  (`Ico (2 ^ (d - k - 1) : ℕ) (2 ^ (d - k))`); the auditor read the index set as natural numbers,
+  which is what the statement now says explicitly.
+- `tendsto_method1MSE` is qualitative (no rate); the auditor shows that no uniform rate exists for
+  monotone square-integrable `f` (a rate of order `1/d` is possible), which is why the paper's
+  "halves per bit" heuristic is not formalised.  `hf2` is essential; `hmono` is not needed for the
+  limit (it is the setting of the paper).
+- In the three dyadic theorems the concavity hypothesis `hconc` is imposed on one block
+  `[2^{−(k+1)}, 2^{−k}]` only; for `Φ⁻¹` it holds with `k ≥ 2`, and the explicit constant is of order
+  `μ² 2^{−5k}`.  Either `hf` or `hf2` alone would suffice.
+- `map_backIter_eq_map_fwdIter` equates the laws at each fixed `n` (not the joint laws), as in
+  §10.1; `tendstoInDistribution_fwdIter` gives the weak convergence of `X_n` to a limit `X∞` stated
+  in §10.1.  Stationarity of the limit law is not stated for the general chain (the paper states the
+  invariant law only for its example, `halfStep_invariant` in `MarkovChain.lean`); the scope is a
+  complete separable metric space with its Borel σ-algebra.
+- `tauInputLaw` is an infinite product and would be the zero measure if a factor failed to be a
+  probability measure; `isProbabilityMeasure_tauLevelLaw` and `isProbabilityMeasure_tauInputLaw`
+  (not in the packet) prove that every factor is one.  On `ℕ` a bounded propensity is automatically
+  Lipschitz, so `hK` is implied by `hΛ` (with `K = Λ`); it is kept because it is the paper's
+  condition.  The weak rate `α` of tau-leaping is a hypothesis (it compares with the exact chain,
+  which needs a continuous-time Markov chain).
+- After the read-back, the lemma `revFun_involutive` cited by the packet was inlined into
+  `revPerm` (the prove2.me generator does not allow a definition to cite a theorem); the
+  definition is unchanged.

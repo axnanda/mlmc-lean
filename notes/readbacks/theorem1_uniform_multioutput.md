@@ -1,7 +1,7 @@
 # Read-back audit: packet 15 (round 4)
 
 - **Date:** 2026-09-27
-- **Packet:** `/tmp/claude-0/-home-user-mlmc-lean/8f263d87-ec2c-550e-ae99-ab3862cfe2e3/scratchpad/readback/round4/packet15.lean` (12 declarations: 6 definitions `complexityBound`, `Vb`, `Cb`, `sumSqrtVC`, `lagrangeN`, `kurtosis`; 6 theorems `giles_theorem1_of_core`, `giles_theorem1_uniform`, `multiOutput_optimal`, `integral_norm_add_sq_of_indepFun`, `integral_add_sq_of_indepFun`, `tendsto_kurtosis_atTop`)
+- **Packet:** `readback/round4/packet15.lean` (12 declarations: 6 definitions `complexityBound`, `Vb`, `Cb`, `sumSqrtVC`, `lagrangeN`, `kurtosis`; 6 theorems `giles_theorem1_of_core`, `giles_theorem1_uniform`, `multiOutput_optimal`, `integral_norm_add_sq_of_indepFun`, `integral_add_sq_of_indepFun`, `tendsto_kurtosis_atTop`)
 - **Auditor:** an independent, blind sub-agent
 - **Rules followed:**
   - Read only three things: the packet, `prove2me_workspace/references/mission_auditor.md`, and Mathlib sources under `.lake/packages/mathlib/Mathlib/`. I used Mathlib only to confirm definitions and conventions: `variance`/`evariance`, `IndepFun`/`Indep`/`IndepSets`, `MemLp`, `Measure.real`, `IsLeast`, `Finset.sup'`, `Pairwise`, the Bochner integral's junk values, the `Real.rpow`/`Real.sqrt`/`Real.log` conventions, the precedence of `∑`, and `Measure.infinitePi` for a witness.
