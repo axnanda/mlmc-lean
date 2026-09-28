@@ -160,3 +160,26 @@ Points recorded, all consistent with the papers or deliberate:
   `integral_sq_sub_eq`, `M > 0` in `fiber_bias_le` and `integrable_innerMean_pow_four`, `c₃ > 0` in
   `nested_mlmc_complexity`, `v ≠ 0` in `consistency_check_gaussian`, `h ≤ 1` in
   `integral_sq_gbmPath_le`, `V, C > 0` in `hasDerivAt_levelCost`.
+
+**Sixth round (2026-09-28).** `poisson_variance.md` is a blind read-back of the statements added
+for the correction variance of the Poisson coupling (Giles §8): `lintegral_sq_coupledIncr_le`,
+`lintegral_sq_coupledTwoStep_le`, `lintegral_sq_coupledChain_le`, `coupledChain_sq_le`,
+`variance_coupledChain_le`, `tauLeaping_level_variance`, with the definitions `couplePair`,
+`coupledIncr`, `tauStep`, `tauChain`, `coupledTwoStep`, `coupledChain`.  No statement is false or
+vacuous, and none holds only because of a junk value (`coupledChain_sq_le` asserts integrability,
+so its Bochner integral is genuine); the auditor checked the bounds numerically on about 53,000
+cases and found the one-step bound sharp.  Points recorded, all consistent with the paper or
+deliberate:
+
+- The packet showed the first line of the equation-compiler proof of
+  `lintegral_sq_coupledChain_le` (a quirk of the packet generator, which cuts proofs at `:=`); the
+  statement is unaffected, and the proof in `PoissonCoupling.lean` is complete (CI, axiom audit).
+- The packet does not state the marginals of `coupledChain`; they are `coupledChain_fst` (the fine
+  chain with step `h` after `2k` steps) and `coupledChain_snd` (the coarse chain with step `2h`
+  after `k` steps), read back in `giles_applications.md`.
+- The coarse coordinate keeps the rate of the start of its step for both fine sub-steps: this is
+  the Anderson–Higham coupling of §8 (the coarse path takes one step of size `2h`).
+- The propensity is assumed bounded and Lipschitz, and the constant `c` is chosen after the
+  propensity and the payoff: `V_ℓ = O(h_ℓ)` for a given model, as in the paper.
+- `tauLeaping_level_variance` covers the levels with `h_ℓ ≤ 1`, all but finitely many; the claim
+  of the paper is asymptotic.

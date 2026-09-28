@@ -116,7 +116,9 @@ variable [MeasurableSpace α]
 lemma measurable_fwdIter {φ : α → E → α} (hφm : Measurable fun q : α × E => φ q.1 q.2)
     (n : ℕ) (x : α) : Measurable fun e : ℕ → E => fwdIter φ n e x := by
   induction n with
-  | zero => exact measurable_const
+  | zero =>
+    show Measurable fun _ : ℕ → E => x
+    exact measurable_const
   | succ n ih =>
     have e : (fun e : ℕ → E => fwdIter φ (n + 1) e x) = fun e => φ (fwdIter φ n e x) (e n) := rfl
     rw [e]
@@ -232,7 +234,7 @@ theorem ae_tendsto_backIter [CompleteSpace α] (hφm : Measurable fun q : α × 
             tsum_congr fun n => lintegral_const_mul _ (hDm n)
         _ ≤ ∑' n, ENNReal.ofReal θ⁻¹ ^ n *
               (ENNReal.ofReal ρ ^ n * ∫⁻ e, ENNReal.ofReal (dist x₀ (φ x₀ e) ^ p) ∂ν) :=
-            ENNReal.tsum_le_tsum fun n => mul_le_mul_left' (hD n) _
+            ENNReal.tsum_le_tsum fun n => mul_le_mul_of_nonneg_left (hD n) zero_le
         _ = ∑' n, ENNReal.ofReal (ρ / θ) ^ n *
               ∫⁻ e, ENNReal.ofReal (dist x₀ (φ x₀ e) ^ p) ∂ν := by
             refine tsum_congr fun n => ?_
@@ -304,7 +306,7 @@ theorem tendstoInDistribution_fwdIter [CompleteSpace α]
     (measurable_backIter_shift hφm ξ n 0 (U := fun _ => x₀) measurable_const).mono
       (noiseFrom_le hξm _) le_rfl
   have hFm : ∀ n, Measurable fun ω => fwdIter φ n (fun k => ξ k ω) x₀ := fun n =>
-    (measurable_fwdIter hφm n x₀).comp (measurable_pi_lambda _ hξm)
+    (measurable_fwdIter hφm n x₀).comp (measurable_pi_lambda (fun ω (k : ℕ) => ξ k ω) hξm)
   have hlim : ∀ᵐ ω ∂μ, Tendsto (fun n => backIter φ n (fun k => ξ k ω) x₀) atTop
       (𝓝 (limUnder atTop fun n => backIter φ n (fun k => ξ k ω) x₀)) :=
     hae.mono fun ω hω => tendsto_nhds_limUnder hω
@@ -312,8 +314,9 @@ theorem tendstoInDistribution_fwdIter [CompleteSpace α]
     aemeasurable_of_tendsto_metrizable_ae atTop (fun n => (hZm n).aemeasurable) hlim
   refine ⟨fun ω => limUnder atTop fun n => backIter φ n (fun k => ξ k ω) x₀, hXm, hlim, ?_⟩
   have hZ := tendstoInDistribution_of_ae_tendsto (fun n => (hZm n).aemeasurable) hXm hlim
-  exact ⟨fun n => (hFm n).aemeasurable, hXm, hZ.tendsto.congr fun n =>
-    Subtype.ext (map_backIter_eq_map_fwdIter hφm hξ hξm hlaw n x₀)⟩
+  refine ⟨fun n => (hFm n).aemeasurable, hXm, ?_⟩
+  refine hZ.tendsto.congr fun n => ?_
+  exact Subtype.ext (map_backIter_eq_map_fwdIter hφm hξ hξm hlaw n x₀)
 
 end limit
 

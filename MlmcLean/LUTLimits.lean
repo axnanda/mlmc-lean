@@ -384,10 +384,10 @@ lemma lutValue_second_diff_ge (hf : IntervalIntegrable f volume 0 1) {d j m : �
     ring
   have e1 : ∫ u in gridPt d j..gridPt d (j + 1), f (u + gridPt d m) =
       ∫ u in gridPt d (j + m)..gridPt d (j + m + 1), f u := by
-    rw [intervalIntegral.integral_comp_add_right, hA1, hB1]
+    rw [intervalIntegral.integral_comp_add_right f (gridPt d m), hA1, hB1]
   have e2 : ∫ u in gridPt d j..gridPt d (j + 1), f (u + 2 * gridPt d m) =
       ∫ u in gridPt d (j + 2 * m)..gridPt d (j + 2 * m + 1), f u := by
-    rw [intervalIntegral.integral_comp_add_right, hA2, hB2]
+    rw [intervalIntegral.integral_comp_add_right f (2 * gridPt d m), hA2, hB2]
   have hI0 : IntervalIntegrable f volume (gridPt d j) (gridPt d (j + 1)) :=
     intervalIntegrable_cell hf (by omega)
   have hI1 : IntervalIntegrable (fun u => f (u + gridPt d m)) volume (gridPt d j)
@@ -544,6 +544,7 @@ theorem dyadic_mse_ge (hf : IntervalIntegrable f volume 0 1)
   calc μ ^ 2 * (((2 : ℝ) ^ (k + 3))⁻¹) ^ 5 / 6
       = ((2 : ℝ) ^ (k + 3))⁻¹ * (μ * (((2 : ℝ) ^ (k + 3))⁻¹) ^ 2) ^ 2 / 6 := by ring
     _ ≤ ((2 : ℝ) ^ (k + 3 + e))⁻¹ * ∑ j ∈ Ico (2 ^ (e + 2)) (2 ^ (e + 3)), r j ^ 2 := by
+        rw [div_le_iff₀ (by norm_num : (0 : ℝ) < 6)]
         linarith
     _ ≤ _ := hsum_cell
 
