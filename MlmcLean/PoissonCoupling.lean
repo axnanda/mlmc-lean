@@ -5,6 +5,7 @@ import Mathlib.MeasureTheory.Measure.GiryMonad
 import Mathlib.Probability.Distributions.Poisson.Basic
 import Mathlib.Probability.HasLaw
 import Mathlib.Probability.Independence.Basic
+import Mathlib.Probability.Moments.Variance
 import Mathlib.Tactic.LinearCombination
 
 /-!
@@ -44,6 +45,13 @@ rate."
   chain and its coarse path the law of the coarse chain with double the timestep
   (`coupledChain_fst`, `coupledChain_snd`); hence (2.4), `E[P^f_ℓ] = E[P^c_ℓ]`, for every payoff
   of the terminal state (`tauLeaping_2_4`, `tauLeaping_level`).
+
+**The correction variance.**  "a very effective multilevel algorithm with a correction variance
+which is `O(h)`": for a Lipschitz, bounded propensity the coupled paths are `O(h)` apart in mean
+square (`lintegral_sq_coupledIncr_le`, `lintegral_sq_coupledTwoStep_le`,
+`lintegral_sq_coupledChain_le`, `coupledChain_sq_le`), so the correction of a Lipschitz payoff has
+variance `O(h)` (`variance_coupledChain_le`), `O(2^{−ℓ})` on level `ℓ + 1`
+(`tauLeaping_level_variance`): `β = 1`.
 
 **Complexity.**  "a correction variance which is `O(h)`, leading to an `O(ε⁻²(log ε)²)` complexity"
 (`tauLeaping_complexity`: `α = β = γ = 1`); with an exact finest level "their overall multilevel
@@ -483,5 +491,515 @@ theorem fixed_levels_cost {ι : Type*} {s : Finset ι} (hs : s.Nonempty) {V C : 
         exact le_div_self hCsum.le hε2 hε21
     _ = ((∑ i ∈ s, Real.sqrt (V i * C i)) ^ 2 + ∑ i ∈ s, C i) / ε ^ 2 := by
         rw [add_div]
+
+
+/-! ### The correction variance of the coupled paths
+
+Giles 2015, §8, p. 56: the coupling "leads to a very effective multilevel algorithm with a
+correction variance which is `O(h)`" (after Anderson and Higham 2012).  Here the propensity `λ`
+is `K`-Lipschitz and bounded by `Λ`.  In one coupled fine step the increments of the two paths
+differ by at most `P₂ ~ P(h|λ(x) − λ(x^c)|)` (`lintegral_sq_coupledIncr_le`); over the two fine
+steps of one coarse step, the coarse rate frozen, the mean square difference of the paths grows by
+a factor `1 + O(h)` and an additive `O(h²)` (`lintegral_sq_coupledTwoStep_le`,
+`lintegral_sq_coupledChain_le`); so after the `T/(2h)` coarse steps to the final time `T` it is
+`O(h)` (`coupledChain_sq_le`), and so is the variance of the correction `Φ(x_T) − Φ(x^c_T)` for
+a Lipschitz payoff `Φ` (`variance_coupledChain_le`), which is `O(2^{−ℓ})` on level `ℓ + 1`
+(`tauLeaping_level_variance`): `β = 1`. -/
+
+/-- The difference of two natural numbers is an integer: `|m − n| ≤ (m − n)²` (used in Giles 2015,
+§8). -/
+lemma abs_natCast_sub_le_sq (m n : ℕ) : |(m : ℝ) - n| ≤ ((m : ℝ) - n) ^ 2 := by
+  rcases lt_trichotomy m n with h | rfl | h
+  · have h1 : (m : ℝ) + 1 ≤ n := by exact_mod_cast Nat.succ_le_of_lt h
+    rw [abs_of_neg (by linarith)]
+    nlinarith
+  · simp
+  · have h1 : (n : ℝ) + 1 ≤ m := by exact_mod_cast Nat.succ_le_of_lt h
+    rw [abs_of_pos (by linarith)]
+    nlinarith
+
+/-- The first two moments of a Poisson variate as lower integrals (used in Giles 2015, §8):
+`∫⁻ (c₀ + c₁ n + c₂ n²) dP(r) = c₀ + c₁ r + c₂ (r + r²)` for `c₀, c₁, c₂ ≥ 0`. -/
+lemma lintegral_poly_poissonMeasure (r : ℝ≥0) {c₀ c₁ c₂ : ℝ} (h₀ : 0 ≤ c₀) (h₁ : 0 ≤ c₁)
+    (h₂ : 0 ≤ c₂) :
+    ∫⁻ n, ENNReal.ofReal (c₀ + c₁ * n + c₂ * (n : ℝ) ^ 2) ∂(poissonMeasure r) =
+      ENNReal.ofReal (c₀ + c₁ * r + c₂ * ((r : ℝ) + (r : ℝ) ^ 2)) := by
+  have hs2 : HasSum (fun n : ℕ => Real.exp (-r) * (r : ℝ) ^ n / (n.factorial : ℝ) * (n : ℝ) ^ 2)
+      ((r : ℝ) + (r : ℝ) ^ 2) := by
+    convert (hasSum_poissonWeight_mul_id r).add (hasSum_poissonWeight_mul_descFactorial r) using 1
+    funext n
+    ring
+  have hi1 : Integrable (fun n : ℕ => (n : ℝ)) (poissonMeasure r) :=
+    integrable_poissonMeasure_iff.2 ((hasSum_poissonWeight_mul_id r).summable.congr fun n => by
+      rw [Real.norm_natCast])
+  have hi2 : Integrable (fun n : ℕ => (n : ℝ) ^ 2) (poissonMeasure r) :=
+    integrable_poissonMeasure_iff.2 (hs2.summable.congr fun n => by
+      rw [norm_pow, Real.norm_natCast])
+  have hA : Integrable (fun n : ℕ => c₀ + c₁ * n) (poissonMeasure r) :=
+    (integrable_const c₀).add (hi1.const_mul c₁)
+  have hB : Integrable (fun n : ℕ => c₂ * (n : ℝ) ^ 2) (poissonMeasure r) := hi2.const_mul c₂
+  have hint : Integrable (fun n : ℕ => c₀ + c₁ * n + c₂ * (n : ℝ) ^ 2) (poissonMeasure r) :=
+    hA.add hB
+  have hnn : 0 ≤ᵐ[poissonMeasure r] fun n : ℕ => c₀ + c₁ * n + c₂ * (n : ℝ) ^ 2 :=
+    ae_of_all _ fun n => add_nonneg (add_nonneg h₀ (mul_nonneg h₁ (Nat.cast_nonneg n)))
+      (mul_nonneg h₂ (sq_nonneg _))
+  rw [← ofReal_integral_eq_lintegral_ofReal hint hnn, integral_add hA hB,
+    integral_add (integrable_const c₀) (hi1.const_mul c₁), integral_const, probReal_univ,
+    one_smul, integral_const_mul, integral_const_mul, integral_poissonMeasure_id,
+    integral_sq_poissonMeasure]
+
+/-- The mean of a Poisson variate as a lower integral: `∫⁻ n dP(r) = r`. -/
+lemma lintegral_id_poissonMeasure (r : ℝ≥0) :
+    ∫⁻ n, ENNReal.ofReal (n : ℝ) ∂(poissonMeasure r) = ENNReal.ofReal r := by
+  have h := lintegral_poly_poissonMeasure r le_rfl zero_le_one le_rfl
+  simp only [zero_add, one_mul, zero_mul, add_zero] at h
+  exact h
+
+/-- The second moment of a Poisson variate as a lower integral: `∫⁻ n² dP(r) = r + r²`. -/
+lemma lintegral_sq_poissonMeasure (r : ℝ≥0) :
+    ∫⁻ n, ENNReal.ofReal ((n : ℝ) ^ 2) ∂(poissonMeasure r) = ENNReal.ofReal (r + (r : ℝ) ^ 2) := by
+  have h := lintegral_poly_poissonMeasure r le_rfl le_rfl zero_le_one
+  simp only [zero_add, one_mul, zero_mul] at h
+  exact h
+
+/-- A function of the second factor, integrated against a product whose first factor is a
+probability measure. -/
+lemma lintegral_prod_snd_eq {μ ν : Measure ℕ} [IsProbabilityMeasure μ] [SFinite ν]
+    (f : ℕ → ℝ≥0∞) : ∫⁻ p, f p.2 ∂(μ.prod ν) = ∫⁻ n, f n ∂ν := by
+  have h := lintegral_map (μ := μ.prod ν) (Measurable.of_discrete (f := f)) measurable_snd
+  rw [Measure.map_snd_prod, measure_univ, one_smul] at h
+  exact h.symm
+
+/-- The increment of the path with rate `b` has the law `P(b)` (`coupledIncr_snd`): lower
+integrals of functions of it. -/
+lemma lintegral_coupledIncr_snd (a b : ℝ≥0) (f : ℕ → ℝ≥0∞) :
+    ∫⁻ ij, f ij.2 ∂(coupledIncr a b) = ∫⁻ n, f n ∂(poissonMeasure b) := by
+  rw [← coupledIncr_snd a b, lintegral_map Measurable.of_discrete measurable_snd]
+
+/-- **One coupled fine step** (Giles 2015, §8, p. 55: "using `P₁` as the Poisson variate for the
+path with the smaller rate, and `P₁ + P₂` for the path with the larger rate"): the increments of
+the paths with rates `a` and `b` differ by at most `P₂ ~ P(|a − b|)`, so from the states `x`, `y`,
+`E[(x + I_a − (y + I_b))²] ≤ (x − y)² + 2|x − y| |a − b| + |a − b| + |a − b|²`. -/
+lemma lintegral_sq_coupledIncr_le (a b : ℝ≥0) (x y : ℕ) :
+    ∫⁻ ij, ENNReal.ofReal ((((x + ij.1 : ℕ) : ℝ) - ((y + ij.2 : ℕ) : ℝ)) ^ 2)
+        ∂(coupledIncr a b) ≤
+      ENNReal.ofReal (((x : ℝ) - y) ^ 2 + 2 * |(x : ℝ) - y| * |(a : ℝ) - b| +
+        1 * (|(a : ℝ) - b| + |(a : ℝ) - b| ^ 2)) := by
+  have hpt : ∀ p : ℕ × ℕ,
+      (((x + (couplePair a b p).1 : ℕ) : ℝ) - ((y + (couplePair a b p).2 : ℕ) : ℝ)) ^ 2 ≤
+        ((x : ℝ) - y) ^ 2 + 2 * |(x : ℝ) - y| * (p.2 : ℝ) + 1 * (p.2 : ℝ) ^ 2 := by
+    intro p
+    have hp : (0 : ℝ) ≤ p.2 := Nat.cast_nonneg _
+    have hδ : |((couplePair a b p).1 : ℝ) - (couplePair a b p).2| ≤ p.2 := by
+      rw [abs_le]
+      simp only [couplePair]
+      constructor <;> split_ifs <;> push_cast <;> linarith
+    have e : (((x + (couplePair a b p).1 : ℕ) : ℝ) - ((y + (couplePair a b p).2 : ℕ) : ℝ)) =
+        ((x : ℝ) - y) + (((couplePair a b p).1 : ℝ) - (couplePair a b p).2) := by
+      push_cast
+      ring
+    rw [e]
+    have h1 : ((x : ℝ) - y) * (((couplePair a b p).1 : ℝ) - (couplePair a b p).2) ≤
+        |(x : ℝ) - y| * p.2 :=
+      (le_abs_self _).trans (by
+        rw [abs_mul]
+        exact mul_le_mul_of_nonneg_left hδ (abs_nonneg _))
+    have h2 : (((couplePair a b p).1 : ℝ) - (couplePair a b p).2) ^ 2 ≤ (p.2 : ℝ) ^ 2 :=
+      sq_le_sq' (abs_le.1 hδ).1 (abs_le.1 hδ).2
+    nlinarith [h1, h2]
+  rw [← coe_max_sub_min]
+  calc ∫⁻ ij, ENNReal.ofReal ((((x + ij.1 : ℕ) : ℝ) - ((y + ij.2 : ℕ) : ℝ)) ^ 2)
+          ∂(coupledIncr a b)
+      = ∫⁻ p, ENNReal.ofReal ((((x + (couplePair a b p).1 : ℕ) : ℝ) -
+            ((y + (couplePair a b p).2 : ℕ) : ℝ)) ^ 2)
+          ∂((poissonMeasure (min a b)).prod (poissonMeasure (max a b - min a b))) :=
+        lintegral_map Measurable.of_discrete Measurable.of_discrete
+    _ ≤ ∫⁻ p, ENNReal.ofReal (((x : ℝ) - y) ^ 2 + 2 * |(x : ℝ) - y| * ((p.2 : ℕ) : ℝ) +
+            1 * ((p.2 : ℕ) : ℝ) ^ 2)
+          ∂((poissonMeasure (min a b)).prod (poissonMeasure (max a b - min a b))) :=
+        lintegral_mono fun p => ENNReal.ofReal_le_ofReal (hpt p)
+    _ = ∫⁻ n, ENNReal.ofReal (((x : ℝ) - y) ^ 2 + 2 * |(x : ℝ) - y| * (n : ℝ) + 1 * (n : ℝ) ^ 2)
+          ∂(poissonMeasure (max a b - min a b)) :=
+        lintegral_prod_snd_eq fun n : ℕ =>
+          ENNReal.ofReal (((x : ℝ) - y) ^ 2 + 2 * |(x : ℝ) - y| * (n : ℝ) + 1 * (n : ℝ) ^ 2)
+    _ = ENNReal.ofReal (((x : ℝ) - y) ^ 2 + 2 * |(x : ℝ) - y| * ((max a b - min a b : ℝ≥0) : ℝ) +
+          1 * (((max a b - min a b : ℝ≥0) : ℝ) + ((max a b - min a b : ℝ≥0) : ℝ) ^ 2)) :=
+        lintegral_poly_poissonMeasure _ (sq_nonneg _) (by positivity) zero_le_one
+
+/-- The polynomial bound behind one coupled fine step at a frozen coarse rate (Giles 2015, §8): if
+`0 ≤ R ≤ κ (|d| + j)`, `j ≥ 0` and `|d| ≤ d²`, then
+`d² + 2|d| R + R + R² ≤ (1 + 4κ + 2κ²) d² + (κ + 2κ²) j² + κ j`. -/
+lemma coupled_step_bound {d j R κ : ℝ} (hj : 0 ≤ j) (hκ : 0 ≤ κ) (hR0 : 0 ≤ R)
+    (hR : R ≤ κ * (|d| + j)) (hd : |d| ≤ d ^ 2) :
+    d ^ 2 + 2 * |d| * R + 1 * (R + R ^ 2) ≤
+      (1 + 4 * κ + 2 * κ ^ 2) * d ^ 2 + (κ + 2 * κ ^ 2) * j ^ 2 + κ * j := by
+  rw [← sq_abs d] at hd ⊢
+  have hu : 0 ≤ |d| := abs_nonneg d
+  have h1 : 2 * |d| * R ≤ 2 * |d| * (κ * (|d| + j)) :=
+    mul_le_mul_of_nonneg_left hR (by positivity)
+  have h2 : R ^ 2 ≤ (κ * (|d| + j)) ^ 2 := pow_le_pow_left₀ hR0 hR 2
+  have h3 : 0 ≤ κ * (|d| - j) ^ 2 := mul_nonneg hκ (sq_nonneg _)
+  have h4 : 0 ≤ κ ^ 2 * (|d| - j) ^ 2 := mul_nonneg (sq_nonneg κ) (sq_nonneg _)
+  have h5 : κ * |d| ≤ κ * |d| ^ 2 := mul_le_mul_of_nonneg_left hd hκ
+  nlinarith [h1, h2, h3, h4, h5, hR]
+
+/-- Splitting a lower integral of `a X + b Y + c Z` on a discrete space. -/
+lemma lintegral_ofReal_add3 {α : Type*} [MeasurableSpace α] [DiscreteMeasurableSpace α]
+    (μ : Measure α) {X Y Z : α → ℝ} (hX : ∀ x, 0 ≤ X x) (hY : ∀ x, 0 ≤ Y x)
+    (hZ : ∀ x, 0 ≤ Z x) {a b c : ℝ} (ha : 0 ≤ a) (hb : 0 ≤ b) (hc : 0 ≤ c) :
+    ∫⁻ x, ENNReal.ofReal (a * X x + b * Y x + c * Z x) ∂μ =
+      ENNReal.ofReal a * ∫⁻ x, ENNReal.ofReal (X x) ∂μ +
+        ENNReal.ofReal b * ∫⁻ x, ENNReal.ofReal (Y x) ∂μ +
+        ENNReal.ofReal c * ∫⁻ x, ENNReal.ofReal (Z x) ∂μ := by
+  have e : ∀ x, ENNReal.ofReal (a * X x + b * Y x + c * Z x) =
+      ENNReal.ofReal a * ENNReal.ofReal (X x) + ENNReal.ofReal b * ENNReal.ofReal (Y x) +
+        ENNReal.ofReal c * ENNReal.ofReal (Z x) := fun x => by
+    rw [ENNReal.ofReal_add (add_nonneg (mul_nonneg ha (hX x)) (mul_nonneg hb (hY x)))
+        (mul_nonneg hc (hZ x)),
+      ENNReal.ofReal_add (mul_nonneg ha (hX x)) (mul_nonneg hb (hY x)), ENNReal.ofReal_mul ha,
+      ENNReal.ofReal_mul hb, ENNReal.ofReal_mul hc]
+  rw [lintegral_congr e, lintegral_add_left Measurable.of_discrete,
+    lintegral_add_left Measurable.of_discrete, lintegral_const_mul _ Measurable.of_discrete,
+    lintegral_const_mul _ Measurable.of_discrete, lintegral_const_mul _ Measurable.of_discrete]
+
+/-- Splitting a lower integral of `a X + b` on a discrete space. -/
+lemma lintegral_ofReal_mul_add {α : Type*} [MeasurableSpace α] [DiscreteMeasurableSpace α]
+    (μ : Measure α) {X : α → ℝ} (hX : ∀ x, 0 ≤ X x) {a b : ℝ} (ha : 0 ≤ a) (hb : 0 ≤ b) :
+    ∫⁻ x, ENNReal.ofReal (a * X x + b) ∂μ =
+      ENNReal.ofReal a * ∫⁻ x, ENNReal.ofReal (X x) ∂μ + ENNReal.ofReal b * μ Set.univ := by
+  have e : ∀ x, ENNReal.ofReal (a * X x + b) =
+      ENNReal.ofReal a * ENNReal.ofReal (X x) + ENNReal.ofReal b := fun x => by
+    rw [ENNReal.ofReal_add (mul_nonneg ha (hX x)) hb, ENNReal.ofReal_mul ha]
+  rw [lintegral_congr e, lintegral_add_left Measurable.of_discrete,
+    lintegral_const_mul _ Measurable.of_discrete, lintegral_const]
+
+/-- The coupled increments form a probability measure. -/
+lemma coupledIncr_univ (a b : ℝ≥0) : coupledIncr a b Set.univ = 1 := by
+  rw [coupledIncr, Measure.map_apply Measurable.of_discrete MeasurableSet.univ, Set.preimage_univ,
+    measure_univ]
+
+/-- Two coupled fine steps form a probability measure. -/
+lemma coupledTwoStep_univ (lam : ℕ → ℝ≥0) (h : ℝ≥0) (s : ℕ × ℕ) :
+    coupledTwoStep lam h s Set.univ = 1 := by
+  have e : ∀ ij : ℕ × ℕ, ((coupledIncr (h * lam (s.1 + ij.1)) (h * lam s.2)).map fun ij' =>
+      (s.1 + ij.1 + ij'.1, s.2 + ij.2 + ij'.2)) Set.univ = 1 := fun ij => by
+    rw [Measure.map_apply Measurable.of_discrete MeasurableSet.univ, Set.preimage_univ,
+      coupledIncr_univ]
+  rw [coupledTwoStep, Measure.bind_apply MeasurableSet.univ Measurable.of_discrete.aemeasurable,
+    lintegral_congr e, lintegral_const, one_mul, coupledIncr_univ]
+
+/-- The law of the coupled pair of paths is a probability measure (Giles 2015, §8). -/
+lemma coupledChain_univ (lam : ℕ → ℝ≥0) (h : ℝ≥0) (x₀ : ℕ) :
+    ∀ k, coupledChain lam h x₀ k Set.univ = 1
+  | 0 => by rw [coupledChain, measure_univ]
+  | k + 1 => by
+      rw [coupledChain, Measure.bind_apply MeasurableSet.univ Measurable.of_discrete.aemeasurable,
+        lintegral_congr (coupledTwoStep_univ lam h), lintegral_const, one_mul,
+        coupledChain_univ lam h x₀ k]
+
+/-- **The difference of the coupled paths over one coarse step** (Giles 2015, §8, p. 55: the
+coarse Poisson variate is expressed "as the sum of two Poisson variates, `P(hλ(x^c_n))`
+corresponding to the first and second fine path timesteps", each coupled with the fine one).  If
+the scaled rates satisfy `|hλ(x) − hλ(y)| ≤ κ |x − y|` and `hλ ≤ ℓ`, then over the two fine steps
+from `(x, x^c)`, the coarse rate frozen at `λ(x^c)`,
+`E[(x₂ − x^c₂)²] ≤ (1 + 4κ + 2κ²)² (x − x^c)² + (κ + 2κ²)(ℓ + ℓ²) + κℓ`. -/
+theorem lintegral_sq_coupledTwoStep_le {lam : ℕ → ℝ≥0} {h : ℝ≥0} {κ ℓ : ℝ} (hκ : 0 ≤ κ)
+    (hr : ∀ x y : ℕ, |((h * lam x : ℝ≥0) : ℝ) - ((h * lam y : ℝ≥0) : ℝ)| ≤ κ * |(x : ℝ) - y|)
+    (hb : ∀ y : ℕ, ((h * lam y : ℝ≥0) : ℝ) ≤ ℓ) (s : ℕ × ℕ) :
+    ∫⁻ q, ENNReal.ofReal (((q.1 : ℝ) - q.2) ^ 2) ∂(coupledTwoStep lam h s) ≤
+      ENNReal.ofReal ((1 + 4 * κ + 2 * κ ^ 2) ^ 2 * ((s.1 : ℝ) - s.2) ^ 2 +
+        ((κ + 2 * κ ^ 2) * (ℓ + ℓ ^ 2) + κ * ℓ)) := by
+  have hℓ : 0 ≤ ℓ := (NNReal.coe_nonneg _).trans (hb 0)
+  have hα : 0 ≤ 1 + 4 * κ + 2 * κ ^ 2 := by positivity
+  -- the second fine step, from the states after the first: the fine rate `hλ(x + i)` against the
+  -- frozen coarse rate `hλ(x^c)`
+  have hin : ∀ ij : ℕ × ℕ,
+      ∫⁻ q, ENNReal.ofReal (((q.1 : ℝ) - q.2) ^ 2)
+          ∂((coupledIncr (h * lam (s.1 + ij.1)) (h * lam s.2)).map fun ij' =>
+            (s.1 + ij.1 + ij'.1, s.2 + ij.2 + ij'.2)) ≤
+        ENNReal.ofReal ((1 + 4 * κ + 2 * κ ^ 2) *
+            (((s.1 + ij.1 : ℕ) : ℝ) - ((s.2 + ij.2 : ℕ) : ℝ)) ^ 2 +
+          (κ + 2 * κ ^ 2) * (ij.2 : ℝ) ^ 2 + κ * ij.2) := by
+    intro ij
+    rw [lintegral_map Measurable.of_discrete Measurable.of_discrete]
+    refine (lintegral_sq_coupledIncr_le _ _ (s.1 + ij.1) (s.2 + ij.2)).trans
+      (ENNReal.ofReal_le_ofReal ?_)
+    refine coupled_step_bound (Nat.cast_nonneg _) hκ (abs_nonneg _) ?_
+      (abs_natCast_sub_le_sq _ _)
+    refine (hr _ _).trans (mul_le_mul_of_nonneg_left ?_ hκ)
+    have e : ((s.1 + ij.1 : ℕ) : ℝ) - (s.2 : ℝ) =
+        (((s.1 + ij.1 : ℕ) : ℝ) - ((s.2 + ij.2 : ℕ) : ℝ)) + ij.2 := by
+      push_cast
+      ring
+    rw [e]
+    exact (abs_add_le _ _).trans (by rw [Nat.abs_cast])
+  -- the first fine step and the moments of the first coarse increment
+  have hd1 : ∫⁻ ij, ENNReal.ofReal ((((s.1 + ij.1 : ℕ) : ℝ) - ((s.2 + ij.2 : ℕ) : ℝ)) ^ 2)
+      ∂(coupledIncr (h * lam s.1) (h * lam s.2)) ≤
+      ENNReal.ofReal ((1 + 4 * κ + 2 * κ ^ 2) * ((s.1 : ℝ) - s.2) ^ 2) := by
+    refine (lintegral_sq_coupledIncr_le _ _ s.1 s.2).trans (ENNReal.ofReal_le_ofReal ?_)
+    have h0 := coupled_step_bound (d := (s.1 : ℝ) - s.2) (j := 0)
+      (R := |((h * lam s.1 : ℝ≥0) : ℝ) - ((h * lam s.2 : ℝ≥0) : ℝ)|) le_rfl hκ (abs_nonneg _)
+      (by rw [add_zero]; exact hr _ _) (abs_natCast_sub_le_sq _ _)
+    linarith
+  have hj2 : ∫⁻ ij, ENNReal.ofReal ((ij.2 : ℝ) ^ 2) ∂(coupledIncr (h * lam s.1) (h * lam s.2)) ≤
+      ENNReal.ofReal (ℓ + ℓ ^ 2) := by
+    rw [lintegral_coupledIncr_snd _ _ fun n : ℕ => ENNReal.ofReal ((n : ℝ) ^ 2),
+      lintegral_sq_poissonMeasure]
+    have hb' := hb s.2
+    have h0 : (0 : ℝ) ≤ ((h * lam s.2 : ℝ≥0) : ℝ) := NNReal.coe_nonneg _
+    exact ENNReal.ofReal_le_ofReal (by nlinarith)
+  have hj1 : ∫⁻ ij, ENNReal.ofReal (ij.2 : ℝ) ∂(coupledIncr (h * lam s.1) (h * lam s.2)) ≤
+      ENNReal.ofReal ℓ := by
+    rw [lintegral_coupledIncr_snd _ _ fun n : ℕ => ENNReal.ofReal (n : ℝ),
+      lintegral_id_poissonMeasure]
+    exact ENNReal.ofReal_le_ofReal (hb s.2)
+  calc ∫⁻ q, ENNReal.ofReal (((q.1 : ℝ) - q.2) ^ 2) ∂(coupledTwoStep lam h s)
+      ≤ ∫⁻ ij, ∫⁻ q, ENNReal.ofReal (((q.1 : ℝ) - q.2) ^ 2)
+          ∂((coupledIncr (h * lam (s.1 + ij.1)) (h * lam s.2)).map fun ij' =>
+            (s.1 + ij.1 + ij'.1, s.2 + ij.2 + ij'.2))
+          ∂(coupledIncr (h * lam s.1) (h * lam s.2)) := by
+        rw [coupledTwoStep]
+        exact Measure.lintegral_bind_le _ _ _
+    _ ≤ ∫⁻ ij, ENNReal.ofReal ((1 + 4 * κ + 2 * κ ^ 2) *
+            (((s.1 + ij.1 : ℕ) : ℝ) - ((s.2 + ij.2 : ℕ) : ℝ)) ^ 2 +
+          (κ + 2 * κ ^ 2) * (ij.2 : ℝ) ^ 2 + κ * ij.2)
+          ∂(coupledIncr (h * lam s.1) (h * lam s.2)) :=
+        lintegral_mono hin
+    _ = ENNReal.ofReal (1 + 4 * κ + 2 * κ ^ 2) *
+            ∫⁻ ij, ENNReal.ofReal ((((s.1 + ij.1 : ℕ) : ℝ) - ((s.2 + ij.2 : ℕ) : ℝ)) ^ 2)
+              ∂(coupledIncr (h * lam s.1) (h * lam s.2)) +
+          ENNReal.ofReal (κ + 2 * κ ^ 2) *
+            ∫⁻ ij, ENNReal.ofReal ((ij.2 : ℝ) ^ 2) ∂(coupledIncr (h * lam s.1) (h * lam s.2)) +
+          ENNReal.ofReal κ *
+            ∫⁻ ij, ENNReal.ofReal (ij.2 : ℝ) ∂(coupledIncr (h * lam s.1) (h * lam s.2)) :=
+        lintegral_ofReal_add3 _ (fun _ => by positivity) (fun _ => by positivity)
+          (fun _ => by positivity) hα (by positivity) hκ
+    _ ≤ ENNReal.ofReal (1 + 4 * κ + 2 * κ ^ 2) *
+            ENNReal.ofReal ((1 + 4 * κ + 2 * κ ^ 2) * ((s.1 : ℝ) - s.2) ^ 2) +
+          ENNReal.ofReal (κ + 2 * κ ^ 2) * ENNReal.ofReal (ℓ + ℓ ^ 2) +
+          ENNReal.ofReal κ * ENNReal.ofReal ℓ := by
+        gcongr
+    _ = ENNReal.ofReal ((1 + 4 * κ + 2 * κ ^ 2) ^ 2 * ((s.1 : ℝ) - s.2) ^ 2 +
+          ((κ + 2 * κ ^ 2) * (ℓ + ℓ ^ 2) + κ * ℓ)) := by
+        rw [← ENNReal.ofReal_mul hα, ← ENNReal.ofReal_mul (by positivity), ← ENNReal.ofReal_mul hκ,
+          ← ENNReal.ofReal_add (by positivity) (by positivity),
+          ← ENNReal.ofReal_add (by positivity) (by positivity)]
+        congr 1
+        ring
+
+/-- **The mean square difference of the coupled paths** (Giles 2015, §8): with the bounds of
+`lintegral_sq_coupledTwoStep_le`, after `k` coarse steps from `(x₀, x₀)`,
+`E[(x_{2k} − x^c_{2k})²] ≤ B ∑_{i<k} Aⁱ`, where `A = (1 + 4κ + 2κ²)²` and
+`B = (κ + 2κ²)(ℓ + ℓ²) + κℓ`. -/
+theorem lintegral_sq_coupledChain_le {lam : ℕ → ℝ≥0} {h : ℝ≥0} {κ ℓ : ℝ} (hκ : 0 ≤ κ)
+    (hr : ∀ x y : ℕ, |((h * lam x : ℝ≥0) : ℝ) - ((h * lam y : ℝ≥0) : ℝ)| ≤ κ * |(x : ℝ) - y|)
+    (hb : ∀ y : ℕ, ((h * lam y : ℝ≥0) : ℝ) ≤ ℓ) (x₀ : ℕ) :
+    ∀ k, ∫⁻ q, ENNReal.ofReal (((q.1 : ℝ) - q.2) ^ 2) ∂(coupledChain lam h x₀ k) ≤
+      ENNReal.ofReal (((κ + 2 * κ ^ 2) * (ℓ + ℓ ^ 2) + κ * ℓ) *
+        ∑ i ∈ Finset.range k, ((1 + 4 * κ + 2 * κ ^ 2) ^ 2) ^ i)
+  | 0 => by
+      rw [coupledChain, lintegral_dirac]
+      simp
+  | k + 1 => by
+      have hℓ : 0 ≤ ℓ := (NNReal.coe_nonneg _).trans (hb 0)
+      have hA : 0 ≤ (1 + 4 * κ + 2 * κ ^ 2) ^ 2 := by positivity
+      have hB : 0 ≤ (κ + 2 * κ ^ 2) * (ℓ + ℓ ^ 2) + κ * ℓ := by positivity
+      have hS : 0 ≤ ∑ i ∈ Finset.range k, ((1 + 4 * κ + 2 * κ ^ 2) ^ 2) ^ i :=
+        Finset.sum_nonneg fun i _ => pow_nonneg hA i
+      calc ∫⁻ q, ENNReal.ofReal (((q.1 : ℝ) - q.2) ^ 2) ∂(coupledChain lam h x₀ (k + 1))
+          ≤ ∫⁻ s, ∫⁻ q, ENNReal.ofReal (((q.1 : ℝ) - q.2) ^ 2) ∂(coupledTwoStep lam h s)
+              ∂(coupledChain lam h x₀ k) := by
+            rw [coupledChain]
+            exact Measure.lintegral_bind_le _ _ _
+        _ ≤ ∫⁻ s, ENNReal.ofReal ((1 + 4 * κ + 2 * κ ^ 2) ^ 2 * ((s.1 : ℝ) - s.2) ^ 2 +
+              ((κ + 2 * κ ^ 2) * (ℓ + ℓ ^ 2) + κ * ℓ)) ∂(coupledChain lam h x₀ k) :=
+            lintegral_mono fun s => lintegral_sq_coupledTwoStep_le hκ hr hb s
+        _ = ENNReal.ofReal ((1 + 4 * κ + 2 * κ ^ 2) ^ 2) *
+              ∫⁻ s, ENNReal.ofReal (((s.1 : ℝ) - s.2) ^ 2) ∂(coupledChain lam h x₀ k) +
+            ENNReal.ofReal ((κ + 2 * κ ^ 2) * (ℓ + ℓ ^ 2) + κ * ℓ) := by
+            rw [lintegral_ofReal_mul_add _ (fun _ => by positivity) hA hB, coupledChain_univ,
+              mul_one]
+        _ ≤ ENNReal.ofReal ((1 + 4 * κ + 2 * κ ^ 2) ^ 2) *
+              ENNReal.ofReal (((κ + 2 * κ ^ 2) * (ℓ + ℓ ^ 2) + κ * ℓ) *
+                ∑ i ∈ Finset.range k, ((1 + 4 * κ + 2 * κ ^ 2) ^ 2) ^ i) +
+            ENNReal.ofReal ((κ + 2 * κ ^ 2) * (ℓ + ℓ ^ 2) + κ * ℓ) := by
+            gcongr
+            exact lintegral_sq_coupledChain_le hκ hr hb x₀ k
+        _ = ENNReal.ofReal (((κ + 2 * κ ^ 2) * (ℓ + ℓ ^ 2) + κ * ℓ) *
+              ∑ i ∈ Finset.range (k + 1), ((1 + 4 * κ + 2 * κ ^ 2) ^ 2) ^ i) := by
+            rw [← ENNReal.ofReal_mul hA, ← ENNReal.ofReal_add (mul_nonneg hA (mul_nonneg hB hS)) hB,
+              geom_sum_succ]
+            congr 1
+            ring
+
+/-- **The coupled fine and coarse paths are `O(h)` apart in mean square** (Giles 2015, §8, p. 56:
+the Poisson coupling "leads to a very effective multilevel algorithm with a correction variance
+which is `O(h)`", after Anderson and Higham 2012).  Let the propensity `λ` be `K`-Lipschitz and
+bounded by `Λ`, and let `T ≥ 0` be the final time.  There is `c ≥ 0`, depending only on `K`, `Λ`
+and `T`, such that for every time step `0 ≤ h ≤ 1` and every number `k` of coarse steps with
+`2kh ≤ T`, the coupled paths from `x₀` satisfy `E[(x_{2k} − x^c_{2k})²] ≤ c h`, the square
+difference being integrable. -/
+theorem coupledChain_sq_le {lam : ℕ → ℝ≥0} {K Λ : ℝ≥0}
+    (hK : ∀ x y : ℕ, |(lam x : ℝ) - lam y| ≤ K * |(x : ℝ) - y|) (hΛ : ∀ x, lam x ≤ Λ)
+    {T : ℝ} (hT : 0 ≤ T) :
+    ∃ c : ℝ, 0 ≤ c ∧ ∀ (h : ℝ≥0) (k x₀ : ℕ), (h : ℝ) ≤ 1 → 2 * k * (h : ℝ) ≤ T →
+      Integrable (fun q : ℕ × ℕ => ((q.1 : ℝ) - q.2) ^ 2) (coupledChain lam h x₀ k) ∧
+        ∫ q, ((q.1 : ℝ) - q.2) ^ 2 ∂(coupledChain lam h x₀ k) ≤ c * h := by
+  have hK0 : (0 : ℝ) ≤ K := K.coe_nonneg
+  have hΛ0 : (0 : ℝ) ≤ Λ := Λ.coe_nonneg
+  refine ⟨(((K : ℝ) + 2 * (K : ℝ) ^ 2) * ((Λ : ℝ) + (Λ : ℝ) ^ 2) + (K : ℝ) * Λ) * T *
+      Real.exp (T * (4 * (K : ℝ) + 2 * (K : ℝ) ^ 2)), by positivity,
+      fun h k x₀ hh1 hkT => ?_⟩
+  have hh0 : (0 : ℝ) ≤ h := h.coe_nonneg
+  have hκ : 0 ≤ (h : ℝ) * K := mul_nonneg hh0 hK0
+  have hr : ∀ x y : ℕ, |((h * lam x : ℝ≥0) : ℝ) - ((h * lam y : ℝ≥0) : ℝ)| ≤
+      (h : ℝ) * K * |(x : ℝ) - y| := by
+    intro x y
+    rw [NNReal.coe_mul, NNReal.coe_mul, ← mul_sub, abs_mul, NNReal.abs_eq, mul_assoc]
+    exact mul_le_mul_of_nonneg_left (hK x y) hh0
+  have hb : ∀ y : ℕ, ((h * lam y : ℝ≥0) : ℝ) ≤ (h : ℝ) * Λ := by
+    intro y
+    rw [NNReal.coe_mul]
+    exact mul_le_mul_of_nonneg_left (by exact_mod_cast hΛ y) hh0
+  have hl := lintegral_sq_coupledChain_le hκ hr hb x₀ k
+  -- `B ∑_{i<k} Aⁱ ≤ c h`: `B ≤ h² B₀`, `∑_{i<k} Aⁱ ≤ k Aᵏ` and `Aᵏ ≤ e^{T(4K + 2K²)}`
+  have h1 : (h : ℝ) ^ 2 ≤ h := by nlinarith
+  have hA1 : (1 : ℝ) ≤ (1 + 4 * ((h : ℝ) * K) + 2 * ((h : ℝ) * K) ^ 2) ^ 2 :=
+    one_le_pow₀ (by nlinarith)
+  have hsum : ∑ i ∈ Finset.range k, ((1 + 4 * ((h : ℝ) * K) + 2 * ((h : ℝ) * K) ^ 2) ^ 2) ^ i ≤
+      k * ((1 + 4 * ((h : ℝ) * K) + 2 * ((h : ℝ) * K) ^ 2) ^ 2) ^ k := by
+    calc ∑ i ∈ Finset.range k, ((1 + 4 * ((h : ℝ) * K) + 2 * ((h : ℝ) * K) ^ 2) ^ 2) ^ i
+        ≤ ∑ _i ∈ Finset.range k, ((1 + 4 * ((h : ℝ) * K) + 2 * ((h : ℝ) * K) ^ 2) ^ 2) ^ k :=
+          Finset.sum_le_sum fun i hi => pow_le_pow_right₀ hA1 (Finset.mem_range.1 hi).le
+      _ = k * ((1 + 4 * ((h : ℝ) * K) + 2 * ((h : ℝ) * K) ^ 2) ^ 2) ^ k := by
+          rw [Finset.sum_const, Finset.card_range, nsmul_eq_mul]
+  have hAk : ((1 + 4 * ((h : ℝ) * K) + 2 * ((h : ℝ) * K) ^ 2) ^ 2) ^ k ≤
+      Real.exp (T * (4 * (K : ℝ) + 2 * (K : ℝ) ^ 2)) := by
+    rw [← pow_mul]
+    calc (1 + 4 * ((h : ℝ) * K) + 2 * ((h : ℝ) * K) ^ 2) ^ (2 * k)
+        ≤ Real.exp (4 * ((h : ℝ) * K) + 2 * ((h : ℝ) * K) ^ 2) ^ (2 * k) := by
+          refine pow_le_pow_left₀ (by positivity) ?_ _
+          linarith [Real.add_one_le_exp (4 * ((h : ℝ) * K) + 2 * ((h : ℝ) * K) ^ 2)]
+      _ = Real.exp (((2 * k : ℕ) : ℝ) * (4 * ((h : ℝ) * K) + 2 * ((h : ℝ) * K) ^ 2)) :=
+          (Real.exp_nat_mul _ _).symm
+      _ ≤ Real.exp (T * (4 * (K : ℝ) + 2 * (K : ℝ) ^ 2)) := by
+          rw [Real.exp_le_exp]
+          push_cast
+          have hk0 : (0 : ℝ) ≤ k := Nat.cast_nonneg k
+          have e1 : (k : ℝ) * ((h : ℝ) ^ 2 * (K : ℝ) ^ 2) ≤ k * ((h : ℝ) * (K : ℝ) ^ 2) :=
+            mul_le_mul_of_nonneg_left (mul_le_mul_of_nonneg_right h1 (sq_nonneg _)) hk0
+          have e2 := mul_le_mul_of_nonneg_right hkT
+            (by positivity : (0 : ℝ) ≤ 4 * (K : ℝ) + 2 * (K : ℝ) ^ 2)
+          nlinarith [e1, e2]
+  have hBh : ((h : ℝ) * K + 2 * ((h : ℝ) * K) ^ 2) * ((h : ℝ) * Λ + ((h : ℝ) * Λ) ^ 2) +
+      (h : ℝ) * K * ((h : ℝ) * Λ) ≤
+      (h : ℝ) ^ 2 * (((K : ℝ) + 2 * (K : ℝ) ^ 2) * ((Λ : ℝ) + (Λ : ℝ) ^ 2) + (K : ℝ) * Λ) := by
+    have e1 : (h : ℝ) * K + 2 * ((h : ℝ) * K) ^ 2 ≤ (h : ℝ) * ((K : ℝ) + 2 * (K : ℝ) ^ 2) := by
+      nlinarith [mul_le_mul_of_nonneg_right h1 (sq_nonneg (K : ℝ))]
+    have e2 : (h : ℝ) * Λ + ((h : ℝ) * Λ) ^ 2 ≤ (h : ℝ) * ((Λ : ℝ) + (Λ : ℝ) ^ 2) := by
+      nlinarith [mul_le_mul_of_nonneg_right h1 (sq_nonneg (Λ : ℝ))]
+    calc ((h : ℝ) * K + 2 * ((h : ℝ) * K) ^ 2) * ((h : ℝ) * Λ + ((h : ℝ) * Λ) ^ 2) +
+          (h : ℝ) * K * ((h : ℝ) * Λ)
+        ≤ ((h : ℝ) * ((K : ℝ) + 2 * (K : ℝ) ^ 2)) * ((h : ℝ) * ((Λ : ℝ) + (Λ : ℝ) ^ 2)) +
+          (h : ℝ) * K * ((h : ℝ) * Λ) := by
+          gcongr
+      _ = (h : ℝ) ^ 2 * (((K : ℝ) + 2 * (K : ℝ) ^ 2) * ((Λ : ℝ) + (Λ : ℝ) ^ 2) + (K : ℝ) * Λ) := by
+          ring
+  have hΣ0 : 0 ≤ ∑ i ∈ Finset.range k, ((1 + 4 * ((h : ℝ) * K) + 2 * ((h : ℝ) * K) ^ 2) ^ 2) ^ i :=
+    Finset.sum_nonneg fun i _ => by positivity
+  have hkh : (k : ℝ) * h ≤ T := by
+    have := mul_nonneg (Nat.cast_nonneg k : (0 : ℝ) ≤ k) hh0
+    linarith
+  have hbound : (((h : ℝ) * K + 2 * ((h : ℝ) * K) ^ 2) * ((h : ℝ) * Λ + ((h : ℝ) * Λ) ^ 2) +
+      (h : ℝ) * K * ((h : ℝ) * Λ)) *
+        ∑ i ∈ Finset.range k, ((1 + 4 * ((h : ℝ) * K) + 2 * ((h : ℝ) * K) ^ 2) ^ 2) ^ i ≤
+      (((K : ℝ) + 2 * (K : ℝ) ^ 2) * ((Λ : ℝ) + (Λ : ℝ) ^ 2) + (K : ℝ) * Λ) * T *
+        Real.exp (T * (4 * (K : ℝ) + 2 * (K : ℝ) ^ 2)) * h := by
+    calc (((h : ℝ) * K + 2 * ((h : ℝ) * K) ^ 2) * ((h : ℝ) * Λ + ((h : ℝ) * Λ) ^ 2) +
+          (h : ℝ) * K * ((h : ℝ) * Λ)) *
+            ∑ i ∈ Finset.range k, ((1 + 4 * ((h : ℝ) * K) + 2 * ((h : ℝ) * K) ^ 2) ^ 2) ^ i
+        ≤ ((h : ℝ) ^ 2 * (((K : ℝ) + 2 * (K : ℝ) ^ 2) * ((Λ : ℝ) + (Λ : ℝ) ^ 2) + (K : ℝ) * Λ)) *
+            (k * Real.exp (T * (4 * (K : ℝ) + 2 * (K : ℝ) ^ 2))) :=
+          mul_le_mul hBh (hsum.trans (mul_le_mul_of_nonneg_left hAk (Nat.cast_nonneg k))) hΣ0
+            (by positivity)
+      _ = (((K : ℝ) + 2 * (K : ℝ) ^ 2) * ((Λ : ℝ) + (Λ : ℝ) ^ 2) + (K : ℝ) * Λ) * ((k : ℝ) * h) *
+            Real.exp (T * (4 * (K : ℝ) + 2 * (K : ℝ) ^ 2)) * h := by
+          ring
+      _ ≤ (((K : ℝ) + 2 * (K : ℝ) ^ 2) * ((Λ : ℝ) + (Λ : ℝ) ^ 2) + (K : ℝ) * Λ) * T *
+            Real.exp (T * (4 * (K : ℝ) + 2 * (K : ℝ) ^ 2)) * h := by
+          gcongr
+  have hfin : ∫⁻ q, ENNReal.ofReal (((q.1 : ℝ) - q.2) ^ 2) ∂(coupledChain lam h x₀ k) ≤
+      ENNReal.ofReal ((((K : ℝ) + 2 * (K : ℝ) ^ 2) * ((Λ : ℝ) + (Λ : ℝ) ^ 2) + (K : ℝ) * Λ) * T *
+        Real.exp (T * (4 * (K : ℝ) + 2 * (K : ℝ) ^ 2)) * h) :=
+    hl.trans (ENNReal.ofReal_le_ofReal hbound)
+  have hnn : 0 ≤ᵐ[coupledChain lam h x₀ k] fun q : ℕ × ℕ => ((q.1 : ℝ) - q.2) ^ 2 :=
+    ae_of_all _ fun q => sq_nonneg _
+  refine ⟨⟨Measurable.of_discrete.aestronglyMeasurable, ?_⟩, ?_⟩
+  · rw [hasFiniteIntegral_iff_ofReal hnn]
+    exact hfin.trans_lt ENNReal.ofReal_lt_top
+  · rw [integral_eq_lintegral_of_nonneg_ae hnn Measurable.of_discrete.aestronglyMeasurable]
+    exact ENNReal.toReal_le_of_le_ofReal (by positivity) hfin
+
+/-- **The correction variance of tau-leaping MLMC is `O(h)`** (Giles 2015, §8, p. 56: "a very
+effective multilevel algorithm with a correction variance which is `O(h)`").  For a
+`K`-Lipschitz propensity bounded by `Λ`, a final time `T ≥ 0` and an `L`-Lipschitz payoff `Φ`
+of the terminal state, there is `c ≥ 0` such that for every time step `0 ≤ h ≤ 1` and `k` coarse
+steps with `2kh ≤ T`, the correction `Φ(x_{2k}) − Φ(x^c_{2k})` of the coupled paths has variance
+at most `c h`. -/
+theorem variance_coupledChain_le {lam : ℕ → ℝ≥0} {K Λ : ℝ≥0}
+    (hK : ∀ x y : ℕ, |(lam x : ℝ) - lam y| ≤ K * |(x : ℝ) - y|) (hΛ : ∀ x, lam x ≤ Λ)
+    {T : ℝ} (hT : 0 ≤ T) {Φ : ℕ → ℝ} {L : ℝ} (hΦ : ∀ x y : ℕ, |Φ x - Φ y| ≤ L * |(x : ℝ) - y|) :
+    ∃ c : ℝ, 0 ≤ c ∧ ∀ (h : ℝ≥0) (k x₀ : ℕ), (h : ℝ) ≤ 1 → 2 * k * (h : ℝ) ≤ T →
+      variance (fun q : ℕ × ℕ => Φ q.1 - Φ q.2) (coupledChain lam h x₀ k) ≤ c * h := by
+  obtain ⟨c, hc, hbd⟩ := coupledChain_sq_le hK hΛ hT
+  refine ⟨L ^ 2 * c, by positivity, fun h k x₀ hh1 hkT => ?_⟩
+  obtain ⟨hint, hle⟩ := hbd h k x₀ hh1 hkT
+  haveI : IsProbabilityMeasure (coupledChain lam h x₀ k) := ⟨coupledChain_univ lam h x₀ k⟩
+  have hpt : ∀ q : ℕ × ℕ, (Φ q.1 - Φ q.2) ^ 2 ≤ L ^ 2 * ((q.1 : ℝ) - q.2) ^ 2 := fun q => by
+    have h1 := hΦ q.1 q.2
+    calc (Φ q.1 - Φ q.2) ^ 2 = |Φ q.1 - Φ q.2| ^ 2 := (sq_abs _).symm
+      _ ≤ (L * |(q.1 : ℝ) - q.2|) ^ 2 := pow_le_pow_left₀ (abs_nonneg _) h1 2
+      _ = L ^ 2 * ((q.1 : ℝ) - q.2) ^ 2 := by rw [mul_pow, sq_abs]
+  calc variance (fun q : ℕ × ℕ => Φ q.1 - Φ q.2) (coupledChain lam h x₀ k)
+      ≤ ∫ q, (Φ q.1 - Φ q.2) ^ 2 ∂(coupledChain lam h x₀ k) :=
+        variance_le_expectation_sq Measurable.of_discrete.aestronglyMeasurable
+    _ ≤ ∫ q, L ^ 2 * ((q.1 : ℝ) - q.2) ^ 2 ∂(coupledChain lam h x₀ k) :=
+        integral_mono_of_nonneg (ae_of_all _ fun q => sq_nonneg _) (hint.const_mul _)
+          (ae_of_all _ hpt)
+    _ = L ^ 2 * ∫ q, ((q.1 : ℝ) - q.2) ^ 2 ∂(coupledChain lam h x₀ k) := integral_const_mul _ _
+    _ ≤ L ^ 2 * (c * h) := mul_le_mul_of_nonneg_left hle (sq_nonneg L)
+    _ = L ^ 2 * c * h := by ring
+
+/-- **`β = 1` for tau-leaping MLMC** (Giles 2015, §8, p. 56, with the level structure of
+`tauLeaping_level`): on level `ℓ + 1` the fine path makes `2^{ℓ+1}` steps of size
+`h_{ℓ+1} = T/2^{ℓ+1}` and the coarse path `2^ℓ` steps of size `h_ℓ`, and for a `K`-Lipschitz
+propensity bounded by `Λ` and an `L`-Lipschitz payoff the variance of the correction
+`Φ(x_T) − Φ(x^c_T)` is at most `c 2^{−ℓ}`, as soon as `h_{ℓ+1} ≤ 1`.  With the weak rate `α = 1`
+and the cost rate `γ = 1` this is the regime `β = γ` of Theorem 1, hence the complexity
+`O(ε⁻²(log ε)²)` (`tauLeaping_complexity`). -/
+theorem tauLeaping_level_variance {lam : ℕ → ℝ≥0} {K Λ : ℝ≥0}
+    (hK : ∀ x y : ℕ, |(lam x : ℝ) - lam y| ≤ K * |(x : ℝ) - y|) (hΛ : ∀ x, lam x ≤ Λ)
+    (T : ℝ≥0) {Φ : ℕ → ℝ} {L : ℝ} (hΦ : ∀ x y : ℕ, |Φ x - Φ y| ≤ L * |(x : ℝ) - y|) :
+    ∃ c : ℝ, 0 ≤ c ∧ ∀ ℓ x₀ : ℕ, (T : ℝ) ≤ 2 ^ (ℓ + 1) →
+      variance (fun q : ℕ × ℕ => Φ q.1 - Φ q.2) (coupledChain lam (T / 2 ^ (ℓ + 1)) x₀ (2 ^ ℓ)) ≤
+        c / 2 ^ ℓ := by
+  obtain ⟨c, hc, hbd⟩ := variance_coupledChain_le hK hΛ T.coe_nonneg hΦ
+  refine ⟨c * T / 2, by positivity, fun ℓ x₀ hℓ => ?_⟩
+  have hh : ((T / 2 ^ (ℓ + 1) : ℝ≥0) : ℝ) = (T : ℝ) / 2 ^ (ℓ + 1) := by
+    rw [NNReal.coe_div, NNReal.coe_pow, NNReal.coe_ofNat]
+  have hpow : (0 : ℝ) < 2 ^ (ℓ + 1) := by positivity
+  have hh1 : ((T / 2 ^ (ℓ + 1) : ℝ≥0) : ℝ) ≤ 1 := by
+    rw [hh]
+    exact div_le_one_of_le₀ hℓ hpow.le
+  have hkT : 2 * ((2 ^ ℓ : ℕ) : ℝ) * ((T / 2 ^ (ℓ + 1) : ℝ≥0) : ℝ) ≤ T := by
+    rw [hh]
+    push_cast
+    rw [pow_succ', mul_div_cancel₀ _ (by positivity)]
+  calc variance (fun q : ℕ × ℕ => Φ q.1 - Φ q.2) (coupledChain lam (T / 2 ^ (ℓ + 1)) x₀ (2 ^ ℓ))
+      ≤ c * ((T / 2 ^ (ℓ + 1) : ℝ≥0) : ℝ) := hbd _ _ _ hh1 hkT
+    _ = c * T / 2 / 2 ^ ℓ := by
+        rw [hh, pow_succ]
+        ring
 
 end MLMC

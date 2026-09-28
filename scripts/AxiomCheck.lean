@@ -376,6 +376,12 @@ import MlmcLean
 #print axioms MLMC.tendsto_kernel_integral_signed
 #print axioms MLMC.tendsto_density
 #print axioms MLMC.splitting_mean_variance
+#print axioms MLMC.lintegral_sq_coupledIncr_le
+#print axioms MLMC.lintegral_sq_coupledTwoStep_le
+#print axioms MLMC.lintegral_sq_coupledChain_le
+#print axioms MLMC.coupledChain_sq_le
+#print axioms MLMC.variance_coupledChain_le
+#print axioms MLMC.tauLeaping_level_variance
 -- helper lemmas that the prove2.me generator promotes to nodes
 #print axioms MLMC.sqrt_Vb_mul_Cb
 #print axioms MLMC.two_rpow_levelL_le
