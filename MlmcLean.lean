@@ -79,6 +79,12 @@
 -- * `MlmcLean.AsymptoticNormal` — Giles §2.1 (Collier et al.) and Haas–Giles §3.2: each level
 --   estimator and, for a fixed number of levels, the MLMC estimator are asymptotically normal
 --   (Mathlib's CLT, Lévy's continuity theorem); sums of independent N(0, 1/n) are N(0, 1)
+-- * `MlmcLean.PoissonGrids` — Giles §8 (with §5.6) and §10.2: Poisson counts summed over the
+--   steps of each path on a union grid have the right laws, so (2.4) holds, also for
+--   tau-leaping on non-nested deterministic grids; rounding increments breaks (2.4)
+-- * `MlmcLean.HaasGilesRemarks` — Haas–Giles §6: the cost factor of Fig. 3 and 5 and when the
+--   nested estimator is cheaper, two-sided sizes of the path variables (39)–(41), and the
+--   rounding error with fixed precision (exact variance, lower bound, beats discretisation)
 import MlmcLean.Allocation
 import MlmcLean.Estimator
 import MlmcLean.LevelDiff
@@ -125,3 +131,5 @@ import MlmcLean.ML2RTheorem
 import MlmcLean.GilesRemarks
 import MlmcLean.RandomShiftQMC
 import MlmcLean.AsymptoticNormal
+import MlmcLean.PoissonGrids
+import MlmcLean.HaasGilesRemarks

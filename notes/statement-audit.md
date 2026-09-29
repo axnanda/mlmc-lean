@@ -224,6 +224,71 @@ Not paper statements; they are the steps of the proof sketch on p. 7 ("L is chos
 (E[Y] − E[P])² < ½ε² …, N_ℓ … rounded up"). `mlmc_complexity_core` shows `c₄` depends only on
 `α, β, γ, c₁, c₂, c₃`, which is stronger than the paper's statement.
 
+## Round 10 (2026-09-29): coverage re-audit of both papers
+
+Five independent auditors re-read Giles (2015) §1–§11 and Haas–Giles (2025) in full and classified
+all 634 claims against the Lean statements (tables in `notes/coverage/`; each row gives the claim,
+the Lean name and the status). No Lean statement misstates a paper. The claims found missing or
+partial were formalised in this round; `notes/coverage/README.md` maps every one of them to its
+Lean statement or to the reason it is not formalised. The deviations of the new statements:
+
+* **ML2R (G15 §2.3; `ML2RTheorem.lean`).** The paper's "`O(2^{−αℓL})`" in the weak-error
+  expansion is read with one constant `K` for all `L` and `ℓ ≤ L` (implicit in the paper: `L`
+  grows as `ε → 0`, and with a constant growing with `L` the bias need not be small). Under it the
+  bias is at most `C_α K 2^{−αL(L+1)/2}` (`ml2r_bias_le`); the printed `O(2^{−αL²})` cannot hold
+  uniformly (`ml2r_bias`: the expansion `2^{−α(L+1)ℓ}` has bias exactly `±2^{−αL(L+1)/2}`), so
+  the `β < γ` cost exponent is `√(2|log₂ ε|/α)`, `√2` times the printed one. The complexity
+  (`ml2r_theorem_eq`, `ml2r_theorem_lt`) is stated for the mean square error of the estimator
+  itself; the earlier `ml2r_complexity_eq`/`_lt` are its deterministic core.
+* **Theorem 2's index set (G15 §2.4, p. 15).** `giles_theorem2_indexSet` and
+  `giles_theorem2_boundary_indexSet` state Theorem 2 on the simplex `{θ·ℓ ≤ L}`,
+  `θ_d = α_d + (γ_d − β_d)/2` (the paper's "of the form `ℓ·n ≤ L`"; it does not say which `n`).
+  That this shape is *optimal* among all index sets is not formalised.
+* **Asymptotic normality (G15 §2.1, p. 8; `AsymptoticNormal.lean`).** Proved for each level
+  estimator and, for a fixed number of levels with `N_ℓ = m_ℓ n`, for the MLMC estimator. Collier
+  et al. let `L` grow as `ε → 0`; that needs a Lindeberg–Feller central limit theorem, which
+  Mathlib does not have, and their confidence-interval theorem is only cited by Giles.
+* **Randomised MLMC "≈" (G15 §2.2).** "If `E_ℓ² ≪ V_ℓ` … `N ≈ ε⁻² Σ V_ℓ/p_ℓ`" is made exact:
+  `E_ℓ² ≤ δV_ℓ` puts `V[Y]` between `Σ V_ℓ/p_ℓ` and `(1 + δ) Σ V_ℓ/p_ℓ`
+  (`singleTerm_variance_le_of_sq_le`, `singleTermN_samples_of_sq_le`).
+* **Splitting "to leading order" (G15 §5.2).** The implicit condition is identified:
+  splitting keeps the variance to leading order at negligible extra cost iff
+  `E[v]/V[m] = o(h⁻¹)` (`splitting_leading_order`), with the cost model of `h⁻¹ − 1 + M` steps.
+* **Random-shift QMC (G15 §3.5).** Formalised on the torus `(ℝ/ℤ)^d`, i.e. for the periodic
+  extension of the integrand; the points are arbitrary (a rank-1 lattice is one choice).
+* **Markov chains, `N_ℓ` linear (G15 §10.1).** `markov_linear_levels` gives conditions (iii)–(iv)
+  of Theorem 1; the paper's "the decay is exponential in `N_ℓ − N_{ℓ−1}`" should read `N_{ℓ−1}`
+  (with linear `N_ℓ` the difference is constant; `variance_levels_le`).
+
+### Corrections to the papers recorded elsewhere, collected
+
+| Paper | Where | Printed | Correct | Lean |
+|---|---|---|---|---|
+| G15 | §1.3, p. 4 | `ε⁻²L²V₀C₀` | `ε⁻²(L+1)²V₀C₀` (levels `0, …, L`) | `optimal_cost_const_product` |
+| G15 | §2.3, p. 11 | weights with `∑ w_ℓ 2^{−nαℓ} = 1` | `= 0` | `ml2r_weights` |
+| G15 | §2.3, p. 12 | bias `O(2^{−αL²})`, exponent `√(|log₂ ε|/α)` | `O(2^{−αL(L+1)/2})`, `√(2|log₂ ε|/α)` | `ml2r_bias`, `ml2r_bias_le`, `ml2r_theorem_lt` |
+| G15 | §2.4, pp. 13–14 | conditions labelled i), iii), ii), iv), v) | labels as in the Notes | hypothesis names follow the statement |
+| G15 | §2.4, p. 15 | rectangles "optimal order" | only for `O(ε⁻²)` | `mimc_rect_lower_bounds` |
+| G15 | §3.1, p. 21 | (3.1) gives variance `< ½ε²` | `≤ ½ε²` | `allocation_eq_3_1` |
+| G15 | §3.3, p. 23 | "`p, q → 0` due to weak convergence" | needs `E[X²] → 0` | `consistency_mean` |
+| G15 | §5, p. 29 | `h_ℓ = h₀M^ℓ` | `h₀M^{−ℓ}` | `timestep_rate` |
+| G15 | §5.2, p. 36 | numerator `b√h_ℓ`; digital constant `25` | `b ΔW_{N−2}`; `10` as on p. 30 | (not formalised as printed) |
+| G15 | §5.2, p. 38 | "`O(h_ℓ)` difference on average" | `O(h_ℓ^{1/2})` | — |
+| G15 | §5.3, p. 39 | `b(Ŝ^c_n, c_n)` | `b(Ŝ^c_n, t_n)` | — |
+| G15 | §7.1, p. 49 | a constant `K` with `|P − P_ℓ| < K h_ℓ²` | impossible for the example (error `∝ Z²`); a random `K` with `E[K²] < ∞` | `elliptic_rates` (literal), `ApplicationExtras.lean` (random `K`) |
+| G15 | §7.3, p. 54 | `√h Z_n` | `√k Z_n` | `ApplicationExtras.lean` |
+| G15 | §9.1, p. 58; §9.2, p. 60 | `−1/(4N_ℓ)` | `−1/(8N_ℓ)` | `antithetic_quadratic`, `NestedRates.lean` |
+| G15 | §9.2, p. 59 | `O(ε⁻²(log ε)⁻²)` | `O(ε⁻²(log ε)²)` | `nested_complexity` |
+| G15 | §10.1, p. 61 | decay exponential in `N_ℓ − N_{ℓ−1}` | in `N_{ℓ−1}` | `variance_levels_le`, `markov_linear_levels` |
+| G15 | §10.2, p. 62 | `U_n = (I_n + ½)/I_max` | exceeds `1` for `I_n = I_max` | — |
+| HG25 | (21) | `E[δx²] = 4^{e−d−1}` | `≤` | `integral_sq_roundError_le` |
+| HG25 | (25) | `2 ∑_{i≠j} Cov` | correct over unordered pairs (as (27) reads it); over ordered pairs no factor 2 | `variance_sum_eq` |
+| HG25 | (27) | derived under perfect correlation | holds for every joint law | `variance_linearised_corr` |
+| HG25 | (28) | factor `1/12` on the MSE term | no factor `1/12` | `variance_extended_indep` |
+| HG25 | Fig. 3, 5 captions | `√(Ṽ/V)` | `√(V^Δ/V)` | `HaasGilesRemarks.lean` |
+
+"—" marks typos that no Lean statement depends on.
+
 ## Out of scope (as in PLAN.md)
 
 The rate conditions (i)–(iv) are hypotheses, exactly as in the papers; proving them for
