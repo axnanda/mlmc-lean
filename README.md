@@ -4,7 +4,7 @@ A research repo (Sept 2026) with four parts:
 
 | Path | What it is |
 |---|---|
-| `MlmcLean/` | Machine-checked **Lean 4 + Mathlib proofs** of Giles' MLMC complexity theorem (Theorem 1), randomised MLMC, the Multi-Index Monte Carlo theorem (Theorem 2), the MLMC and MLQMC algorithms, Richardson–Romberg MLMC, and the pure-mathematics content of the application sections of Giles (2015) and of Haas–Giles (2025): 42 modules, 426 audited theorems. Zero `sorry`. |
+| `MlmcLean/` | Machine-checked **Lean 4 + Mathlib proofs** of Giles' MLMC complexity theorem (Theorem 1), randomised MLMC, the Multi-Index Monte Carlo theorem (Theorem 2), the MLMC and MLQMC algorithms, Richardson–Romberg MLMC, and the pure-mathematics content of the application sections of Giles (2015) and of Haas–Giles (2025): 53 modules, 565 audited theorems. Zero `sorry`. |
 | `PLAN.md` | Formalisation milestones (M0–M3 and M5 done; M4, level-dependent precision, awaits sign-off) and ground rules. **Start here for new work.** |
 | `notes/research-notes.md` | Evaluation of ternary/low-precision inputs for the Haas–Giles framework, the weak-vs-strong ("path") argument, AWS F2/Trainium notes, strategy and open directions. |
 | `experiments/quantization/` | The two numerical checks behind the notes (Python), with saved outputs in `results/`. |
@@ -76,6 +76,7 @@ The statement-by-statement comparison with the papers, including every deviation
 | `MlmcLean/SDEDigital.lean`, `MlmcLean/SDEMisc.lean` | The §5 probability steps not in `SDEExtras`: Lipschitz payoffs; the digital option's variance from the strong error, `O(h^{1/3})` from mean square (sharp), `β = 1/3` for GBM with no assumption (`gbm_digital_variance_le`); conditional expectation of the last step with the `Φ` formulas, (2.4) and `V₀ = 0` (`digital_smoothing`, `digital_smoothing_coarse`, `digital_smoothing_level_zero`); Gaussian change of measure; the call payoff's derivative; the antithetic bound in `d` dimensions and for the call (`variance_antithetic_le_fderiv`, `variance_call_antithetic_le`); explicit versus tamed Euler steps for super-linear drift; the smoothed CDF for any bounded smoother; the density of a `d`-dimensional output. | [G15] §5.1–§5.7 |
 | `MlmcLean/ApplicationExtras.lean`, `MlmcLean/PoissonGrids.lean` | Summed Lévy increments have the coarse law, so (2.4) holds (`integral_levyCoarse`, `levy_telescoping`); exponential periods concentrate at `T`; FE with midpoint quadrature is the FD scheme (`fe_eq_centralDiff`); the elliptic rates `α = 2`, `β = 4` with a random `K` (`elliptic_rates_random`; no deterministic `K` exists, `not_ae_abs_gaussian_sq_mul_le`); the §7.3 scheme is one Milstein step (`spdeScheme_eq_milstein`); the Brownian-bridge and variable-precision paths agree in both roles (`bb_telescoping`, `vp_telescoping`); Poisson counts summed on union grids and tau-leaping on non-nested grids keep the laws, so (2.4) holds (`unionGrid_2_4`, `unionChain_2_4`); truncating increments breaks it (`roundFixed_sum_inconsistent_general`). | [G15] §6.2, §7, §8, §10.2 |
 | `MlmcLean/MarkovLimitLaw.lean` | The level bias decays geometrically (`abs_integral_sub_limit_le`); the law of the limit is the unique invariant law (`existsUnique_invariant`, `invariant_unique`), `U[0, 2]` in the example (`halfStep_invariant_unique`, `halfStep_limit_uniform`); Glynn–Rhee's randomised estimator of `E[f(X_∞)]` is unbiased with finite variance and cost (`markov_randomised_mlmc`), and MLMC reaches MSE `< ε²` at cost `O(ε⁻²)` (`markov_mlmc_theorem1`). | [G15] §10.1 |
+| `MlmcLean/NestedRates.lean` | The §9.2 Taylor expansion with the coefficient `−1/8` (`mimc_antithetic_quadratic`, `abs_mimc_antithetic_taylor_le`); nested MLMC with `2^ℓ` inner samples of a level-`ℓ` inner approximation (e.g. `2^ℓ` Milstein steps, whose weak and strong orders are hypotheses): `α = 1`, `β = 2`, `γ = 2` and cost `O(ε⁻²(log ε)²)` (`nested_sde_bias_rate`, `nested_sde_variance_rate`, `nested_sde_mlmc_complexity`); a piecewise linear `f`: `β = 3/2`, `α = ½` and cost `O(ε⁻²)` when the inner mean has little mass near the kink, e.g. a bounded density (`antithetic_kink`, `nested_kink_variance_rate_of_density`, `nested_kink_mlmc_complexity`); the nested MIMC rates `E[Y_ℓ] = O(2^{−ℓ₁−ℓ₂})`, `V_ℓ = O(2^{−2ℓ₁−2ℓ₂})` (`nested_mimc_mean_rate`, `nested_mimc_variance_rate`). | [G15] §9.1–§9.2 |
 | `MlmcLean/HaasGilesRemarks.lean` | The plotted cost factor and when the nested estimator is cheaper (`nestedCost_le_of_costFactor_le`; the full cost (32) needs `ρ²(1+ρ²) < 1`, `exists_costFactor_lt_one_nestedCost_gt`), two-sided sizes of the path variables (39)–(41) (`gbmPath_size_bounds`, `gbmPath_sq_largest`), and the accumulated rounding error with fixed precision: exact variance, lower bound, and it exceeds the discretisation error for small `h` (`perturbed_path_sub_mean_variance`, `strongError_lt_integral_sq_perturbed_path_sub`). | [HG25] §6.1, §6.3 |
 
 No `sorry` and no extra axioms (see Verification below).
@@ -118,6 +119,21 @@ No `sorry` and no extra axioms (see Verification below).
   exponents only when `α_d > ½β_d`; `giles_theorem2_full` states exactly that (the exponents
   exist, and are the paper's in the strict case). The explicit boundary exponents of
   `giles_theorem2_boundary` are this formalisation's.
+* **Hypotheses in place of SDE theory.** Where a claim of §5, §9 or §10 rests on the convergence
+  order of a discretisation, that order is a hypothesis of the Lean statement (for example the
+  Milstein weak and strong orders of the inner paths in `NestedRates.lean`, or the mean-square
+  strong rate in `SDEDigital.lean`). Where the paper's argument needs more than the order, the
+  extra hypothesis is stated: a bounded density of the underlying for the digital option (§5.1),
+  a bounded conditional density for the antithetic call (§5.3), little mass of the inner mean near
+  the kink for a piecewise linear `f` (§9.1), `L⁴` strong convergence and a Lipschitz `f″` for the
+  nested MIMC rates (§9.2).
+* **ML2R's weak-error expansion.** The paper's remainder `O(2^{−αℓL})` is read with one constant
+  for all `L` and `ℓ ≤ L`, which the complexity argument needs since `L` grows as `ε → 0`.
+* **Deterministic grids.** The union grids for non-nested timesteps (§5.6, §8) are deterministic;
+  the adaptive, path-dependent grids of §5.6 are not covered.
+* **Random constants.** The PDE bound `|P − P_ℓ| < K h_ℓ²` of §7.1 holds with a random `K`,
+  `E[K²] < ∞`; for the paper's example no deterministic `K` exists
+  (`not_ae_abs_gaussian_sq_mul_le`).
 
 ### Build
 

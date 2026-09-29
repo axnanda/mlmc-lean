@@ -535,6 +535,22 @@ import MlmcLean
 #print axioms MLMC.markov_mlmc_rates
 #print axioms MLMC.markov_randomised_mlmc
 #print axioms MLMC.markov_mlmc_theorem1
+#print axioms MLMC.mimc_antithetic_quadratic
+#print axioms MLMC.abs_mimc_antithetic_le
+#print axioms MLMC.abs_mimc_antithetic_taylor_le
+#print axioms MLMC.abs_mimc_antithetic_le_of_deriv2
+#print axioms MLMC.integral_nestedSdeDelta
+#print axioms MLMC.nested_sde_variance_rate
+#print axioms MLMC.nested_sde_mean_rate
+#print axioms MLMC.nested_sde_bias_rate
+#print axioms MLMC.nested_sde_mlmc_complexity
+#print axioms MLMC.antithetic_kink
+#print axioms MLMC.nested_kink_variance_rate
+#print axioms MLMC.nested_kink_variance_rate_of_density
+#print axioms MLMC.nested_kink_bias_rate
+#print axioms MLMC.nested_kink_mlmc_complexity
+#print axioms MLMC.nested_mimc_variance_rate
+#print axioms MLMC.nested_mimc_mean_rate
 -- helper lemmas that the prove2.me generator promotes to nodes
 #print axioms MLMC.sqrt_Vb_mul_Cb
 #print axioms MLMC.two_rpow_levelL_le

@@ -475,7 +475,10 @@ analysis rate `O(h^{1/2} log h)`).  If `X` has density at most `ρ` near `K` and
 Gaussian-type tails, `P(|X − Y| > δ) ≤ A e^{−δ²/(Bh)}` for all `δ > 0`, with `B > 0` and
 `0 < h < 1`, then (taking `δ = (B h log(1/h))^{1/2}` in `digital_mismatch_le`)
 `V[1_{X>K} − 1_{Y>K}] ≤ P(1_{X>K} ≠ 1_{Y>K}) ≤ 2ρ (B h log(1/h))^{1/2} + A h`.  The tail bound
-is a hypothesis: for the Euler–Maruyama scheme it is SDE theory, not proved here. -/
+is a hypothesis: for the Euler–Maruyama scheme it is SDE theory, not proved here.  Only the value
+`δ = (B h log(1/h))^{1/2}` is used.  The bound holds, for example, when `Y − X` is `√h` times a
+standard Gaussian; it does not hold for all `δ` for the Euler–Maruyama error of geometric Brownian
+motion, whose tails are lognormal, and that case is `gbm_digital_variance_le`. -/
 theorem digital_mismatch_le_of_tail [IsProbabilityMeasure μ] {X Y : Ω → ℝ} (hX : Measurable X)
     (hY : Measurable Y) {K ρ A B h : ℝ}
     (hρ : ∀ δ, 0 < δ → μ.real {ω | |X ω - K| ≤ δ} ≤ 2 * ρ * δ) (hB : 0 < B) (hh : 0 < h)

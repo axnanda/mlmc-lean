@@ -97,6 +97,9 @@
 -- * `MlmcLean.MarkovLimitLaw` — Giles §10.1: the level bias decays geometrically, the invariant
 --   law exists and is unique (U[0, 2] in the example), Glynn–Rhee's randomised estimator of
 --   E[f(X_∞)] is unbiased with finite variance and cost, and MLMC reaches it at cost O(ε⁻²)
+-- * `MlmcLean.NestedRates` — Giles §9.1–§9.2: the MIMC Taylor expansion (coefficient −1/8),
+--   MLMC with discretised inner paths (α = 1, β = γ = 2, cost O(ε⁻²(log ε)²)), a piecewise
+--   linear f (β = 3/2, cost O(ε⁻²)), and the nested MIMC rates O(2^{−ℓ₁−ℓ₂}), O(2^{−2ℓ₁−2ℓ₂})
 import MlmcLean.Allocation
 import MlmcLean.Estimator
 import MlmcLean.LevelDiff
@@ -149,3 +152,4 @@ import MlmcLean.SDEMisc
 import MlmcLean.SDEDigital
 import MlmcLean.ApplicationExtras
 import MlmcLean.MarkovLimitLaw
+import MlmcLean.NestedRates
