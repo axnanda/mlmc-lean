@@ -12,8 +12,12 @@ import Mathlib.MeasureTheory.Measure.WithDensity
 
 Reference: M.B. Giles, *Multilevel Monte Carlo methods*, Acta Numerica 24 (2015), §5 "SDEs"
 (pp. 29–46).  The convergence orders of the discretisations (strong order `½` of Euler–Maruyama,
-order `1` of Milstein, the Brownian-bridge results) are SDE theory and are not formalised; what is
-formalised here is every step of the section that follows from them by probability or algebra.
+order `1` of Milstein, the Brownian-bridge results) are SDE theory and are not formalised, except
+for geometric Brownian motion, from its explicit solution (`GBMEulerMaruyama.lean`,
+`GBMMilstein.lean`).  This file proves the steps listed below, which follow from them by
+probability or algebra; `SDEDigital.lean` and `SDEMisc.lean` prove the remaining such steps
+(Lipschitz payoffs, digital options, the conditional expectation and change of measure of §5.2,
+antithetic estimators in several dimensions, taming, general smoothers and densities).
 
 * **§5.1** (`timestep_rate`): with `h_ℓ = h₀ 2^{−kℓ}` a bound `c h_ℓ^q` decays at the rate `kq` and
   the cost `1/h_ℓ` grows at the rate `k` — "if `h_ℓ = 4^{−ℓ}h₀` … `α = 2`, `β = 2` and `γ = 2`

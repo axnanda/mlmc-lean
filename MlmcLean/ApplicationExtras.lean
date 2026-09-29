@@ -886,7 +886,9 @@ let the two fine Brownian increments be `ΔW₁ ∈ (0, 1/20)` and `ΔW₂ ∈ (
 coarse increment `ΔW₁ + ΔW₂` to `0`, whereas summing the fine increments rounded to `B_ℓ` bits
 gives `1/2`, with the truncation to `B_{ℓ−1}` bits before or after the summation.  This is a
 pathwise statement, on a rectangle of increments of positive probability for Brownian increments;
-the laws of the two coarse increments are not computed.  Compare `vpPath_castLE`. -/
+the laws of the two coarse increments are not computed.  The witness uses the exact tie
+`roundFixed 0 1 (1/4) = 1/2`, so it relies on `round` breaking ties upwards (Mathlib's `round`);
+`roundFixed_sum_inconsistent_general` gives a family of instances.  Compare `vpPath_castLE`. -/
 theorem roundFixed_sum_inconsistent {x y : ℝ} (hx : 0 < x) (hx' : x < 1 / 20) (hy : 3 / 20 < y)
     (hy' : y < 1 / 5) :
     roundFixed 0 1 (x + y) = 0 ∧

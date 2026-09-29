@@ -42,7 +42,9 @@ namespace MLMC
 /-! ### Fixed-point rounding (§4.1) -/
 
 /-- Round-to-nearest onto the fixed-point grid `2^{e−d} ℤ` (Haas–Giles 2025, §4.1): the number
-`2^{e−d} n`, `n ∈ ℤ`, nearest to `x`, for the exponent `e` and the bit-width `d`. -/
+`2^{e−d} n`, `n ∈ ℤ`, nearest to `x`, for the exponent `e` and the bit-width `d`.  The paper says
+"round-to-nearest" without a tie rule; a tie (`x` halfway between two grid points) is rounded
+upwards here, as Mathlib's `round` does. -/
 noncomputable def roundFixed (e : ℤ) (d : ℕ) (x : ℝ) : ℝ :=
   (2 : ℝ) ^ (e - d) * round (x / (2 : ℝ) ^ (e - d))
 

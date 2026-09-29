@@ -157,7 +157,10 @@ cost `ε⁻² (∑_ℓ (34))²` is strictly smaller than the standard cost (8); 
 `ρ² (1 + ρ²) < 1` (e.g. `ρ ≤ 3/4`; the values of Figure 5 are below `0.4`), so is the nested cost
 (32) with `Ṽ_ℓ = V_ℓ` and `C^Δ_ℓ = C_ℓ + C̃_ℓ`.  The paper's inference from "smaller than 1"
 holds for (34) but needs the extra margin for (32): see
-`exists_costFactor_lt_one_nestedCost_gt`. -/
+`exists_costFactor_lt_one_nestedCost_gt`.  The margin `ρ² (1 + ρ²) < 1` (`ρ < 0.786…`) is
+sufficient, not sharp: with `a = √(C̃_ℓ/C_ℓ)` and `b = √(V^Δ_ℓ/V_ℓ)` the level cost (33) is
+`(a + b √(1 + a²)) √(V_ℓ C_ℓ)`, and its largest value over `a + b ≤ ρ` stays below `√(V_ℓ C_ℓ)`
+exactly for `ρ < 0.9429…` (a numerical computation, not proved here). -/
 theorem nestedCost_lt_of_costFactor_le (L : ℕ) {V Vd C Ct : ℕ → ℝ} {ε ρ : ℝ} (hε : ε ≠ 0)
     (hV : ∀ ℓ ∈ range (L + 1), 0 < V ℓ) (hC : ∀ ℓ ∈ range (L + 1), 0 < C ℓ)
     (hCt : ∀ ℓ ∈ range (L + 1), 0 ≤ Ct ℓ)
@@ -628,7 +631,9 @@ bound on the path error variance (25): `V[P − P̃] ≤ (1/12) ∑_i E[x̄_i²]
 (26)."  Under exactly the hypotheses of `variance_linearised_indep` (sensitivities `x̄_i`
 independent of the errors `δx_i`, the terms `x̄_i δx_i` pairwise independent, each `δx_i` uniform
 on `[−2^{e_i−d_i−1}, 2^{e_i−d_i−1}]` (22)) the variance of the linearised error is exactly
-`V_indep`: `E[δx_i] = 0`, so `V[x̄_i δx_i] = E[x̄_i²] E[δx_i²]`. -/
+`V_indep`: `E[δx_i] = 0`, so `V[x̄_i δx_i] = E[x̄_i²] E[δx_i²]`.  The pairwise independence of
+the terms is the paper's assumption; the proof uses it only through the vanishing of their
+covariances. -/
 theorem variance_linearised_indep_eq {ι : Type*} (s : Finset ι) (xbar δ : ι → Ω → ℝ)
     (e : ι → ℤ) (d : ι → ℕ) (hxbar : ∀ i ∈ s, MemLp (xbar i) 2 μ)
     (hδ : ∀ i ∈ s, pdf.IsUniform (δ i)

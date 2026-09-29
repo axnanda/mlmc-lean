@@ -51,7 +51,10 @@ union-grid indices (`unionChain`).
   its own grid** — at the end of its `k`-th step its state has the law of `k` tau-leaping steps
   with its own (variable) step lengths (`tauChainVar`, `gridStepLength`).  `unionChain_nested`: for
   nested uniform grids this is the case `h^c = 2h` of `coupledChain_fst`, `coupledChain_snd`.
-* `unionChain_2_4`: **(2.4) for tau-leaping on non-nested grids**.
+* `unionChain_2_4`: **(2.4) for tau-leaping on non-nested grids**, for payoffs of the terminal
+  state (the chain theorems compare the laws of the state at one grid time, not the laws of whole
+  paths; path functionals are covered by `unionGrid_2_4` when the rate does not depend on the
+  state).
 
 **Scope.**  All grids here are deterministic.  In the adaptive approach of §5.6 the timesteps
 `h_ℓ = 2^{−ℓ} H(Ŝ_n)` depend on the path, so the union grid is random and the sub-intervals seen by
@@ -209,7 +212,9 @@ Figure 5.9).  The counts of a Poisson process of rate `λ` on the sub-intervals 
 of lengths `h_i`, are independent `P(λ h_i)`.  Summed over the steps of the fine grid (`bf`) and of
 the coarse grid (`bc`), they give the fine path independent counts `P(λ H^f_k)` and the coarse path
 independent counts `P(λ H^c_k)`, where `H^f_k = ∑_{bf(i)=k} h_i` and `H^c_k = ∑_{bc(i)=k} h_i` are
-the lengths of their steps: the laws of the counts simulated on each grid alone. -/
+the lengths of their steps: the laws of the counts simulated on each grid alone.  The two paths
+are coupled by being functions of the same counts `X`; the statement gives each path's own law,
+not their joint law. -/
 theorem unionGrid_hasLaw {κf κc : Type*} [Fintype κf] [Fintype κc] [DecidableEq κf]
     [DecidableEq κc] {lam : ℝ≥0} {h : ι → ℝ≥0} (hind : iIndepFun X μ)
     (hX : ∀ i, HasLaw (X i) (poissonMeasure (lam * h i)) μ) (bf : ι → κf) (bc : ι → κc) :
