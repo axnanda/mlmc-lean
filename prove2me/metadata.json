@@ -5168,6 +5168,410 @@
     "real-analysis",
     "convergence"
    ]
+  },
+  "MLMC.lipschitz_european_asian_lookback": {
+   "theorem_title": "Giles (2015), §5.1: the European, Asian and lookback payoffs are Lipschitz for the sup norm on discrete paths",
+   "natural_language_statement": "Giles (2015), §5.1, p. 29: \"For Lipschitz payoff functions $P$ (such as European, Asian and lookback options in finance) for which $|P(S_1)-P(S_2)|\\le K\\|S_1-S_2\\|$, we have …\"; p. 33: \"the Asian option is based on the average value of the underlying asset, the lookback is based on its maximum or minimum value\".\n\nLet $n\\in\\mathbb N$ and $K\\in\\mathbb R$, and equip $\\mathbb R^{n+1}$ (discrete paths $x=(x_0,\\dots,x_n)$) with the sup norm $\\|x\\|_\\infty=\\max_i|x_i|$. Then, for all $x,y\\in\\mathbb R^{n+1}$,\n$$\n\\big|f(x)-f(y)\\big|\\le\\|x-y\\|_\\infty\\quad\\text{for}\\quad f(x)=\\max(x_n-K,0),\\ \\ \\max\\Big(\\frac1{n+1}\\sum_{i=0}^nx_i-K,0\\Big),\\ \\ \\max\\big(\\max_ix_i-K,0\\big),\n$$\n(the European call, the Asian call and the fixed-strike lookback call), and\n$$\n\\big|f(x)-f(y)\\big|\\le2\\|x-y\\|_\\infty\\quad\\text{for}\\quad f(x)=x_n-\\min_ix_i,\\ \\ \\max_ix_i-x_n\n$$\n(the floating-strike lookback call and put).\n\n**Formalization Note** Paths are `Fin (n + 1) → ℝ` with Mathlib's product (sup) metric, the constants are `LipschitzWith 1` and `LipschitzWith 2`, and $\\max_i$, $\\min_i$ are `Finset.univ.sup'` and `Finset.univ.inf'`. The discount factor $e^{-rT}$ of the paper only rescales the constants.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §5.1 \"Euler-Maruyama discretisation\", p. 29 (Lipschitz payoffs) and p. 33 (Asian and lookback options).",
+   "explanation": "The call: $|\\max(a,0)-\\max(b,0)|\\le|a-b|$ (`abs_max_sub_max_le_abs`). The average: $|\\bar x-\\bar y|\\le\\frac1{n+1}\\sum_i|x_i-y_i|\\le\\|x-y\\|_\\infty$ (`dist_le_pi_dist`). The maximum: $x_i\\le y_i+\\|x-y\\|_\\infty\\le\\max_jy_j+\\|x-y\\|_\\infty$ for all $i$ (`Finset.sup'_le`), and symmetrically; likewise for the minimum. The payoffs are compositions (`LipschitzWith.comp`, constant $1\\cdot1$) and differences (`LipschitzWith.sub`, constant $1+1$) of these with the coordinate map $x\\mapsto x_n$ (`LipschitzWith.eval`).",
+   "tags": [
+    "real-analysis",
+    "multilevel-monte-carlo",
+    "numerical-analysis"
+   ]
+  },
+  "MLMC.variance_lipschitz_payoff_le": {
+   "theorem_title": "Giles (2015), §5.1: for a $K$-Lipschitz path payoff, $\\mathbb V[P-P_\\ell]\\le\\mathbb E[(P-P_\\ell)^2]\\le K^2\\mathbb E[\\|S-\\hat S_\\ell\\|^2]$",
+   "natural_language_statement": "Giles (2015), §5.1, p. 29: \"For Lipschitz payoff functions $P$ (such as European, Asian and lookback options in finance) for which $|P(S_1)-P(S_2)|\\le K\\|S_1-S_2\\|$, we have $\\mathbb V[P-P_\\ell]\\le\\mathbb E[(P-P_\\ell)^2]\\le K^2\\,\\mathbb E\\big[\\|S-\\hat S_\\ell\\|^2\\big]$\".\n\nLet $(\\Omega,\\mathcal F,\\mathbb P)$ be a probability space, $E$ a seminormed abelian group (a space of paths, e.g. $\\mathbb R^{n+1}$ with the sup norm), $g:E\\to\\mathbb R$ with $|g(u)-g(w)|\\le L\\|u-w\\|$ for all $u,w$ ($L\\ge0$), and $S,\\hat S:\\Omega\\to E$ almost everywhere strongly measurable with $\\|S-\\hat S\\|^2$ integrable. Then\n$$\n\\mathbb V\\big[g(S)-g(\\hat S)\\big]\\le\\mathbb E\\big[(g(S)-g(\\hat S))^2\\big]\\le L^2\\,\\mathbb E\\big[\\|S-\\hat S\\|^2\\big].\n$$\n\n**Formalization Note** $L$ is an `ℝ≥0` and the hypothesis is `LipschitzWith L g`; $\\mathbb V$ is Mathlib's `variance`.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §5.1 \"Euler-Maruyama discretisation\", p. 29.",
+   "explanation": "$|g(S)-g(\\hat S)|\\le L\\,\\mathrm{dist}(S,\\hat S)=L\\|S-\\hat S\\|$ pointwise (`LipschitzWith.dist_le_mul`, `dist_eq_norm`), and `variance_sub_le_of_lipschitz` with $D=\\|S-\\hat S\\|$ gives both inequalities ($\\mathbb V[Y]\\le\\mathbb E[Y^2]$, then integrate $Y^2\\le L^2D^2$); $g(S)-g(\\hat S)$ is a.e. strongly measurable because $g$ is continuous.",
+   "tags": [
+    "probability",
+    "multilevel-monte-carlo",
+    "numerical-analysis"
+   ]
+  },
+  "MLMC.digital_mismatch_le": {
+   "theorem_title": "Giles (2015), §5.1: if $X$ has density $\\le\\rho$ near $K$, then $\\mathbb P(\\mathbf 1_{X>K}\\ne\\mathbf 1_{Y>K})\\le2\\rho\\delta+\\mathbb P(|X-Y|>\\delta)$ and $\\le3\\rho^{2/3}\\mathbb E[(X-Y)^2]^{1/3}$",
+   "natural_language_statement": "Giles (2015), §5.1, p. 33: \"However, noting that the strong error is $O(h_\\ell^{1/2})$, and there is a bounded density of paths terminating in the neighbourhood of $K$, there is therefore an $O(h_\\ell^{1/2})$ fraction of the samples with the coarse and fine paths on either side of the strike, with $P_\\ell-P_{\\ell-1}=\\pm1$. This gives $V_\\ell=O(h^{1/2})$ … the digital option analysis is due to Avikainen (Avikainen 2009)\".\n\nLet $(\\Omega,\\mathcal F,\\mu)$ be a finite measure space, $X,Y:\\Omega\\to\\mathbb R$, and $K,\\rho\\in\\mathbb R$ such that\n$$\n\\mu\\big(|X-K|\\le\\delta\\big)\\le2\\rho\\delta\\qquad\\text{for all }\\delta>0\n$$\n(the density of $X$ is at most $\\rho$ near the strike $K$) and $(X-Y)^2$ is integrable. Write $A=\\{\\mathbf 1_{\\{X>K\\}}\\ne\\mathbf 1_{\\{Y>K\\}}\\}$ for the event that $X$ and $Y$ lie on either side of the strike, and $m=\\mathbb E[(X-Y)^2]$. Then for every $\\delta>0$\n$$\n\\mu(A)\\le2\\rho\\delta+\\mu\\big(|X-Y|>\\delta\\big),\\qquad \\mu(A)\\le2\\rho\\delta+\\frac m{\\delta^2},\n$$\nand\n$$\n\\mu(A)\\le3\\rho^{2/3}m^{1/3}.\n$$\nWith a mean-square strong error $m=O(h)$ this is an $O(h^{1/3})$ fraction; the exponent $1/3$ is the best possible from these hypotheses alone ($X$ uniform on $[-1,1]$, $K=0$, $Y=X-2d\\,\\mathbf 1_{\\{0<X<d\\}}$ give $\\mu(A)=d/2$, $m=2d^3$). The paper's $O(h^{1/2})$ uses that the error is $O(h^{1/2})$ on (almost) every path; $p$-th moment bounds $\\mathbb E|X-Y|^p=O(h^{p/2})$ give $O(h^{p/(2(p+1))})$ (`MLMC.digital_mismatch_le_of_moment`) and Gaussian-type tails give $O((h\\log(1/h))^{1/2})$ (`MLMC.digital_mismatch_le_of_tail`).\n\n**Formalization Note** $\\mu(\\cdot)$ is `μ.real` (the measure as a real number); $X$, $Y$ need not be measurable; $\\mathbf 1_{\\{x>K\\}}$ is `(Set.Ioi K).indicator 1 x`; $\\rho^{2/3}$, $m^{1/3}$ are real powers of nonnegative numbers ($\\rho\\ge0$ follows from the hypothesis).",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §5.1, p. 33 (digital option, Figure 5.4 and Table 5.2); the analysis is attributed there to M. Avikainen, On irregular functionals of SDEs and the Euler scheme, Finance Stoch. 13 (2009).",
+   "explanation": "If the payoffs differ, $K$ lies between $X$ and $Y$, so $|X-K|\\le|X-Y|$ and $A\\subseteq\\{|X-K|\\le\\delta\\}\\cup\\{|X-Y|>\\delta\\}$ (`digital_ne_subset`); the union bound gives the first inequality (`measureReal_digital_ne_le`), Chebyshev–Markov (`measureReal_lt_abs_sub_le_div_sq`, from `mul_meas_ge_le_integral_of_nonneg`) the second. With $p=\\mu(A)$, taking $\\delta=p/(3\\rho)$ gives $p\\le\\frac23p+9\\rho^2m/p^2$, i.e. $p^3\\le27\\rho^2m$ (`digital_pow_three_le_of_forall`; for $\\rho=0$ let $\\delta\\to\\infty$), and $p=(p^3)^{1/3}\\le(27\\rho^2m)^{1/3}=3\\rho^{2/3}m^{1/3}$ (`digital_le_three_mul_rpow`).",
+   "tags": [
+    "probability",
+    "multilevel-monte-carlo",
+    "numerical-analysis"
+   ]
+  },
+  "MLMC.variance_digital_le": {
+   "theorem_title": "Giles (2015), §5.1: $\\mathbb V[\\mathbf 1_{X>K}-\\mathbf 1_{Y>K}]\\le\\mathbb P(\\mathbf 1_{X>K}\\ne\\mathbf 1_{Y>K})\\le3\\rho^{2/3}\\mathbb E[(X-Y)^2]^{1/3}$ when $X$ has density $\\le\\rho$ near $K$",
+   "natural_language_statement": "Giles (2015), §5.1, p. 33: \"… there is therefore an $O(h_\\ell^{1/2})$ fraction of the samples with the coarse and fine paths on either side of the strike, with $P_\\ell-P_{\\ell-1}=\\pm1$. This gives $V_\\ell=O(h^{1/2})$\".\n\nLet $(\\Omega,\\mathcal F,\\mathbb P)$ be a probability space, $X,Y:\\Omega\\to\\mathbb R$ measurable, $K,\\rho\\in\\mathbb R$ with $\\mathbb P(|X-K|\\le\\delta)\\le2\\rho\\delta$ for all $\\delta>0$, and $(X-Y)^2$ integrable. Let $D=\\mathbf 1_{\\{X>K\\}}-\\mathbf 1_{\\{Y>K\\}}\\in\\{-1,0,1\\}$. Then\n$$\n\\mathbb V[D]\\le\\mathbb E[D^2]=\\mathbb P\\big(\\mathbf 1_{\\{X>K\\}}\\ne\\mathbf 1_{\\{Y>K\\}}\\big)\\le3\\rho^{2/3}\\,\\mathbb E\\big[(X-Y)^2\\big]^{1/3}.\n$$\n\n**Formalization Note** $\\mathbf 1_{\\{x>K\\}}$ is `(Set.Ioi K).indicator 1 x`; $\\mathbb P(\\cdot)$ is `μ.real`.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §5.1, p. 33.",
+   "explanation": "$\\mathbb V[D]\\le\\mathbb E[D^2]$ (`variance_le_expectation_sq`); $D^2$ is the indicator of $\\{\\mathbf 1_{\\{X>K\\}}\\ne\\mathbf 1_{\\{Y>K\\}}\\}$ (`sq_digital_sub_eq_indicator`), a measurable set, so $\\mathbb E[D^2]$ is its probability (`integral_indicator_one`, `integral_sq_digital_sub`); the last inequality is `digital_mismatch_le`.",
+   "tags": [
+    "probability",
+    "multilevel-monte-carlo",
+    "numerical-analysis"
+   ]
+  },
+  "MLMC.variance_digital_levelDiff_le": {
+   "theorem_title": "Giles (2015), §5.1: the digital correction $\\mathbf 1_{Y_1>K}-\\mathbf 1_{Y_2>K}$ has variance $\\le3\\rho^{2/3}(\\mathbb E[(X-Y_1)^2]^{1/3}+\\mathbb E[(X-Y_2)^2]^{1/3})$",
+   "natural_language_statement": "Giles (2015), §5.1, p. 33: \"noting that the strong error is $O(h_\\ell^{1/2})$, and there is a bounded density of paths terminating in the neighbourhood of $K$, there is therefore an $O(h_\\ell^{1/2})$ fraction of the samples with the coarse and fine paths on either side of the strike, with $P_\\ell-P_{\\ell-1}=\\pm1$\".\n\nLet $(\\Omega,\\mathcal F,\\mathbb P)$ be a probability space, $X:\\Omega\\to\\mathbb R$ (the exact value) with $\\mathbb P(|X-K|\\le\\delta)\\le2\\rho\\delta$ for all $\\delta>0$, and $Y_1,Y_2:\\Omega\\to\\mathbb R$ measurable (the fine and coarse approximations) with $(X-Y_1)^2$, $(X-Y_2)^2$ integrable. Then\n$$\n\\mathbb V\\big[\\mathbf 1_{\\{Y_1>K\\}}-\\mathbf 1_{\\{Y_2>K\\}}\\big]\\le3\\rho^{2/3}\\Big(\\mathbb E\\big[(X-Y_1)^2\\big]^{1/3}+\\mathbb E\\big[(X-Y_2)^2\\big]^{1/3}\\Big).\n$$\nThe density hypothesis is on the exact value only, not on the approximations; $X$ need not be measurable.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §5.1, p. 33.",
+   "explanation": "$\\mathbb V[D]\\le\\mathbb P(\\mathbf 1_{\\{Y_1>K\\}}\\ne\\mathbf 1_{\\{Y_2>K\\}})$ (`variance_digital_le_measureReal`); if the fine and coarse payoffs differ, one of them differs from $\\mathbf 1_{\\{X>K\\}}$ (`digital_ne_subset_union`), so the union bound and `digital_mismatch_le` for $(X,Y_1)$ and $(X,Y_2)$ give the bound.",
+   "tags": [
+    "probability",
+    "multilevel-monte-carlo",
+    "numerical-analysis"
+   ]
+  },
+  "MLMC.variance_digital_rate": {
+   "theorem_title": "Giles (2015), §5.1: a mean-square strong error $\\mathbb E[(X-Y_\\ell)^2]\\le c\\,h_\\ell$ gives the digital-option variance rate $V_\\ell=O(h_\\ell^{1/3})$",
+   "natural_language_statement": "Giles (2015), §5.1, p. 33: \"This gives $V_\\ell=O(h^{1/2})$\"; §5.2, p. 35: \"In the case of a digital option, if we use the natural multilevel estimator then $P_\\ell-P_{\\ell-1}=O(1)$ for an $O(h_\\ell)$ fraction of the paths, giving $V_\\ell=O(h_\\ell)$\".\n\nLet $(\\Omega,\\mathcal F,\\mathbb P)$ be a probability space, $X$ and $Y_\\ell$ ($\\ell\\in\\mathbb N$) measurable real random variables, $K,\\rho\\in\\mathbb R$ with $\\mathbb P(|X-K|\\le\\delta)\\le2\\rho\\delta$ for all $\\delta>0$, $c\\ge0$ and $h_\\ell\\ge0$ such that $(X-Y_\\ell)^2$ is integrable and $\\mathbb E[(X-Y_\\ell)^2]\\le c\\,h_\\ell$ for every $\\ell$ (strong order $\\tfrac12$). Then for every $\\ell$\n$$\n\\mathbb V\\big[\\mathbf 1_{\\{X>K\\}}-\\mathbf 1_{\\{Y_\\ell>K\\}}\\big]\\le3\\rho^{2/3}c^{1/3}h_\\ell^{1/3},\\qquad\n\\mathbb V\\big[\\mathbf 1_{\\{Y_{\\ell+1}>K\\}}-\\mathbf 1_{\\{Y_\\ell>K\\}}\\big]\\le3\\rho^{2/3}c^{1/3}\\big(h_{\\ell+1}^{1/3}+h_\\ell^{1/3}\\big).\n$$\nSo $V_\\ell=O(h_\\ell^{1/3})$ from the mean-square error alone, weaker than the paper's $O(h_\\ell^{1/2})$ (see `MLMC.digital_mismatch_le` for why); for first-order strong convergence ($\\mathbb E[(X-Y_\\ell)^2]\\le c\\,h_\\ell^2$, Milstein) the same bound gives $O(h_\\ell^{2/3})$ in place of the paper's $O(h_\\ell)$.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §5.1, p. 33 and §5.2 (Digital options), p. 35.",
+   "explanation": "`variance_digital_le` and `variance_digital_levelDiff_le`, with $\\mathbb E[(X-Y_k)^2]^{1/3}\\le(c\\,h_k)^{1/3}=c^{1/3}h_k^{1/3}$ (`Real.rpow_le_rpow`, `Real.mul_rpow`); $\\rho\\ge0$ follows from the hypothesis at $\\delta=1$.",
+   "tags": [
+    "probability",
+    "multilevel-monte-carlo",
+    "numerical-analysis",
+    "convergence"
+   ]
+  },
+  "MLMC.digital_mismatch_le_of_tail": {
+   "theorem_title": "Giles (2015), §5.1, Table 5.2: Gaussian tails $\\mathbb P(|X-Y|>\\delta)\\le Ae^{-\\delta^2/(Bh)}$ give $\\mathbb V[\\mathbf 1_{X>K}-\\mathbf 1_{Y>K}]\\le2\\rho\\sqrt{Bh\\log(1/h)}+Ah$",
+   "natural_language_statement": "Giles (2015), §5.1, p. 33, Table 5.2: for the digital option with the Euler–Maruyama discretisation the observed variance rate is $O(h^{1/2})$ and the analysis rate is $O(h^{1/2}\\log h)$ (\"the digital option analysis is due to Avikainen (Avikainen 2009)\").\n\nLet $(\\Omega,\\mathcal F,\\mathbb P)$ be a probability space, $X,Y:\\Omega\\to\\mathbb R$ measurable, $K,\\rho,A,B,h\\in\\mathbb R$ with $B>0$, $0<h<1$, $\\mathbb P(|X-K|\\le\\delta)\\le2\\rho\\delta$ and\n$$\n\\mathbb P\\big(|X-Y|>\\delta\\big)\\le A\\,e^{-\\delta^2/(Bh)}\\qquad\\text{for all }\\delta>0 .\n$$\nThen\n$$\n\\mathbb V\\big[\\mathbf 1_{\\{X>K\\}}-\\mathbf 1_{\\{Y>K\\}}\\big]\\le\\mathbb P\\big(\\mathbf 1_{\\{X>K\\}}\\ne\\mathbf 1_{\\{Y>K\\}}\\big)\\le2\\rho\\sqrt{B\\,h\\log(1/h)}+A\\,h ,\n$$\ni.e. an $O((h\\log(1/h))^{1/2})$ variance. The tail bound is a hypothesis (for the Euler–Maruyama scheme it is SDE theory).",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §5.1, p. 33 and Table 5.2.",
+   "explanation": "`variance_digital_le_measureReal`, and `measureReal_digital_ne_le` with $\\delta=\\sqrt{Bh\\log(1/h)}>0$: then $\\delta^2/(Bh)=\\log(1/h)$ and $A e^{-\\log(1/h)}=Ah$.",
+   "tags": [
+    "probability",
+    "multilevel-monte-carlo",
+    "numerical-analysis",
+    "convergence"
+   ]
+  },
+  "MLMC.digital_mismatch_le_of_moment": {
+   "theorem_title": "Giles (2015), §5.1: a $p$-th moment bound gives $\\mathbb V[\\mathbf 1_{X>K}-\\mathbf 1_{Y>K}]\\le(2\\rho+1)\\,\\mathbb E[|X-Y|^p]^{1/(p+1)}$ when $X$ has density $\\le\\rho$ near $K$",
+   "natural_language_statement": "Giles (2015), §5.1, p. 33: \"noting that the strong error is $O(h_\\ell^{1/2})$, and there is a bounded density of paths terminating in the neighbourhood of $K$, there is therefore an $O(h_\\ell^{1/2})$ fraction of the samples with the coarse and fine paths on either side of the strike\".\n\nLet $(\\Omega,\\mathcal F,\\mathbb P)$ be a probability space, $X,Y:\\Omega\\to\\mathbb R$ measurable, $K,\\rho\\in\\mathbb R$ with $\\mathbb P(|X-K|\\le\\delta)\\le2\\rho\\delta$ for all $\\delta>0$, and $p\\in\\mathbb N$ with $|X-Y|^p$ integrable. Then\n$$\n\\mathbb V\\big[\\mathbf 1_{\\{X>K\\}}-\\mathbf 1_{\\{Y>K\\}}\\big]\\le\\mathbb P\\big(\\mathbf 1_{\\{X>K\\}}\\ne\\mathbf 1_{\\{Y>K\\}}\\big)\\le(2\\rho+1)\\,\\mathbb E\\big[|X-Y|^p\\big]^{1/(p+1)} .\n$$\nIn particular a strong error of order $\\tfrac12$ in $L^p$, $\\mathbb E|X-Y|^p\\le c\\,h^{p/2}$, gives $O(h^{p/(2(p+1))})$, and strong order $\\tfrac12$ in every $L^p$ gives every rate below $\\tfrac12$.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §5.1, p. 33.",
+   "explanation": "`variance_digital_le_measureReal`; `measureReal_digital_ne_le` with Markov's inequality for the $p$-th moment (`measureReal_lt_abs_sub_le_div_pow`) gives $\\mathbb P(\\ne)\\le2\\rho\\delta+m/\\delta^p$, $m=\\mathbb E|X-Y|^p$. If $m>0$ take $\\delta=m^{1/(p+1)}$, so that $m/\\delta^p=m^{1/(p+1)}$ (`Real.rpow_natCast`, `Real.rpow_mul`, `Real.rpow_add`); if $m=0$, $\\mathbb P(\\ne)\\le2\\rho\\delta$ for every $\\delta>0$ forces $\\mathbb P(\\ne)=0$.",
+   "tags": [
+    "probability",
+    "multilevel-monte-carlo",
+    "numerical-analysis",
+    "convergence"
+   ]
+  },
+  "MLMC.gbm_digital_variance_le": {
+   "theorem_title": "Giles (2015), §5.1: for GBM with Euler–Maruyama, the digital option's level correction has variance $O(h_\\ell^{1/3})$, with explicit constants",
+   "natural_language_statement": "Giles (2015), §5.1, pp. 30 and 33, Figure 5.4: \"the payoff is a digital option with payoff $P(S)\\equiv10\\exp(-rT)\\,H(S_T-K)$, where $H(x)$ is the Heaviside step function … This gives $V_\\ell=O(h^{1/2})$\".\n\nLet $Z_0,Z_1,\\dots$ be the coordinates of $(\\mathbb R^{\\mathbb N},N(0,1)^{\\otimes\\mathbb N})$ (`stdNormalSeq`). Let $r,\\sigma,s_0,T,K\\in\\mathbb R$ with $s_0\\ne0$, $\\sigma\\ne0$, $T>0$, and $h_\\ell=T2^{-\\ell}$. Let $\\hat S_\\ell(Z)$ = `gbmEM`$(r,\\sigma,T,s_0,\\ell)$ be the Euler–Maruyama approximation of $dS=rS\\,dt+\\sigma S\\,dW$, $S_0=s_0$, at $T$ after $2^\\ell$ steps of size $h_\\ell$ driven by the increments $\\sqrt{h_\\ell}Z_i$, and $\\mathrm{pairAvg}(Z)_k=(Z_{2k}+Z_{2k+1})/\\sqrt2$ the coarse increments. Let $C(T)=s_0^2e^{(2|r|+\\sigma^2)T}(|r|+\\sigma^2)(5(|r|+\\sigma^2)T+4)$ (`gbmStrongConst`) and\n$$\n\\rho=\\frac{e^{(\\sigma^2-r)T}}{\\sqrt{2\\pi}\\,|s_0|\\,|\\sigma|\\sqrt T}\n$$\n(the maximum of the lognormal density of $S_T$). Then for every $\\ell\\in\\mathbb N$\n$$\n\\mathbb V\\Big[\\mathbf 1_{\\{\\hat S_{\\ell+1}(Z)>K\\}}-\\mathbf 1_{\\{\\hat S_\\ell(\\mathrm{pairAvg}(Z))>K\\}}\\Big]\\le3\\rho^{2/3}\\,C(T)^{1/3}\\big(h_{\\ell+1}^{1/3}+h_\\ell^{1/3}\\big),\n$$\nso $\\beta=1/3$ is proved with no assumption (the paper's $\\beta=\\tfrac12$ is observed numerically). The factor $10e^{-rT}$ of the payoff multiplies the variance by $100e^{-2rT}$.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §5.1, pp. 30 and 33, Figure 5.4 (digital option for geometric Brownian motion with the Euler–Maruyama discretisation).",
+   "explanation": "The exact solution $X=S_T^{(\\ell+1)}$ (`gbmExact`) has the law of $s_0e^{(r-\\sigma^2/2)T+\\sigma\\sqrt TZ_0}$ (`map_gbmExact`, `gbmExact_zero`), which is at most $\\rho$ times Lebesgue measure (`map_lognormal_le_smul_volume`: change of variables `lintegral_image_eq_lintegral_abs_deriv_mul` and $\\varphi(u)\\le\\rho|f'(u)|$, i.e. $-u^2/2\\le s^2/2+su$), so $\\mathbb P(|X-K|\\le\\delta)\\le2\\rho\\delta$ (`measureReal_abs_sub_le_of_map_le`). The fine and coarse strong errors are at most $C(T)h_{\\ell+1}$ and $C(T)h_\\ell$ (`gbm_strong_error`, with $S_T^{(\\ell)}\\circ\\mathrm{pairAvg}=S_T^{(\\ell+1)}$ by `gbmExact_pairAvg` and `measurePreserving_pairAvg`); then `variance_digital_levelDiff_le`.",
+   "tags": [
+    "probability",
+    "multilevel-monte-carlo",
+    "numerical-analysis",
+    "convergence"
+   ]
+  },
+  "MLMC.integral_digital_final_step": {
+   "theorem_title": "Giles (2015), §5.2: $\\mathbb E[\\mathbf 1_{\\{x+ah+b\\sqrt hZ>K\\}}]=\\Phi\\big((x+ah-K)/(|b|\\sqrt h)\\big)$ for $Z\\sim N(0,1)$",
+   "natural_language_statement": "Giles (2015), §5.2, pp. 35–36: \"Conditional on the value $\\hat S_{N-1}$ which is the numerical approximation of $S_{T-h}$ one timestep before the maturity $T$, the numerical approximation for the final value $\\hat S_N$ has a Gaussian distribution, and for a simple digital option the conditional expectation is known analytically. Thus the fine path payoff can be taken to be $P^f_\\ell=25\\exp(-rT)\\,\\Phi\\Big(\\frac{\\hat S^f_{N-1}+a(\\hat S^f_{N-1})h_\\ell-K}{b(\\hat S^f_{N-1})\\sqrt{h_\\ell}}\\Big)$, where $\\Phi$ is the Normal cumulative distribution function.\"\n\nLet $x,a,b,h,K\\in\\mathbb R$ with $b\\ne0$ and $h>0$, let $Z\\sim N(0,1)$ and let $\\Phi$ be the standard normal distribution function. Then\n$$\n\\mathbb E\\big[\\mathbf 1_{\\{x+ah+b\\sqrt h\\,Z>K\\}}\\big]=\\Phi\\Big(\\frac{x+ah-K}{|b|\\sqrt h}\\Big).\n$$\nThe paper writes $b$ for $|b|$ (it has $b>0$ in mind; for $b<0$ its formula gives $1-\\Phi(\\cdot)$) and keeps the constant factor $25e^{-rT}$.\n\n**Formalization Note** $\\Phi$ is Mathlib's `cdf (gaussianReal 0 1)`, $N(0,1)$ is `gaussianReal 0 1`, and $\\mathbf 1_{\\{y>K\\}}$ is `(Set.Ioi K).indicator 1 y`.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §5.2 \"Milstein discretisation\", Digital options, pp. 35–36.",
+   "explanation": "`integral_digital_gaussian` with $m=x+ah$, $s=b\\sqrt h$ and $|s|=|b|\\sqrt h$: the integral of the indicator is $\\mathbb P(K<m+sZ)$ (`integral_indicator_one`), which for $s<0$ is $\\mathbb P(Z<(m-K)/|s|)=\\mathbb P(Z\\le(m-K)/|s|)$ (no atoms, `Iio_ae_eq_Iic`, `cdf_eq_real`) and for $s>0$ reduces to $-s$ by the symmetry $Z\\mapsto-Z$ (`gaussianReal_map_neg`) (`stdGaussian_measureReal_gt`).",
+   "tags": [
+    "probability",
+    "multilevel-monte-carlo",
+    "monte-carlo"
+   ]
+  },
+  "MLMC.condExp_digital_last_step": {
+   "theorem_title": "Giles (2015), §5.2: if $X$ is independent of $Z\\sim N(0,1)$, then $\\mathbb E[\\mathbf 1_{\\{m(X)+s(X)Z>K\\}}\\mid X]=\\Phi((m(X)-K)/|s(X)|)$ a.s.",
+   "natural_language_statement": "Giles (2015), §5.2, pp. 35–36: \"Conditional on the value $\\hat S_{N-1}$ which is the numerical approximation of $S_{T-h}$ one timestep before the maturity $T$, the numerical approximation for the final value $\\hat S_N$ has a Gaussian distribution, and for a simple digital option the conditional expectation is known analytically.\"\n\nLet $(\\Omega,\\mathcal F,\\mathbb P)$ be a probability space, $(E,\\mathcal E)$ a measurable space, $X:\\Omega\\to E$ and $Z:\\Omega\\to\\mathbb R$ measurable and independent with $Z\\sim N(0,1)$, $m,s:E\\to\\mathbb R$ measurable with $s(X)\\ne0$ almost surely, and $K\\in\\mathbb R$. Then, almost surely,\n$$\n\\mathbb E\\big[\\mathbf 1_{\\{m(X)+s(X)Z>K\\}}\\,\\big|\\,\\sigma(X)\\big]=\\Phi\\Big(\\frac{m(X)-K}{|s(X)|}\\Big).\n$$\nThe fine path of the paper has $X=\\hat S_{N-1}$, $m(x)=x+a(x)h_\\ell$, $s(x)=b(x)\\sqrt{h_\\ell}$; the coarse path has $X=(\\hat S^c_{N-2},\\Delta W_{N-2})$.\n\n**Formalization Note** The conditional expectation is Mathlib's `μ[·|mE.comap X]`; $\\Phi$ is `cdf (gaussianReal 0 1)`.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §5.2, Digital options, pp. 35–36.",
+   "explanation": "By independence, $\\mathbb P_{(X,Z)}=\\mathbb P_X\\otimes N(0,1)=\\mathbb P_X\\otimes_m\\mathrm{const}(N(0,1))$ (`indepFun_iff_map_prod_eq_prod_map_map`, `Measure.compProd_const`), so the conditional law of $Z$ given $X$ is $N(0,1)$ a.e. (`condDistrib_ae_eq_of_measure_eq_compProd`); then `condExp_prod_ae_eq_integral_condDistrib` gives $\\mathbb E[f(X,Z)\\mid X]=\\int f(X,z)\\,dN(0,1)(z)$ for the bounded measurable $f(x,z)=\\mathbf 1_{\\{m(x)+s(x)z>K\\}}$, which is $\\Phi((m(X)-K)/|s(X)|)$ by `integral_digital_gaussian`.",
+   "tags": [
+    "probability",
+    "multilevel-monte-carlo",
+    "monte-carlo"
+   ]
+  },
+  "MLMC.digital_smoothing": {
+   "theorem_title": "Giles (2015), §5.2: the conditional-expectation payoff $\\Phi((\\hat S_{N-1}+a h-K)/(|b|\\sqrt h))$ of a digital option has the same mean and no larger variance",
+   "natural_language_statement": "Giles (2015), §5.2, pp. 35–36: \"Thus the fine path payoff can be taken to be $P^f_\\ell=25\\exp(-rT)\\,\\Phi\\Big(\\frac{\\hat S^f_{N-1}+a(\\hat S^f_{N-1})h_\\ell-K}{b(\\hat S^f_{N-1})\\sqrt{h_\\ell}}\\Big)$ … It is very important in this conditional expectation formulation that $\\mathbb E[P^c_{\\ell-1}]=\\mathbb E[P^f_{\\ell-1}]$ … This ensures that the identity in Equation (2.4) is respected so that the telescoping summation remains valid.\"\n\nLet $(\\Omega,\\mathcal F,\\mathbb P)$ be a probability space, $X,Z:\\Omega\\to\\mathbb R$ measurable and independent with $Z\\sim N(0,1)$ ($X=\\hat S_{N-1}$ and $Z$ the last normalised Brownian increment), $a,b:\\mathbb R\\to\\mathbb R$ measurable with $b(X)\\ne0$ a.s., $h>0$, $K\\in\\mathbb R$, and let $\\hat S_N=X+a(X)h+b(X)\\sqrt h\\,Z$ (last step Euler–Maruyama), $F=\\mathbf 1_{\\{\\hat S_N>K\\}}$ and $G=\\Phi\\big((X+a(X)h-K)/(|b(X)|\\sqrt h)\\big)$. Then\n$$\n\\mathbb E[F\\mid\\sigma(X)]=G\\ \\text{a.s.},\\qquad \\mathbb E[G]=\\mathbb E[F],\\qquad \\mathbb V[G]\\le\\mathbb V[F].\n$$\nSo replacing the digital payoff by its smoothed version keeps the expectation of each level (hence (2.4)) and does not increase the variance. The paper writes $b$ for $|b|$ and keeps the factor $25e^{-rT}$.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §5.2, Digital options, pp. 35–36.",
+   "explanation": "`condExp_digital_last_step` with $m(x)=x+a(x)h$, $s(x)=b(x)\\sqrt h$; the mean by `integral_condExp`; the variance by `variance_smoothed_le_of_integral_eq`: $F\\in\\{0,1\\}$ so $\\mathbb V[F]=\\mathbb E[F]-\\mathbb E[F]^2$, and $0\\le G\\le1$ (`cdf_nonneg`, `cdf_le_one`) so $\\mathbb V[G]=\\mathbb E[G^2]-\\mathbb E[G]^2\\le\\mathbb E[G]-\\mathbb E[F]^2$.",
+   "tags": [
+    "probability",
+    "multilevel-monte-carlo",
+    "monte-carlo"
+   ]
+  },
+  "MLMC.digital_smoothing_coarse": {
+   "theorem_title": "Giles (2015), §5.2: the coarse-path conditional expectation of the digital payoff, $\\Phi((\\hat S^c_{N-2}+ah_{\\ell-1}+b\\,\\Delta W_{N-2}-K)/(|b|\\sqrt{h_\\ell}))$ (typo corrected)",
+   "natural_language_statement": "Giles (2015), §5.2, p. 36: \"A similar treatment is used for the coarse path, except that in the final timestep, we re-use the known value of the Brownian increment for the second last fine timestep, which corresponds to the first half of the final coarse timestep. … the corresponding coarse path payoff function is $P^c_{\\ell-1}=25\\exp(-rT)\\,\\Phi\\Big(\\frac{\\hat S^c_{N-2}+a(\\hat S^c_{N-2})h_{\\ell-1}+b(\\hat S^c_{N-2})\\sqrt{h_\\ell}-K}{b(\\hat S^c_{N-2})\\sqrt{h_\\ell}}\\Big)$.\"\n\nLet $(\\Omega,\\mathcal F,\\mathbb P)$ be a probability space, $S,W,Z:\\Omega\\to\\mathbb R$ measurable with $(S,W)$ independent of $Z\\sim N(0,1)$ ($S=\\hat S^c_{N-2}$, $W=\\Delta W_{N-2}$ the known first fine increment, $\\sqrt{h_\\ell}Z=\\Delta W_{N-1}$ the second), $a,b:\\mathbb R\\to\\mathbb R$ measurable with $b(S)\\ne0$ a.s., $h_{\\ell-1}\\in\\mathbb R$, $h_\\ell>0$, $K\\in\\mathbb R$. Then, almost surely,\n$$\n\\mathbb E\\Big[\\mathbf 1_{\\{S+a(S)h_{\\ell-1}+b(S)(W+\\sqrt{h_\\ell}Z)>K\\}}\\,\\Big|\\,\\sigma(S,W)\\Big]=\\Phi\\Big(\\frac{S+a(S)h_{\\ell-1}+b(S)W-K}{|b(S)|\\sqrt{h_\\ell}}\\Big).\n$$\n**Correction:** the numerator of the paper's formula has $b(\\hat S^c_{N-2})\\sqrt{h_\\ell}$ where the re-used increment $b(\\hat S^c_{N-2})\\,\\Delta W_{N-2}$ ($=b\\sqrt{h_\\ell}Z_{N-2}$) belongs; with $\\sqrt{h_\\ell}$ the formula does not depend on the re-used increment and is not the conditional expectation.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §5.2, Digital options, p. 36.",
+   "explanation": "`condExp_digital_last_step` with $X=(S,W)$, $m(s,w)=s+a(s)h_{\\ell-1}+b(s)w$, $s(s,w)=b(s)\\sqrt{h_\\ell}$, after rewriting $b(S)(W+\\sqrt{h_\\ell}Z)=b(S)W+b(S)\\sqrt{h_\\ell}Z$.",
+   "tags": [
+    "probability",
+    "multilevel-monte-carlo",
+    "monte-carlo"
+   ]
+  },
+  "MLMC.digital_smoothing_level_zero": {
+   "theorem_title": "Giles (2015), §5.2: with one timestep on level 0 the conditional-expectation payoff is deterministic, so $V_0=0$ (unsmoothed: $\\Phi(c)(1-\\Phi(c))>0$)",
+   "natural_language_statement": "Giles (2015), §5.2, p. 36: \"One particularly interesting feature of these results is that there is zero variance on the coarsest level. This is because there is only one timestep on the coarsest level, and therefore the conditional expectation is taken immediately and every sample gives the same payoff.\"\n\nLet $(\\Omega,\\mathcal F,\\mathbb P)$ be a probability space, $Z:\\Omega\\to\\mathbb R$ measurable with $Z\\sim N(0,1)$, $S_0,a,b,h_0,K\\in\\mathbb R$ with $b\\ne0$, $h_0>0$ (one Euler–Maruyama step $S_0+ah_0+b\\sqrt{h_0}Z$ from the deterministic $S_0$), $F=\\mathbf 1_{\\{S_0+ah_0+b\\sqrt{h_0}Z>K\\}}$ and $p=\\Phi\\big((S_0+ah_0-K)/(|b|\\sqrt{h_0})\\big)$. Then, with $\\mathcal G=\\sigma(S_0)$ the (trivial) σ-algebra of the path before the last step,\n$$\n\\mathbb E[F\\mid\\mathcal G]=p\\ \\text{a.s.},\\qquad \\mathbb V\\big[\\mathbb E[F\\mid\\mathcal G]\\big]=0,\\qquad \\mathbb V[F]=p(1-p)>0 .\n$$\n\n**Formalization Note** $\\mathcal G$ is `MeasurableSpace.comap (fun _ => S₀) inferInstance`; $\\Phi$ is `cdf (gaussianReal 0 1)`.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §5.2, Digital options, p. 36, and Figure 5.6.",
+   "explanation": "`digital_smoothing` with the constant $X=S_0$ (independent of $Z$, `indepFun_const_left`): the conditional expectation is a.s. the constant $p$, whose variance is $0$ (`variance_congr`); $\\mathbb V[F]=\\mathbb E[F]-\\mathbb E[F]^2=p-p^2$ since $F\\in\\{0,1\\}$ and $\\mathbb E[F]=p$; $0<p<1$ because $N(0,1)$ and Lebesgue measure are equivalent and half-lines have infinite Lebesgue measure (`cdf_stdGaussian_pos`, `cdf_stdGaussian_lt_one`).",
+   "tags": [
+    "probability",
+    "multilevel-monte-carlo",
+    "monte-carlo"
+   ]
+  },
+  "MLMC.gaussian_change_of_measure": {
+   "theorem_title": "Giles (2015), §5.2: $N(m',v')=(\\varphi_{m',v'}/\\varphi_{m,v})\\cdot N(m,v)$, i.e. the Radon–Nikodym derivative is the ratio of the Gaussian densities",
+   "natural_language_statement": "Giles (2015), §5.2, p. 38: \"The change of measure approach is another approximation to the conditional expectation. Using the Euler-Maruyama approximation for the final timestep, the fine and coarse path conditional distributions at maturity are two very similar Gaussian distributions. Instead of following the splitting approach of taking corresponding samples from these two distributions, we can take a sample from a third Gaussian distribution (with a mean and variance perhaps equal to the average of the other two). This leads to the introduction of a Radon-Nikodym derivative for each path\".\n\nLet $m,m'\\in\\mathbb R$ and variances $v,v'>0$, and let $\\varphi_{m,v}(z)=(2\\pi v)^{-1/2}e^{-(z-m)^2/(2v)}$. Then\n$$\nN(m',v')(A)=\\int_A\\frac{\\varphi_{m',v'}(z)}{\\varphi_{m,v}(z)}\\,dN(m,v)(z)\\quad\\text{for all Borel }A,\n$$\nand $\\varphi_{m',v'}/\\varphi_{m,v}$ is the Radon–Nikodym derivative $dN(m',v')/dN(m,v)$, $N(m,v)$-a.e.\n\n**Formalization Note** The densities are Mathlib's `gaussianPDF` ($[0,\\infty]$-valued); the first statement is `gaussianReal m' v' = (gaussianReal m v).withDensity (φ'/φ)`, the second is about `Measure.rnDeriv`.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §5.2, Digital options (change of measure), p. 38.",
+   "explanation": "$N(m,v)=\\varphi_{m,v}\\cdot\\mathrm{Leb}$ (`gaussianReal_of_var_ne_zero`), so $(\\varphi'/\\varphi)\\cdot N(m,v)=(\\varphi\\cdot\\varphi'/\\varphi)\\cdot\\mathrm{Leb}=\\varphi'\\cdot\\mathrm{Leb}=N(m',v')$ (`withDensity_mul`, $\\varphi>0$ finite: `ENNReal.mul_div_cancel`); then `Measure.rnDeriv_withDensity`.",
+   "tags": [
+    "probability",
+    "monte-carlo",
+    "multilevel-monte-carlo"
+   ]
+  },
+  "MLMC.integral_mul_likelihoodRatio": {
+   "theorem_title": "Giles (2015), §5.2: $\\mathbb E_{N(m,v)}[g\\,\\varphi_{m',v'}/\\varphi_{m,v}]=\\mathbb E_{N(m',v')}[g]$ — the change-of-measure estimator is unbiased",
+   "natural_language_statement": "Giles (2015), §5.2, p. 38: \"we can take a sample from a third Gaussian distribution (with a mean and variance perhaps equal to the average of the other two). This leads to the introduction of a Radon-Nikodym derivative for each path\".\n\nLet $m,m'\\in\\mathbb R$, $v,v'>0$, $\\varphi_{m,v}$ the $N(m,v)$ density, and $g:\\mathbb R\\to\\mathbb R$ integrable under $N(m',v')$. Then $z\\mapsto g(z)\\varphi_{m',v'}(z)/\\varphi_{m,v}(z)$ is integrable under $N(m,v)$ and\n$$\n\\mathbb E_{Z\\sim N(m,v)}\\Big[g(Z)\\,\\frac{\\varphi_{m',v'}(Z)}{\\varphi_{m,v}(Z)}\\Big]=\\mathbb E_{Z\\sim N(m',v')}\\big[g(Z)\\big].\n$$\nA sample of the third Gaussian weighted by the Radon–Nikodym derivative has the conditional expectation of the fine (or coarse) payoff, so the expectation of every level, and (2.4), are kept.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §5.2, Digital options (change of measure), p. 38.",
+   "explanation": "Both sides are Lebesgue integrals against the densities (`integral_gaussianReal_eq_integral_smul`, `integrable_gaussianReal_iff_mul_pdf`, from `integrable_withDensity_iff_integrable_smul'`), and $\\varphi_{m,v}\\cdot g\\,\\varphi_{m',v'}/\\varphi_{m,v}=\\varphi_{m',v'}\\,g$ pointwise since $\\varphi_{m,v}>0$ (`gaussianPDFReal_pos`).",
+   "tags": [
+    "probability",
+    "monte-carlo",
+    "multilevel-monte-carlo"
+   ]
+  },
+  "MLMC.integral_mul_sub_likelihoodRatio": {
+   "theorem_title": "Giles (2015), §5.2: with a common Gaussian sample, the fine–coarse correction $g\\,(L_f-L_c)$ of the change of measure has mean $\\mathbb E_f[g]-\\mathbb E_c[g]$",
+   "natural_language_statement": "Giles (2015), §5.2, p. 38: \"This leads to the introduction of a Radon-Nikodym derivative for each path, and the difference in the payoffs from the two paths is then due to the difference in their Radon-Nikodym derivatives.\"\n\nLet $m,m_f,m_c\\in\\mathbb R$ and $v,v_f,v_c>0$, $\\varphi_{\\mu,w}$ the $N(\\mu,w)$ density, and $g:\\mathbb R\\to\\mathbb R$ integrable under $N(m_f,v_f)$ and under $N(m_c,v_c)$ (the fine and coarse conditional laws). With $L_f=\\varphi_{m_f,v_f}/\\varphi_{m,v}$ and $L_c=\\varphi_{m_c,v_c}/\\varphi_{m,v}$,\n$$\n\\mathbb E_{Z\\sim N(m,v)}\\big[g(Z)\\,(L_f(Z)-L_c(Z))\\big]=\\mathbb E_{N(m_f,v_f)}[g]-\\mathbb E_{N(m_c,v_c)}[g].\n$$",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §5.2, Digital options (change of measure), p. 38.",
+   "explanation": "`integral_mul_likelihoodRatio` for the fine and the coarse law (integrability and value), and linearity (`integral_sub`).",
+   "tags": [
+    "probability",
+    "monte-carlo",
+    "multilevel-monte-carlo"
+   ]
+  },
+  "MLMC.hasDerivAt_call_payoff": {
+   "theorem_title": "Giles (2015), §5.4: the call payoff $\\max(x-K,0)$ has derivative $\\mathbf 1_{\\{x>K\\}}$ for $x\\ne K$, is not differentiable at $K$, and its derivative is discontinuous",
+   "natural_language_statement": "Giles (2015), §5.4, p. 42: \"From a multilevel Monte Carlo point of view, the difficulty that this introduces is that the derivative of a call option payoff function is discontinuous. Hence, computing first order sensitivities for a call option has similar difficulties to computing the option price for a digital option.\"\n\nLet $K\\in\\mathbb R$ and $f(x)=\\max(x-K,0)$. Then\n1. for every $x\\ne K$, $f$ is differentiable at $x$ with $f'(x)=\\mathbf 1_{\\{x>K\\}}$ (the Heaviside function $H(x-K)$, i.e. the digital payoff);\n2. $f$ is not differentiable at $K$;\n3. there is no function $g:\\mathbb R\\to\\mathbb R$ that is continuous at $K$ and satisfies $f'(x)=g(x)$ for all $x\\ne K$.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §5.4 \"Computing sensitivities\", p. 42.",
+   "explanation": "$f=0$ on the open set $\\{x<K\\}$ and $f(x)=x-K$ on $\\{x>K\\}$ (`HasDerivAt.congr_of_eventuallyEq`). At $K$, the one-sided derivatives within $(-\\infty,K)$ and $(K,\\infty)$ are $0$ and $1$ (`uniqueDiffWithinAt_Iio`, `uniqueDiffWithinAt_Ioi`, `UniqueDiffWithinAt.eq_deriv`), so no two-sided derivative exists. A $g$ as in 3 equals $0$ on $(-\\infty,K)$ and $1$ on $(K,\\infty)$ (`HasDerivAt.unique`), so its one-sided limits at $K$ are $0$ and $1$, contradicting continuity (`tendsto_nhds_unique`).",
+   "tags": [
+    "real-analysis",
+    "multilevel-monte-carlo"
+   ]
+  },
+  "MLMC.levyPath_levyPairSum": {
+   "theorem_title": "Giles (2015), §6.2: summing the fine Lévy increments in pairs gives the coarse path, which is the fine path at the coarse times",
+   "natural_language_statement": "Giles (2015), §6.2, pp. 47–48: \"Alternatively, for many SDEs driven by a Lévy process it is possible to directly simulate the increments of the Lévy process over a set of uniform timesteps (Schoutens 2003), in exactly the same way as one simulates Brownian increments. … it may be the best approach to achieve a perfect coupling between the coarse and fine path simulations, since the increments of the driving Lévy process for the coarse path can be obtained trivially by summing the increments for the fine path.\"\n\nLet $M$ be a commutative additive monoid and $z=(z_0,z_1,\\dots)\\in M^{\\mathbb N}$. Define the coarse increments $\\mathrm{levyPairSum}(z)_k=z_{2k}+z_{2k+1}$ and the path $\\mathrm{levyPath}(z)_n=\\sum_{i<n}z_i$. Then for every $m\\in\\mathbb N$,\n$$\n\\mathrm{levyPath}(\\mathrm{levyPairSum}(z))_m=\\mathrm{levyPath}(z)_{2m}.\n$$",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §6.2, pp. 47–48.",
+   "explanation": "Induction on $m$: the coarse sum gains $z_{2m}+z_{2m+1}$, the fine sum gains the same two terms (`Finset.sum_range_succ` twice).",
+   "tags": [
+    "multilevel-monte-carlo",
+    "algebra"
+   ]
+  },
+  "MLMC.measurePreserving_levyPairSum": {
+   "theorem_title": "Giles (2015), §6.2: summing independent fine Lévy increments in pairs gives independent coarse increments, $\\nu^{\\otimes\\mathbb N}\\mapsto(\\nu*\\nu)^{\\otimes\\mathbb N}$",
+   "natural_language_statement": "Giles (2015), §6.2, pp. 47–48: \"Alternatively, for many SDEs driven by a Lévy process it is possible to directly simulate the increments of the Lévy process over a set of uniform timesteps (Schoutens 2003), in exactly the same way as one simulates Brownian increments. … it may be the best approach to achieve a perfect coupling between the coarse and fine path simulations, since the increments of the driving Lévy process for the coarse path can be obtained trivially by summing the increments for the fine path.\"\n\nLet $M$ be an additive monoid with a measurable structure for which addition $M\\times M\\to M$ is measurable (e.g. $\\mathbb R$, $\\mathbb R^d$, $\\mathbb N$), and let $\\nu$ be a probability measure on $M$. The map $z\\mapsto(z_{2k}+z_{2k+1})_{k\\in\\mathbb N}$ from $M^{\\mathbb N}$ to $M^{\\mathbb N}$ is measurable and maps the product measure $\\nu^{\\otimes\\mathbb N}$ (Mathlib's `Measure.infinitePi`) to $(\\nu*\\nu)^{\\otimes\\mathbb N}$, where $\\nu*\\nu$ (`Measure.conv`) is the image of $\\nu\\otimes\\nu$ under $(x,y)\\mapsto x+y$. This generalises `measurePreserving_pairAvg` (the normalised Gaussian case).",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §6.2, pp. 47–48.",
+   "explanation": "Factor the map into three measure-preserving steps, as for `measurePreserving_pairAvg`: reindex the coordinates by the injection $(k,i)\\mapsto2k+i$ of $\\mathbb N\\times\\{0,1\\}$ (`Measure.map_infinitePi_infinitePi_of_inj`); curry to a sequence of pairs (`Measure.infinitePi_map_curry`); map each pair to its sum (`Measure.infinitePi_map_pi`). The law of the sum of the two coordinates of $\\nu^{\\otimes2}$ is $\\nu*\\nu$ (`map_add_infinitePi_fin_two`, via `Measure.infinitePi_eq_pi` and `measurePreserving_finTwoArrow`).",
+   "tags": [
+    "probability",
+    "multilevel-monte-carlo"
+   ]
+  },
+  "MLMC.integral_levyCoarse": {
+   "theorem_title": "Giles (2015), (2.4) for Lévy-driven paths: with summed fine increments the coarse approximation on level $\\ell+1$ has the mean of the fine one on level $\\ell$",
+   "natural_language_statement": "Giles (2015), §2.1, p. 8: MLMC with different fine and coarse approximations needs \"the identity $\\mathbb E[P^f_\\ell]=\\mathbb E[P^c_\\ell]$ (2.4)\". Giles (2015), §6.2, pp. 47–48: \"Alternatively, for many SDEs driven by a Lévy process it is possible to directly simulate the increments of the Lévy process over a set of uniform timesteps (Schoutens 2003), in exactly the same way as one simulates Brownian increments. … it may be the best approach to achieve a perfect coupling between the coarse and fine path simulations, since the increments of the driving Lévy process for the coarse path can be obtained trivially by summing the increments for the fine path.\"\n\nLet $M$ be as in `measurePreserving_levyPairSum`, let $\\nu,\\nu_2$ be probability measures on $M$ with $\\nu*\\nu=\\nu_2$ ($\\nu$ the law of a fine increment, $\\nu_2$ that of a coarse one), and let $F:M^{\\mathbb N}\\to\\mathbb R$ (a payoff computed from the increments) be almost everywhere strongly measurable with respect to $\\nu_2^{\\otimes\\mathbb N}$. Then\n$$\n\\int F\\big((z_{2k}+z_{2k+1})_k\\big)\\,d\\nu^{\\otimes\\mathbb N}(z)=\\int F\\,d\\nu_2^{\\otimes\\mathbb N}.\n$$",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §2.1, (2.4), p. 8, and §6.2, pp. 47–48.",
+   "explanation": "The pair-sum map sends $\\nu^{\\otimes\\mathbb N}$ to $\\nu_2^{\\otimes\\mathbb N}$ (`measurePreserving_levyPairSum'`), so the integrals agree by the change of variables for a measure-preserving map (`integral_comp_of_measurePreserving`).",
+   "tags": [
+    "multilevel-monte-carlo",
+    "probability"
+   ]
+  },
+  "MLMC.levy_telescoping": {
+   "theorem_title": "Giles (2015), §6.2 and (2.4): with Lévy increments summed over pairs, $\\mathbb E[P^f_0]+\\sum_{\\ell<L}\\mathbb E[P^f_{\\ell+1}-P^c_\\ell]=\\mathbb E[P^f_L]$",
+   "natural_language_statement": "Giles (2015), §2.1, p. 8: MLMC with different fine and coarse approximations needs \"the identity $\\mathbb E[P^f_\\ell]=\\mathbb E[P^c_\\ell]$ (2.4)\". Giles (2015), §6.2, pp. 47–48: \"Alternatively, for many SDEs driven by a Lévy process it is possible to directly simulate the increments of the Lévy process over a set of uniform timesteps (Schoutens 2003), in exactly the same way as one simulates Brownian increments. … it may be the best approach to achieve a perfect coupling between the coarse and fine path simulations, since the increments of the driving Lévy process for the coarse path can be obtained trivially by summing the increments for the fine path.\"\n\nLet $M$ be as in `measurePreserving_levyPairSum` and $(\\nu_\\ell)_{\\ell\\in\\mathbb N}$ probability measures on $M$ with $\\nu_{\\ell+1}*\\nu_{\\ell+1}=\\nu_\\ell$ for every $\\ell$ (e.g. the laws of the increments of a Lévy process over the steps $T2^{-\\ell}$). Let $F_\\ell:M^{\\mathbb N}\\to\\mathbb R$ be integrable with respect to $\\nu_\\ell^{\\otimes\\mathbb N}$ (the fine payoff $P^f_\\ell=F_\\ell(z)$ of a level-$\\ell$ sample; the coarse payoff of a level-$(\\ell+1)$ sample is $P^c_\\ell=F_\\ell((z_{2k}+z_{2k+1})_k)$). Then for every $L\\in\\mathbb N$,\n$$\n\\int F_0\\,d\\nu_0^{\\otimes\\mathbb N}+\\sum_{\\ell<L}\\int\\Big(F_{\\ell+1}(z)-F_\\ell\\big((z_{2k}+z_{2k+1})_k\\big)\\Big)\\,d\\nu_{\\ell+1}^{\\otimes\\mathbb N}(z)=\\int F_L\\,d\\nu_L^{\\otimes\\mathbb N}.\n$$",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §1.3, §2.1, (2.4), and §6.2, pp. 47–48.",
+   "explanation": "Induction on $L$. The coarse payoff is integrable (`MeasurePreserving.integrable_comp` with `measurePreserving_levyPairSum'`), so the correction integral splits (`integral_sub`), and its coarse part equals $\\int F_\\ell\\,d\\nu_\\ell^{\\otimes\\mathbb N}$ by `integral_levyCoarse`.",
+   "tags": [
+    "multilevel-monte-carlo",
+    "probability"
+   ]
+  },
+  "MLMC.map_levyPath_levyPairSum": {
+   "theorem_title": "Giles (2015), §6.2: the fine Lévy path at the coarse times has the law of the path driven by increments of law $\\nu*\\nu$",
+   "natural_language_statement": "Giles (2015), §6.2, pp. 47–48: \"Alternatively, for many SDEs driven by a Lévy process it is possible to directly simulate the increments of the Lévy process over a set of uniform timesteps (Schoutens 2003), in exactly the same way as one simulates Brownian increments. … it may be the best approach to achieve a perfect coupling between the coarse and fine path simulations, since the increments of the driving Lévy process for the coarse path can be obtained trivially by summing the increments for the fine path.\"\n\nLet $M$ be a commutative additive monoid with measurable addition, $\\nu$ a probability measure on $M$, and $L_n(z)=\\sum_{i<n}z_i$ for $z\\in M^{\\mathbb N}$. The image of $\\nu^{\\otimes\\mathbb N}$ under $z\\mapsto(L_{2m}(z))_{m\\in\\mathbb N}$ equals the image of $(\\nu*\\nu)^{\\otimes\\mathbb N}$ under $z\\mapsto(L_m(z))_{m\\in\\mathbb N}$: the coarse path built from the summed fine increments has the law of the path on the level below.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §6.2, pp. 47–48.",
+   "explanation": "By `levyPath_levyPairSum` the map is $L\\circ\\mathrm{levyPairSum}$; the path map $L$ is measurable (`Finset.measurable_sum`), so `Measure.map_map` and `measurePreserving_levyPairSum` give the claim.",
+   "tags": [
+    "probability",
+    "multilevel-monte-carlo"
+   ]
+  },
+  "MLMC.sum_exponential_periods": {
+   "theorem_title": "Giles (2015), §6.2: a terminal time made of $n$ exponential periods of mean $T/n$ has mean $T$ and variance $T^2/n$, so it concentrates at $T$",
+   "natural_language_statement": "Giles (2015), §6.2, p. 48: Ferreiro-Castilla et al. \"sample exactly from the joint distribution of the terminal value of a Lévy process at an exponential random stopping time … The particularly novel aspect here is the random terminal time; by using multiple shorter random periods it is possible, because of the Central Limit Theorem, to get closer to a desired fixed terminal time, but at an increased cost.\"\n\nLet $T>0$, $n\\ge1$, and let $X_1,\\dots,X_n$ be pairwise independent real random variables on a probability space, each exponential with rate $n/T$ (Mathlib's `expMeasure (n/T)`). Let $\\tau=\\sum_{i=1}^nX_i$. Then\n$$\n\\mathbb E[\\tau]=T,\\qquad \\mathbb V[\\tau]=\\frac{T^2}n,\\qquad \\mathbb P(|\\tau-T|\\ge\\delta)\\le\\frac{T^2}{n\\delta^2}\\quad(\\delta>0).\n$$",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §6.2, p. 48.",
+   "explanation": "`integral_pow_expMeasure`: $\\int x^m\\,d\\mathrm{Exp}(r)=m!/r^m$ (write the law as a density, `integral_withDensity_eq_integral_toReal_smul`, and use `Real.integral_rpow_mul_exp_neg_mul_Ioi` and `Real.Gamma_nat_eq_factorial`); hence `expMeasure_moments`: mean $1/r$, variance $1/r^2$, finite second moment. Linearity gives the mean, `IndepFun.variance_sum` the variance, and Chebyshev's inequality `meas_ge_le_variance_div_sq` the tail bound.",
+   "tags": [
+    "probability",
+    "multilevel-monte-carlo"
+   ]
+  },
+  "MLMC.exponential_periods_clt": {
+   "theorem_title": "Giles (2015), §6.2: by the Central Limit Theorem, $n$ exponential periods of mean $T/n$ give a terminal time $\\tau_n$ with $(\\sqrt n/T)(\\tau_n-T)\\to N(0,1)$",
+   "natural_language_statement": "Giles (2015), §6.2, p. 48: Ferreiro-Castilla et al. \"sample exactly from the joint distribution of the terminal value of a Lévy process at an exponential random stopping time … The particularly novel aspect here is the random terminal time; by using multiple shorter random periods it is possible, because of the Central Limit Theorem, to get closer to a desired fixed terminal time, but at an increased cost.\"\n\nLet $E_0,E_1,\\dots$ be independent random variables on a probability space $(\\Omega,P)$, each exponential with rate $1$, let $Y$ be a standard normal random variable on a probability space $(\\Omega',P')$, and let $T>0$. Then\n(i) for every $n\\ge1$ and $k$, the period $(T/n)E_k$ is exponential with rate $n/T$ (mean $T/n$);\n(ii) the terminal time $\\tau_n=\\sum_{k<n}(T/n)E_k$ satisfies\n$$\n\\frac{\\sqrt n}T\\,(\\tau_n-T)\\ \\longrightarrow\\ Y\\quad\\text{in distribution as }n\\to\\infty .\n$$\nSo $\\tau_n\\approx T+\\frac T{\\sqrt n}N(0,1)$ gets closer to the fixed terminal time $T$ as the number of periods grows.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §6.2, p. 48.",
+   "explanation": "(i) `map_const_mul_expMeasure`: $\\mathrm{Exp}(r)$ scaled by $c>0$ is $\\mathrm{Exp}(r/c)$, by comparing the CDFs (`cdf_expMeasure_eq`, `ofReal_cdf`, `Measure.ext_of_Iic`). (ii) The variables $E_k-1$ are i.i.d. with mean $0$ and variance $1$ (`expMeasure_moments`), so Mathlib's Central Limit Theorem `tendstoInDistribution_inv_sqrt_mul_sum` gives $n^{-1/2}\\sum_{k<n}(E_k-1)\\to Y$; and $\\frac{\\sqrt n}T\\big(\\sum_{k<n}\\frac TnE_k-T\\big)=n^{-1/2}\\sum_{k<n}(E_k-1)$.",
+   "tags": [
+    "probability",
+    "convergence",
+    "multilevel-monte-carlo"
+   ]
+  },
+  "MLMC.fe_eq_centralDiff": {
+   "theorem_title": "Giles (2015), §7.1: piecewise-linear finite elements with 1-point quadrature give the second order central difference scheme",
+   "natural_language_statement": "Giles (2015), §7.1, p. 49: \"Level $\\ell$ uses a uniform grid with spacing $h_\\ell=2^{-(\\ell+1)}$, so there is just one interior grid point on the coarsest level. A simple second order central difference approximation is used (equivalent to a finite element approximation with a 1-point quadrature).\"\n\nLet $N\\in\\mathbb N$, $h\\ne0$, $c,f:\\mathbb R\\to\\mathbb R$ and nodal values $u:\\mathbb N\\to\\mathbb R$ on the mesh $x_i=ih$. Let $\\varphi_j$ be the hat functions ($\\varphi_j(x_i)=\\delta_{ij}$). With the midpoint rule on every element $[x_e,x_{e+1}]$, $e<N$, of midpoint $m_e=(e+\\frac12)h$, the finite-element stiffness row and load of node $j$ are\n$$\nA_j(u)=\\sum_{e<N}h\\,c(m_e)\\,\\frac{u_{e+1}-u_e}h\\,\\frac{\\varphi_j(x_{e+1})-\\varphi_j(x_e)}h,\\qquad b_j=\\sum_{e<N}h\\,f(m_e)\\,\\frac{\\varphi_j(x_{e+1})+\\varphi_j(x_e)}2 .\n$$\nThen for $1\\le j<N$, with $c_{j\\pm1/2}=c((j\\pm\\frac12)h)$ and $f_{j\\pm1/2}=f((j\\pm\\frac12)h)$,\n$$\nA_j(u)=h\\cdot\\Big(-\\frac{c_{j+1/2}(u_{j+1}-u_j)-c_{j-1/2}(u_j-u_{j-1})}{h^2}\\Big),\\qquad b_j=h\\,\\frac{f_{j-1/2}+f_{j+1/2}}2 ,\n$$\nso the finite-element equations $A_j(u)=b_j$ are $h$ times the conservative central-difference equations for $-(cu')'=f$ (with $b_j=hf$ for the constant forcing $f=50Z^2$ of the example).",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §7.1, p. 49.",
+   "explanation": "Only the elements $j-1$ and $j$ meet the support of $\\varphi_j$ (`sum_range_hatNodal`, from `Finset.sum_ite_eq'`), after which both identities are `field_simp`/`ring` computations.",
+   "tags": [
+    "numerical-analysis",
+    "algebra"
+   ]
+  },
+  "MLMC.rates_of_pathwise_random": {
+   "theorem_title": "Giles (2015), §7.1 (corrected): a pathwise bound $|P-P_\\ell|\\le K e_\\ell$ with a random $K\\in L^2$ gives the weak and the variance rates",
+   "natural_language_statement": "Giles (2015), §7.1, p. 49: the equation is $\\frac{d}{dx}\\big(c(x)\\frac{du}{dx}\\big)=-50Z^2$ on $0<x<1$, $u(0)=u(1)=0$, with $Z$ standard normal and $c(x)=1+ax$, $a$ uniform on $(0,1)$; \"Level $\\ell$ uses a uniform grid with spacing $h_\\ell=2^{-(\\ell+1)}$ … The uniform second order accuracy means that there is a constant $K$ such that $|P-P_\\ell|<Kh_\\ell^2$ and therefore we have $\\alpha=2$, $\\beta=4$ and $\\gamma=1$, resulting in an $O(\\varepsilon^{-2})$ complexity.\" (The constant $K$ cannot be deterministic for this example, see `not_ae_abs_gaussian_sq_mul_le`; a random $K$ with $\\mathbb E[K^2]<\\infty$ suffices.)\n\nLet $(\\Omega,\\mathcal F,\\mathbb P)$ be a probability space, $P,P_0,P_1,\\dots:\\Omega\\to\\mathbb R$ almost everywhere strongly measurable, $K\\in L^2(\\mathbb P)$ and $e_0,e_1,\\dots\\in\\mathbb R$ with $|P-P_\\ell|\\le K\\,e_\\ell$ almost surely for every $\\ell$. Then for every $\\ell$: $P_\\ell-P$ is integrable with $|\\mathbb E[P_\\ell-P]|\\le\\mathbb E[K]\\,e_\\ell$, and $P_{\\ell+1}-P_\\ell$ is square integrable with\n$$\n\\mathbb V[P_{\\ell+1}-P_\\ell]\\le\\mathbb E[(P_{\\ell+1}-P_\\ell)^2]\\le\\mathbb E[K^2]\\,(e_{\\ell+1}+e_\\ell)^2 .\n$$",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §7.1, pp. 49–51.",
+   "explanation": "$|P_\\ell-P|\\le Ke_\\ell$ is integrable, and $|P_{\\ell+1}-P_\\ell|\\le|P-P_{\\ell+1}|+|P-P_\\ell|\\le(e_{\\ell+1}+e_\\ell)K$, whose square is integrable. Then `abs_integral_le_integral_abs`, `integral_mono_of_nonneg` and `variance_le_expectation_sq`.",
+   "tags": [
+    "probability",
+    "multilevel-monte-carlo",
+    "numerical-analysis"
+   ]
+  },
+  "MLMC.elliptic_rates_random": {
+   "theorem_title": "Giles (2015), §7.1, the elliptic example (corrected): $|P-P_\\ell|\\le Kh_\\ell^2$ with a random $K$, $\\mathbb E[K^2]<\\infty$, gives $\\alpha=2$ and $\\beta=4$",
+   "natural_language_statement": "Giles (2015), §7.1, p. 49: the equation is $\\frac{d}{dx}\\big(c(x)\\frac{du}{dx}\\big)=-50Z^2$ on $0<x<1$, $u(0)=u(1)=0$, with $Z$ standard normal and $c(x)=1+ax$, $a$ uniform on $(0,1)$; \"Level $\\ell$ uses a uniform grid with spacing $h_\\ell=2^{-(\\ell+1)}$ … The uniform second order accuracy means that there is a constant $K$ such that $|P-P_\\ell|<Kh_\\ell^2$ and therefore we have $\\alpha=2$, $\\beta=4$ and $\\gamma=1$, resulting in an $O(\\varepsilon^{-2})$ complexity.\"\n\nNo deterministic $K$ exists for this example, since the error is $Z^2$ times a nonzero error (`not_ae_abs_gaussian_sq_mul_le`); the rates hold with a random $K$ (for instance $K=cZ^2$). Let $(\\Omega,\\mathcal F,\\mathbb P)$ be a probability space, $P,P_0,P_1,\\dots:\\Omega\\to\\mathbb R$ almost everywhere strongly measurable, $K\\in L^2(\\mathbb P)$, $h_\\ell=2^{-(\\ell+1)}$, and $|P-P_\\ell|\\le K\\,h_\\ell^2$ almost surely for every $\\ell$. Then for every $\\ell\\in\\mathbb N$,\n$$\n\\big|\\mathbb E[P_\\ell-P]\\big|\\le\\mathbb E[K]\\,h_\\ell^2=\\frac{\\mathbb E[K]}4\\,2^{-2\\ell},\\qquad \\mathbb V[P_{\\ell+1}-P_\\ell]\\le\\mathbb E[(P_{\\ell+1}-P_\\ell)^2]\\le25\\,\\mathbb E[K^2]\\,h_{\\ell+1}^4=\\frac{25}{256}\\,\\mathbb E[K^2]\\,2^{-4\\ell},\n$$\ni.e. $\\alpha=2$ and $\\beta=4$.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §7.1, pp. 49–51.",
+   "explanation": "`rates_of_pathwise_random` with $e_\\ell=h_\\ell^2$, and $h_{\\ell+1}^2+h_\\ell^2=5h_{\\ell+1}^2$.",
+   "tags": [
+    "probability",
+    "multilevel-monte-carlo",
+    "numerical-analysis"
+   ]
+  },
+  "MLMC.not_ae_abs_gaussian_sq_mul_le": {
+   "theorem_title": "Giles (2015), §7.1: the elliptic example has no deterministic $K$ with $|P-P_\\ell|<Kh_\\ell^2$, since $Z^2e$ is unbounded for Gaussian $Z$",
+   "natural_language_statement": "Giles (2015), §7.1, p. 49: the equation is $\\frac{d}{dx}\\big(c(x)\\frac{du}{dx}\\big)=-50Z^2$ on $0<x<1$, $u(0)=u(1)=0$, with $Z$ standard normal and $c(x)=1+ax$, $a$ uniform on $(0,1)$; \"Level $\\ell$ uses a uniform grid with spacing $h_\\ell=2^{-(\\ell+1)}$ … The uniform second order accuracy means that there is a constant $K$ such that $|P-P_\\ell|<Kh_\\ell^2$ and therefore we have $\\alpha=2$, $\\beta=4$ and $\\gamma=1$, resulting in an $O(\\varepsilon^{-2})$ complexity.\"\n\nThe equation is linear in the forcing, so for a given coefficient $c$ the error is $P-P_\\ell=Z^2e$ with $e$ the error for the forcing $-50$. Let $Z$ be a standard normal random variable on a measure space $(\\Omega,\\mu)$, $e\\ne0$ and $K\\in\\mathbb R$. Then it is not true that $|Z^2e|\\le K$ $\\mu$-almost everywhere; hence no deterministic constant bounds $|P-P_\\ell|$ when $e\\ne0$.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §7.1, p. 49.",
+   "explanation": "The set $\\{z:K<|z^2e|\\}$ contains the half-line $(|K|/|e|+1,\\infty)$, of infinite Lebesgue measure; Lebesgue measure is absolutely continuous with respect to $N(0,1)$ (`gaussianReal_absolutelyContinuous'`), so this set has positive $N(0,1)$ measure, which is $\\mu(K<|Z^2e|)$ by `HasLaw.measure_eq`.",
+   "tags": [
+    "probability",
+    "numerical-analysis"
+   ]
+  },
+  "MLMC.spdeMilsteinStep_eq": {
+   "theorem_title": "Giles (2015), §7.3: one Milstein step for $dp=-\\mu p_x\\,dt+\\frac12p_{xx}\\,dt-\\sqrt\\rho\\,p_x\\,dM$ is $p-(\\mu k+\\sqrt{\\rho k}Z)p_x+\\frac{(1-\\rho)k+\\rho kZ^2}2p_{xx}$",
+   "natural_language_statement": "Giles (2015), §7.3, pp. 53–54: \"Giles & Reisinger (Giles and Reisinger 2012) consider an unusual SPDE from credit default modelling, $dp=-\\mu\\frac{\\partial p}{\\partial x}dt+\\frac12\\frac{\\partial^2p}{\\partial x^2}dt-\\sqrt\\rho\\frac{\\partial p}{\\partial x}dM_t$ … A Milstein time discretisation with timestep $k$, and a central space discretisation of the spatial derivatives with uniform spacing $h$ gives the numerical approximation $p^{n+1}_j=p^n_j-\\frac{\\mu k+\\sqrt{\\rho k}\\,Z_n}{2h}\\big(p^n_{j+1}-p^n_{j-1}\\big)+\\frac{(1-\\rho)k+\\rho k Z_n^2}{2h^2}\\big(p^n_{j+1}-2p^n_j+p^n_{j-1}\\big)$ where $p^n_j\\approx p(jh,nk)$, and the $Z_n$ are standard Normal random variables so that $\\sqrt h\\,Z_n$ corresponds to an increment of the driving scalar Brownian motion.\"\n\nLet $\\mu\\in\\mathbb R$, $\\rho\\ge0$, $k\\ge0$, $Z\\in\\mathbb R$ and $p:\\mathbb R\\to\\mathbb R$, with derivatives taken as Mathlib's `deriv`. Let $Bq=-\\sqrt\\rho\\,q'$ (the noise operator) and define one Milstein step of the SPDE $dp=Ap\\,dt+Bp\\,dM$, $Ap=-\\mu p'+\\frac12p''$, by\n$$\n\\mathrm{Mil}(p)(x)=p(x)+(Ap)(x)\\,k+(Bp)(x)\\,\\Delta M+\\tfrac12\\,(B(Bp))(x)\\,(\\Delta M^2-k).\n$$\nWith $\\Delta M=\\sqrt k\\,Z$, for every $x$,\n$$\n\\mathrm{Mil}(p)(x)=p(x)-(\\mu k+\\sqrt{\\rho k}\\,Z)\\,p'(x)+\\frac{(1-\\rho)k+\\rho kZ^2}2\\,p''(x).\n$$",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §7.3, pp. 53–54.",
+   "explanation": "$B(Bp)=\\rho p''$ (`spdeNoiseOp_twice`, from `deriv_const_mul_field'` and $\\sqrt\\rho^2=\\rho$); then $\\sqrt{\\rho k}=\\sqrt\\rho\\sqrt k$, $\\sqrt k^2=k$ and `linear_combination`.",
+   "tags": [
+    "numerical-analysis",
+    "algebra"
+   ]
+  },
+  "MLMC.spdeScheme_eq_milstein": {
+   "theorem_title": "Giles (2015), §7.3: the printed SPDE scheme is one Milstein step with central differences; the Brownian increment is $\\sqrt k Z_n$, not $\\sqrt h Z_n$",
+   "natural_language_statement": "Giles (2015), §7.3, pp. 53–54: \"Giles & Reisinger (Giles and Reisinger 2012) consider an unusual SPDE from credit default modelling, $dp=-\\mu\\frac{\\partial p}{\\partial x}dt+\\frac12\\frac{\\partial^2p}{\\partial x^2}dt-\\sqrt\\rho\\frac{\\partial p}{\\partial x}dM_t$ … A Milstein time discretisation with timestep $k$, and a central space discretisation of the spatial derivatives with uniform spacing $h$ gives the numerical approximation $p^{n+1}_j=p^n_j-\\frac{\\mu k+\\sqrt{\\rho k}\\,Z_n}{2h}\\big(p^n_{j+1}-p^n_{j-1}\\big)+\\frac{(1-\\rho)k+\\rho k Z_n^2}{2h^2}\\big(p^n_{j+1}-2p^n_j+p^n_{j-1}\\big)$ where $p^n_j\\approx p(jh,nk)$, and the $Z_n$ are standard Normal random variables so that $\\sqrt h\\,Z_n$ corresponds to an increment of the driving scalar Brownian motion.\" (The increment of $M$ over a time step is $\\sqrt k\\,Z_n$: $h$ is the mesh width.)\n\nLet $\\mu,h\\in\\mathbb R$, $\\rho\\ge0$, $k\\ge0$, $Z\\in\\mathbb R$, $p:\\mathbb Z\\to\\mathbb R$ and $j\\in\\mathbb Z$. Let $D_1p_j=(p_{j+1}-p_{j-1})/(2h)$, $D_2p_j=(p_{j+1}-2p_j+p_{j-1})/h^2$ and\n$$\nS_j=p_j-\\frac{\\mu k+\\sqrt{\\rho k}Z}{2h}(p_{j+1}-p_{j-1})+\\frac{(1-\\rho)k+\\rho kZ^2}{2h^2}(p_{j+1}-2p_j+p_{j-1}).\n$$\nThen $S_j=p_j-(\\mu k+\\sqrt{\\rho k}Z)D_1p_j+\\frac{(1-\\rho)k+\\rho kZ^2}2D_2p_j$ (the Milstein step of `spdeMilsteinStep_eq` with $p_x,p_{xx}$ replaced by $D_1p,D_2p$), and\n$$\nS_j=p_j+\\big(-\\mu D_1p_j+\\tfrac12D_2p_j\\big)k+\\big(-\\sqrt\\rho D_1p_j\\big)\\Delta M+\\tfrac12\\rho D_2p_j\\,(\\Delta M^2-k),\\qquad\\Delta M=\\sqrt kZ .\n$$",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §7.3, pp. 53–54.",
+   "explanation": "`ring` for the first identity; for the second, $\\sqrt{\\rho k}=\\sqrt\\rho\\sqrt k$ and $\\sqrt k^2=k$ with `linear_combination`.",
+   "tags": [
+    "numerical-analysis",
+    "algebra"
+   ]
+  },
+  "MLMC.bbPath_nested": {
+   "theorem_title": "Giles (2015), §10.2: the Brownian-bridge construction of level $\\ell+m$ contains that of level $\\ell$, $W^{(\\ell+m)}_{2^mi}=W^{(\\ell)}_i$",
+   "natural_language_statement": "Giles (2015), §10.2, p. 62: \"Random numbers can be generated in steps by $I_n\\to U_n\\to Z_n$ where $I_n$ is a random integer on a range $[0,I_{max}]$, $U_n=(I_n+\\frac12)/I_{max}$ is a random, approximately uniformly-distributed variable on the interval $(0,1)$, and $Z_n=\\Phi^{-1}(U_n)$ is the corresponding $N(0,1)$ random variable. When using a Brownian Bridge construction, as long as the $I_n$ are generated in exactly the same way for each level, the other two steps can be performed with the level of accuracy appropriate to the level of the path, i.e. with higher precision on level $\\ell$ than on level $\\ell-1$. The Brownian path being generated for level $\\ell$ is then exactly the same, regardless of whether it is the finer or coarser of the two levels being simulated for a particular multilevel correction. Hence, the telescoping sum will be respected.\"\n\nHere $W^{(\\ell)}_i=\\mathrm{bbPath}(r,T,Z)(\\ell,i)$ is the Brownian-bridge construction of the values at the dyadic points $iT2^{-\\ell}$ from inputs $Z_0,Z_1,\\dots$ with rounding $r:\\mathbb R\\to\\mathbb R$: $W^{(0)}_0=0$, $W^{(0)}_i=r(\\sqrt T Z_0)$ for $i\\ge1$, $W^{(\\ell+1)}_{2m}=W^{(\\ell)}_m$ and $W^{(\\ell+1)}_{2m+1}=r\\big(\\tfrac12(W^{(\\ell)}_m+W^{(\\ell)}_{m+1})+\\tfrac12\\sqrt{T2^{-\\ell}}\\,Z_{2^\\ell+m}\\big)$. For every rounding $r$, $T\\in\\mathbb R$, inputs $Z$ and $\\ell,m,i\\in\\mathbb N$: $W^{(\\ell+m)}_{2^mi}=W^{(\\ell)}_i$, i.e. the level-$\\ell$ values computed inside a finer construction with the same arithmetic are the level-$\\ell$ construction.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §10.2, p. 62.",
+   "explanation": "Induction on $m$ with `bbPath_succ_two_mul` ($W^{(\\ell+1)}_{2i}=W^{(\\ell)}_i$, by definition).",
+   "tags": [
+    "multilevel-monte-carlo",
+    "algorithms"
+   ]
+  },
+  "MLMC.bbPath_congr": {
+   "theorem_title": "Giles (2015), §10.2: the level-$\\ell$ Brownian-bridge values depend only on the first $2^\\ell$ inputs",
+   "natural_language_statement": "Giles (2015), §10.2, p. 62: \"Random numbers can be generated in steps by $I_n\\to U_n\\to Z_n$ where $I_n$ is a random integer on a range $[0,I_{max}]$, $U_n=(I_n+\\frac12)/I_{max}$ is a random, approximately uniformly-distributed variable on the interval $(0,1)$, and $Z_n=\\Phi^{-1}(U_n)$ is the corresponding $N(0,1)$ random variable. When using a Brownian Bridge construction, as long as the $I_n$ are generated in exactly the same way for each level, the other two steps can be performed with the level of accuracy appropriate to the level of the path, i.e. with higher precision on level $\\ell$ than on level $\\ell-1$. The Brownian path being generated for level $\\ell$ is then exactly the same, regardless of whether it is the finer or coarser of the two levels being simulated for a particular multilevel correction. Hence, the telescoping sum will be respected.\"\n\nHere $W^{(\\ell)}_i=\\mathrm{bbPath}(r,T,Z)(\\ell,i)$ is the Brownian-bridge construction of the values at the dyadic points $iT2^{-\\ell}$ from inputs $Z_0,Z_1,\\dots$ with rounding $r:\\mathbb R\\to\\mathbb R$: $W^{(0)}_0=0$, $W^{(0)}_i=r(\\sqrt T Z_0)$ for $i\\ge1$, $W^{(\\ell+1)}_{2m}=W^{(\\ell)}_m$ and $W^{(\\ell+1)}_{2m+1}=r\\big(\\tfrac12(W^{(\\ell)}_m+W^{(\\ell)}_{m+1})+\\tfrac12\\sqrt{T2^{-\\ell}}\\,Z_{2^\\ell+m}\\big)$. For every rounding $r$ and $T$: if two input sequences $Z,Z'$ satisfy $Z_n=Z'_n$ for all $n<2^\\ell$, then $W^{(\\ell)}_i(Z)=W^{(\\ell)}_i(Z')$ for all $0\\le i\\le2^\\ell$.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §10.2, p. 62.",
+   "explanation": "Induction on $\\ell$: even points are level-$\\ell$ values; the midpoint of the level-$\\ell$ interval $m<2^\\ell$ uses the input $Z_{2^\\ell+m}$ with $2^\\ell+m<2^{\\ell+1}$ (`bbPath_succ_two_mul`, `bbPath_succ_two_mul_add_one`).",
+   "tags": [
+    "multilevel-monte-carlo",
+    "algorithms"
+   ]
+  },
+  "MLMC.bb_telescoping": {
+   "theorem_title": "Giles (2015), §10.2: with the Brownian-bridge construction the multilevel telescoping sum holds pathwise",
+   "natural_language_statement": "Giles (2015), §10.2, p. 62: \"Random numbers can be generated in steps by $I_n\\to U_n\\to Z_n$ where $I_n$ is a random integer on a range $[0,I_{max}]$, $U_n=(I_n+\\frac12)/I_{max}$ is a random, approximately uniformly-distributed variable on the interval $(0,1)$, and $Z_n=\\Phi^{-1}(U_n)$ is the corresponding $N(0,1)$ random variable. When using a Brownian Bridge construction, as long as the $I_n$ are generated in exactly the same way for each level, the other two steps can be performed with the level of accuracy appropriate to the level of the path, i.e. with higher precision on level $\\ell$ than on level $\\ell-1$. The Brownian path being generated for level $\\ell$ is then exactly the same, regardless of whether it is the finer or coarser of the two levels being simulated for a particular multilevel correction. Hence, the telescoping sum will be respected.\"\n\nHere $W^{(\\ell)}_i=\\mathrm{bbPath}(r,T,Z)(\\ell,i)$ is the Brownian-bridge construction of the values at the dyadic points $iT2^{-\\ell}$ from inputs $Z_0,Z_1,\\dots$ with rounding $r:\\mathbb R\\to\\mathbb R$: $W^{(0)}_0=0$, $W^{(0)}_i=r(\\sqrt T Z_0)$ for $i\\ge1$, $W^{(\\ell+1)}_{2m}=W^{(\\ell)}_m$ and $W^{(\\ell+1)}_{2m+1}=r\\big(\\tfrac12(W^{(\\ell)}_m+W^{(\\ell)}_{m+1})+\\tfrac12\\sqrt{T2^{-\\ell}}\\,Z_{2^\\ell+m}\\big)$. Let $F_\\ell:\\mathbb R^{\\{0,\\dots,2^\\ell\\}}\\to\\mathbb R$ be payoffs of the level-$\\ell$ values, the fine payoff $P^f_\\ell=F_\\ell(W^{(\\ell)})$ and the coarse payoff of a level-$(\\ell+1)$ sample $P^c_\\ell=F_\\ell\\big((W^{(\\ell+1)}_{2i})_{i\\le2^\\ell}\\big)$. Then for every input sequence $Z$ and every $L$,\n$$\nP^f_0+\\sum_{\\ell<L}\\big(P^f_{\\ell+1}-P^c_\\ell\\big)=P^f_L .\n$$",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §10.2, p. 62.",
+   "explanation": "$P^c_\\ell=P^f_\\ell$ pathwise (`bbCoarse_eq_fine`, from `bbPath_succ_two_mul`), and the sum telescopes by induction.",
+   "tags": [
+    "multilevel-monte-carlo",
+    "algorithms"
+   ]
+  },
+  "MLMC.vpPath_castLE": {
+   "theorem_title": "Giles (2015), §10.2: in variable precision the level-$\\ell$ Brownian-bridge path is the same whether it is the finer or the coarser level",
+   "natural_language_statement": "Giles (2015), §10.2, p. 62: \"Random numbers can be generated in steps by $I_n\\to U_n\\to Z_n$ where $I_n$ is a random integer on a range $[0,I_{max}]$, $U_n=(I_n+\\frac12)/I_{max}$ is a random, approximately uniformly-distributed variable on the interval $(0,1)$, and $Z_n=\\Phi^{-1}(U_n)$ is the corresponding $N(0,1)$ random variable. When using a Brownian Bridge construction, as long as the $I_n$ are generated in exactly the same way for each level, the other two steps can be performed with the level of accuracy appropriate to the level of the path, i.e. with higher precision on level $\\ell$ than on level $\\ell-1$. The Brownian path being generated for level $\\ell$ is then exactly the same, regardless of whether it is the finer or coarser of the two levels being simulated for a particular multilevel correction. Hence, the telescoping sum will be respected.\"\n\nHere $W^{(\\ell)}_i=\\mathrm{bbPath}(r,T,Z)(\\ell,i)$ is the Brownian-bridge construction of the values at the dyadic points $iT2^{-\\ell}$ from inputs $Z_0,Z_1,\\dots$ with rounding $r:\\mathbb R\\to\\mathbb R$: $W^{(0)}_0=0$, $W^{(0)}_i=r(\\sqrt T Z_0)$ for $i\\ge1$, $W^{(\\ell+1)}_{2m}=W^{(\\ell)}_m$ and $W^{(\\ell+1)}_{2m+1}=r\\big(\\tfrac12(W^{(\\ell)}_m+W^{(\\ell)}_{m+1})+\\tfrac12\\sqrt{T2^{-\\ell}}\\,Z_{2^\\ell+m}\\big)$. For per-level roundings $\\mathrm{rnd}_\\ell:\\mathbb R\\to\\mathbb R$, generators $G_\\ell:\\mathbb N\\to\\mathbb R$ (the step $I\\mapsto Z$ in the precision of level $\\ell$) and a sample of $m$ random integers $I\\in\\mathbb N^m$, $\\mathrm{vpPath}(\\ell,I)_i=\\mathrm{bbPath}(\\mathrm{rnd}_\\ell,T,Z)(\\ell,i)$ for $0\\le i\\le2^\\ell$, where $Z_n=G_\\ell(I_n)$ for $n<m$ and $Z_n=0$ otherwise. For all roundings, generators, $T$, $\\ell$, $m\\ge2^\\ell$ and $I\\in\\mathbb N^m$: $\\mathrm{vpPath}(\\ell,I)=\\mathrm{vpPath}(\\ell,(I_0,\\dots,I_{2^\\ell-1}))$. The level-$\\ell$ path computed in level-$\\ell$ precision from the integers of a level-$(\\ell+1)$ sample (the coarse path, $m=2^{\\ell+1}$) is the level-$\\ell$ path of the sample made of its first $2^\\ell$ integers (a fine path of level $\\ell$).",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §10.2, p. 62.",
+   "explanation": "The padded inputs agree below $2^\\ell$, so `bbPath_congr` applies at every point $i\\le2^\\ell$.",
+   "tags": [
+    "multilevel-monte-carlo",
+    "algorithms"
+   ]
+  },
+  "MLMC.integral_vpCoarse": {
+   "theorem_title": "Giles (2015), (2.4) in variable precision: with a Brownian-bridge construction the coarse payoff on level $\\ell+1$ has the mean of the fine payoff on level $\\ell$",
+   "natural_language_statement": "Giles (2015), §2.1, p. 8: MLMC with different fine and coarse approximations needs \"the identity $\\mathbb E[P^f_\\ell]=\\mathbb E[P^c_\\ell]$ (2.4)\". Giles (2015), §10.2, p. 62: \"Random numbers can be generated in steps by $I_n\\to U_n\\to Z_n$ where $I_n$ is a random integer on a range $[0,I_{max}]$, $U_n=(I_n+\\frac12)/I_{max}$ is a random, approximately uniformly-distributed variable on the interval $(0,1)$, and $Z_n=\\Phi^{-1}(U_n)$ is the corresponding $N(0,1)$ random variable. When using a Brownian Bridge construction, as long as the $I_n$ are generated in exactly the same way for each level, the other two steps can be performed with the level of accuracy appropriate to the level of the path, i.e. with higher precision on level $\\ell$ than on level $\\ell-1$. The Brownian path being generated for level $\\ell$ is then exactly the same, regardless of whether it is the finer or coarser of the two levels being simulated for a particular multilevel correction. Hence, the telescoping sum will be respected.\"\n\nFor per-level roundings $\\mathrm{rnd}_\\ell:\\mathbb R\\to\\mathbb R$, generators $G_\\ell:\\mathbb N\\to\\mathbb R$ (the step $I\\mapsto Z$ in the precision of level $\\ell$) and a sample of $m$ random integers $I\\in\\mathbb N^m$, $\\mathrm{vpPath}(\\ell,I)_i=\\mathrm{bbPath}(\\mathrm{rnd}_\\ell,T,Z)(\\ell,i)$ for $0\\le i\\le2^\\ell$, where $Z_n=G_\\ell(I_n)$ for $n<m$ and $Z_n=0$ otherwise. Let $\\nu$ be a probability measure on $\\mathbb N$ (the law of each random integer) and $F:\\mathbb R^{\\{0,\\dots,2^\\ell\\}}\\to\\mathbb R$ any function. Then\n$$\n\\int F(\\mathrm{vpPath}(\\ell,I))\\,d\\nu^{\\otimes2^{\\ell+1}}(I)=\\int F(\\mathrm{vpPath}(\\ell,I))\\,d\\nu^{\\otimes2^\\ell}(I),\n$$\nwhatever the roundings and generators of the levels.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §2.1, (2.4), p. 8, and §10.2, p. 62.",
+   "explanation": "`vpPath_castLE` rewrites the left integrand through the restriction to the first $2^\\ell$ integers, which maps $\\nu^{\\otimes2^{\\ell+1}}$ to $\\nu^{\\otimes2^\\ell}$ (`measurePreserving_restrictFin`, from `Measure.map_infinitePi_infinitePi_of_inj` and `Fin.castLE_injective`); every function on the countable discrete space $\\mathbb N^{2^\\ell}$ is measurable.",
+   "tags": [
+    "multilevel-monte-carlo",
+    "probability"
+   ]
+  },
+  "MLMC.vp_telescoping": {
+   "theorem_title": "Giles (2015), §10.2: in variable precision with a Brownian-bridge construction, the telescoping sum is respected",
+   "natural_language_statement": "Giles (2015), §10.2, p. 62: \"Random numbers can be generated in steps by $I_n\\to U_n\\to Z_n$ where $I_n$ is a random integer on a range $[0,I_{max}]$, $U_n=(I_n+\\frac12)/I_{max}$ is a random, approximately uniformly-distributed variable on the interval $(0,1)$, and $Z_n=\\Phi^{-1}(U_n)$ is the corresponding $N(0,1)$ random variable. When using a Brownian Bridge construction, as long as the $I_n$ are generated in exactly the same way for each level, the other two steps can be performed with the level of accuracy appropriate to the level of the path, i.e. with higher precision on level $\\ell$ than on level $\\ell-1$. The Brownian path being generated for level $\\ell$ is then exactly the same, regardless of whether it is the finer or coarser of the two levels being simulated for a particular multilevel correction. Hence, the telescoping sum will be respected.\"\n\nFor per-level roundings $\\mathrm{rnd}_\\ell:\\mathbb R\\to\\mathbb R$, generators $G_\\ell:\\mathbb N\\to\\mathbb R$ (the step $I\\mapsto Z$ in the precision of level $\\ell$) and a sample of $m$ random integers $I\\in\\mathbb N^m$, $\\mathrm{vpPath}(\\ell,I)_i=\\mathrm{bbPath}(\\mathrm{rnd}_\\ell,T,Z)(\\ell,i)$ for $0\\le i\\le2^\\ell$, where $Z_n=G_\\ell(I_n)$ for $n<m$ and $Z_n=0$ otherwise. Let $\\nu$ be a probability measure on $\\mathbb N$, a level-$\\ell$ sample consist of $2^\\ell$ independent integers of law $\\nu$, and $F_\\ell:\\mathbb R^{\\{0,\\dots,2^\\ell\\}}\\to\\mathbb R$ with $I\\mapsto F_\\ell(\\mathrm{vpPath}(\\ell,I))$ integrable for $\\nu^{\\otimes2^\\ell}$. The level-$(\\ell+1)$ correction is $F_{\\ell+1}(\\mathrm{vpPath}(\\ell+1,I))-F_\\ell(\\mathrm{vpPath}(\\ell,I))$ on a level-$(\\ell+1)$ sample $I$ (each path in the precision of its own level). Then for every $L$,\n$$\n\\int F_0(\\mathrm{vpPath}(0,I))\\,d\\nu^{\\otimes1}+\\sum_{\\ell<L}\\int\\big(F_{\\ell+1}(\\mathrm{vpPath}(\\ell+1,I))-F_\\ell(\\mathrm{vpPath}(\\ell,I))\\big)\\,d\\nu^{\\otimes2^{\\ell+1}}(I)=\\int F_L(\\mathrm{vpPath}(L,I))\\,d\\nu^{\\otimes2^L}(I).\n$$",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §10.2, p. 62.",
+   "explanation": "Induction on $L$ with `integral_sub` and `integral_vpCoarse`; the coarse payoff is integrable on the level-$(\\ell+1)$ samples by `vpPath_castLE` and `measurePreserving_restrictFin`.",
+   "tags": [
+    "multilevel-monte-carlo",
+    "probability"
+   ]
+  },
+  "MLMC.roundFixed_sum_inconsistent": {
+   "theorem_title": "Giles (2015), §10.2: summing fine increments rounded to $B_\\ell$ bits does not give the coarse increment rounded to $B_{\\ell-1}$ bits",
+   "natural_language_statement": "Giles (2015), §10.2, p. 62: \"This would not be the case if the increments on level $\\ell$ were generated with $B_\\ell$ bits of accuracy, then summed to give increments for level $\\ell-1$, regardless of whether the truncation to the lower accuracy $B_{\\ell-1}$ took place before or after the summation.\"\n\nLet $\\mathrm{rd}_d(x)=2^{-d}\\,\\mathrm{round}(2^dx)$ be rounding to nearest (ties upwards, $\\mathrm{round}(t)=\\lfloor t+\\frac12\\rfloor$) with exponent $0$ and $d$ bits (`roundFixed 0 d`). Take $B_\\ell=2$, $B_{\\ell-1}=1$ and fine increments $x\\in(0,\\frac1{20})$, $y\\in(\\frac3{20},\\frac15)$. Then\n$$\n\\mathrm{rd}_1(x+y)=0,\\qquad \\mathrm{rd}_1(\\mathrm{rd}_2(x))+\\mathrm{rd}_1(\\mathrm{rd}_2(y))=\\tfrac12,\\qquad \\mathrm{rd}_1\\big(\\mathrm{rd}_2(x)+\\mathrm{rd}_2(y)\\big)=\\tfrac12 :\n$$\nthe level-$(\\ell-1)$ increment of the same Brownian path differs from the sum of the rounded fine increments, whether the truncation to $B_{\\ell-1}$ bits is done before or after the summation. (Pathwise, on a set of increments of positive probability; the laws are not computed.)",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §10.2, p. 62; the rounding is that of I.-B. Haas and M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §4.1.",
+   "explanation": "Evaluate every rounding with `roundFixed_eq_of_floor` (`round_eq`, `Int.floor_eq_iff`): $\\mathrm{rd}_2(x)=0$, $\\mathrm{rd}_2(y)=\\frac14$, $\\mathrm{rd}_1(0)=0$, $\\mathrm{rd}_1(\\frac14)=\\frac12$ (a tie) and $\\mathrm{rd}_1(x+y)=0$, using `norm_num` and `linarith`.",
+   "tags": [
+    "numerical-analysis",
+    "algorithms"
+   ]
   }
  },
  "definitions": {
@@ -5531,6 +5935,16 @@
    "source": "",
    "tags": [
     "multilevel-monte-carlo"
+   ]
+  },
+  "MLMC_ApplicationExtras": {
+   "definition_title": "Giles (2015), §6.2, §7.1, §7.3, §10.2: Lévy pair sums and paths, finite-element rows, the credit-SPDE Milstein step and scheme, and the Brownian-bridge construction in variable precision",
+   "natural_language_statement": "Definitions for the applications of Giles (2015), §6.2 (Lévy processes), §7.1 (finite elements), §7.3 (the credit SPDE) and §10.2 (variable precision arithmetic).\n\n**`levyPairSum`**. For an additive type $M$ and $z\\in M^{\\mathbb N}$ (the increments over the fine steps), the coarse increments $\\mathrm{levyPairSum}(z)_k=z_{2k}+z_{2k+1}$.\n\n**`levyPath`**. For a commutative additive monoid $M$ and $z\\in M^{\\mathbb N}$, the path at the grid points, $\\mathrm{levyPath}(z)_n=\\sum_{i<n}z_i$.\n\n**`hatNodal`**. The nodal values of the hat function $\\varphi_j$ of a uniform mesh: $\\mathrm{hatNodal}(j,i)=1$ if $i=j$ and $0$ otherwise ($i,j\\in\\mathbb N$).\n\n**`feStiffness`**. For $N\\in\\mathbb N$, $h\\in\\mathbb R$, $c:\\mathbb R\\to\\mathbb R$, $u:\\mathbb N\\to\\mathbb R$ and $j\\in\\mathbb N$, the stiffness row with the midpoint rule, $\\sum_{e<N}h\\,c((e+\\frac12)h)\\,\\frac{u_{e+1}-u_e}h\\,\\frac{\\mathrm{hatNodal}(j,e+1)-\\mathrm{hatNodal}(j,e)}h$.\n\n**`feLoad`**. For $N,h$, $f:\\mathbb R\\to\\mathbb R$ and $j$, the load with the midpoint rule, $\\sum_{e<N}h\\,f((e+\\frac12)h)\\,\\frac{\\mathrm{hatNodal}(j,e+1)+\\mathrm{hatNodal}(j,e)}2$.\n\n**`spdeD1`**, **`spdeD2`**. For $h\\in\\mathbb R$, $p:\\mathbb Z\\to\\mathbb R$ and $j\\in\\mathbb Z$: $D_1p_j=(p_{j+1}-p_{j-1})/(2h)$ and $D_2p_j=(p_{j+1}-2p_j+p_{j-1})/h^2$.\n\n**`spdeNoiseOp`**. For $\\rho\\in\\mathbb R$ and $p:\\mathbb R\\to\\mathbb R$, $B p=x\\mapsto-\\sqrt\\rho\\,p'(x)$, with $p'$ Mathlib's `deriv p` (the real square root of a negative number is $0$).\n\n**`spdeMilsteinStep`**. For $\\mu,\\rho,k,\\Delta M\\in\\mathbb R$, $p:\\mathbb R\\to\\mathbb R$ and $x\\in\\mathbb R$: $p(x)+(-\\mu p'(x)+\\frac12p''(x))k+(Bp)(x)\\,\\Delta M+\\frac12(B(Bp))(x)(\\Delta M^2-k)$.\n\n**`spdeScheme`**. For $\\mu,\\rho,h,k,Z\\in\\mathbb R$, $p:\\mathbb Z\\to\\mathbb R$ and $j\\in\\mathbb Z$: $p_j-\\frac{\\mu k+\\sqrt{\\rho k}Z}{2h}(p_{j+1}-p_{j-1})+\\frac{(1-\\rho)k+\\rho kZ^2}{2h^2}(p_{j+1}-2p_j+p_{j-1})$.\n\n**`bbPath`**. For a rounding $r:\\mathbb R\\to\\mathbb R$, $T\\in\\mathbb R$ and inputs $Z\\in\\mathbb R^{\\mathbb N}$, the values $W^{(\\ell)}_i=\\mathrm{bbPath}(r,T,Z)(\\ell,i)$ ($\\ell,i\\in\\mathbb N$), defined by recursion on $\\ell$: $W^{(0)}_0=0$ and $W^{(0)}_i=r(\\sqrt T\\,Z_0)$ for $i\\ge1$; $W^{(\\ell+1)}_i=W^{(\\ell)}_{i/2}$ for even $i$ and $W^{(\\ell+1)}_i=r\\big(\\frac12(W^{(\\ell)}_{\\lfloor i/2\\rfloor}+W^{(\\ell)}_{\\lfloor i/2\\rfloor+1})+\\frac12\\sqrt{T/2^\\ell}\\,Z_{2^\\ell+\\lfloor i/2\\rfloor}\\big)$ for odd $i$. This is the Brownian-bridge (Lévy–Ciesielski) construction: for $r=\\mathrm{id}$ and i.i.d. $N(0,1)$ inputs, $(W^{(\\ell)}_i)_{i\\le2^\\ell}$ has the law of a Brownian motion at the times $iT2^{-\\ell}$ (a classical fact that the formalisation does not use).\n\n**`vpInputs`**. For $G:\\mathbb N\\to\\mathbb R$, $m\\in\\mathbb N$ and $I\\in\\mathbb N^m$ (a sample of random integers), the inputs $n\\mapsto G(I_n)$ for $n<m$ and $0$ for $n\\ge m$.\n\n**`vpPath`**. For roundings $\\mathrm{rnd}:\\mathbb N\\to(\\mathbb R\\to\\mathbb R)$, generators $G:\\mathbb N\\to(\\mathbb N\\to\\mathbb R)$, $T$, $\\ell$ and $I\\in\\mathbb N^m$, the vector $\\big(\\mathrm{bbPath}(\\mathrm{rnd}_\\ell,T,\\mathrm{vpInputs}(G_\\ell,I))(\\ell,i)\\big)_{0\\le i\\le2^\\ell}$: the level-$\\ell$ Brownian values computed in the precision of level $\\ell$.\n\n**Formalization Note** Rounding and generation are arbitrary functions, so any precision model fits; the Gaussian law of the construction is not used.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §6.2 (pp. 47–48), §7.1 (p. 49), §7.3 (pp. 53–54) and §10.2 (p. 62).",
+   "tags": [
+    "multilevel-monte-carlo",
+    "numerical-analysis",
+    "probability"
    ]
   }
  }

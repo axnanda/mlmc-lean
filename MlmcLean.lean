@@ -88,6 +88,12 @@
 -- * `MlmcLean.SDEMisc` — Giles §5.3, §5.6, §5.7: the antithetic bound for smooth payoffs in d
 --   dimensions and for the call option, explicit versus tamed Euler steps for super-linear
 --   drift, the smoothed CDF for any bounded smoother, the density of a d-dimensional output
+-- * `MlmcLean.SDEDigital` — Giles §5.1–§5.4: Lipschitz payoffs, the digital-option variance from
+--   the strong error (O(h^{1/3}), sharp; β = 1/3 for GBM with no assumption), smoothing by
+--   conditional expectation (Φ formulas, (2.4), V₀ = 0), change of measure, the call derivative
+-- * `MlmcLean.ApplicationExtras` — Giles §6.2, §7.1, §7.3, §10.2: summed Lévy increments keep
+--   the law ((2.4)), exponential periods, FE = FD, random-K elliptic rates (no deterministic K
+--   exists), the SPDE Milstein scheme, the Brownian-bridge and variable-precision paths
 import MlmcLean.Allocation
 import MlmcLean.Estimator
 import MlmcLean.LevelDiff
@@ -137,3 +143,5 @@ import MlmcLean.AsymptoticNormal
 import MlmcLean.PoissonGrids
 import MlmcLean.HaasGilesRemarks
 import MlmcLean.SDEMisc
+import MlmcLean.SDEDigital
+import MlmcLean.ApplicationExtras
