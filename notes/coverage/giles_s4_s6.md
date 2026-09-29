@@ -1,0 +1,215 @@
+# Coverage audit C3: Giles (2015), §4 to §6 (giles2015.txt lines 1233–2096, pp. 28–48)
+
+I audited this range independently and did not change the repository. I read the text from
+`docs/giles2015.txt` and checked the garbled formulas on typeset pages 29, 33, 36, 38, 39, 42, 43
+and 48. On the Lean side I read the statements (not only the docstrings) in `EulerMaruyama`,
+`SDEExtras`, `GBMEulerMaruyama`, `GBMMilstein`, `PDEExamples` (`milsteinStep`), `Corrections`,
+`ErrorAnalysis` (kurtosis), `GeometricRates`, `CostComparison`, `Complexity` and `LevelDiff`,
+together with `scripts/AxiomCheck.lean`. For documentation I checked README.md, PLAN.md,
+`notes/statement-audit.md`, `notes/research-notes.md`, `notes/readbacks/*` and the module
+docstrings.
+
+Every theorem named below is listed in `scripts/AxiomCheck.lean`, and "(def)" marks a definition.
+
+**Documentation levels for OUT-OF-SCOPE items**
+* **explicit**: the item itself is named as not formalised. Examples are README l.28–33, PLAN
+  "Out of scope" and "Not formalised", and the `SDEExtras.lean` header ("strong order ½ of
+  Euler–Maruyama, order 1 of Milstein, the Brownian-bridge results … are not formalised").
+* **generic**: only the blanket statements cover the item. README l.28–33 says "The convergence
+  orders of the discretisations themselves (Euler–Maruyama, Milstein, …) are not formalised in
+  general: Mathlib has no Itô calculus", and PLAN "Out of scope" says "rate assumptions … for
+  general SDEs". PLAN l.159–160 also files "tables" under "numerical or empirical". That is wrong
+  for the *analysis* columns of Table 5.2 and for Table 6.3, which list proved rates.
+* **none**: no documentation mentions the item. §6 appears nowhere in README, PLAN or notes, and
+  README's scope list names §1–§3, §5 and §7–§10 but not §6.
+
+## Table
+
+| id | line / page | claim (short quote) | status | Lean name(s) | notes |
+|---|---|---|---|---|---|
+| G4-01 | 1240–1242 / p.28 | "How are the levels defined?" | N/A | — | question |
+| G4-02 | 1243–1248 | "How are the coarse and fine samples coupled …?" | N/A | — | question; couplings are formalised per application (EM: `measurePreserving_pairAvg`; antithetic: `measurePreserving_swapIncrements`) |
+| G4-03 | 1249–1254 | discontinuous output ⇒ "O(1) value for Pℓ−Pℓ−1 … larger variance, and hence a lower value for β" | N/A | — | heuristic; the concrete instance is G5.1-25 |
+| G4-04 | 1255–1258 | different coarse/fine approximations "provided always that the identity (2.4) is respected, so that the telescoping sum is still valid" | DONE | `integral_fineCoarseDiff`, `giles_theorem1_fineCoarse`, `giles_theorem1_corrections` | §2.1 result |
+| G4-05 | 1259–1265 | exploiting the coarse/fine flexibility to beat the variance rate implied by the strong rate | N/A | — | prose; instance G5.3-07…09 |
+| G4-06 | 1266–1269 | status of supporting numerical analysis | N/A | — | |
+| G5.1-01 | 1276–1277 / p.29 | SDE dS = a(S,t)dt + b(S,t)dW | N/A | — | definition. No SDE or Itô solution in Lean (README l.28–33); GBM uses its closed form `gbmExact` (def) |
+| G5.1-02 | 1278–1280 | EM: Ŝ_{n+1} = Ŝ_n + a(Ŝ_n,t_n)h + b(Ŝ_n,t_n)ΔW_n | DONE | `emPath` (def), `emPath_gbm` | ΔW_n = √h·Z_n, Z_n iid N(0,1) (`stdNormalSeq`) |
+| G5.1-03 | 1281–1285 | "hℓ = h0 M^ℓ [sic], for some integer M"; h0 often T "but this is not required" | DONE-DEV | `emFine`, `emCoarse` (defs), `timestep_rate` | Paper typo: M^ℓ should read M^{−ℓ}. The Lean coupling fixes M = 2 and h0 = T (h_ℓ = T·2^{−ℓ}, as in HG25 (4)–(5)); `timestep_rate` handles rates for M = 2^k. The EulerMaruyama.lean header states this, but no list of deviations includes it. General integer M (sum of M increments divided by √M) would be an easy extension |
+| G5.1-04 | 1285–1289 | too large h0 ⇒ poor control variate; start with smaller h0 | N/A | — | advice |
+| G5.1-05 | 1290–1293 | "summing the Brownian increments for the fine path timesteps to obtain the Brownian increments for the coarse timesteps" | DONE | `emCoarsePath_two_mul`, `emCoarsePath_succ`, `eq_emCoarsePath`, `map_pairSum_gaussian`, `measurePreserving_pairAvg`, `emCoarse_eq`, `integral_emCoarse` | M = 2 |
+| G5.1-06 | 1293–1295 | "the natural one defined in (2.2)" | DONE | `em_mlmc_theorem1` | `blockMean` of `fineCoarseDiff` with emCoarse = emFine ∘ pairAvg; (2.4) is proved, not assumed |
+| G5.1-07 | 1296–1301 | strong error O(h^{1/2}), "E[‖S−Ŝ‖²] = O(h)" (general SDE, K–P Thm 10.2.2) | OUT-OF-SCOPE | — | doc: explicit (README l.28–33; PLAN Out of scope; SDEExtras header) |
+| G5.1-08 | 1296–1301 | the same, GBM instance | DONE-DEV | `gbm_em_strong_error`, `gbm_strong_error`, `gbmExp_eq_prod`, `integral_sq_prod_sub_prod` | E[(S_{t_n}−Ŝ_n)²] ≤ C(t_n)·h at each grid time. This is not the path (sup-norm) error that Asian or lookback payoffs need. Documented in the GBMEulerMaruyama header ("at every grid time") and notes/readbacks/README.md |
+| G5.1-09 | 1302–1304 | Lipschitz payoffs "(such as European, Asian and lookback options)" | MISSING | — | Trivial: the call max(S_T−K,0), the path average and the path max/min are 1-Lipschitz (sup norm). Lean only assumes a Lipschitz g of S_T, and no path-dependent payoff appears anywhere |
+| G5.1-10 | 1305–1306 | V[P−Pℓ] ≤ E[(P−Pℓ)²] ≤ K²E[‖S−Ŝℓ‖²] | DONE | `variance_sub_le_of_lipschitz` | D = ‖S−Ŝℓ‖ abstract, D² integrable |
+| G5.1-11 | 1309–1311 | Vℓ ≤ 2(V[P−Pℓ] + V[P−Pℓ−1]) | DONE | `variance_levelDiff_le`, `variance_sub_le_two_mul` | L² hypotheses (standing) |
+| G5.1-12 | 1313 | "and hence Vℓ = O(hℓ)" | DONE | `variance_levelDiff_of_strong`; GBM: `gbm_correction_variance_le` | the general case is conditional on the mean-square rate (OOS input, G5.1-07) |
+| G5.1-13 | 1317–1320 / p.30 | hℓ = 4^{−ℓ}h0 ⇒ α=β=γ=2; hℓ = 2^{−ℓ}h0 ⇒ α=β=γ=1 | DONE-DEV | `timestep_rate`; GBM: `gbm_correction_variance_le` (β=1), cost 2^ℓ (γ=1), `gbm_weak_error_le` (α=½) | The algebra is done given weak order 1. α = 1 (EM weak order 1) is not proved even for GBM: only α = ½ follows from the strong rate. This is documented in notes/readbacks/README.md (8th round) and README ("weak rate α = ½"), and it is harmless for Theorem 1 because α ≥ ½·min(β,γ). No separate GBM statement for M = 4 |
+| G5.1-14 | 1320–1321 | "Theorem 1 gives the complexity … O(ε^{−2}(log ε)²)" | DONE | `em_complexity`, `em_mlmc_theorem1`, `gbm_mlmc_theorem1` | GBM: unconditional, cost Σ N_ℓ·2^ℓ |
+| G5.1-15 | 1321–1323 | "near-optimal as Creutzig, Dereich, Müller-Gronbach and Ritter (2009) prove an O(ε^{−2}) lower bound" | OUT-OF-SCOPE | — | an information-based lower bound over SDE path functionals; `mc_cost_lower` covers only the plain sample mean. doc: none |
+| G5.1-16 | 1323–1325 | CDMR: MLMC achieves the worst-case optimal O(ε^{−2}(log ε)²) for Lipschitz path-dependent functions | OUT-OF-SCOPE | — | doc: none |
+| G5.1-17 | 1326–1330 | Fig. 5.3 problem: GBM dS = rS dt + σS dW, P = e^{−rT}max(S_T−K,0), r=0.05, σ=0.2, T=1, S0=K=100 | DONE | `gbmDrift`, `gbmVol`, `gbmExact`, `europeanPayoff` (defs), `gbm_mlmc_theorem1` | covers any K-Lipschitz g(S_T), with the discount factor inside g. The call itself is not instantiated (G5.1-09); parameter values N/A |
+| G5.1-18 | 1331–1336 | slopes ≈ −1 of log2 V and log2 abs(mean) ⇒ V ∝ hℓ, "O(hℓ) weak convergence" | N/A | — | numerical |
+| G5.1-19 | 1337–1339 | consistency fine; "kurtosis is actually improving slightly" | N/A | — | numerical |
+| G5.1-20 | 1340–1346 | levels increase as ε decreases; many samples on the coarsest level | N/A | — | numerical |
+| G5.1-21 | 1346–1348 | "Nℓ ∝ √(Vℓ/Cℓ) ≈ 2^{−ℓ}" | DONE | `lagrangeN_geometric` | instance β = γ = 1 of the general statement |
+| G5.1-22 | 1349–1355 | ε²C ≈ const with a slight rise from the log² term; MC/MLMC cost ratio 5–12 | N/A | (`mc_complexity`) | numerical |
+| G5.1-23 | 1356–1358 | digital payoff 10·e^{−rT}·H(S_T−K) | N/A | — | definition |
+| G5.1-24 | 1358–1359, 1435 / p.33 | most fine/coarse pairs end on the same side of K ⇒ Pℓ−Pℓ−1 = 0 | N/A | — | heuristic |
+| G5.1-25 | 1436–1442 | strong error O(h^{1/2}) + "bounded density of paths terminating in the neighbourhood of K" ⇒ O(h^{1/2}) fraction with Pℓ−Pℓ−1 = ±1 ⇒ "Vℓ = O(h^{1/2})" | MISSING | — | The probabilistic step is absent. In Avikainen's form: if X has density ≤ ρ̄, then P(1{X>K} ≠ 1{Y>K}) ≤ 2ρ̄δ + P(‖X−Y‖>δ), which bounds V[H(X−K)−H(Y−K)]. It is pure probability and the discontinuous-payoff counterpart of `variance_sub_le_of_lipschitz`. The SDE rate itself is OOS (generic). For GBM (lognormal S_T) with `gbm_strong_error` it would give O(h^{1/3}) |
+| G5.1-26 | 1443–1446 | "E[(Pℓ−Pℓ−1)⁴] = O(h^{1/2}) and so the kurtosis is O(h^{−1/2})" | DONE | `kurtosis_of_ternary`, `kurtosis_const_mul` | exact κ = 1/P(ΔP≠0) for values in {0, ±c}; the paper's O means Θ |
+| G5.1-27 | 1447–1449 | "α=1, β=½, γ=1, leading to the MLMC complexity being O(ε^{−2.5})" | DONE | `digital_em_complexity`, `em_mlmc_theorem1` | Rates enter as hypotheses. α = 1 (digital weak order) and β = ½ are OOS (generic) |
+| G5.1-28 | 1449–1451 | worse complexity visible; smaller savings vs MC | N/A | — | numerical |
+| G5.1-29 | Table 5.2, l.1427 / p.33 | EM, Lipschitz, analysis O(h) | DONE-DEV | `gbm_correction_variance_le`, `variance_levelDiff_of_strong` | GBM European only (documented); general scalar SDE OOS (generic) |
+| G5.1-30 | Table 5.2, l.1428 | EM, Asian, analysis O(h) | OUT-OF-SCOPE | — | Giles–Higham–Mao 2009. doc: generic (PLAN mislabels tables as numerical). Even the GBM discrete-average case is missing, although it would follow from `gbm_em_strong_error` by Jensen |
+| G5.1-31 | Table 5.2, l.1429 | EM, lookback, analysis O(h) | OUT-OF-SCOPE | — | needs an extremum (sup-norm) error bound. doc: generic |
+| G5.1-32 | Table 5.2, l.1430 | EM, barrier, analysis o(h^{1/2−δ}) | OUT-OF-SCOPE | — | doc: generic |
+| G5.1-33 | Table 5.2, l.1431 | EM, digital, analysis O(h^{1/2}·log h) (Avikainen) | OUT-OF-SCOPE | — | doc: generic; see G5.1-25 for the formalisable step |
+| G5.1-34 | Table 5.2 numerics columns | observed O(h), O(h^{1/2}), O(h²), O(h^{3/2}) | N/A | — | numerical (both schemes) |
+| G5.1-35 | 1452–1459 | Asian = average, lookback = max/min, barrier = discontinuous in the max/min; attributions | N/A | — | definitions and citations |
+| G5.2-01 | 1461–1463 / p.33 | "For Lipschitz payoffs, the variance Vℓ … converges at twice the order of the strong convergence" | DONE | `variance_sub_le_of_lipschitz` + `variance_levelDiff_of_strong` | conditional on the strong rate |
+| G5.2-02 | 1463–1500 / p.35 | Milstein "gives first order strong convergence under certain conditions" (K–P Thm 10.3.5) | OUT-OF-SCOPE | — | general SDE. doc: explicit (README l.28–33, PLAN, SDEExtras header) |
+| G5.2-03 | 1463–1500 | the same, GBM instance | DONE-DEV | `gbm_mil_strong_error`, `gbm_mil_strong_error_level`, `milsteinPath_gbm`, `integral_sq_prod_sub_prod_of`, `abs_pow_sub_two_mul_pow_add_pow_le` | E[(S_{t_n}−Ŝ_n)²] ≤ C(t_n)·h² at grid times, not the max over the grid (documented in notes/readbacks/README.md, 9th round) |
+| G5.2-04 | 1501–1506 | scalar Milstein Ŝ_{n+1} = Ŝ_n + a h + bΔW + ½ b ∂b/∂S (ΔW² − h) with coefficients at (Ŝ_n, t_n) | DONE-DEV | `milsteinStep` (def, PDEExamples), `milsteinPath` (def), `milsteinPath_gbm` | time-independent a(S), b(S) only; the `milsteinPath` docstring says so |
+| G5.2-05 | 1507–1510 | GBM call: "Vℓ is now O(hℓ²), leading to α=1, β=2, γ=1" | DONE | `gbm_mil_correction_variance_le`, `gbm_mil_weak_error_le`, `gbm_mil_mlmc_theorem1` | any Lipschitz g(S_T); cost 2^ℓ; complexity ε^{−2} |
+| G5.2-06 | 1510–1511 | "significant reduction in the total computational cost" vs EM | N/A | (`milstein_complexity`, `em_complexity`) | numerical; the orders ε^{−2} and ε^{−2}(log ε)² are done |
+| G5.2-07 | 1512–1513 | "Because β > γ, the dominant computational cost is on the coarsest levels" | DONE | `coarsest_level_dominant`, `summable_sqrt_Vb_mul_Cb` | §2.1 remark |
+| G5.2-08 | 1513–1524 | coarse levels suit QMC; Giles–Waterhouse: MLMC+QMC best, ε^{−2} → ≈ε^{−1.5} | N/A | — | empirical; PLAN lists QMC rates as not formalised |
+| G5.2-09 | 1525–1532 | natural estimator for the digital: O(1) difference on an O(hℓ) fraction ⇒ Vℓ = O(hℓ), "kurtosis which is O(hℓ^{−1})" | PARTIAL | `kurtosis_of_ternary`, `kurtosis_const_mul` | The kurtosis step is done. The variance step needs the lemma missing in G5.1-25, and the rate is OOS (generic) |
+| G5.2-10 | 1532–1538 | different Pc, Pf "based on … conditional expectation, splitting, change of measure" (§2.1 ideas) | DONE | `giles_theorem1_fineCoarse`, `integral_fineCoarseDiff` | framework |
+| G5.2-11 | 1539–1559 / p.36 | EM last step ⇒ Ŝ_N Gaussian given Ŝ_{N−1}; "Pf_ℓ = 25 exp(−rT) Φ((Ŝ^f_{N−1} + a hℓ − K)/(b √hℓ))" | MISSING | — | Two pieces are missing: the Gaussian identity E[H(x + ah + b√h·Z − K)] = Φ((x+ah−K)/(b√h)) for b>0, and its conditional-expectation form (Ŝ_{N−1} is independent of the last increment). Mathlib has `gaussianReal` and `cdf`. The paper's constant 25 conflicts with the 10 in G5.1-23 |
+| G5.2-12 | 1560–1574 | coarse path reuses ΔW_{N−2}; "Pc_{ℓ−1} = 25 exp(−rT) Φ((Ŝ^c_{N−2} + a h_{ℓ−1} + b·[ΔW_{N−2}] − K)/(b √hℓ))" | MISSING | — | same lemma. Paper typo: the numerator prints b√hℓ where b·ΔW_{N−2} is meant |
+| G5.2-13 | 1563–1566 | coarse conditional law at maturity matches the fine one "to within O(h), for both the mean and the standard deviation" (GDR 2013) | OUT-OF-SCOPE | — | SDE analysis. doc: generic |
+| G5.2-14 | 1575–1577 | payoff difference O(h^{1/2}) near the discontinuity ⇒ variance "approximately O(h^{3/2})", kurtosis "approximately O(h^{−1/2})" | OUT-OF-SCOPE | — | heuristic resting on G5.2-13; the final arithmetic (an O(h^{1/2}) difference on an O(h^{1/2})-probability band) is elementary but not stated. doc: generic |
+| G5.2-15 | 1577–1578 | "α=1, β=3/2 and γ=1. Since β > γ, the MLMC complexity is O(ε^{−2})" | DONE | `milstein_complexity` | complexity; rates are hypotheses |
+| G5.2-16 | 1579–1580 | illustrated by Figure 5.6 | N/A | — | numerical |
+| G5.2-17 | 1580–1583 | "zero variance on the coarsest level … the conditional expectation is taken immediately and every sample gives the same payoff" | MISSING | — | trivial: P_0 = Φ(·)(S_0) is deterministic, so V = 0; a corollary of G5.2-11 |
+| G5.2-18 | 1584–1590 | "E[Pc_{ℓ−1}] = E[Pf_{ℓ−1}] … This ensures that the identity in Equation (2.4) is respected" | DONE | `integral_condExp_eq_of_map_eq`, `integral_fineCoarseDiff` | Equal laws of the terminal values are assumed (`hlaw`). Not instantiated for the Milstein scheme with an EM last step (a pairAvg argument) |
+| G5.2-19 | 1591–1600 | splitting: "averaging over a number of sub-samples"; "the variance is the same, to leading order, without any increase in the computational cost, again to leading order" | PARTIAL | `splitting_mean_variance` | Exact result proved: same mean, V = V[m] + E[v]/M. Missing: the leading-order statement, i.e. a choice of M with E[v]/M = o(V[m]) and extra cost M = o(h^{−1}). The arithmetic is trivial once rates for E[v] and V[m] (SDE-dependent) are assumed. The docstring says only that M can make E[v]/M small |
+| G5.2-20 | 1635–1636 / p.38 | splitting is the author's preferred approach; can revert to Milstein in the last step | N/A | — | |
+| G5.2-21 | 1637–1646 | change of measure: sample from "a third Gaussian distribution … a Radon–Nikodym derivative for each path … the difference in the payoffs … due to the difference in their Radon–Nikodym derivatives" | MISSING | — | The unbiasedness identity E_{N(m,s²)}[g·φ_f/φ] = E_{N(m_f,s_f²)}[g] (hence (2.4)) is elementary (`gaussianPDFReal`, `withDensity`); easy to moderate |
+| G5.2-22 | 1647–1649 | for digitals "more complicated … and the resulting variance is no better" | N/A | — | empirical |
+| G5.2-23 | 1651–1662 | discrete min/max: "O(h^{1/2}) variation … therefore … an O(hℓ) difference on average" ⇒ O(hℓ) variance (lookback), O(hℓ^{1/2}) (barrier) | OUT-OF-SCOPE | — | SDE/BM extremes. doc: generic. Paper inconsistency: an O(hℓ^{1/2}) difference is meant, since O(hℓ) would give O(hℓ²) variance. The lookback step is `variance_sub_le_of_lipschitz`; the barrier step needs the G5.1-25 lemma |
+| G5.2-24 | 1663–1672 | fine interpolant Ŝ^f(t) = Ŝ^f_n + λ(Ŝ^f_{n+1}−Ŝ^f_n) + b^f_n(W(t)−W_n−λ(W_{n+1}−W_n)) | DONE | `bridgeInterp` (def) | definition |
+| G5.2-25 | 1673–1678 | the interpolant is BM with constant drift and volatility; "standard results for the distribution of the minimum or maximum within each fine timestep" | OUT-OF-SCOPE | — | reflection principle. doc: explicit (SDEExtras header: "the Brownian-bridge results … are not formalised") |
+| G5.2-26 | 1679–1689 / p.38–39 | coarse interpolant on [t_n, t_n+2h] | DONE | `bridgeInterp` (def) | |
+| G5.2-27 | 1689–1698 | Ŝ^c(t_{n+1}) = ½(Ŝ^c_n+Ŝ^c_{n+2}) + ½b^c_n((W_{n+1}−W_n)−(W_{n+2}−W_{n+1})) | DONE | `bridgeInterp_midpoint` | ring identity; paper typo b(Ŝ^c_n, c_n) for t_n |
+| G5.2-28 | 1699–1701 | "The standard Brownian path results can then be used to obtain the coarse path payoff approximations" | OUT-OF-SCOPE | — | doc: explicit (as G5.2-25). The discrete Gaussian-bridge midpoint law (formalisable) is not stated either |
+| G5.2-29 | 1702–1703 | "β=2 for lookback options, and β=1.5 for barrier options" (Giles 2008a) | OUT-OF-SCOPE | — | doc: explicit (Brownian-bridge results) and generic (SDE rates) |
+| G5.2-30 | 1703–1704 | "we remain in the regime where β>γ and the overall complexity is O(ε^{−2})" | DONE | `milstein_complexity` | |
+| G5.2-31 | Table 5.2, l.1427 | Milstein, Lipschitz, analysis O(h²) | DONE-DEV | `gbm_mil_correction_variance_le` | GBM European only; general case OOS (generic) |
+| G5.2-32 | Table 5.2, l.1428 | Milstein, Asian, analysis O(h²) | OUT-OF-SCOPE | — | doc: generic |
+| G5.2-33 | Table 5.2, l.1429 | Milstein, lookback, analysis o(h^{2−δ}) | OUT-OF-SCOPE | — | doc: generic |
+| G5.2-34 | Table 5.2, l.1430 | Milstein, barrier, analysis o(h^{3/2−δ}) | OUT-OF-SCOPE | — | doc: generic |
+| G5.2-35 | Table 5.2, l.1431 | Milstein, digital, analysis o(h^{3/2−δ}) | OUT-OF-SCOPE | — | doc: generic |
+| G5.2-36 | 1705–1707 | Table 5.2 summary; "supporting numerical analysis by Giles et al. (2013)" | N/A | — | citation |
+| G5.3-01 | 1709–1714 / p.39 | commutative multi-d SDEs: Milstein "requires only Brownian increments", "most of the analysis above carries over" | OUT-OF-SCOPE | — | iterated Itô integrals. doc: generic |
+| G5.3-02 | 1715–1719 | 1-D min/max results do not extend to correlated Brownian motions | N/A | — | remark on BM theory |
+| G5.3-03 | 1719–1722 | weighted-average options: per-asset Brownian interpolation gives one for the average, then the 1-D results apply | OUT-OF-SCOPE | — | doc: explicit (Brownian-bridge results). The linearity of `bridgeInterp` in (S, b·W) is trivial but not stated |
+| G5.3-04 | 1723–1727 | Figs 5.7–5.8: variance O(h²) lookback, O(h^{3/2}) barrier (5 assets) | N/A | — | numerical |
+| G5.3-05 | 1728–1731 | non-commutative case: Milstein needs Lévy areas, "relatively easily simulated in 2D" only | OUT-OF-SCOPE | — | doc: generic |
+| G5.3-06 | 1731–1733 | Clark–Cameron: "O(h^{1/2}) strong convergence is the best that can be achieved in general using only Brownian increments" | OUT-OF-SCOPE | — | doc: generic at best (the lower bound is never mentioned) |
+| G5.3-07 | 1734–1736, 1800–1808 / p.42 | Yℓ = Nℓ^{−1} Σ ½(Pℓ(ωi)+Pℓ(ωi^a)) − Pℓ−1(ωi); ω^a swaps the fine increments within each coarse step | DONE | `antitheticDiff` (def), `integral_antitheticDiff`, `giles_theorem1_antithetic`, `pairSwap`, `swapIncrements` (defs), `measurePreserving_swapIncrements` | the swap preserves any iid product law |
+| G5.3-08 | 1809–1810 | "the average of the fine and antithetic paths is within O(h) of the coarse path" | OUT-OF-SCOPE | — | Giles–Szpruch analysis; it enters `variance_antithetic_le` as hypothesis h1. doc: generic |
+| G5.3-09 | 1810–1811 | "and hence the multilevel variance is O(h²) for smooth payoffs" | PARTIAL | `abs_antithetic_le`, `variance_antithetic_le` | Proved only for scalar A, B, C and f: ℝ→ℝ, conditional on the O(h) closeness and fourth moments O(h²). §5.3 concerns d-dimensional SDEs (f: ℝ^d→ℝ with a Lipschitz gradient). Undocumented. Moderate effort: the same Taylor bound in an inner-product space |
+| G5.3-10 | 1811–1812 | "and O(h^{3/2}) for the standard European call option" | MISSING | — | The conditional analogue of `variance_antithetic_le` for the kinked payoff is missing. It needs strong-error moments and a bounded density of the coarse value near K; pure probability, moderate effort; the SDE inputs are OOS |
+| G5.3-11 | 1813–1818 | Giles–Szpruch 2013: lookback/barrier via Lévy-area sub-sampling, "O(h^{3/4}) strong convergence", antithetic treatment at the finest level | OUT-OF-SCOPE | — | doc: generic |
+| G5.4-01 | 1820–1825 / p.42 | pathwise sensitivity analysis (Broadie–Glasserman; IPA) | N/A | — | description |
+| G5.4-02 | 1826–1827 | "the derivative of a call option payoff function is discontinuous" | MISSING | — | trivial: the derivative is H(S−K) away from K |
+| G5.4-03 | 1827–1829 | hence call sensitivities have digital-like difficulties | N/A | — | heuristic |
+| G5.4-04 | 1829–1832 | digital sensitivities: conditional expectation first, then pathwise sensitivity analysis | OUT-OF-SCOPE | — | needs the SDE tangent process. doc: none (§5.4 is not mentioned anywhere) |
+| G5.4-05 | 1833–1835 | Burgos–Giles (2012); variance analysis in Burgos (2014) | N/A | — | citation |
+| G5.5-01 | 1837–1855 / p.42–43 | Feynman–Kac: u(x,t) = E[f(S_T)1_{τ≥T} + g(S_τ)1_{τ<T} ∣ S_t = x], τ = inf{t : S_t ∉ V} | OUT-OF-SCOPE | — | Itô calculus plus PDE. doc: none (only README's blanket "no Itô calculus") |
+| G5.5-02 | 1856–1859 | interest in estimating exit times | N/A | — | |
+| G5.5-03 | 1860–1864 | Higham–Mao–Roj–Song–Yin: MLMC for E[τ] with EM "at a computational cost which is O(ε^{−3}·abs(log ε)^{1/2})" | OUT-OF-SCOPE | — | exit-time rates; the log^{1/2} factor falls outside Theorem 1's form. doc: none |
+| G5.5-04 | 1864–1865 | "better than the O(ε^{−4}) complexity of a standard Monte Carlo simulation" | OUT-OF-SCOPE | (`mc_complexity`) | would follow from `mc_complexity` with α=½, γ=1, but the paper does not give the rate. doc: generic |
+| G5.5-05 | 1865–1868 | "not better than … Gobet and Menozzi (2010) … weak order … first order" | OUT-OF-SCOPE | (`mc_complexity`) | implicitly ε^{−3}. doc: generic |
+| G5.5-06 | 1869–1874 | Primozic (2011): Milstein plus Brownian interpolation for the crossing probability, "giving α=1, β=3/2 and γ=1" | OUT-OF-SCOPE | — | rates. doc: explicit (Brownian-bridge results) and generic |
+| G5.5-07 | 1869–1870 | "an O(ε^{−2}) complexity for a one-dimensional problem" | DONE | `milstein_complexity` | the docstring cites Primozic, §5.5 |
+| G5.5-08 | 1875–1877 | can be extended to commutative multi-d SDEs | N/A | — | |
+| G5.6-01 | 1879–1882 / p.43 | one coarse timestep sufficed in the examples above | N/A | — | |
+| G5.6-02 | 1883–1891 | drift (θ−S_t)/τ: explicit EM "h0 … cannot be much larger than τ without encountering severe numerical stability problems" | DONE-DEV | `emMeanRevert` (def), `emMeanRevert_iterate`, `emMeanRevert_bounded` (h ≤ 2τ), `emMeanRevert_unbounded` (h > 2τ) | drift part only (deterministic linear stability), as the docstring says |
+| G5.6-03 | 1890–1891 | "a natural restriction shared by explicit discretisations of ordinary differential equations" | N/A | — | the Lean result is exactly the ODE statement |
+| G5.6-04 | 1892–1897 / p.44 | super-linear growth (dS = −S³dt + dW) "again leads to numerical instability if a uniform timestep is used" | MISSING | — | The deterministic analogue is easy: for every h>0, x ↦ x − hx³ diverges from abs(x0) ≥ √(3/h), unlike `emMeanRevert_bounded`. The stochastic version (HJK 2011, E abs(Ŝ_N)^p → ∞) is discrete-time but hard. doc: none |
+| G5.6-05 | 1897–1900 | the tamed scheme "limits the size of the drift term … to avoid this instability" | MISSING | — | The deterministic analogue is easy: the tamed increment has size ≤ 1, so orbits stay within max(abs(x0), 1). Uniform moment bounds (HJK 2012) are hard. doc: none |
+| G5.6-06 | 1901–1905 | drift-implicit methods; integrating-factor change of variables (Heston) | N/A | — | pointers |
+| G5.6-07 | 1906–1914 | Hoel et al.: nested adaptive steps ⇒ "the payoff Pℓ … is the same … and therefore the MLMC telescoping summation is respected" | DONE | `sum_integral_levelDiff`, `integral_fineCoarseDiff` (Pf = Pc) | The abstract identity is done. The adaptive construction (BM at path-dependent times) is not formalised, and only Algorithm 3 is documented |
+| G5.6-08 | 1915–1916 | adjoint/dual sensitivities choose the timestep | N/A | — | |
+| G5.6-09 | 1917–1966 / p.44–45 | independent adaptation hℓ = 2^{−ℓ}H(Ŝ_n); W sampled on the union of the times by summing independent increments; Algorithm 3 | OUT-OF-SCOPE | — | doc: explicit (PLAN "Not formalised": "Algorithm 3 with path-dependent timesteps (§5.6, needs Brownian motion at stopping times)") |
+| G5.7-01 | 1973–1977 / p.46 | Kebaier–Kohatsu-Higa: Malliavin calculus with a two-level density estimator | N/A | — | citation |
+| G5.7-02 | 1978–1983 | CDF represented by a polynomial spline (Giles et al. 2014) | N/A | — | method; no error statement given |
+| G5.7-03 | 1983–1985 | "C(x) ≡ E[1_{P<x}] ≡ E[H(x−P)]" | DONE | `abs_smoothCDF_sub_le`, `tendsto_smoothCDF` (C(x) = μ.real{P<x}), `smooth_step_eventually` (H(y) = 1_{y>0}) | definitional |
+| G5.7-04 | 1986–1990 | "Cδ(x) = E[g((x−P)/δ)]", g continuous, g=0 for x<−1, g=1 for x>1 | DONE | `smoothCDF` (def) | |
+| G5.7-05 | 1990–1991 | "As δ→0, g(x/δ)→H(x)" | DONE | `smooth_step_eventually` | for x ≠ 0 (false at 0 in general; implicit in the paper) |
+| G5.7-06 | 1991 | "and the accuracy improves" | PARTIAL | `abs_smoothCDF_sub_le` (error ≤ P(abs(P−x) ≤ δ)), `tendsto_smoothCDF` (→ C(x) if P has no atom at x) | Both add the hypothesis 0 ≤ g ≤ 1, which the paper does not state: its g is any continuous function with the boundary values, and higher-order smoothers must overshoot [0,1]. For bounded g the bound becomes (1 + sup abs g)·P(abs(P−x) ≤ δ), an easy fix. Undocumented deviation (Lean needs only measurable g, which is weaker than continuity) |
+| G5.7-07 | 1991–1992 | "but the variance of the multilevel estimator increases" | N/A | — | Heuristic: at a fixed level the variance tends to the digital variance. The formal content would be a Lipschitz bound ∝ δ^{−2}E[(ΔP)²] |
+| G5.7-08 | 1992–1995 | spline, smoothing, discretisation and sampling errors; "balancing these errors" | N/A | — | qualitative, no formula |
+| G5.7-09 | 1995–1997 | "substantial improvement in the order of complexity" | N/A | — | no rate stated |
+| G5.7-10 | 1998–2006 | "ρ(x) = lim_{δ→0} E[δ^{−1} g((x−P)/δ)]", g continuous, 0 for abs(x)>1, ∫_{−1}^{1} g = 1 | DONE | `tendsto_density`, `tendsto_kernel_integral_signed` | assumes a density continuous at x (necessary; stated in the docstring); signed g allowed, as in the paper |
+| G5.7-11 | 2007–2008 | "can also be generalised to multi-dimensional outputs" | MISSING | — | ρ(x) = lim δ^{−d}E[g((x−P)/δ)] on ℝ^d. Mathlib's peak-function lemma (`tendsto_integral_comp_smul_smul_of_integrable'`) is already finite-dimensional; easy to moderate, low priority |
+| G6-01 | 2013–2019 / p.47 | jump-adapted discretisation (Merton): EM or Milstein between jumps, jumps simulated exactly | N/A | — | description |
+| G6-02 | 2020–2025 | constant rate: jumps coincide; same Brownian paths and jump variables ⇒ "the extension of the multilevel method is straightforward" | OUT-OF-SCOPE | — | (2.4) for the jump-adapted coupling needs a Poisson process and Brownian increments over a random partition. doc: none |
+| G6-03 | 2026–2030 | path-dependent rate with a known upper bound: thinning (Glasserman–Merener) | OUT-OF-SCOPE | — | point processes. doc: none |
+| G6-04 | 2030–2033 | thinning mismatch ⇒ "O(1) difference in the paths and hence the payoffs" | N/A | — | heuristic |
+| G6-05 | 2033–2036 | Xia–Giles change of measure: equal jump times, a Radon–Nikodym derivative in the payoff, "significantly reduces the multilevel correction variance" | OUT-OF-SCOPE | — | Girsanov for point processes; the variance claim is empirical. doc: none |
+| G6-06 | 2038–2043 | infinite activity: simulate large jumps, drop small ones or replace them by a diffusion; "δℓ → 0 … to ensure that the bias converges to zero" | OUT-OF-SCOPE | — | Lévy–Itô decomposition. doc: none |
+| G6-07 | 2044–2051 | three jump categories in Pℓ − Pℓ−1; the range [δℓ, δℓ−1] causes the difference | N/A | — | description of the coupling |
+| G6-08 | 2052–2070 / p.47–48 | Lévy increments simulated directly on uniform steps; Europeans need no MLMC; MLMC useful for path-dependent options | N/A | — | |
+| G6-09 | Table 6.3, l.2057 / p.48 | Asian: O(h²) for VG, NIG, α-stable | OUT-OF-SCOPE | — | Xia 2014; Xia–Giles 2014. doc: none (PLAN files tables as numerical, but Table 6.3 lists proved rates). A discrete-time exponential-Lévy analogue of the GBM proofs (iid increments with known exponential moments) would be formalisable |
+| G6-10 | Table 6.3, l.2058 | lookback: O(h), O(h·abs(log h)), O(h^{2/α−δ}) | OUT-OF-SCOPE | — | fluctuation theory. doc: none |
+| G6-11 | Table 6.3, l.2059 | barrier: o(h^{1−δ}), o(h^{1/2−δ}), o(h^{1/α−δ}) | OUT-OF-SCOPE | — | doc: none |
+| G6-12 | 2071–2072 | experiments support the rates, which "may not be sharp" | N/A | — | |
+| G6-13 | 2073–2076 | near-perfect inverse-CDF approximations "may be possible in the future" | N/A | — | speculative |
+| G6-14 | 2076–2079 (also 2063–2065) | coarse Lévy increments "can be obtained trivially by summing the increments for the fine path" ⇒ perfect coupling | MISSING | — | Abstract form: if μ_h ∗ μ_h = μ_{2h}, then z ↦ (z_{2k}+z_{2k+1})_k maps μ_h^{⊗ℕ} to μ_{2h}^{⊗ℕ}, so (2.4) holds. This is the direct generalisation of `measurePreserving_pairAvg`; easy |
+| G6-15 | 2080–2085 | Ferreiro-Castilla et al.: Wiener–Hopf exact sampling of (X at an exponential time, its maximum) | OUT-OF-SCOPE | — | doc: none |
+| G6-16 | 2085–2088 | "by using multiple shorter random periods it is possible, because of the Central Limit Theorem, to get closer to a desired fixed terminal time, but at an increased cost" | MISSING | — | A sum of n iid Exp(n/T) times has mean T and variance T²/n (L² concentration, CLT scaling); easy, low value |
+| G6-17 | 2088–2090 | thinning links the coarse and fine simulations | N/A | — | |
+| G6-18 | 2090–2092 | lookback: complexity "O(ε^{−3}) for processes of bounded variation, and O(ε^{−4})" otherwise | OUT-OF-SCOPE | — | the paper gives no rates. doc: none |
+| G6-19 | 2092–2093 | barrier experiments show a similar complexity | N/A | — | numerical |
+
+## Counts
+
+| section | DONE | DONE-DEV | PARTIAL | MISSING | OUT-OF-SCOPE | N/A | total |
+|---|---|---|---|---|---|---|---|
+| §4 | 1 | 0 | 0 | 0 | 0 | 5 | 6 |
+| §5.1 | 11 | 4 | 0 | 2 | 7 | 11 | 35 |
+| §5.2 | 10 | 3 | 2 | 4 | 11 | 6 | 36 |
+| §5.3 | 1 | 0 | 1 | 1 | 6 | 2 | 11 |
+| §5.4 | 0 | 0 | 0 | 1 | 1 | 3 | 5 |
+| §5.5 | 1 | 0 | 0 | 0 | 5 | 2 | 8 |
+| §5.6 | 1 | 1 | 0 | 2 | 1 | 4 | 9 |
+| §5.7 | 4 | 0 | 1 | 1 | 0 | 5 | 11 |
+| §6 | 0 | 0 | 0 | 2 | 9 | 8 | 19 |
+| **total** | **29** | **8** | **4** | **13** | **40** | **46** | **140** |
+
+Documentation of the 40 OUT-OF-SCOPE items:
+* **explicit (8):** G5.1-07, G5.2-02, G5.2-25, G5.2-28, G5.2-29, G5.3-03, G5.5-06, G5.6-09.
+* **generic only (18):** G5.1-30…33, G5.2-13, G5.2-14, G5.2-23, G5.2-32…35, G5.3-01, G5.3-05,
+  G5.3-06, G5.3-08, G5.3-11, G5.5-04, G5.5-05.
+* **none (14):** G5.1-15, G5.1-16, G5.4-04, G5.5-01, G5.5-03, G6-02, G6-03, G6-05, G6-06, G6-09,
+  G6-10, G6-11, G6-15, G6-18.
+
+## Misstatements and documentation issues
+
+* **No Lean statement misstates the paper.** Every theorem cited is true as stated and says what
+  its docstring claims.
+* **Undocumented hypothesis deviations:**
+  * `abs_smoothCDF_sub_le` and `tendsto_smoothCDF` assume 0 ≤ g ≤ 1, which the paper does not
+    (G5.7-06).
+  * `variance_antithetic_le` and `abs_antithetic_le` are scalar only, while §5.3 is about
+    d-dimensional SDEs (G5.3-09).
+* **Documentation overclaims:**
+  * The `SDEExtras.lean` header says "what is formalised here is every step of the section that
+    follows from them by probability or algebra". The MISSING and PARTIAL rows above contradict
+    this.
+  * README l.7 and PLAN M5 say "every other formal claim … that follows from probability and
+    algebra". §6 is skipped without comment (G6-14 and G6-16 are formalisable).
+  * PLAN l.159–160 calls the tables "numerical or empirical", but the analysis columns of
+    Table 5.2 and Table 6.3 are theoretical.
+* **Paper typos** (no Lean statement depends on them):
+  * h_ℓ = h0·M^ℓ should read M^{−ℓ} (p.29).
+  * The Pc numerator has b√hℓ where b·ΔW_{N−2} is meant (p.36).
+  * The digital payoff constant is 25 on p.36 but 10 on p.30.
+  * "O(hℓ) difference on average" should read O(hℓ^{1/2}) (p.38).
+  * b(Ŝ^c_n, c_n) should read t_n (p.39).

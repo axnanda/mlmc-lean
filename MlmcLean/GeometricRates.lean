@@ -24,7 +24,7 @@ namespace MLMC
 
 /-- **The optimal allocation under geometric rates** (Giles 2015, §2.1, p. 7, proof sketch of
 Theorem 1: "the optimal number of samples `N_ℓ` on level `ℓ` is proportional to `2^{−(β+γ)ℓ/2}`,
-and so the total cost on level `ℓ` is proportional to `2^{(γ−β)ℓ/2}`").  For the rates
+and therefore the cost on level `ℓ` is proportional to `2^{(γ−β)ℓ/2}`").  For the rates
 `V_ℓ = c₂ 2^{−βℓ}`, `C_ℓ = c₃ 2^{γℓ}` (`c₂, c₃ > 0`), the Lagrange allocation
 `N_ℓ = τ⁻¹ √(V_ℓ/C_ℓ) ∑_j √(V_j C_j)` of §1.3 over any finite set of levels is
 `N_ℓ = K √(c₂/c₃) (2^{−(β+γ)/2})^ℓ` and costs `N_ℓ C_ℓ = K √(c₂ c₃) (2^{(γ−β)/2})^ℓ` on level
