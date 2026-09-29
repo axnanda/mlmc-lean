@@ -133,6 +133,10 @@ lake env lean scripts/AxiomCheck.lean
 This prints `#print axioms` for every main theorem. Each one must list only `propext`,
 `Classical.choice` and `Quot.sound`, the standard axioms, and in particular no `sorryAx`.
 GitHub Actions runs the build and this audit on every push (`.github/workflows/lean_action_ci.yml`).
+Where GitHub Actions is not available (for example when the free minutes are used up),
+`bash scripts/local_ci.sh` runs the same steps locally: the uploader tests, `lake build`, the
+generator regression test, this audit, the prove2.me facts, and the generation, build and
+validation of the platform tree.
 
 ### prove2.me
 
@@ -222,6 +226,7 @@ MlmcLean/FixedPointPath.lean      [HG25] §4.1, §6.3: the GBM path and error ac
 MlmcLean/BitWidth.lean            [HG25] §5–§6: the cost model and bit-width optimisation
 MlmcLean/LagrangeBitWidth.lean    [HG25] §4.3, §6: the Lagrange conditions (35), (37)
 scripts/AxiomCheck.lean           axiom audit (run in CI)
+scripts/local_ci.sh               the steps of the CI workflow, for running them locally
 scripts/prove2me/                 prove2.me packaging: extractors, generator, validator, uploader
 PLAN.md, CLAUDE.md                milestones; instructions for Claude sessions
 notes/statement-audit.md          statement-by-statement comparison with the papers
