@@ -274,3 +274,29 @@ recorded, all consistent with the paper or deliberate:
 - `hFG` in `integral_sq_prod_sub_prod_of` follows from `hF2` and `hG2` (`|FG| ≤ (F² + G²)/2`) and is
   kept for a shorter proof; `0 ≤ T` is needed for the strong and weak bounds but not for the
   variance and MLMC statements (for `T < 0` everything is deterministic).
+
+**Tenth round (2026-09-29).** Four blind read-backs of the 47 audited theorems that no earlier
+read-back had named: `estimator_theorem1_allocation.md` (packet L1: `Estimator`,
+`StandardEstimator`, `Allocation`, `MultiIndex`; 14 statements), `randomised_levels.md` (L2:
+`Randomised`; 12), `complexity_theorem2_helpers.md` (L3: `Complexity` and the helpers of
+Theorem 2; 13) and `lattice.md` (L4: `Lattice`; 8).  All 47 read back as true; none is vacuous
+and none holds only because of a junk value; the auditors checked them numerically (random
+instances, exact finite spaces, the lattice sums up to large `L`) and with negative controls
+(dropping a hypothesis gives a counterexample where the hypothesis is needed).  Points recorded,
+all kept as they are:
+
+- Redundant hypotheses: `hs : s.Nonempty` in `optimalN_variance`, `optimalN_cost` (the empty case
+  is trivial); `hα : 0 < α` in Theorem 1 (implied by the others, but part of the paper's
+  statement); `hκi` in `randomised_infinite_cost` (a non-integrable cost would have the junk mean
+  `0`, contradicting the lower bound on the costs).
+- Seven statements are for an arbitrary measure (`mlmc_mean`, `mlmc_variance`,
+  `variance_sample_mean`, `indepFun_levelEstimator` and three in `Randomised`); they hold for every
+  measure, since independence forces total mass `0`, `1` or `∞` and the other cases are degenerate.
+- In the lattice bounds the ℕ-subtraction `crit δ − 1` gives the exponent `0`, not `−1`, when no
+  direction is critical: the statements are then weaker, never false.  `boxSize θ L` is a sum of
+  side lengths, used only as a truncation level (`indexSet θ L ⊆ box D (boxSize θ L)`).
+- `randomised_optimal_p` and `randomised_optimal_p_eq` are about the functional
+  `(Σ V_ℓ/p_ℓ)(Σ p_ℓ C_ℓ)`; its link to the estimator is `randomised_optimal_cost`.
+- Packet artefacts: `open … in` lines of helper declarations left out of the packet preceded a
+  `variable [IsProbabilityMeasure μ]`, so the auditors could not tell whether the instance is in
+  force; in the source it is a standalone `variable` (and the statements are true either way).
