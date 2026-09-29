@@ -224,7 +224,125 @@ Not paper statements; they are the steps of the proof sketch on p. 7 ("L is chos
 (E[Y] − E[P])² < ½ε² …, N_ℓ … rounded up"). `mlmc_complexity_core` shows `c₄` depends only on
 `α, β, γ, c₁, c₂, c₃`, which is stronger than the paper's statement.
 
+## Round 10 (2026-09-29): coverage re-audit of both papers
+
+Five independent auditors re-read Giles (2015) §1–§11 and Haas–Giles (2025) in full and classified
+all 634 claims against the Lean statements (tables in `notes/coverage/`; each row gives the claim,
+the Lean name and the status). No Lean statement misstates a paper. The claims found missing or
+partial were formalised in this round; `notes/coverage/README.md` maps every one of them to its
+Lean statement or to the reason it is not formalised. The deviations of the new statements:
+
+* **ML2R (G15 §2.3; `ML2RTheorem.lean`).** The paper's "`O(2^{−αℓL})`" in the weak-error
+  expansion is read with one constant `K` for all `L` and `ℓ ≤ L` (implicit in the paper: `L`
+  grows as `ε → 0`, and with a constant growing with `L` the bias need not be small). Under it the
+  bias is at most `C_α K 2^{−αL(L+1)/2}` (`ml2r_bias_le`); the printed `O(2^{−αL²})` cannot hold
+  uniformly (`ml2r_bias`: the expansion `2^{−α(L+1)ℓ}` has bias exactly `±2^{−αL(L+1)/2}`), so
+  the `β < γ` cost exponent is `√(2|log₂ ε|/α)`, `√2` times the printed one. The complexity
+  (`ml2r_theorem_eq`, `ml2r_theorem_lt`) is stated for the mean square error of the estimator
+  itself; the earlier `ml2r_complexity_eq`/`_lt` are its deterministic core.
+* **Theorem 2's index set (G15 §2.4, p. 15).** `giles_theorem2_indexSet` and
+  `giles_theorem2_boundary_indexSet` state Theorem 2 on the simplex `{θ·ℓ ≤ L}`,
+  `θ_d = α_d + (γ_d − β_d)/2` (the paper's "of the form `ℓ·n ≤ L`"; it does not say which `n`).
+  That this shape is *optimal* among all index sets is not formalised.
+* **Asymptotic normality (G15 §2.1, p. 8; `AsymptoticNormal.lean`).** Proved for each level
+  estimator and, for a fixed number of levels with `N_ℓ = m_ℓ n`, for the MLMC estimator. Collier
+  et al. let `L` grow as `ε → 0`; that needs a Lindeberg–Feller central limit theorem, which
+  Mathlib does not have, and their confidence-interval theorem is only cited by Giles.
+* **Randomised MLMC "≈" (G15 §2.2).** "If `E_ℓ² ≪ V_ℓ` … `N ≈ ε⁻² Σ V_ℓ/p_ℓ`" is made exact:
+  `E_ℓ² ≤ δV_ℓ` puts `V[Y]` between `Σ V_ℓ/p_ℓ` and `(1 + δ) Σ V_ℓ/p_ℓ`
+  (`singleTerm_variance_le_of_sq_le`, `singleTermN_samples_of_sq_le`).
+* **Splitting "to leading order" (G15 §5.2).** The implicit condition is identified:
+  splitting keeps the variance to leading order at negligible extra cost iff
+  `E[v]/V[m] = o(h⁻¹)` (`splitting_leading_order`), with the cost model of `h⁻¹ − 1 + M` steps.
+* **Random-shift QMC (G15 §3.5).** Formalised on the torus `(ℝ/ℤ)^d`, i.e. for the periodic
+  extension of the integrand; the points are arbitrary (a rank-1 lattice is one choice).
+* **Markov chains, `N_ℓ` linear (G15 §10.1).** `markov_linear_levels` gives conditions (iii)–(iv)
+  of Theorem 1; the paper's "the decay is exponential in `N_ℓ − N_{ℓ−1}`" should read `N_{ℓ−1}`
+  (with linear `N_ℓ` the difference is constant; `variance_levels_le`).
+* **The limit law of a Markov chain (G15 §10.1; `MarkovLimitLaw.lean`).** The chain contracts on
+  average in `L^p`, `E[d(φ(x, ξ), φ(y, ξ))^p] ≤ ρ d(x, y)^p` with `p = 2γ` (the paper's condition,
+  `ρ` its supremum), on a complete separable metric space. The limit law is the unique invariant
+  law (`existsUnique_invariant`); for the example it is `U[0, 2]` (`halfStep_limit_uniform`,
+  `halfStep_invariant_unique`); the level bias decays like `(√ρ)^{N_ℓ}` and MLMC for `E[f(X_∞)]`
+  has cost `O(ε⁻²)` (`markov_mlmc_theorem1`) or is unbiased with the randomised estimator
+  (`markov_randomised_mlmc`). The paper's `γ ∈ (0, 1)` is relaxed to `0 < γ ≤ 1`.
+* **Digital options (G15 §5.1–§5.2; `SDEDigital.lean`).** "`V_ℓ = O(h^{1/2})`" needs more than the
+  mean-square strong rate: from `E[(Ŝ − S)²] = O(h)` and a bounded density alone the variance is
+  `O(h^{1/3})`, and this is sharp (`variance_digital_rate`); with Gaussian tails of the error it is
+  `O(√(h log(1/h)))` (`digital_mismatch_le_of_tail`). The antithetic call's `O(h^{3/2})` (§5.3)
+  is proved when, given `|A − B|`, the average `½(A + B)` of the fine and antithetic values has a
+  bounded density (`variance_call_antithetic_le`); marginal information alone gives a weaker rate
+  (`variance_call_antithetic_le_holder`). For GBM, `β = 1/3` holds with no assumption
+  (`gbm_digital_variance_le`).
+* **Super-linear drift (G15 §5.6; `SDEMisc.lean`).** Deterministic analogues: the explicit Euler
+  step for the drift `−S³` diverges iff `h S₀² > 2` (`eulerCubic_growth`,
+  `eulerCubic_tendsto_atTop`, `eulerCubic_bounded`), and the tamed step stays bounded
+  (`tamedCubic_bounded`). The moment bounds for the SDE (Hutzenthaler–Jentzen–Kloeden) are not
+  formalised.
+* **Poisson counts on union grids (G15 §8, §5.6; `PoissonGrids.lean`).** Deterministic grids only;
+  the adaptive grids of §5.6 depend on the path and need a martingale argument. The tau-leaping
+  statements compare the law of the state at one grid time (payoffs of the terminal state);
+  path functionals are covered when the rate does not depend on the state (`unionGrid_2_4`).
+* **Elliptic PDE with a random coefficient (G15 §7.1; `ApplicationExtras.lean`).** A deterministic
+  `K` with `|P − P_ℓ| < K h_ℓ²` is impossible for the example (`not_ae_abs_gaussian_sq_mul_le`);
+  with a random `K`, `E[K²] < ∞`, the rates `α = 2`, `β = 4` follow (`elliptic_rates_random`).
+* **Nested simulation with discretised inner paths (G15 §9.1–§9.2; `NestedRates.lean`).** The
+  weak and strong orders of the inner discretisation (Milstein) are hypotheses on the inner
+  approximations `g_ℓ`; from them `α = 1`, `β = 2`, `γ = 2` and cost `O(ε⁻²(log ε)²)`
+  (`nested_sde_mlmc_complexity`). The piecewise-linear `f` of Bujok, Hambly and Reisinger gives
+  `β = 3/2` and `O(ε⁻²)` if the inner mean has little mass near the kink, e.g. a bounded density
+  (`nested_kink_variance_rate_of_density`, `nested_kink_mlmc_complexity`), and the conditional
+  fourth moments `E_W[g(z, W)⁴]` are bounded uniformly in `z` (raw moments, a simplification that
+  also bounds the conditional mean); the bias rate proved there is `α = ½`, which is what
+  Theorem 1 needs with `β = 3/2`, `γ = 1`. The MIMC rates
+  `E[Y_ℓ] = O(2^{−ℓ₁−ℓ₂})`, `V_ℓ = O(2^{−2ℓ₁−2ℓ₂})` need `f″` Lipschitz and `L⁴` strong
+  convergence (`nested_mimc_mean_rate`, `nested_mimc_variance_rate`); the paper's intermediate
+  "`Δg_{1,ℓ₂} + Δg_{1,ℓ₂−1} = O(2^{−ℓ₁/2})`" holds only after re-centring.
+* **Haas–Giles §6 (`HaasGilesRemarks.lean`).** "The cost factor is smaller than 1, which means that
+  the nested framework is cheaper" is exact for (34) but, for the nested cost (32), a factor `ρ`
+  on every level needs `ρ²(1 + ρ²) < 1` (sufficient; the sharp threshold is `ρ ≈ 0.943`), and a
+  factor `99/100` can make (32) more expensive than (8) (`exists_costFactor_lt_one_nestedCost_gt`).
+  Under the paper's own assumptions (26) is an equality (`variance_linearised_indep_eq`). With
+  fixed bit-widths, the paper's "`O(h⁻¹ 2^{e−d})`" rounding error is the worst case; under the
+  model (22) the root mean square is of order `h^{−1/2} 2^{e−d}`
+  (`integral_sq_perturbed_path_sub_bounds`), which still dominates the `O(h^{1/2})` strong error
+  for small `h` (`strongError_lt_integral_sq_perturbed_path_sub`).
+
+### Corrections to the papers recorded elsewhere, collected
+
+| Paper | Where | Printed | Correct | Lean |
+|---|---|---|---|---|
+| G15 | §1.3, p. 4 | `ε⁻²L²V₀C₀` | `ε⁻²(L+1)²V₀C₀` (levels `0, …, L`) | `optimal_cost_const_product` |
+| G15 | §2.3, p. 11 | weights with `∑ w_ℓ 2^{−nαℓ} = 1` | `= 0` | `ml2r_weights` |
+| G15 | §2.3, p. 12 | bias `O(2^{−αL²})`, exponent `√(|log₂ ε|/α)` | `O(2^{−αL(L+1)/2})`, `√(2|log₂ ε|/α)` | `ml2r_bias`, `ml2r_bias_le`, `ml2r_theorem_lt` |
+| G15 | §2.4, pp. 13–14 | conditions labelled i), iii), ii), iv), v) | labels as in the Notes | hypothesis names follow the statement |
+| G15 | §2.4, p. 15 | rectangles "optimal order" | only for `O(ε⁻²)` | `mimc_rect_lower_bounds` |
+| G15 | §3.1, p. 21 | (3.1) gives variance `< ½ε²` | `≤ ½ε²` | `allocation_eq_3_1` |
+| G15 | §3.3, p. 23 | "`p, q → 0` due to weak convergence" | needs `E[X²] → 0` | `consistency_mean` |
+| G15 | §5, p. 29 | `h_ℓ = h₀M^ℓ` | `h₀M^{−ℓ}` | `timestep_rate` |
+| G15 | §5.2, p. 36 | coarse numerator `b√h_ℓ`; `Φ(…/(b√h_ℓ))`; digital constant `25` | `b ΔW_{N−2}`; `|b|` in the denominator; `10` as on p. 30 | `digital_smoothing_coarse`, `integral_digital_final_step` |
+| G15 | §5.2, p. 38 | "`O(h_ℓ)` difference on average" | `O(h_ℓ^{1/2})` | — |
+| G15 | §5.3, p. 39 | `b(Ŝ^c_n, c_n)` | `b(Ŝ^c_n, t_n)` | — |
+| G15 | §7.1, p. 49 | a constant `K` with `|P − P_ℓ| < K h_ℓ²` | impossible for the example (error `∝ Z²`); a random `K` with `E[K²] < ∞` | `elliptic_rates` (literal), `ApplicationExtras.lean` (random `K`) |
+| G15 | §7.3, p. 54 | `√h Z_n` | `√k Z_n` | `ApplicationExtras.lean` |
+| G15 | §9.1, p. 58; §9.2, p. 60 | `−1/(4N_ℓ)` | `−1/(8N_ℓ)` | `antithetic_quadratic`, `NestedRates.lean` |
+| G15 | §9.2, p. 59 | `O(ε⁻²(log ε)⁻²)` | `O(ε⁻²(log ε)²)` | `nested_complexity` |
+| G15 | §10.1, p. 61 | decay exponential in `N_ℓ − N_{ℓ−1}` | in `N_{ℓ−1}` | `variance_levels_le`, `markov_linear_levels` |
+| G15 | §10.2, p. 62 | `U_n = (I_n + ½)/I_max` | `(I_n + ½)/(I_max + 1)` (the printed `U_n` exceeds `1` for `I_n = I_max`) | — |
+| HG25 | (21) | `E[δx²] = 4^{e−d−1}` | `≤` | `integral_sq_roundError_le` |
+| HG25 | (25) | `2 ∑_{i≠j} Cov` | correct over unordered pairs (as (27) reads it); over ordered pairs no factor 2 | `variance_sum_eq` |
+| HG25 | (27) | derived under perfect correlation | holds for every joint law | `variance_linearised_corr` |
+| HG25 | (28) | factor `1/12` on the MSE term | no factor `1/12` | `variance_extended_indep` |
+| HG25 | Fig. 3, 5 captions | `√(Ṽ/V)` | `√(V^Δ/V)` | `HaasGilesRemarks.lean` |
+| HG25 | §6.1, p. 12 | cost factor `< 1` ⇒ nested framework cheaper | true for (34); for (32) e.g. `ρ²(1 + ρ²) < 1` | `nestedCost_lt_of_costFactor_le`, `exists_costFactor_lt_one_nestedCost_gt` |
+| HG25 | §6.3, p. 14 | fixed-precision rounding error `O(h⁻¹2^{e−d})` | worst case; root mean square `Θ(h^{−1/2}2^{e−d})` under (22) | `integral_sq_perturbed_path_sub_bounds` |
+
+"—" marks typos that no Lean statement depends on.
+
 ## Out of scope (as in PLAN.md)
 
 The rate conditions (i)–(iv) are hypotheses, exactly as in the papers; proving them for
-Euler–Maruyama or Milstein needs Itô calculus.
+Euler–Maruyama or Milstein for a general SDE needs Itô calculus.  For geometric Brownian motion,
+whose solution is explicit, they are proved (`GBMEulerMaruyama.lean`: strong error `O(h)` in mean
+square, `α = ½`, `β = 1`; `GBMMilstein.lean`: strong error `O(h²)` in mean square, `α = 1`,
+`β = 2`), and Theorem 1 holds with no assumed rate.

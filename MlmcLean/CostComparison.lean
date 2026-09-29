@@ -392,7 +392,7 @@ theorem summable_sqrt_Vb_mul_Cb {β γ c₂ c₃ : ℝ} (hc₂ : 0 < c₂) (hc�
 `S_∞ = ∑_ℓ √(V_ℓ C_ℓ)` converges, the cost `(ε²/2)⁻¹ S_L²` of the equal split tends to
 `2 ε⁻² S_∞²` as `L → ∞`. -/
 theorem tendsto_equal_split_cost {V C : ℕ → ℝ} (hS : Summable fun ℓ => Real.sqrt (V ℓ * C ℓ))
-    {ε : ℝ} (hε : 0 < ε) :
+    {ε : ℝ} (_hε : 0 < ε) :
     Tendsto (fun L : ℕ => (ε ^ 2 / 2)⁻¹ * (∑ ℓ ∈ range (L + 1), Real.sqrt (V ℓ * C ℓ)) ^ 2)
       atTop (𝓝 (2 * ((ε ^ 2)⁻¹ * (∑' ℓ, Real.sqrt (V ℓ * C ℓ)) ^ 2))) := by
   have h1 : Tendsto (fun L : ℕ => ∑ ℓ ∈ range (L + 1), Real.sqrt (V ℓ * C ℓ)) atTop

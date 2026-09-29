@@ -367,7 +367,7 @@ theorem moments_sum_indep [IsProbabilityMeasure μ] {X : ℕ → Ω → ℝ} (hi
     have hX1 : ∀ i, Integrable (X i) μ := fun i => by
       simpa using integrable_pow_of_pow_four (hXm i) (hX4 i) (k := 1) (by norm_num)
     have hS0 : ∫ ω, ∑ i ∈ range n, X i ω ∂μ = 0 := by
-      rw [integral_finset_sum _ fun i _ => hX1 i]
+      rw [integral_finsetSum _ fun i _ => hX1 i]
       simp [hX0]
     obtain ⟨h4, e2, e4⟩ := moments_add_indep hSX hSm (hXm n) hS4 (hX4 n) hS0 (hX0 n)
     simp only [Finset.sum_range_succ]

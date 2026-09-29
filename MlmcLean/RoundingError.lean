@@ -18,8 +18,9 @@ In fixed-point arithmetic with exponent `e` and bit-width `d` a number is stored
 * **(22)** If `δx` is uniform on `[−2^{e−d−1}, 2^{e−d−1}]` then `E[δx²] = 4^{e−d}/12`
   (`integral_sq_of_isUniform`, `integral_sq_uniform_roundError`).
 * **(25)** `V[P − P̃] = ∑_i V[x̄_i δx_i] + 2 ∑_{i≠j} Cov(x̄_i δx_i, x̄_j δx_j)` for the
-  linearised error `P − P̃ ≈ ∑_i x̄_i δx_i`: as printed the covariances are counted twice; the
-  identity holds with `∑_{i≠j}` and no factor 2 (`variance_sum_eq`).
+  linearised error `P − P̃ ≈ ∑_i x̄_i δx_i`: correct when `∑_{i≠j}` runs over unordered pairs
+  `{i, j}` (the reading the paper's (27) uses); over ordered pairs the factor 2 must go
+  (`variance_sum_eq` sums over ordered pairs `i ≠ j`, with no factor 2).
 * "It always holds that `V[x̄_i δx_i] ≤ E[x̄_i² δx_i²]`" (`variance_le_integral_sq`).
 * **(26)** With independent errors, sensitivities independent of the rounding errors and (22),
   `V[P − P̃] ≤ (1/12) ∑_i E[x̄_i²] 4^{e_i−d_i} ≜ V_indep` (`variance_linearised_indep`, from the
@@ -41,7 +42,9 @@ namespace MLMC
 /-! ### Fixed-point rounding (§4.1) -/
 
 /-- Round-to-nearest onto the fixed-point grid `2^{e−d} ℤ` (Haas–Giles 2025, §4.1): the number
-`2^{e−d} n`, `n ∈ ℤ`, nearest to `x`, for the exponent `e` and the bit-width `d`. -/
+`2^{e−d} n`, `n ∈ ℤ`, nearest to `x`, for the exponent `e` and the bit-width `d`.  The paper says
+"round-to-nearest" without a tie rule; a tie (`x` halfway between two grid points) is rounded
+upwards here, as Mathlib's `round` does. -/
 noncomputable def roundFixed (e : ℤ) (d : ℕ) (x : ℝ) : ℝ :=
   (2 : ℝ) ^ (e - d) * round (x / (2 : ℝ) ^ (e - d))
 
@@ -199,9 +202,10 @@ section variance
 variable {Ω : Type*} [MeasurableSpace Ω] {μ : Measure Ω} [IsProbabilityMeasure μ]
 
 /-- **Haas–Giles (25)**, corrected (2025, §4.2, p. 9): the variance of the linearised error
-`∑_i X_i` (with `X_i = x̄_i δx_i`) is `∑_i V[X_i] + ∑_{i ≠ j} Cov(X_i, X_j)`.  The printed (25) has
-`2 ∑_{i≠j}`, which counts every covariance twice; the correct sum over ordered pairs `i ≠ j` has no
-factor 2 (equivalently `2 ∑_{i<j}`). -/
+`∑_i X_i` (with `X_i = x̄_i δx_i`) is `∑_i V[X_i] + ∑_{i ≠ j} Cov(X_i, X_j)`, the sum over
+ordered pairs `i ≠ j`.  The printed (25) has `2 ∑_{i≠j}`: this is correct when the sum runs over
+unordered pairs `{i, j}` (equivalently `2 ∑_{i<j}`), the reading behind the paper's (27), but
+counts every covariance twice if the pairs are ordered; the notation is ambiguous. -/
 theorem variance_sum_eq {ι : Type*} [DecidableEq ι] (s : Finset ι) {X : ι → Ω → ℝ}
     (hX : ∀ i ∈ s, MemLp (X i) 2 μ) :
     variance (fun ω => ∑ i ∈ s, X i ω) μ =

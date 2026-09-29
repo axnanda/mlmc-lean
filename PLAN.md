@@ -41,7 +41,15 @@ table and `notes/statement-audit.md`, which compares every statement with the pa
   checks), the pure steps of the applications in §5, §7, §8 (the Poisson coupling), §9 and §10,
   and Haas–Giles §2–§6 (the Euler–Maruyama coupling, approximate normals, the rounding-error
   model, the fixed-point path, the cost model and the bit-width optimisation). The README table
-  lists the modules; `scripts/AxiomCheck.lean` lists the 408 audited theorems.
+  lists the modules; `scripts/AxiomCheck.lean` lists the audited theorems.
+- **Round 10 (2026-09-29): an independent coverage re-audit of both papers** (634 claims,
+  `notes/coverage/`) found no misstatement; every claim it found missing or partial is now
+  formalised or listed below with its reason (`notes/coverage/README.md`).
+- **Round 11 (2026-09-29): verification.** All 139 theorems added in round 10 were read back
+  blind by independent auditors (`notes/readbacks/README.md`, eleventh round): all true, none
+  vacuous, none dependent on a junk value. `lake build` is warning-free and `scripts/local_ci.sh`
+  passes: 53 modules, 565 audited theorems, each depending only on `propext`,
+  `Classical.choice` and `Quot.sound`, and 565 validated prove2.me nodes.
 
 ## Setup and verification (Linux / cloud session)
 
@@ -146,14 +154,33 @@ items listed under "Not formalised" below.
   strong error of Euler–Maruyama `E[(S_{t_n} − Ŝ_n)²] ≤ C(t_n) h` from the exact solution, the
   weak rate `α = ½` and the variance rate `β = 1` for Lipschitz payoffs, and Theorem 1 with no
   assumed rate (MSE `< ε²` at cost `O(ε⁻²(log ε)²)`).
-- Not formalised: the convergence orders of the discretisations for general SDEs (Itô calculus,
-  not in Mathlib; proved for geometric Brownian motion from its exact solution)
-  and of QMC; for tau-leaping (§8), the weak rate `α = 1` against the exact chain and the exact
-  (SSA) coupling on the finest level, which need the continuous-time chain itself; Algorithm 3
-  with path-dependent timesteps (§5.6, needs Brownian motion at stopping times); the value of the
-  dyadic limit `C` and the rate "MSE halves per bit" (Haas–Giles §3.4, need the asymptotics of
-  `Φ⁻¹`); the floating-point remark of §10.2; the remaining claims are numerical or empirical
-  (tables, figures, run times).
+- ✅ The Milstein scheme for geometric Brownian motion end to end (§5.2, Figure 5.5,
+  `GBMMilstein.lean`): first-order strong convergence `E[(S_{t_n} − Ŝ_n)²] ≤ C(t_n) h²`, the weak
+  rate `α = 1` and the variance rate `β = 2` for Lipschitz payoffs, and Theorem 1 with cost
+  `O(ε⁻²)` and no assumed rate.
+- ✅ Round 10: the claims the coverage re-audit found missing — ML2R's bias and complexity for
+  the estimator itself (`ML2RTheorem.lean`), Theorem 2 on the explicit simplex, asymptotic
+  normality (`AsymptoticNormal.lean`), random-shift QMC, the §2.2/§2.6/§5.2/§10.1 remarks
+  (`GilesRemarks.lean`), the §5 probability steps (`SDEDigital.lean`, `SDEMisc.lean`), §6.2, §7,
+  §10.2 (`ApplicationExtras.lean`), Poisson noise on union grids (`PoissonGrids.lean`), the limit
+  law and MLMC for Markov chains (`MarkovLimitLaw.lean`), the §9 rates with discretised inner
+  paths, a piecewise linear `f` and MIMC (`NestedRates.lean`), and the Haas–Giles §6 remarks
+  (`HaasGilesRemarks.lean`).
+- Not formalised (each with its reason in `notes/coverage/README.md`): the convergence orders of
+  the discretisations of general SDEs, SPDEs and PDEs (Itô calculus and PDE regularity are not in
+  Mathlib; proved for geometric Brownian motion from its exact solution) and of QMC (discrepancy
+  theory), hence the MLQMC complexity; Collier et al.'s confidence intervals with a growing number
+  of levels (a Lindeberg–Feller CLT); the consistency check with estimated variances (Slutsky's
+  theorem); the optimality of the simplex among all MIMC index sets; the kurtosis rates of the
+  digital option; path-dependent (adaptive) grids for Brownian and Poisson noise (a martingale
+  argument); tau-leaping's weak rate against the exact chain and the exact (SSA) coupling; the
+  moment results for super-linear drifts; the jump-diffusion and Lévy-process theory of §6 beyond
+  the coarse-increment identity; the Karhunen–Loève expansion and the finite-element analysis of
+  §7.2 and the stability constraint of §7.3; contracting SDEs (§10.1); the value of the dyadic
+  limit `C` and "MSE halves per bit" (Haas–Giles §3.4, asymptotics of `Φ⁻¹`); the rate `β = 1.5`
+  for a piecewise linear `f` with inner time steps (§9.2; proved for exact inner samples); the
+  remaining claims are numerical or empirical (measured rates, figures, run times) or hardware
+  facts.
 
 **M4: Research, needs Alex's sign-off before formalising: nested MLMC with level-dependent
 precision.**
@@ -165,9 +192,10 @@ precision.**
 
 ## Out of scope
 
-- **Proving the rate assumptions (α, β, γ) for Euler–Maruyama or Milstein.** This needs Itô
-  calculus, which Mathlib doesn't have. The theorems stay conditional on assumptions (i)–(iv),
-  exactly as in the papers.
+- **Proving the rate assumptions (α, β, γ) for Euler–Maruyama or Milstein for general SDEs.**
+  This needs Itô calculus, which Mathlib doesn't have. The theorems stay conditional on
+  assumptions (i)–(iv), exactly as in the papers. (For geometric Brownian motion the rates are
+  proved from the explicit solution: `GBMEulerMaruyama.lean`, `GBMMilstein.lean`.)
 - **Hardware and benchmark work** (see `notes/research-notes.md` §5).
 
 ## prove2.me

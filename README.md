@@ -4,7 +4,7 @@ A research repo (Sept 2026) with four parts:
 
 | Path | What it is |
 |---|---|
-| `MlmcLean/` | Machine-checked **Lean 4 + Mathlib proofs** of Giles' MLMC complexity theorem (Theorem 1), randomised MLMC, the Multi-Index Monte Carlo theorem (Theorem 2), the MLMC and MLQMC algorithms, Richardson–Romberg MLMC, and the pure-mathematics content of the application sections of Giles (2015) and of Haas–Giles (2025): 41 modules, 418 audited theorems. Zero `sorry`. |
+| `MlmcLean/` | Machine-checked **Lean 4 + Mathlib proofs** of Giles' MLMC complexity theorem (Theorem 1), randomised MLMC, the Multi-Index Monte Carlo theorem (Theorem 2), the MLMC and MLQMC algorithms, Richardson–Romberg MLMC, and the pure-mathematics content of the application sections of Giles (2015) and of Haas–Giles (2025): 53 modules, 565 audited theorems. Zero `sorry`. |
 | `PLAN.md` | Formalisation milestones (M0–M3 and M5 done; M4, level-dependent precision, awaits sign-off) and ground rules. **Start here for new work.** |
 | `notes/research-notes.md` | Evaluation of ternary/low-precision inputs for the Haas–Giles framework, the weak-vs-strong ("path") argument, AWS F2/Trainium notes, strategy and open directions. |
 | `experiments/quantization/` | The two numerical checks behind the notes (Python), with saved outputs in `results/`. |
@@ -21,13 +21,16 @@ Machine-checked proofs (Lean 4 + Mathlib) of the complexity results for MLMC fro
   (continuous-time Markov chains), §9 (nested simulation) and §10 (Markov chain equilibria) that
   follow from probability and algebra.
 * **[HG25]** I.-B. Haas, M.B. Giles, *A nested MLMC framework for efficient simulations on
-  FPGAs*, arXiv:2502.07123 (2025). §2 (eq. (2)–(12)), §3 (approximate normals, (13)–(19)),
+  FPGAs*, arXiv:2502.07123 (2025). §2 (eq. (2)–(13)), §3 (approximate normals, (14)–(19)),
   §4 (rounding errors, (20)–(29)), §5–§6 (the cost model and the bit-width optimisation,
   (30)–(41)).
 
 The convergence orders of the discretisations themselves (Euler–Maruyama, Milstein, finite
-differences, QMC) are not formalised: Mathlib has no Itô calculus. The theorems that use them
-take the orders as hypotheses, as the papers' complexity theorems do.
+differences, QMC) are not formalised in general: Mathlib has no Itô calculus. The theorems that
+use them take the orders as hypotheses, as the papers' complexity theorems do. The exception is
+the paper's worked example, geometric Brownian motion, whose solution is explicit: there the
+strong and weak rates of Euler–Maruyama and Milstein are proved and Theorem 1 holds with no
+assumed rate (`GBMEulerMaruyama.lean`, `GBMMilstein.lean`).
 
 The statement-by-statement comparison with the papers, including every deviation, is in
 `notes/statement-audit.md`.
@@ -58,7 +61,7 @@ The statement-by-statement comparison with the papers, including every deviation
 | `MlmcLean/RectangularMIMC.lean` | MIMC on a rectangular index set: box telescoping, the cost and MSE bounds, and when the rectangle suffices (`giles_mimc_rectangular`, `mimc_rect_lower_bounds`, `mimc_rect_necessary`). | [G15] §2.4 |
 | `MlmcLean/Algorithm.lean`, `MlmcLean/MLQMC.lean` | Algorithm 1 with exact means and variances: the robust convergence test, termination, the variance and MSE at exit, the cost of Theorem 1 order, and that the algorithm is heuristic (`alg1_terminates`, `alg1_variance`, `robust_test_mse`, `alg1_mse`, `alg1_complexity`, `alg1_not_guaranteed`). Algorithm 2 (MLQMC): the greedy doubling (3.3) reaches the variance target (3.2) (`mlqmc_inner_terminates`), the algorithm stops with `∑ V_ℓ ≤ ε²/2` (`mlqmc_algorithm`) and MSE `≤ ε²` (`mlqmc_mse`). | [G15] §3.1, §3.5 |
 | `MlmcLean/Implementation.lean` | The driver's variance estimate from power sums, the floors and the regression for `α, β, γ`, the probability that the consistency check fails (Gaussian `< 0.3%`, Chebyshev `≤ 1/9`), the relative accuracy of the sample variance, and the MLQMC rule (3.3) (`mlqmc_doubling_level`). | [G15] §3.3–§3.5 |
-| `MlmcLean/EulerMaruyama.lean`, `MlmcLean/SDEExtras.lean` | The Euler–Maruyama fine/coarse coupling: the coarse path has the law of the level-`ℓ−1` path, (2.4), Theorem 1 for it (`measurePreserving_pairAvg`, `integral_emCoarse`, `em_mlmc_theorem1`), the variance rate from the strong rate (`variance_levelDiff_of_strong`). The §5 steps that need no SDE theory: rates from the timestep, the complexities of the digital option and of Milstein, conditional expectations and (2.4), the Brownian-bridge midpoint, the antithetic swap and its variance `O(h²)` (`measurePreserving_swapIncrements`, `variance_antithetic_le`), splitting (`splitting_mean_variance`: same mean, variance `V[m] + E[v]/M`), the stability of the explicit step, the smoothed CDF and the density as a limit (`tendsto_smoothCDF`, `tendsto_density`). `MlmcLean/GBMEulerMaruyama.lean`: the Euler–Maruyama MLMC estimator for geometric Brownian motion end to end — the exact solution and the Euler–Maruyama path as products of one-step factors, the strong error `E[(S_{t_n} − Ŝ_n)²] ≤ C(t_n) h` (`gbm_em_strong_error`), the consistency of the exact solution across levels (`gbmExact_pairAvg`, `map_gbmExact`), the weak rate `α = ½` and the variance rate `β = 1` for Lipschitz payoffs (`gbm_weak_error_le`, `gbm_correction_variance_le`) and Theorem 1 with no assumed rate (`gbm_mlmc_theorem1`). | [HG25] (2), (4)–(5); [G15] §5 |
+| `MlmcLean/EulerMaruyama.lean`, `MlmcLean/SDEExtras.lean` | The Euler–Maruyama fine/coarse coupling: the coarse path has the law of the level-`ℓ−1` path, (2.4), Theorem 1 for it (`measurePreserving_pairAvg`, `integral_emCoarse`, `em_mlmc_theorem1`), the variance rate from the strong rate (`variance_levelDiff_of_strong`). The §5 steps that need no SDE theory: rates from the timestep, the complexities of the digital option and of Milstein, conditional expectations and (2.4), the Brownian-bridge midpoint, the antithetic swap and its variance `O(h²)` (`measurePreserving_swapIncrements`, `variance_antithetic_le`), splitting (`splitting_mean_variance`: same mean, variance `V[m] + E[v]/M`), the stability of the explicit step, the smoothed CDF and the density as a limit (`tendsto_smoothCDF`, `tendsto_density`). `MlmcLean/GBMEulerMaruyama.lean`: the Euler–Maruyama MLMC estimator for geometric Brownian motion end to end — the exact solution and the Euler–Maruyama path as products of one-step factors, the strong error `E[(S_{t_n} − Ŝ_n)²] ≤ C(t_n) h` (`gbm_em_strong_error`), the consistency of the exact solution across levels (`gbmExact_pairAvg`, `map_gbmExact`), the weak rate `α = ½` and the variance rate `β = 1` for Lipschitz payoffs (`gbm_weak_error_le`, `gbm_correction_variance_le`) and Theorem 1 with no assumed rate (`gbm_mlmc_theorem1`). `MlmcLean/GBMMilstein.lean`: the Milstein MLMC estimator for geometric Brownian motion end to end — the Milstein path (`milsteinPath`, iterating `milsteinStep`) as a product, first-order strong convergence `E[(S_{t_n} − Ŝ_n)²] ≤ C(t_n) h²` (`gbm_mil_strong_error`, from the Gaussian moments up to `E[Z⁴] = 3` and a second-order bound on `aⁿ − 2bⁿ + cⁿ`), the weak rate `α = 1` and the variance rate `β = 2` for Lipschitz payoffs (`gbm_mil_weak_error_le`, `gbm_mil_correction_variance_le`) and Theorem 1 with cost `O(ε⁻²)` (`gbm_mil_mlmc_theorem1`). | [HG25] (2), (4)–(5); [G15] §5 |
 | `MlmcLean/PDEExamples.lean` | Pathwise errors give `α` and `β = 2α` (`rates_of_pathwise`, `elliptic_rates`), the discrete maximum principle and stability of the explicit heat scheme for `k/h² ≤ ½`, the cost factor 8 (`parabolic_cost`), Euler–Maruyama = Milstein for additive noise, and the complexity (`pde_complexity`). | [G15] §7.1 |
 | `MlmcLean/PoissonCoupling.lean` | Tau-leaping and the Anderson–Higham Poisson coupling: the marginals are the fine and coarse tau-leaping chains, (2.4), the moments of the coupled difference, the correction variance `O(h)` for a Lipschitz, bounded propensity and a Lipschitz payoff (`β = 1`: the coupled paths are `O(h)` apart in mean square at the final time), and the complexity statements (`coupled_increments_hasLaw`, `integral_sq_coupledIncr_sub`, `coupledChain_fst`, `coupledChain_snd`, `tauLeaping_2_4`, `coupledChain_sq_le`, `variance_coupledChain_le`, `tauLeaping_level_variance`, `tauLeaping_complexity`). `MlmcLean/TauLeapingMLMC.lean`: Theorem 1 for the tau-leaping estimator with the Poisson coupling — square-integrable payoffs, (2.4), `β = 1` on every level, and MSE `< ε²` at cost `O(ε⁻²(log ε)²)` given the weak rate `α ≥ ½` of tau-leaping (`lintegral_sq_tauChain_lt_top`, `integral_tauCoarse`, `variance_tauCorrection_le`, `tauLeaping_mlmc_theorem1`). | [G15] §8 |
 | `MlmcLean/NestedSimulation.lean`, `MlmcLean/NestedMLMC.lean` | Nested simulation: the antithetic difference (with the constant `−1/8`, correcting the paper's `−1/4`), moment bounds, the exponents of §9.1–§9.2, and the nested MLMC estimator with its expectation, the rates `α = 1`, `β = 2` and the complexity `O(ε⁻²)` (`antithetic_quadratic`, `nested_variance_rate`, `nested_mean_rate`, `nested_complexity`). | [G15] §9 |
@@ -66,6 +69,15 @@ The statement-by-statement comparison with the papers, including every deviation
 | `MlmcLean/ApproxNormal.lean` | Approximate normal random variables: the `L²` projection behind (14)–(15), the lookup tables of methods 1–3, (16)–(19), the coupling (17), and that methods 2 and 3 cannot beat method 1 (`intervalMean_isLeast`, `method1_le`, `method1_le_perm`). `MlmcLean/LUTLimits.lean`: as `d → ∞` the MSE of method 1 (uniform intervals) tends to `0` for monotone `f` (`tendsto_method1MSE`), while that of method 3 (dyadic intervals) stays above a positive constant where `f` is strongly concave (`dyadic_mse_ge`, `method3_mse_ge`, `method3_mse_not_tendsto_zero`). | [HG25] §3 |
 | `MlmcLean/RoundingError.lean`, `MlmcLean/FixedPointPath.lean` | Fixed-point rounding and its error bounds (20)–(22), the error-variance model (25)–(29) with the independent and fully correlated cases (`variance_linearised_indep`, `variance_linearised_corr`, `vIndep_le_vCorr`), the GBM path of Algorithm 1, the sizes (39)–(41) of its variables and the accumulation of rounding errors along the path (`integral_abs_roundFixed_path_sub_le`). | [HG25] §4, §6.3 |
 | `MlmcLean/BitWidth.lean`, `MlmcLean/LagrangeBitWidth.lean` | The cost model (30)–(34), the separable optimisation, the Lagrange conditions (35) and (37) (sufficient and necessary), the ratio (38), the trends of §6.3 and the lookup-table size (`levelwise_optimisation`, `exists_unique_bitWidth`, `greedy_rounding_feasible`, `exists_eq35_isMin`, `eq35_of_isLocalMinOn`, `eq37_iff`). | [HG25] §5–§6 |
+| `MlmcLean/ML2RTheorem.lean` | ML2R end to end: the sharp weight bound `|w_ℓ| ≤ B² r^{(L−ℓ)(L−ℓ+1)/2}` (`abs_ml2rWeight_le_sharp`), the bias from the weak-error expansion, `≤ C_α K 2^{−αL(L+1)/2}` uniformly in `L` (`ml2r_bias_le`; the printed `2^{−αL²}` is not attainable), and the ML2R estimator's MSE `< ε²` at cost `O(ε⁻²|log ε|)` for `β = γ` and `O(ε⁻²2^{(γ−β)√(2 log₂(1/ε)/α)})` for `β < γ` (`ml2r_theorem_eq`, `ml2r_theorem_lt`). | [G15] §2.3 |
+| `MlmcLean/Theorem2.lean` (index set) | Theorem 2 on the simplex `{θ·ℓ ≤ L}`, `θ_d = α_d + (γ_d − β_d)/2`: the index set "of the form `ℓ·n ≤ L`" achieves the bounds (`giles_theorem2_indexSet`, `giles_theorem2_boundary_indexSet`, `mimc_complexity_core_indexSet`). | [G15] §2.4, p. 15 |
+| `MlmcLean/AsymptoticNormal.lean` | Asymptotic normality from Mathlib's central limit theorem: each level estimator (`tendstoInDistribution_levelEstimator`) and, for a fixed number of levels with `N_ℓ = m_ℓ n`, the MLMC estimator, `√n (Y − E[P_L]) → N(0, Σ V_ℓ/m_ℓ)` (`tendstoInDistribution_mlmcEstimator`); sums of independent `N(0, 1/n)` are `N(0, 1)` and sums of approximate normals are approximately normal (`sum_gaussian_hasLaw`, `tendstoInDistribution_sum_of_approxNormal`, `tendstoInDistribution_sum_inv_sqrt_mul`). | [G15] §2.1 p. 8; [HG25] §3.2 |
+| `MlmcLean/GilesRemarks.lean`, `MlmcLean/RandomShiftQMC.lean` | The randomised variance between `Σ V_ℓ/p_ℓ` and `(1+δ) Σ V_ℓ/p_ℓ` when `E_ℓ² ≤ δV_ℓ` (`singleTerm_variance_le_of_sq_le`), the combined variance and cost of two kept levels (`levelKeep_combined`), splitting to leading order iff `E[v]/V[m] = o(1/h)` (`splitting_leading_order`), `N_ℓ` linear for Markov chains (`markov_linear_levels`); a uniform random shift makes a QMC rule unbiased and independent shifts give i.i.d. replicates with an unbiased variance estimate (`shiftedQMC_unbiased`, `randomShift_replicates`). | [G15] §2.2, §2.6, §3.5, §5.2, §10.1 |
+| `MlmcLean/SDEDigital.lean`, `MlmcLean/SDEMisc.lean` | The §5 probability steps not in `SDEExtras`: Lipschitz payoffs; the digital option's variance from the strong error, `O(h^{1/3})` from mean square (sharp), `β = 1/3` for GBM with no assumption (`gbm_digital_variance_le`); conditional expectation of the last step with the `Φ` formulas, (2.4) and `V₀ = 0` (`digital_smoothing`, `digital_smoothing_coarse`, `digital_smoothing_level_zero`); Gaussian change of measure; the call payoff's derivative; the antithetic bound in `d` dimensions and for the call (`variance_antithetic_le_fderiv`, `variance_call_antithetic_le`); explicit versus tamed Euler steps for super-linear drift; the smoothed CDF for any bounded smoother; the density of a `d`-dimensional output. | [G15] §5.1–§5.7 |
+| `MlmcLean/ApplicationExtras.lean`, `MlmcLean/PoissonGrids.lean` | Summed Lévy increments have the coarse law, so (2.4) holds (`integral_levyCoarse`, `levy_telescoping`); exponential periods concentrate at `T`; FE with midpoint quadrature is the FD scheme (`fe_eq_centralDiff`); the elliptic rates `α = 2`, `β = 4` with a random `K` (`elliptic_rates_random`; no deterministic `K` exists, `not_ae_abs_gaussian_sq_mul_le`); the §7.3 scheme is one Milstein step (`spdeScheme_eq_milstein`); the Brownian-bridge and variable-precision paths agree in both roles (`bb_telescoping`, `vp_telescoping`); Poisson counts summed on union grids and tau-leaping on non-nested grids keep the laws, so (2.4) holds (`unionGrid_2_4`, `unionChain_2_4`); truncating increments breaks it (`roundFixed_sum_inconsistent_general`). | [G15] §6.2, §7, §8, §10.2 |
+| `MlmcLean/MarkovLimitLaw.lean` | The level bias decays geometrically (`abs_integral_sub_limit_le`); the law of the limit is the unique invariant law (`existsUnique_invariant`, `invariant_unique`), `U[0, 2]` in the example (`halfStep_invariant_unique`, `halfStep_limit_uniform`); Glynn–Rhee's randomised estimator of `E[f(X_∞)]` is unbiased with finite variance and cost (`markov_randomised_mlmc`), and MLMC reaches MSE `< ε²` at cost `O(ε⁻²)` (`markov_mlmc_theorem1`). | [G15] §10.1 |
+| `MlmcLean/NestedRates.lean` | The §9.2 Taylor expansion with the coefficient `−1/8` (`mimc_antithetic_quadratic`, `abs_mimc_antithetic_taylor_le`); nested MLMC with `2^ℓ` inner samples of a level-`ℓ` inner approximation (e.g. `2^ℓ` Milstein steps, whose weak and strong orders are hypotheses): `α = 1`, `β = 2`, `γ = 2` and cost `O(ε⁻²(log ε)²)` (`nested_sde_bias_rate`, `nested_sde_variance_rate`, `nested_sde_mlmc_complexity`); a piecewise linear `f`: `β = 3/2`, `α = ½` and cost `O(ε⁻²)` when the inner mean has little mass near the kink, e.g. a bounded density (`antithetic_kink`, `nested_kink_variance_rate_of_density`, `nested_kink_mlmc_complexity`); the nested MIMC rates `E[Y_ℓ] = O(2^{−ℓ₁−ℓ₂})`, `V_ℓ = O(2^{−2ℓ₁−2ℓ₂})` (`nested_mimc_mean_rate`, `nested_mimc_variance_rate`). | [G15] §9.1–§9.2 |
+| `MlmcLean/HaasGilesRemarks.lean` | The plotted cost factor and when the nested estimator is cheaper (`nestedCost_le_of_costFactor_le`; the full cost (32) needs `ρ²(1+ρ²) < 1`, `exists_costFactor_lt_one_nestedCost_gt`), two-sided sizes of the path variables (39)–(41) (`gbmPath_size_bounds`, `gbmPath_sq_largest`), and the accumulated rounding error with fixed precision: exact variance, lower bound, and it exceeds the discretisation error for small `h` (`perturbed_path_sub_mean_variance`, `strongError_lt_integral_sq_perturbed_path_sub`). | [HG25] §6.1, §6.3 |
 
 No `sorry` and no extra axioms (see Verification below).
 
@@ -107,6 +119,21 @@ No `sorry` and no extra axioms (see Verification below).
   exponents only when `α_d > ½β_d`; `giles_theorem2_full` states exactly that (the exponents
   exist, and are the paper's in the strict case). The explicit boundary exponents of
   `giles_theorem2_boundary` are this formalisation's.
+* **Hypotheses in place of SDE theory.** Where a claim of §5, §9 or §10 rests on the convergence
+  order of a discretisation, that order is a hypothesis of the Lean statement (for example the
+  Milstein weak and strong orders of the inner paths in `NestedRates.lean`, or the mean-square
+  strong rate in `SDEDigital.lean`). Where the paper's argument needs more than the order, the
+  extra hypothesis is stated: a bounded density of the underlying for the digital option (§5.1),
+  a bounded conditional density for the antithetic call (§5.3), little mass of the inner mean near
+  the kink for a piecewise linear `f` (§9.1), `L⁴` strong convergence and a Lipschitz `f″` for the
+  nested MIMC rates (§9.2).
+* **ML2R's weak-error expansion.** The paper's remainder `O(2^{−αℓL})` is read with one constant
+  for all `L` and `ℓ ≤ L`, which the complexity argument needs since `L` grows as `ε → 0`.
+* **Deterministic grids.** The union grids for non-nested timesteps (§5.6, §8) are deterministic;
+  the adaptive, path-dependent grids of §5.6 are not covered.
+* **Random constants.** The PDE bound `|P − P_ℓ| < K h_ℓ²` of §7.1 holds with a random `K`,
+  `E[K²] < ∞`; for the paper's example no deterministic `K` exists
+  (`not_ae_abs_gaussian_sq_mul_le`).
 
 ### Build
 
@@ -130,6 +157,10 @@ lake env lean scripts/AxiomCheck.lean
 This prints `#print axioms` for every main theorem. Each one must list only `propext`,
 `Classical.choice` and `Quot.sound`, the standard axioms, and in particular no `sorryAx`.
 GitHub Actions runs the build and this audit on every push (`.github/workflows/lean_action_ci.yml`).
+Where GitHub Actions is not available (for example when the free minutes are used up),
+`bash scripts/local_ci.sh` runs the same steps locally: the uploader tests, `lake build`, the
+generator regression test, this audit, the prove2.me facts, and the generation, build and
+validation of the platform tree.
 
 ### prove2.me
 
@@ -204,6 +235,7 @@ MlmcLean/Implementation.lean      §3.3–§3.5: the driver's estimates and chec
 MlmcLean/EulerMaruyama.lean       [HG25] (2), (4)–(5), §5.1: the Euler–Maruyama coupling
 MlmcLean/SDEExtras.lean           §5: the steps that need no SDE theory
 MlmcLean/GBMEulerMaruyama.lean    §5.1: geometric Brownian motion end to end
+MlmcLean/GBMMilstein.lean         §5.2: the Milstein scheme for geometric Brownian motion end to end
 MlmcLean/PDEExamples.lean         §7.1: the PDE examples
 MlmcLean/PoissonCoupling.lean     §8: tau-leaping and the Poisson coupling
 MlmcLean/TauLeapingMLMC.lean      §8: Theorem 1 for tau-leaping MLMC
@@ -218,6 +250,7 @@ MlmcLean/FixedPointPath.lean      [HG25] §4.1, §6.3: the GBM path and error ac
 MlmcLean/BitWidth.lean            [HG25] §5–§6: the cost model and bit-width optimisation
 MlmcLean/LagrangeBitWidth.lean    [HG25] §4.3, §6: the Lagrange conditions (35), (37)
 scripts/AxiomCheck.lean           axiom audit (run in CI)
+scripts/local_ci.sh               the steps of the CI workflow, for running them locally
 scripts/prove2me/                 prove2.me packaging: extractors, generator, validator, uploader
 PLAN.md, CLAUDE.md                milestones; instructions for Claude sessions
 notes/statement-audit.md          statement-by-statement comparison with the papers

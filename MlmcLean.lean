@@ -65,6 +65,41 @@
 -- * `MlmcLean.GBMEulerMaruyama` — Giles §5.1: the Euler–Maruyama MLMC estimator for geometric
 --   Brownian motion end to end (strong error O(h), α = ½, β = 1, Theorem 1 with no
 --   assumed rate)
+-- * `MlmcLean.GBMMilstein` — Giles §5.2: the Milstein MLMC estimator for geometric Brownian
+--   motion end to end (strong error O(h²) in mean square, α = 1, β = 2, Theorem 1 with
+--   cost O(ε⁻²) and no assumed rate)
+-- * `MlmcLean.ML2RTheorem` — Giles §2.3: the ML2R estimator end to end (sharp weight bound,
+--   bias O(2^{−αL(L+1)/2}) uniformly in L from the weak-error expansion, MSE < ε² at cost
+--   O(ε⁻²|log ε|) for β = γ and O(ε⁻²2^{(γ−β)√(2 log₂(1/ε)/α)}) for β < γ)
+-- * `MlmcLean.GilesRemarks` — Giles §2.2, §2.6, §5.2, §10.1: the randomised variance within
+--   (1 + δ) of Σ V_ℓ/p_ℓ, the combined variance and cost of two kept levels, splitting to
+--   leading order, N_ℓ linear in ℓ for Markov chains
+-- * `MlmcLean.RandomShiftQMC` — Giles §3.5: a random shift makes a QMC rule unbiased; independent
+--   shifts give i.i.d. replicates whose average has variance V₁/R, estimated without bias
+-- * `MlmcLean.AsymptoticNormal` — Giles §2.1 (Collier et al.) and Haas–Giles §3.2: each level
+--   estimator and, for a fixed number of levels, the MLMC estimator are asymptotically normal
+--   (Mathlib's CLT, Lévy's continuity theorem); sums of independent N(0, 1/n) are N(0, 1)
+-- * `MlmcLean.PoissonGrids` — Giles §8 (with §5.6) and §10.2: Poisson counts summed over the
+--   steps of each path on a union grid have the right laws, so (2.4) holds, also for
+--   tau-leaping on non-nested deterministic grids; rounding increments breaks (2.4)
+-- * `MlmcLean.HaasGilesRemarks` — Haas–Giles §6: the cost factor of Fig. 3 and 5 and when the
+--   nested estimator is cheaper, two-sided sizes of the path variables (39)–(41), and the
+--   rounding error with fixed precision (exact variance, lower bound, beats discretisation)
+-- * `MlmcLean.SDEMisc` — Giles §5.3, §5.6, §5.7: the antithetic bound for smooth payoffs in d
+--   dimensions and for the call option, explicit versus tamed Euler steps for super-linear
+--   drift, the smoothed CDF for any bounded smoother, the density of a d-dimensional output
+-- * `MlmcLean.SDEDigital` — Giles §5.1–§5.4: Lipschitz payoffs, the digital-option variance from
+--   the strong error (O(h^{1/3}), sharp; β = 1/3 for GBM with no assumption), smoothing by
+--   conditional expectation (Φ formulas, (2.4), V₀ = 0), change of measure, the call derivative
+-- * `MlmcLean.ApplicationExtras` — Giles §6.2, §7.1, §7.3, §10.2: summed Lévy increments keep
+--   the law ((2.4)), exponential periods, FE = FD, random-K elliptic rates (no deterministic K
+--   exists), the SPDE Milstein scheme, the Brownian-bridge and variable-precision paths
+-- * `MlmcLean.MarkovLimitLaw` — Giles §10.1: the level bias decays geometrically, the invariant
+--   law exists and is unique (U[0, 2] in the example), Glynn–Rhee's randomised estimator of
+--   E[f(X_∞)] is unbiased with finite variance and cost, and MLMC reaches it at cost O(ε⁻²)
+-- * `MlmcLean.NestedRates` — Giles §9.1–§9.2: the MIMC Taylor expansion (coefficient −1/8),
+--   MLMC with discretised inner paths (α = 1, β = γ = 2, cost O(ε⁻²(log ε)²)), a piecewise
+--   linear f (β = 3/2, cost O(ε⁻²)), and the nested MIMC rates O(2^{−ℓ₁−ℓ₂}), O(2^{−2ℓ₁−2ℓ₂})
 import MlmcLean.Allocation
 import MlmcLean.Estimator
 import MlmcLean.LevelDiff
@@ -106,3 +141,15 @@ import MlmcLean.LUTLimits
 import MlmcLean.MarkovLimit
 import MlmcLean.TauLeapingMLMC
 import MlmcLean.GBMEulerMaruyama
+import MlmcLean.GBMMilstein
+import MlmcLean.ML2RTheorem
+import MlmcLean.GilesRemarks
+import MlmcLean.RandomShiftQMC
+import MlmcLean.AsymptoticNormal
+import MlmcLean.PoissonGrids
+import MlmcLean.HaasGilesRemarks
+import MlmcLean.SDEMisc
+import MlmcLean.SDEDigital
+import MlmcLean.ApplicationExtras
+import MlmcLean.MarkovLimitLaw
+import MlmcLean.NestedRates
