@@ -306,12 +306,8 @@ theorem milsteinPath_gbm (r σ h s₀ : ℝ) (z : ℕ → ℝ) (n : ℕ) :
   induction n with
   | zero => simp [milsteinPath]
   | succ n ih =>
-    rw [milsteinPath_succ, ih, Finset.prod_range_succ, milsteinStep, gbmMilFactor]
-    -- `milsteinStep` was elaborated in another module: match its `deriv` up to instances
-    first
-      | (rw [hd]; ring)
-      | (simp only [hd]; ring)
-      | (erw [hd]; ring)
+    rw [milsteinPath_succ, ih, Finset.prod_range_succ, milsteinStep, gbmMilFactor, hd]
+    ring
 
 /-! ### The second moment of the error -/
 
