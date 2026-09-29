@@ -94,6 +94,9 @@
 -- * `MlmcLean.ApplicationExtras` — Giles §6.2, §7.1, §7.3, §10.2: summed Lévy increments keep
 --   the law ((2.4)), exponential periods, FE = FD, random-K elliptic rates (no deterministic K
 --   exists), the SPDE Milstein scheme, the Brownian-bridge and variable-precision paths
+-- * `MlmcLean.MarkovLimitLaw` — Giles §10.1: the level bias decays geometrically, the invariant
+--   law exists and is unique (U[0, 2] in the example), Glynn–Rhee's randomised estimator of
+--   E[f(X_∞)] is unbiased with finite variance and cost, and MLMC reaches it at cost O(ε⁻²)
 import MlmcLean.Allocation
 import MlmcLean.Estimator
 import MlmcLean.LevelDiff
@@ -145,3 +148,4 @@ import MlmcLean.HaasGilesRemarks
 import MlmcLean.SDEMisc
 import MlmcLean.SDEDigital
 import MlmcLean.ApplicationExtras
+import MlmcLean.MarkovLimitLaw

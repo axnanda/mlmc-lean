@@ -521,6 +521,20 @@ import MlmcLean
 #print axioms MLMC.integral_vpCoarse
 #print axioms MLMC.vp_telescoping
 #print axioms MLMC.roundFixed_sum_inconsistent
+#print axioms MLMC.lintegral_dist_limit_le
+#print axioms MLMC.sq_integral_sub_limit_le
+#print axioms MLMC.abs_integral_sub_limit_le
+#print axioms MLMC.abs_integral_fwdIter_sub_limit_le
+#print axioms MLMC.map_limit_invariant
+#print axioms MLMC.map_limit_eq_of_invariant
+#print axioms MLMC.invariant_unique
+#print axioms MLMC.existsUnique_invariant
+#print axioms MLMC.map_limit_halfStep
+#print axioms MLMC.halfStep_limit_uniform
+#print axioms MLMC.halfStep_invariant_unique
+#print axioms MLMC.markov_mlmc_rates
+#print axioms MLMC.markov_randomised_mlmc
+#print axioms MLMC.markov_mlmc_theorem1
 -- helper lemmas that the prove2.me generator promotes to nodes
 #print axioms MLMC.sqrt_Vb_mul_Cb
 #print axioms MLMC.two_rpow_levelL_le
