@@ -71,6 +71,11 @@
 -- * `MlmcLean.ML2RTheorem` — Giles §2.3: the ML2R estimator end to end (sharp weight bound,
 --   bias O(2^{−αL(L+1)/2}) uniformly in L from the weak-error expansion, MSE < ε² at cost
 --   O(ε⁻²|log ε|) for β = γ and O(ε⁻²2^{(γ−β)√(2 log₂(1/ε)/α)}) for β < γ)
+-- * `MlmcLean.GilesRemarks` — Giles §2.2, §2.6, §5.2, §10.1: the randomised variance within
+--   (1 + δ) of Σ V_ℓ/p_ℓ, the combined variance and cost of two kept levels, splitting to
+--   leading order, N_ℓ linear in ℓ for Markov chains
+-- * `MlmcLean.RandomShiftQMC` — Giles §3.5: a random shift makes a QMC rule unbiased; independent
+--   shifts give i.i.d. replicates whose average has variance V₁/R, estimated without bias
 import MlmcLean.Allocation
 import MlmcLean.Estimator
 import MlmcLean.LevelDiff
@@ -114,3 +119,5 @@ import MlmcLean.TauLeapingMLMC
 import MlmcLean.GBMEulerMaruyama
 import MlmcLean.GBMMilstein
 import MlmcLean.ML2RTheorem
+import MlmcLean.GilesRemarks
+import MlmcLean.RandomShiftQMC

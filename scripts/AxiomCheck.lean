@@ -421,6 +421,14 @@ import MlmcLean
 #print axioms MLMC.mimc_complexity_boundary_indexSet
 #print axioms MLMC.giles_theorem2_indexSet
 #print axioms MLMC.giles_theorem2_boundary_indexSet
+#print axioms MLMC.singleTerm_variance_le_of_sq_le
+#print axioms MLMC.singleTermN_samples_of_sq_le
+#print axioms MLMC.levelKeep_combined
+#print axioms MLMC.splitting_variance_le
+#print axioms MLMC.splitting_leading_order
+#print axioms MLMC.markov_linear_levels
+#print axioms MLMC.shiftedQMC_unbiased
+#print axioms MLMC.randomShift_replicates
 -- helper lemmas that the prove2.me generator promotes to nodes
 #print axioms MLMC.sqrt_Vb_mul_Cb
 #print axioms MLMC.two_rpow_levelL_le
