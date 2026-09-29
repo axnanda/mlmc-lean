@@ -291,7 +291,10 @@ Lean statement or to the reason it is not formalised. The deviations of the new 
   approximations `g_ℓ`; from them `α = 1`, `β = 2`, `γ = 2` and cost `O(ε⁻²(log ε)²)`
   (`nested_sde_mlmc_complexity`). The piecewise-linear `f` of Bujok, Hambly and Reisinger gives
   `β = 3/2` and `O(ε⁻²)` if the inner mean has little mass near the kink, e.g. a bounded density
-  (`nested_kink_variance_rate_of_density`, `nested_kink_mlmc_complexity`). The MIMC rates
+  (`nested_kink_variance_rate_of_density`, `nested_kink_mlmc_complexity`), and the conditional
+  fourth moments `E_W[g(z, W)⁴]` are bounded uniformly in `z` (raw moments, a simplification that
+  also bounds the conditional mean); the bias rate proved there is `α = ½`, which is what
+  Theorem 1 needs with `β = 3/2`, `γ = 1`. The MIMC rates
   `E[Y_ℓ] = O(2^{−ℓ₁−ℓ₂})`, `V_ℓ = O(2^{−2ℓ₁−2ℓ₂})` need `f″` Lipschitz and `L⁴` strong
   convergence (`nested_mimc_mean_rate`, `nested_mimc_variance_rate`); the paper's intermediate
   "`Δg_{1,ℓ₂} + Δg_{1,ℓ₂−1} = O(2^{−ℓ₁/2})`" holds only after re-centring.

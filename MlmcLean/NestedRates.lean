@@ -1539,7 +1539,10 @@ little mass near the kink: `ν{|E_W[g(Z, W)] − k| ≤ t} ≤ c_d t` for all `t
 within the inner sampling error of `k`; for each outer sample `E_W[Y²] = O(M⁻¹)` and
 `(E_W[g(z, W)] − k)² E_W[Y²] = O(M⁻²)` (`sq_antithetic_kink_le`), and the small-ball bound turns
 these into `O(M^{−3/2})` (`integral_le_of_small_ball`).  The paper states no hypotheses for this
-case; the two above are what the argument needs.  A bound `P(k between A_M and A′_M) = O(M^{−1/2})`
+case; the argument needs the small-ball bound and bounded conditional fourth moments.  Bounding the
+raw moments `E_W[g(z, W)⁴]` rather than the centred ones is a simplification: it also bounds the
+conditional mean `E_W[g(z, W)]`, which excludes, e.g., `g(Z, W) = Z + W` with a Gaussian outer
+variable `Z`.  A bound `P(k between A_M and A′_M) = O(M^{−1/2})`
 on the probability of straddling the kink, with fourth moments, would not be enough: Cauchy–Schwarz
 then gives only `E[Y²] = O(M^{−5/4})`, and `(A_M − A′_M)² = M^{−3/4}` on an event of probability
 `M^{−1/2}` (and `0` elsewhere) attains it; this is why the argument conditions on the outer

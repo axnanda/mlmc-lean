@@ -300,3 +300,67 @@ all kept as they are:
 - Packet artefacts: `open … in` lines of helper declarations left out of the packet preceded a
   `variable [IsProbabilityMeasure μ]`, so the auditors could not tell whether the instance is in
   force; in the source it is a standalone `variable` (and the statements are true either way).
+
+**Eleventh round (2026-09-29).** Blind read-backs of every theorem added in round 10, one packet
+per module group, each read by its own auditor under the same rules (packet only, Mathlib sources
+for conventions, numerical checks saved with their output): `ml2r_theorem2_indexset.md` (M1:
+`ML2RTheorem` and the index-set form of Theorem 2; 9 theorems), `remarks_qmc_clt.md` (M2:
+`GilesRemarks`, `RandomShiftQMC`, `AsymptoticNormal`; 13), `poisson_grids.md` (M3: `PoissonGrids`;
+13), `haas_giles_remarks.md` (M4: `HaasGilesRemarks`; 16), `sde_misc.md` (M5: `SDEMisc`; 20),
+`sde_digital.md` (M6: `SDEDigital`; 18), `application_extras.md` (M7: `ApplicationExtras`; 20),
+`markov_limit_law.md` (M8: `MarkovLimitLaw`; 14) and `nested_rates.md` (M9: `NestedRates`; 16). All
+139 theorems read back as true; none is vacuous and none holds only because of a junk value. The
+auditors checked the explicit constants numerically (exact computation, random search and
+hill-climbing where possible) and compiled their scratch copies of the statements; the M9 auditor
+also confirmed that its 16 statements are `rfl`-equal to the compiled theorems.
+Findings and what was done:
+
+- **Packet defects, not statement defects.** The extractor cut a statement whose line ends in `∧`
+  before a line starting with `|…|` (M4 #9, M5 #13 and #17, two in M8); it was fixed and the
+  full statements were given to the auditors, who checked them (M4's auditor recovered the
+  statement with `#check`).  The packets of M2 and M8 lacked the definition `singleTerm` (and M2's
+  `singleTermN`), which the extractor cut because an `omit … in` line precedes it; the auditors
+  recovered them with `#print`.  Stray `open … in` lines (M1) made the auditor unsure
+  whether `[IsProbabilityMeasure μ]` is in force; in the source it is a standalone `variable`.
+- **Rounding ties.** `roundFixed_sum_inconsistent` and `roundFixed_sum_inconsistent_general`
+  evaluate `round` exactly at a tie, which Mathlib's `round` breaks upwards; the paper only says
+  "round-to-nearest".  Both docstrings and the docstring of `roundFixed` now say so, and the
+  general theorem's docstring gives the witnesses for ties broken downwards.  The phenomenon (the
+  coarse increment of the two roles differs) does not depend on the tie rule.
+- **Scope made explicit in the docstrings.** The tau-leaping union-grid theorems compare the laws
+  of the state at one grid time, so (2.4) is for payoffs of the terminal state (path functionals
+  are covered when the rate does not depend on the state, `unionGrid_2_4`); `unionGrid_hasLaw`
+  gives each path's own law, not the joint law.  The MLMC central limit theorem is for a fixed
+  number of levels (already in its docstring).
+- **Haas–Giles §6.1.** The margin `ρ²(1 + ρ²) < 1` of `nestedCost_lt_of_costFactor_le` is
+  sufficient, not sharp; the auditor computed the sharp per-level threshold `ρ ≈ 0.943`, which we
+  confirmed (`a + b√(1 + a²) < 1` for all `a + b ≤ ρ` iff `ρ < 0.9429…`); the docstring now says
+  so.  The pairwise independence of the terms in `variance_linearised_indep_eq` is the paper's
+  assumption; the docstring notes that only their zero covariances are used.
+- **SDEDigital.** The Gaussian-tail hypothesis of `digital_mismatch_le_of_tail` is used at one
+  `δ` only and does not hold for all `δ` for the Euler–Maruyama error of geometric Brownian motion
+  (lognormal tails); its docstring now says so, and that case is `gbm_digital_variance_le`
+  (`β = 1/3`, which is what the mean-square strong rate gives; the observed rate `½` needs more,
+  as the docstrings already say).  The constant `3` in the digital mismatch bounds is valid, not
+  sharp (`12^{1/3}` is).
+- **MarkovLimitLaw.** Uniqueness of the invariant law holds among all probability measures, with
+  no moment condition (the auditor exhibited a Cauchy example to which it applies).  The
+  multilevel conclusions state the variance and the MSE bounds without restating square
+  integrability; under the hypotheses (Hölder `f`, finite `2γ`-th moment) every quantity involved
+  is square integrable, so these are the genuine values.  `[CompleteSpace α]` is needed only for
+  the existence of the limit and is kept on the related statements.
+- **NestedRates.** The kink theorems bound the raw conditional fourth moments `E_W[g(z, W)⁴]`
+  uniformly in `z`, which also bounds the conditional mean (excluding, e.g., `g = Z + W` with a
+  Gaussian `Z`); centred moments would do, and the docstring of `nested_kink_variance_rate` now
+  says so.  The kink bias rate proved is `α = ½` (sharp without a small-ball hypothesis on the
+  bias, and what Theorem 1 needs); the mean rates `nested_sde_mean_rate`,
+  `nested_mimc_mean_rate` follow from the variance rates by `|E Y| ≤ (1 + E Y²)/2`, as the paper's
+  `E[Y_ℓ] = O(…)` does; the weak convergence hypotheses hold uniformly in `z`.  The constants are
+  valid but loose (the `β = 3/2` bound beats the elementary `β = 1` bound only from level about 21
+  in the auditor's example): only the rates matter for Theorem 1.
+- **Kept as they are.** Hypotheses that exclude meaningless cases but are not needed for truth
+  (`hCt : 0 ≤ C̃_ℓ` in `nestedCost_le_of_costFactor_le`; positivity hypotheses in the ML2R cost
+  theorems); the bounded conditional density in `variance_call_antithetic_le` (the substitute for
+  the paper's "lengthy analysis", documented, with the weaker `…_holder` version needing only
+  marginal information); the modelling assumptions of the rounding-error model (22)
+  (uniform, independent errors), which are the paper's.
