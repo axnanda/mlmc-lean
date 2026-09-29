@@ -325,7 +325,7 @@ theorem abs_smoothCDF_sub_le {P : Ω → ℝ} (hP : Measurable P) {g : ℝ → �
       Set.indicator {ω | |P ω - x| ≤ δ} (fun _ => (1 : ℝ)) ω := by
     intro ω
     have hb := hgb ((x - P ω) / δ)
-    simp only [Set.indicator_apply, Set.mem_setOf_eq]
+    simp only [Set.indicator_apply, Set.mem_ofPred_eq]
     by_cases hω : |P ω - x| ≤ δ
     · rw [if_pos hω]
       by_cases hlt : P ω < x
@@ -367,7 +367,7 @@ theorem tendsto_smoothCDF {P : Ω → ℝ} (hP : Measurable P) {g : ℝ → ℝ}
       (fun i j _ hij ω hω => le_trans hω hij) ⟨1, one_pos, measure_ne_top μ _⟩
     have hinter : (⋂ r > (0 : ℝ), {ω | |P ω - x| ≤ r}) = {ω | P ω = x} := by
       ext ω
-      simp only [Set.mem_iInter, Set.mem_setOf_eq]
+      simp only [Set.mem_iInter, Set.mem_ofPred_eq]
       constructor
       · intro h
         by_contra hne

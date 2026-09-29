@@ -277,7 +277,7 @@ lemma ml2rLevel_lt (α c₁ ε : ℝ) :
 possible to obtain the usual `O(ε)` weak error with a value of `L` which is the square root of the
 usual value").  Standard MLMC needs `levelL α c₁ (ε/2) = ⌈log₂(2c₁/ε)/α⌉` levels for the bias
 `c₁ 2^{−αL} ≤ ε/2` (`levelL_bias`); ML2R needs at most `√(2 · levelL α c₁ (ε/2)) + 1`. -/
-theorem ml2rLevel_lt_sqrt_levelL {α : ℝ} (hα : 0 < α) (c₁ ε : ℝ) :
+theorem ml2rLevel_lt_sqrt_levelL {α : ℝ} (_hα : 0 < α) (c₁ ε : ℝ) :
     (ml2rLevel α c₁ ε : ℝ) < Real.sqrt (2 * levelL α c₁ (ε / 2)) + 1 := by
   refine (ml2rLevel_lt α c₁ ε).trans_le (add_le_add (Real.sqrt_le_sqrt ?_) le_rfl)
   have h1 : Real.logb 2 (c₁ / (ε / 2)) / α ≤ levelL α c₁ (ε / 2) := Nat.le_ceil _

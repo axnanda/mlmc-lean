@@ -245,7 +245,7 @@ theorem ae_tendsto_backIter [CompleteSpace α] (hφm : Measurable fun q : α × 
   have hWm : Measurable fun ω => ∑' n, ENNReal.ofReal θ⁻¹ ^ n *
       ENNReal.ofReal (dist (backIter φ n (fun k => ξ k ω) x₀)
         (backIter φ (n + 1) (fun k => ξ k ω) x₀) ^ p) :=
-    Measurable.ennreal_tsum fun n => (hDm n).const_mul _
+    Measurable.tsum fun n => (hDm n).const_mul _
   filter_upwards [ae_lt_top hWm hW] with ω hω
   -- `d(Z_n, Z_{n+1})^p ≤ θ^n S` with `S = W(ω) < ∞`
   obtain ⟨S, hS⟩ : ∃ S : ℝ, S = (∑' n, ENNReal.ofReal θ⁻¹ ^ n *

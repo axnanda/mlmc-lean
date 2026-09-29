@@ -469,7 +469,7 @@ theorem mimc_rect_lower_bounds (P : Ω → ℝ) (Pℓ : (Fin D → ℕ) → Ω �
       congr 1
       ext ω
       simp [Finset.sum_apply]
-    rw [h1, hmean, sum_rectSet_crossDiff p L, integral_sub (hPℓ L) hP] <;> rfl
+    rw [h1, hmean, sum_rectSet_crossDiff p L, integral_sub (hPℓ L) hP]
   have hsum : MemLp (∑ ℓ ∈ rectSet L, Y ℓ (N ℓ)) 2 μ :=
     memLp_finsetSum' _ fun ℓ _ => hY ℓ (N ℓ) (hN ℓ)
   have hind' : Set.Pairwise ↑(rectSet L) fun i j => IndepFun (Y i (N i)) (Y j (N j)) μ :=

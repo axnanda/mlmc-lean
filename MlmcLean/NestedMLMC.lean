@@ -223,6 +223,7 @@ lemma nestedSign_sq (M m : ℕ) : nestedSign M m ^ 2 = 1 := by
   unfold nestedSign
   split_ifs <;> norm_num
 
+omit [MeasurableSpace 𝒵] [MeasurableSpace 𝒲] in
 /-- **The fine inner mean is the average of the two coarse ones** (Giles 2015, §9.1: "split the
 `M_ℓ` samples of `W` for the fine value into two subsets of size `M_{ℓ−1}` for the coarse
 value"): `A_{2M} = ½ (A_M + A'_M)`. -/
@@ -232,6 +233,7 @@ theorem innerMean_two_mul (g : 𝒵 → 𝒲 → ℝ) (M : ℕ) (z : 𝒵) (w : 
   rw [two_mul, Finset.sum_range_add, Nat.cast_add, ← two_mul, mul_inv]
   ring
 
+omit [MeasurableSpace 𝒵] [MeasurableSpace 𝒲] in
 /-- **The two coarse means as a signed sum** (Giles 2015, §9.1): for every `a`,
 `A_M − A'_M = M⁻¹ ∑_{m<2M} s_m (g(z, w_m) − a)` with `s_m = +1` for `m < M` and `−1` otherwise. -/
 lemma signed_sum_eq (g : 𝒵 → 𝒲 → ℝ) (M : ℕ) (z : 𝒵) (w : ℕ → 𝒲) (a : ℝ) :
@@ -249,6 +251,7 @@ lemma signed_sum_eq (g : 𝒵 → 𝒲 → ℝ) (M : ℕ) (z : 𝒵) (w : ℕ �
   simp only [innerMean, shiftSeq]
   ring
 
+omit [MeasurableSpace 𝒵] [MeasurableSpace 𝒲] in
 /-- **The inner mean minus a constant as a sum** (Giles 2015, §9.1): for `M ≥ 1` and every `a`,
 `A_M − a = M⁻¹ ∑_{m<M} (g(z, w_m) − a)` (written with the sign `s_m = +1`, `m < M`). -/
 lemma centred_sum_eq (g : 𝒵 → 𝒲 → ℝ) {M : ℕ} (hM : 0 < M) (z : 𝒵) (w : ℕ → 𝒲) (a : ℝ) :
@@ -271,6 +274,7 @@ lemma measurable_innerMean {g : 𝒵 → 𝒲 → ℝ} (hg : Measurable (Functio
 lemma measurable_shiftSeq (M : ℕ) : Measurable (shiftSeq (𝒲 := 𝒲) M) :=
   measurable_pi_lambda _ fun m => measurable_pi_apply (M + m)
 
+omit [MeasurableSpace 𝒵] in
 /-- For a fixed outer sample the inner mean is measurable in the inner samples. -/
 lemma measurable_innerMean_right {g : 𝒵 → 𝒲 → ℝ} {z : 𝒵} (hgz : Measurable (g z)) (M : ℕ) :
     Measurable fun w : ℕ → 𝒲 => innerMean g M z w := by
@@ -379,9 +383,10 @@ theorem fiber_sum_moments {h : 𝒲 → ℝ} (hh : Measurable h)
   have hX1 : ∀ m, Integrable (fun w : ℕ → 𝒲 => c m * (h (w m) - a)) (innerLaw ρ) := fun m => by
     simpa using integrable_pow_of_pow_four (hXm m) (hX4 m) (k := 1) (by norm_num)
   refine ⟨m4, ?_, m2, m4le⟩
-  rw [integral_finset_sum _ fun m _ => hX1 m]
+  rw [integral_finsetSum _ fun m _ => hX1 m]
   exact Finset.sum_eq_zero fun m _ => hX0 m
 
+omit [MeasurableSpace 𝒵] in
 /-- **The moments of the nested differences for a fixed outer sample** (Giles 2015, §9.1, p. 58:
 "By the Central Limit Theorem, `Δg₁⁽ⁿ⁾, Δg₂⁽ⁿ⁾ = O(M_ℓ^{−1/2})` and therefore
 `f″(E[g(Z⁽ⁿ⁾, W)])(Δg₁⁽ⁿ⁾ − Δg₂⁽ⁿ⁾)² = O(M_ℓ⁻¹)`").  Fix `z` with `E_W[g(z, W)⁴] =: m₄ < ∞`, let
@@ -446,6 +451,7 @@ theorem fiber_nested_moments (g : 𝒵 → 𝒲 → ℝ) (z : 𝒵) (hgz : Measu
       _ ≤ 1 + 16 * ∫ v, g z v ^ 4 ∂ρ := by rw [ht]; linarith
   · rw [integral_const_mul, j1, mul_zero]
 
+omit [MeasurableSpace 𝒵] in
 /-- **The bias for a fixed outer sample** (Giles 2015, §9.1, p. 58: the Taylor expansion of `f`
 about `E[g(Z⁽ⁿ⁾, W)]` together with "`Δg = O(M_ℓ^{−1/2})`"; the first-order term has mean zero).
 Let `f′` be `K`-Lipschitz, fix `z` with `E_W[g(z, W)⁴] =: m₄ < ∞`, let `G = E_W[g(z, W)]` and
@@ -536,6 +542,7 @@ lemma fourth_moment_fibers {g : 𝒵 → 𝒲 → ℝ}
       ∫ z, ∫ v, g z v ^ 4 ∂ρ ∂ν = ∫ p, g p.1 p.2 ^ 4 ∂(ν.prod ρ) :=
   ⟨hg4.prod_right_ae, hg4.integral_prod_left, (integral_prod _ hg4).symm⟩
 
+omit [MeasurableSpace 𝒵] [MeasurableSpace 𝒲] in
 /-- **The antithetic correction is at most `(K/8)(A_M − A'_M)²`** (Giles 2015, §9.1, p. 58: the
 Taylor expansion of `Y_ℓ`, with `A_M − A'_M = Δg₁ − Δg₂`): if `f′` is `K`-Lipschitz, then
 `|Y_{ℓ+1}| ≤ (K/8)(A_M − A'_M)²` pointwise, `M = 2^ℓ`. -/
