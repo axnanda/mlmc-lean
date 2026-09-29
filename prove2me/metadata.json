@@ -6075,9 +6075,10 @@
   "MLMC_SDEMisc": {
    "definition_title": "The explicit and the tamed Euler drift steps $S\\mapsto S+h\\,b(S)$ and $S\\mapsto S+h\\,b(S)/(1+h|b(S)|)$",
    "natural_language_statement": "These two definitions are the drift parts (the Euler–Maruyama step without the Brownian increment) of the explicit and the tamed Euler schemes discussed in Giles (2015), §5.6, p. 44 for SDEs with a super-linear drift such as $dS_t=-S_t^3\\,dt+dW_t$. Let $b:\\mathbb R\\to\\mathbb R$ be a drift and $h\\in\\mathbb R$ a timestep.\n\n**`eulerDriftStep`.** The explicit Euler step\n\n$$\n\\mathrm{eulerDriftStep}(b,h,S)=S+h\\,b(S).\n$$\n\n**`tamedDriftStep`.** The tamed Euler step\n\n$$\n\\mathrm{tamedDriftStep}(b,h,S)=S+\\frac{h\\,b(S)}{1+h\\,|b(S)|},\n$$\n\nin which the drift increment is divided by $1+h|b(S)|$, so that it is less than $1$ in absolute value for $h\\ge0$ (\"a slight modification to the Euler-Maruyama discretisation which limits the size of the drift term … when $S_t$ is large\"; the survey gives no formula, this is the taming of Hutzenthaler, Jentzen and Kloeden). For $h<0$ the denominator may vanish, and then Lean's convention $x/0=0$ applies; the theorems assume $h\\ge0$.",
-   "source": "",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §5.6, p. 44.",
    "tags": [
-    "multilevel-monte-carlo"
+    "multilevel-monte-carlo",
+    "numerical-analysis"
    ]
   },
   "MLMC_ApplicationExtras": {
