@@ -4962,6 +4962,212 @@
     "numerical-analysis",
     "multilevel-monte-carlo"
    ]
+  },
+  "MLMC.abs_midpoint_sub_avg_le_fderiv": {
+   "theorem_title": "Giles (2015), §5.3: for a payoff on $\\mathbb R^d$ with $K$-Lipschitz gradient, $|f(\\frac{a+b}2)-\\frac12f(a)-\\frac12f(b)|\\le\\frac K8\\|a-b\\|^2$",
+   "natural_language_statement": "Giles (2015), §5.3, p. 42: \"Lengthy analysis proves that the average of the fine and antithetic paths is within $O(h)$ of the coarse path, and hence the multilevel variance is $O(h^2)$ for smooth payoffs\"\n\nLet $E$ be a real normed space (for instance $\\mathbb R^d$) and $f:E\\to\\mathbb R$ Fréchet differentiable everywhere with derivative $f'(x)\\in E^*$, whose derivative is $K$-Lipschitz: $\\|f'(y)-f'(x)\\|\\le K\\|y-x\\|$ (operator norm; for $E=\\mathbb R^d$ this says that $\\nabla f$ is $K$-Lipschitz) for all $x,y\\in E$. Then for all $a,b\\in E$,\n$$\n\\Big|f\\Big(\\frac{a+b}2\\Big)-\\frac12f(a)-\\frac12f(b)\\Big|\\le\\frac K8\\,\\|a-b\\|^2,\n$$\ni.e. $|f(a)+f(b)-2f(\\frac{a+b}2)|\\le\\frac K4\\|a-b\\|^2$: the first-order terms of the fine and antithetic values cancel.\n\n**Formalization Note** The midpoint is `midpoint ℝ a b`; the derivative is `f' : E → E →L[ℝ] ℝ` with `HasFDerivAt f (f' x) x` for all `x`.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §5.3 \"Multi-dimensional SDEs\", pp. 39–42, p. 42.",
+   "explanation": "Restrict $f$ to the line $t\\mapsto a+t(b-a)$ (`hasDerivAt_lineRestrict`): the restriction has derivative $t\\mapsto f'(a+t(b-a))(b-a)$, which is $K\\|b-a\\|^2$-Lipschitz; the scalar `abs_midpoint_sub_avg_le` on $[0,1]$ gives the bound, since the midpoint is the point $t=\\frac12$.",
+   "tags": [
+    "real-analysis",
+    "multilevel-monte-carlo"
+   ]
+  },
+  "MLMC.abs_antithetic_le_fderiv": {
+   "theorem_title": "Giles (2015), §5.3: pointwise bound on the antithetic correction $\\frac12(f(a)+f(b))-f(c)$ of a smooth payoff of a $d$-dimensional value",
+   "natural_language_statement": "Giles (2015), §5.3, p. 42: \"Lengthy analysis proves that the average of the fine and antithetic paths is within $O(h)$ of the coarse path, and hence the multilevel variance is $O(h^2)$ for smooth payoffs\"\n\nLet $E$ be a real normed space (for instance $\\mathbb R^d$) and $f:E\\to\\mathbb R$ Fréchet differentiable everywhere with derivative $f'(x)\\in E^*$, whose derivative is $K$-Lipschitz: $\\|f'(y)-f'(x)\\|\\le K\\|y-x\\|$ (operator norm; for $E=\\mathbb R^d$ this says that $\\nabla f$ is $K$-Lipschitz) for all $x,y\\in E$. Then for all $a,b,c\\in E$ (fine, antithetic and coarse values)\n$$\n\\Big|\\frac{f(a)+f(b)}2-f(c)\\Big|\\le\\|f'(c)\\|\\,\\Big\\|\\frac{a+b}2-c\\Big\\|+\\frac K4\\big(\\|a-c\\|^2+\\|b-c\\|^2\\big).\n$$\nFor $E=\\mathbb R$ this is the scalar `abs_antithetic_le`.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §5.3 \"Multi-dimensional SDEs\", pp. 39–42, p. 42.",
+   "explanation": "The first-order Taylor bound in a normed space `abs_taylor_fderiv_le`, $|f(y)-f(x)-f'(x)(y-x)|\\le\\frac K2\\|y-x\\|^2$ (from `hasDerivAt_lineRestrict` and the scalar `abs_taylor_first_le`), at $c$ for $y=a$ and $y=b$; the two linear terms add up to $2f'(c)(\\frac{a+b}2-c)$, bounded by the operator norm.",
+   "tags": [
+    "real-analysis",
+    "multilevel-monte-carlo"
+   ]
+  },
+  "MLMC.abs_antithetic_le_midpoint": {
+   "theorem_title": "Giles (2015), §5.3: $|\\frac12(f(a)+f(b))-f(c)|\\le L\\|\\frac{a+b}2-c\\|+\\frac K8\\|a-b\\|^2$ for a payoff on $\\mathbb R^d$ with $\\|\\nabla f\\|\\le L$ and $K$-Lipschitz gradient",
+   "natural_language_statement": "Giles (2015), §5.3, p. 42: \"Lengthy analysis proves that the average of the fine and antithetic paths is within $O(h)$ of the coarse path, and hence the multilevel variance is $O(h^2)$ for smooth payoffs\"\n\nLet $E$ be a real normed space (for instance $\\mathbb R^d$) and $f:E\\to\\mathbb R$ Fréchet differentiable everywhere with derivative $f'(x)\\in E^*$, whose derivative is $K$-Lipschitz: $\\|f'(y)-f'(x)\\|\\le K\\|y-x\\|$ (operator norm; for $E=\\mathbb R^d$ this says that $\\nabla f$ is $K$-Lipschitz) for all $x,y\\in E$. Assume moreover $\\|f'(x)\\|\\le L$ for all $x$. Then for all $a,b,c\\in E$\n$$\n\\Big|\\frac{f(a)+f(b)}2-f(c)\\Big|\\le L\\,\\Big\\|\\frac{a+b}2-c\\Big\\|+\\frac K8\\,\\|a-b\\|^2:\n$$\nthe antithetic correction is controlled by the distance of the average of the fine and antithetic values from the coarse value and by the square of the fine–antithetic difference.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §5.3 \"Multi-dimensional SDEs\", pp. 39–42, p. 42.",
+   "explanation": "Write $\\frac{f(a)+f(b)}2-f(c)=-(f(m)-\\frac12f(a)-\\frac12f(b))+(f(m)-f(c))$ with $m=\\frac{a+b}2$; bound the first term by `abs_midpoint_sub_avg_le_fderiv` and the second by the mean value inequality (`Convex.norm_image_sub_le_of_norm_hasFDerivWithin_le`).",
+   "tags": [
+    "real-analysis",
+    "multilevel-monte-carlo"
+   ]
+  },
+  "MLMC.variance_antithetic_le_fderiv": {
+   "theorem_title": "Giles (2015), §5.3: for a multi-dimensional SDE, if the fine/antithetic average is within $O(h)$ of the coarse value, the antithetic multilevel variance is $O(h^2)$ for smooth payoffs",
+   "natural_language_statement": "Giles (2015), §5.3, pp. 39–42: \"With multi-dimensional SDEs which do not satisfy the commutativity condition, the Milstein discretisation requires the simulation of Lévy areas … Nevertheless, Giles and Szpruch (2014) have developed an antithetic treatment which achieves a very low variance despite the $O(h^{1/2})$ strong convergence. The estimator which is used is $Y_\\ell=N_\\ell^{-1}\\sum_i\\frac12(P_\\ell(\\omega_i)+P_\\ell(\\omega^a_i))-P_{\\ell-1}(\\omega_i)$ … Lengthy analysis proves that the average of the fine and antithetic paths is within $O(h)$ of the coarse path, and hence the multilevel variance is $O(h^2)$ for smooth payoffs, and $O(h^{3/2})$ for the standard European call option.\"\n\nLet $(\\Omega,\\mathcal F,\\mathbb P)$ be a probability space, $E$ a real normed space with a measurable structure in which open sets are measurable (e.g. $\\mathbb R^d$ with its Borel sets), and $A,B,C:\\Omega\\to E$ measurable (the fine, antithetic and coarse terminal values). Let $f:E\\to\\mathbb R$ Fréchet differentiable everywhere with derivative $f'(x)\\in E^*$, whose derivative is $K$-Lipschitz: $\\|f'(y)-f'(x)\\|\\le K\\|y-x\\|$ (operator norm; for $E=\\mathbb R^d$ this says that $\\nabla f$ is $K$-Lipschitz) for all $x,y\\in E$. Assume $\\|f'(x)\\|\\le L$ for all $x$, that $\\|\\frac{A+B}2-C\\|^2$, $\\|A-C\\|^4$, $\\|B-C\\|^4$ are integrable, and, for some $D_1,D_2,h\\in\\mathbb R$,\n$$\n\\mathbb E\\Big[\\Big\\|\\frac{A+B}2-C\\Big\\|^2\\Big]\\le D_1h^2,\\qquad\\mathbb E\\|A-C\\|^4\\le D_2h^2,\\qquad\\mathbb E\\|B-C\\|^4\\le D_2h^2.\n$$\nThen\n$$\n\\mathbb V\\Big[\\frac{f(A)+f(B)}2-f(C)\\Big]\\le\\Big(2L^2D_1+\\frac{K^2D_2}2\\Big)h^2,\n$$\nthe constant of the scalar case `variance_antithetic_le`. The path rates (the SDE analysis of Giles and Szpruch) are hypotheses.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §5.3 \"Multi-dimensional SDEs\", pp. 39–42, pp. 39 and 42.",
+   "explanation": "Square `abs_antithetic_le_fderiv` with $\\|f'(C)\\|\\le L$ using `sq_le_of_abs_le_add`: $Y^2\\le2L^2\\|\\frac{A+B}2-C\\|^2+\\frac{K^2}4(\\|A-C\\|^4+\\|B-C\\|^4)$; then $\\mathbb V[Y]\\le\\mathbb E[Y^2]$ (`variance_le_expectation_sq`) and integrate.",
+   "tags": [
+    "probability",
+    "multilevel-monte-carlo",
+    "numerical-analysis"
+   ]
+  },
+  "MLMC.variance_antithetic_le_midpoint": {
+   "theorem_title": "Giles (2015), §5.3: the antithetic multilevel variance is $O(h^2)$ for smooth payoffs if $\\mathbb E\\|\\frac{A+B}2-C\\|^2=O(h^2)$ and $\\mathbb E\\|A-B\\|^4=O(h^2)$",
+   "natural_language_statement": "Giles (2015), §5.3, pp. 39–42: \"With multi-dimensional SDEs which do not satisfy the commutativity condition, the Milstein discretisation requires the simulation of Lévy areas … Nevertheless, Giles and Szpruch (2014) have developed an antithetic treatment which achieves a very low variance despite the $O(h^{1/2})$ strong convergence. The estimator which is used is $Y_\\ell=N_\\ell^{-1}\\sum_i\\frac12(P_\\ell(\\omega_i)+P_\\ell(\\omega^a_i))-P_{\\ell-1}(\\omega_i)$ … Lengthy analysis proves that the average of the fine and antithetic paths is within $O(h)$ of the coarse path, and hence the multilevel variance is $O(h^2)$ for smooth payoffs, and $O(h^{3/2})$ for the standard European call option.\"\n\nLet $(\\Omega,\\mathcal F,\\mathbb P)$ be a probability space, $E$ a real normed space with a measurable structure in which open sets are measurable (e.g. $\\mathbb R^d$ with its Borel sets), and $A,B,C:\\Omega\\to E$ measurable (the fine, antithetic and coarse terminal values). Let $f:E\\to\\mathbb R$ Fréchet differentiable everywhere with derivative $f'(x)\\in E^*$, whose derivative is $K$-Lipschitz: $\\|f'(y)-f'(x)\\|\\le K\\|y-x\\|$ (operator norm; for $E=\\mathbb R^d$ this says that $\\nabla f$ is $K$-Lipschitz) for all $x,y\\in E$. Assume $\\|f'(x)\\|\\le L$ for all $x$, that $\\|\\frac{A+B}2-C\\|^2$ and $\\|A-B\\|^4$ are integrable, and, for some $D_1,D_2,h\\in\\mathbb R$,\n$$\n\\mathbb E\\Big[\\Big\\|\\frac{A+B}2-C\\Big\\|^2\\Big]\\le D_1h^2\\quad\\text{(the average within $O(h)$ of the coarse path)},\\qquad\\mathbb E\\|A-B\\|^4\\le D_2h^2.\n$$\nThen\n$$\n\\mathbb V\\Big[\\frac{f(A)+f(B)}2-f(C)\\Big]\\le\\Big(2L^2D_1+\\frac{K^2D_2}{32}\\Big)h^2.\n$$\nSince $\\|A-B\\|^4\\le8(\\|A-C\\|^4+\\|B-C\\|^4)$, these hypotheses are weaker than those of `variance_antithetic_le_fderiv` (with $16D_2$ for $D_2$ the bound is the same).",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §5.3 \"Multi-dimensional SDEs\", pp. 39–42, pp. 39 and 42.",
+   "explanation": "Square `abs_antithetic_le_midpoint`: $Y^2\\le(L\\|\\frac{A+B}2-C\\|+\\frac K8\\|A-B\\|^2)^2\\le2L^2\\|\\frac{A+B}2-C\\|^2+\\frac{K^2}{32}\\|A-B\\|^4$; then $\\mathbb V[Y]\\le\\mathbb E[Y^2]$ (`variance_le_expectation_sq`) and integrate.",
+   "tags": [
+    "probability",
+    "multilevel-monte-carlo",
+    "numerical-analysis"
+   ]
+  },
+  "MLMC.abs_call_antithetic_le": {
+   "theorem_title": "Giles (2015), §5.3: for the call payoff $g(x)=\\max(x-K,0)$, $|\\frac12(g(a)+g(b))-g(c)|\\le|\\frac{a+b}2-c|+\\frac14|a-b|\\mathbf 1\\{K\\text{ strictly between }a,b\\}$",
+   "natural_language_statement": "Giles (2015), §5.3, p. 42: \"Lengthy analysis proves that the average of the fine and antithetic paths is within $O(h)$ of the coarse path, and hence the multilevel variance is $O(h^2)$ for smooth payoffs, and $O(h^{3/2})$ for the standard European call option.\"\n\nLet $K,a,b,c\\in\\mathbb R$ and $g(x)=\\max(x-K,0)$. Then\n$$\n\\Big|\\frac{g(a)+g(b)}2-g(c)\\Big|\\le\\Big|\\frac{a+b}2-c\\Big|+\\begin{cases}\\frac14|a-b|&\\text{if }\\min(a,b)<K<\\max(a,b),\\\\0&\\text{otherwise.}\\end{cases}\n$$\nThe constant $\\frac14$ is attained ($a=K-t$, $b=K+t$, $c=K$).",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §5.3 \"Multi-dimensional SDEs\", pp. 39–42, p. 42.",
+   "explanation": "Split at $m=\\frac{a+b}2$: $g$ is $1$-Lipschitz (`abs_max_sub_max_le_abs`), so $|g(m)-g(c)|\\le|m-c|$; and the convexity defect $\\frac12(g(a)+g(b))-g(m)$ lies in $[0,\\frac14|a-b|]$ and vanishes unless $K$ is strictly between $a$ and $b$ (`call_midpoint_defect`, a case analysis).",
+   "tags": [
+    "real-analysis",
+    "multilevel-monte-carlo"
+   ]
+  },
+  "MLMC.variance_call_antithetic_le": {
+   "theorem_title": "Giles (2015), §5.3: the antithetic multilevel variance is $O(h^{3/2})$ for the European call if the fine/antithetic average has a bounded conditional density",
+   "natural_language_statement": "Giles (2015), §5.3, p. 42: \"Lengthy analysis proves that the average of the fine and antithetic paths is within $O(h)$ of the coarse path, and hence the multilevel variance is $O(h^2)$ for smooth payoffs, and $O(h^{3/2})$ for the standard European call option.\"\n\nLet $(\\Omega,\\mathcal F,\\mathbb P)$ be a probability space, $A,B,C:\\Omega\\to\\mathbb R$ measurable (the fine, antithetic and coarse terminal values), $K\\in\\mathbb R$ and $g(x)=\\max(x-K,0)$. Assume that the joint law of $(|A-B|,\\frac{A+B}2)$ is dominated by $\\mathrm{law}(|A-B|)\\otimes\\rho_0\\,\\mathrm{Leb}$ for some $\\rho_0\\ge0$ (given the fine–antithetic difference, the average has a density at most $\\rho_0$; e.g. $|A-B|$ independent of $\\frac{A+B}2$ whose density is at most $\\rho_0$), that $(\\frac{A+B}2-C)^2$ and $|A-B|^3$ are integrable, and, for some $D_1,D_2,h\\in\\mathbb R$,\n$$\n\\mathbb E\\Big[\\Big(\\frac{A+B}2-C\\Big)^2\\Big]\\le D_1h^2,\\qquad\\mathbb E|A-B|^3\\le D_2h^{3/2}.\n$$\nThen\n$$\n\\mathbb V\\Big[\\frac{g(A)+g(B)}2-g(C)\\Big]\\le2D_1h^2+\\frac{\\rho_0D_2}8\\,h^{3/2}.\n$$\n\n**Formalization Note** The domination is `μ.map (fun ω => (|A ω - B ω|, (A ω + B ω) / 2)) ≤ (μ.map fun ω => |A ω - B ω|).prod ((ρ₀ : ℝ≥0∞) • volume)`; $h^{3/2}$ is `h ^ (3 / 2 : ℝ)`. Marginal hypotheses (bounded density of the average, moment bounds) do not suffice for the exponent $3/2$, see `variance_call_antithetic_le_holder`.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §5.3 \"Multi-dimensional SDEs\", pp. 39–42, p. 42.",
+   "explanation": "By `abs_call_antithetic_le`, $Y^2\\le2(\\frac{A+B}2-C)^2+\\frac18|A-B|^2\\mathbf 1\\{|\\frac{A+B}2-K|<\\frac12|A-B|\\}$ (`between_iff_abs_lt`). The domination and Tonelli (`lintegral_prod`) bound the expectation of the second term: given $|A-B|=d$ the window $|\\frac{A+B}2-K|<\\frac d2$ has measure at most $\\rho_0d$, so $\\mathbb E[|A-B|^2\\mathbf 1\\{\\cdot\\}]\\le\\rho_0\\mathbb E|A-B|^3$ (`integral_sq_ite_le_of_density`). Conclude with $\\mathbb V[Y]\\le\\mathbb E[Y^2]$.",
+   "tags": [
+    "probability",
+    "multilevel-monte-carlo",
+    "numerical-analysis"
+   ]
+  },
+  "MLMC.variance_call_antithetic_le_holder": {
+   "theorem_title": "Giles (2015), §5.3: the antithetic call variance is at most $2\\mathbb E[(\\frac{A+B}2-C)^2]+\\frac18(\\mathbb E|A-B|^{2p})^{1/p}\\,\\mathbb P(K\\text{ between }A,B)^{1/q}$",
+   "natural_language_statement": "Giles (2015), §5.3, p. 42: \"Lengthy analysis proves that the average of the fine and antithetic paths is within $O(h)$ of the coarse path, and hence the multilevel variance is $O(h^2)$ for smooth payoffs, and $O(h^{3/2})$ for the standard European call option.\"\n\nLet $(\\Omega,\\mathcal F,\\mathbb P)$ be a probability space, $A,B,C:\\Omega\\to\\mathbb R$ measurable (the fine, antithetic and coarse terminal values), $K\\in\\mathbb R$ and $g(x)=\\max(x-K,0)$. Let $p,q>1$ with $\\frac1p+\\frac1q=1$, assume $(\\frac{A+B}2-C)^2$ and $|A-B|^{2p}$ integrable, and let $S=\\{\\min(A,B)<K<\\max(A,B)\\}$. Then\n$$\n\\mathbb V\\Big[\\frac{g(A)+g(B)}2-g(C)\\Big]\\le2\\,\\mathbb E\\Big[\\Big(\\frac{A+B}2-C\\Big)^2\\Big]+\\frac18\\big(\\mathbb E|A-B|^{2p}\\big)^{1/p}\\,\\mathbb P(S)^{1/q}.\n$$\nWith $\\mathbb E[(\\frac{A+B}2-C)^2]=O(h^2)$, $\\mathbb E|A-B|^{2p}=O(h^p)$ and $\\mathbb P(S)=O(h^{1/2})$ this is $O(h^{3/2-1/(2p)})$. Such marginal information cannot give $O(h^{3/2})$: for $h<e^{-2}$, $\\frac{A+B}2=C=K+V$ with $V$ uniform on $(-1,1)$ and $|A-B|=h^{1/2}\\log(1/h)$ if $|V|<h^{1/2}$, $h^{1/2}$ otherwise, gives $\\mathbb P(S)=h^{1/2}$, $\\mathbb E|A-B|^r=O(h^{r/2})$ for all $r$, and variance at least $\\frac{h^{3/2}}{16}((\\log\\frac1h-2)^2-h^{1/2}\\log^2\\frac1h)$.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §5.3 \"Multi-dimensional SDEs\", pp. 39–42, p. 42.",
+   "explanation": "By `abs_call_antithetic_le`, $Y^2\\le2(\\frac{A+B}2-C)^2+\\frac18|A-B|^2\\mathbf 1_S$; Hölder's inequality (`integral_mul_le_Lp_mul_Lq_of_nonneg`) with $|A-B|^2\\in L^p$ (`integrable_norm_rpow_iff`) and $\\mathbf 1_S\\in L^q$ gives $\\mathbb E[|A-B|^2\\mathbf 1_S]\\le(\\mathbb E|A-B|^{2p})^{1/p}\\mathbb P(S)^{1/q}$; conclude with $\\mathbb V[Y]\\le\\mathbb E[Y^2]$.",
+   "tags": [
+    "probability",
+    "multilevel-monte-carlo",
+    "numerical-analysis"
+   ]
+  },
+  "MLMC.eulerCubic_growth": {
+   "theorem_title": "Giles (2015), §5.6: for the drift $-S^3$ and $hS^2\\ge2$ the explicit Euler iterates grow at least like $(hS^2-1)^n|S|$",
+   "natural_language_statement": "Giles (2015), §5.6, p. 44: \"A related problem is addressed by Hutzenthaler, Jentzen and Kloeden (2013), who are concerned with SDEs such as $dS_t=-S_t^3\\,dt+dW_t$, which have a super-linear growth in the drift and/or the volatility. This again leads to numerical instability if a uniform timestep is used. Their solution is to introduce a slight modification to the Euler-Maruyama discretisation which limits the size of the drift term on each level of approximation when $S_t$ is large, to avoid this instability.\"\n\nLet $\\phi_h(S)=S-hS^3$ be the explicit Euler step for the drift $-S^3$ (`eulerDriftStep (fun S => -S ^ 3) h`) and $\\phi_h^{[n]}$ its $n$-th iterate. If $h,S\\in\\mathbb R$ satisfy $hS^2\\ge2$, then for every $n\\in\\mathbb N$\n$$\n\\big|\\phi_h^{[n]}(S)\\big|\\ge(hS^2-1)^n\\,|S|\n$$\n(at least $2^n|S|$ when $hS^2\\ge3$), whereas the solutions of the ODE $S'=-S^3$ decay monotonically. The stochastic statement (divergence of the moments of the Euler–Maruyama scheme) is not formalised.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §5.6 \"Stiff and highly nonlinear SDEs\", pp. 43–44, p. 44.",
+   "explanation": "$\\phi_h(x)=x(1-hx^2)$ (`eulerDriftStep_cubic`); by induction $hx_n^2\\ge hS^2\\ge2$, so $|1-hx_n^2|=hx_n^2-1\\ge hS^2-1\\ge1$ and $|x_{n+1}|\\ge(hS^2-1)|x_n|$.",
+   "tags": [
+    "numerical-analysis",
+    "real-analysis"
+   ]
+  },
+  "MLMC.eulerCubic_tendsto_atTop": {
+   "theorem_title": "Giles (2015), §5.6: for every timestep $h$, the explicit Euler iterates for the drift $-S^3$ from $|S|>\\sqrt{2/h}$ tend to infinity",
+   "natural_language_statement": "Giles (2015), §5.6, p. 44: \"A related problem is addressed by Hutzenthaler, Jentzen and Kloeden (2013), who are concerned with SDEs such as $dS_t=-S_t^3\\,dt+dW_t$, which have a super-linear growth in the drift and/or the volatility. This again leads to numerical instability if a uniform timestep is used. Their solution is to introduce a slight modification to the Euler-Maruyama discretisation which limits the size of the drift term on each level of approximation when $S_t$ is large, to avoid this instability.\"\n\nLet $\\phi_h(S)=S-hS^3$ be the explicit Euler step for the drift $-S^3$ (`eulerDriftStep (fun S => -S ^ 3) h`) and $\\phi_h^{[n]}$ its $n$-th iterate. If $hS^2>2$, i.e. $|S|>\\sqrt{2/h}$, then $|\\phi_h^{[n]}(S)|\\to\\infty$ as $n\\to\\infty$. So no uniform timestep $h>0$ is stable for all starting values, while the ODE $S'=-S^3$ is globally stable.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §5.6 \"Stiff and highly nonlinear SDEs\", pp. 43–44, p. 44.",
+   "explanation": "`eulerCubic_growth` gives $|\\phi_h^{[n]}(S)|\\ge(hS^2-1)^n|S|$ with $hS^2-1>1$ and $|S|>0$ (`tendsto_pow_atTop_atTop_of_one_lt`).",
+   "tags": [
+    "numerical-analysis",
+    "convergence"
+   ]
+  },
+  "MLMC.eulerCubic_bounded": {
+   "theorem_title": "Giles (2015), §5.6: for the drift $-S^3$, $h\\ge0$ and $hS^2\\le2$ the explicit Euler iterates stay within $|S|$ (the threshold $\\sqrt{2/h}$ is sharp)",
+   "natural_language_statement": "Giles (2015), §5.6, p. 44: \"A related problem is addressed by Hutzenthaler, Jentzen and Kloeden (2013), who are concerned with SDEs such as $dS_t=-S_t^3\\,dt+dW_t$, which have a super-linear growth in the drift and/or the volatility. This again leads to numerical instability if a uniform timestep is used. Their solution is to introduce a slight modification to the Euler-Maruyama discretisation which limits the size of the drift term on each level of approximation when $S_t$ is large, to avoid this instability.\"\n\nLet $\\phi_h(S)=S-hS^3$ be the explicit Euler step for the drift $-S^3$ (`eulerDriftStep (fun S => -S ^ 3) h`) and $\\phi_h^{[n]}$ its $n$-th iterate. If $h\\ge0$ and $hS^2\\le2$, then $|\\phi_h^{[n]}(S)|\\le|S|$ for every $n$. With `eulerCubic_tendsto_atTop` the stability threshold of the explicit step is exactly $|S|=\\sqrt{2/h}$ (at $hS^2=2$ the orbit is the 2-cycle $S,-S$).",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §5.6 \"Stiff and highly nonlinear SDEs\", pp. 43–44, p. 44.",
+   "explanation": "$\\phi_h(x)=x(1-hx^2)$ (`eulerDriftStep_cubic`); by induction $|x_n|\\le|S|$, so $0\\le hx_n^2\\le hS^2\\le2$ and $|1-hx_n^2|\\le1$.",
+   "tags": [
+    "numerical-analysis",
+    "real-analysis"
+   ]
+  },
+  "MLMC.abs_tamedDrift_lt": {
+   "theorem_title": "Giles (2015), §5.6: taming limits the drift term, $|h\\,b(S)/(1+h|b(S)|)|<1$",
+   "natural_language_statement": "Giles (2015), §5.6, p. 44: \"A related problem is addressed by Hutzenthaler, Jentzen and Kloeden (2013), who are concerned with SDEs such as $dS_t=-S_t^3\\,dt+dW_t$, which have a super-linear growth in the drift and/or the volatility. This again leads to numerical instability if a uniform timestep is used. Their solution is to introduce a slight modification to the Euler-Maruyama discretisation which limits the size of the drift term on each level of approximation when $S_t$ is large, to avoid this instability.\"\n\nFor a drift $b:\\mathbb R\\to\\mathbb R$ and $h\\ge0$ let $\\psi_h(S)=S+\\frac{h\\,b(S)}{1+h|b(S)|}$ be the tamed Euler step (`tamedDriftStep b h`) and $\\phi_h(S)=S+h\\,b(S)$ the explicit one (`eulerDriftStep b h`); Giles (2015) gives no formula, $\\psi_h$ is the taming of Hutzenthaler, Jentzen and Kloeden. For every $b$, $h\\ge0$ and $S\\in\\mathbb R$,\n$$\n\\Big|\\frac{h\\,b(S)}{1+h|b(S)|}\\Big|<1.\n$$",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §5.6 \"Stiff and highly nonlinear SDEs\", pp. 43–44, p. 44.",
+   "explanation": "$|h\\,b(S)|=h|b(S)|<1+h|b(S)|$ and the denominator is positive.",
+   "tags": [
+    "numerical-analysis",
+    "real-analysis"
+   ]
+  },
+  "MLMC.abs_tamedDriftStep_sub_eulerDriftStep_le": {
+   "theorem_title": "Giles (2015), §5.6: taming is a slight modification, $|\\psi_h(S)-\\phi_h(S)|\\le h^2b(S)^2$",
+   "natural_language_statement": "Giles (2015), §5.6, p. 44: \"A related problem is addressed by Hutzenthaler, Jentzen and Kloeden (2013), who are concerned with SDEs such as $dS_t=-S_t^3\\,dt+dW_t$, which have a super-linear growth in the drift and/or the volatility. This again leads to numerical instability if a uniform timestep is used. Their solution is to introduce a slight modification to the Euler-Maruyama discretisation which limits the size of the drift term on each level of approximation when $S_t$ is large, to avoid this instability.\"\n\nFor a drift $b:\\mathbb R\\to\\mathbb R$ and $h\\ge0$ let $\\psi_h(S)=S+\\frac{h\\,b(S)}{1+h|b(S)|}$ be the tamed Euler step (`tamedDriftStep b h`) and $\\phi_h(S)=S+h\\,b(S)$ the explicit one (`eulerDriftStep b h`); Giles (2015) gives no formula, $\\psi_h$ is the taming of Hutzenthaler, Jentzen and Kloeden. For every $b$, $h\\ge0$ and $S\\in\\mathbb R$,\n$$\n\\Big|S+\\frac{h\\,b(S)}{1+h|b(S)|}-(S+h\\,b(S))\\Big|\\le h^2\\,b(S)^2,\n$$\nso the tamed and explicit steps agree to $O(h^2)$ for bounded $S$.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §5.6 \"Stiff and highly nonlinear SDEs\", pp. 43–44, p. 44.",
+   "explanation": "The difference is $-\\frac{h\\,b(S)\\cdot h|b(S)|}{1+h|b(S)|}$, whose absolute value is $\\frac{h^2b(S)^2}{1+h|b(S)|}\\le h^2b(S)^2$.",
+   "tags": [
+    "numerical-analysis",
+    "real-analysis"
+   ]
+  },
+  "MLMC.tamedDriftStep_iterate_bounded": {
+   "theorem_title": "Giles (2015), §5.6: for an inward drift ($S\\,b(S)\\le0$) the tamed Euler iterates stay within $\\max(|S|,1)$ for every timestep",
+   "natural_language_statement": "Giles (2015), §5.6, p. 44: \"A related problem is addressed by Hutzenthaler, Jentzen and Kloeden (2013), who are concerned with SDEs such as $dS_t=-S_t^3\\,dt+dW_t$, which have a super-linear growth in the drift and/or the volatility. This again leads to numerical instability if a uniform timestep is used. Their solution is to introduce a slight modification to the Euler-Maruyama discretisation which limits the size of the drift term on each level of approximation when $S_t$ is large, to avoid this instability.\"\n\nFor a drift $b:\\mathbb R\\to\\mathbb R$ and $h\\ge0$ let $\\psi_h(S)=S+\\frac{h\\,b(S)}{1+h|b(S)|}$ be the tamed Euler step (`tamedDriftStep b h`) and $\\phi_h(S)=S+h\\,b(S)$ the explicit one (`eulerDriftStep b h`); Giles (2015) gives no formula, $\\psi_h$ is the taming of Hutzenthaler, Jentzen and Kloeden. If $S\\,b(S)\\le0$ for all $S$ (as for $b(S)=-S^3$) and $h\\ge0$, then for all $S$ and $n$, $|\\psi_h^{[n]}(S)|\\le\\max(|S|,1)$. Deterministic analogue only: the uniform moment bounds of the tamed Euler–Maruyama scheme are not formalised.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §5.6 \"Stiff and highly nonlinear SDEs\", pp. 43–44, p. 44.",
+   "explanation": "One step (`abs_tamedDriftStep_le`): the increment $u$ satisfies $|u|<1$ (`abs_tamedDrift_lt`) and $Su\\le0$, so $|S+u|\\le\\max(|S|,1)$ by cases on the signs; then induction.",
+   "tags": [
+    "numerical-analysis",
+    "real-analysis"
+   ]
+  },
+  "MLMC.tamedCubic_bounded": {
+   "theorem_title": "Giles (2015), §5.6: for $dS_t=-S_t^3dt+dW_t$ the tamed Euler drift iterates stay within $\\max(|S|,1)$ for every timestep $h\\ge0$",
+   "natural_language_statement": "Giles (2015), §5.6, p. 44: \"A related problem is addressed by Hutzenthaler, Jentzen and Kloeden (2013), who are concerned with SDEs such as $dS_t=-S_t^3\\,dt+dW_t$, which have a super-linear growth in the drift and/or the volatility. This again leads to numerical instability if a uniform timestep is used. Their solution is to introduce a slight modification to the Euler-Maruyama discretisation which limits the size of the drift term on each level of approximation when $S_t$ is large, to avoid this instability.\"\n\nLet $\\psi_h(S)=S-\\frac{hS^3}{1+h|S^3|}$ be the tamed Euler step for the drift $-S^3$ (`tamedDriftStep (fun S => -S ^ 3) h`). For every $h\\ge0$, $S\\in\\mathbb R$ and $n\\in\\mathbb N$, $|\\psi_h^{[n]}(S)|\\le\\max(|S|,1)$, whereas the explicit iterates explode as soon as $hS^2>2$ (`eulerCubic_tendsto_atTop`).",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §5.6 \"Stiff and highly nonlinear SDEs\", pp. 43–44, p. 44.",
+   "explanation": "`tamedDriftStep_iterate_bounded` with $S\\cdot(-S^3)=-S^4\\le0$.",
+   "tags": [
+    "numerical-analysis",
+    "real-analysis"
+   ]
+  },
+  "MLMC.abs_smoothCDF_sub_le_of_bounded": {
+   "theorem_title": "Giles (2015), §5.7: for a smoothing function with $|g|\\le B$ (of either sign), $|C_\\delta(x)-\\mathbb P(P<x)|\\le(1+B)\\,\\mathbb P(|P-x|\\le\\delta)$",
+   "natural_language_statement": "Giles (2015), §5.7, p. 46: \"The CDF of a scalar output $P$ … $C(x)\\equiv\\mathbb E[\\mathbf 1_{P<x}]\\equiv\\mathbb E[H(x-P)]$, where $H(x)$ is the Heaviside step function. To improve the multilevel variance, this is smoothed to give $C_\\delta(x)=\\mathbb E[g((x-P)/\\delta)]$, where $g(x)$ is a continuous function with $g(x)=0$ for $x<-1$, and $g(x)=1$ for $x>1$. The parameter $\\delta$ controls the degree of smoothing. As $\\delta\\to0$, $g(x/\\delta)\\to H(x)$, and the accuracy improves but the variance of the multilevel estimator increases.\"\n\nLet $(\\Omega,\\mathcal F,\\mathbb P)$ be a probability space, $P:\\Omega\\to\\mathbb R$ measurable, and $C_\\delta(x)=\\mathbb E[g((x-P)/\\delta)]$ (`smoothCDF`). Let $g:\\mathbb R\\to\\mathbb R$ be measurable with $g(y)=0$ for $y<-1$, $g(y)=1$ for $y>1$ and $|g(y)|\\le B$ for all $y$ (no sign condition). Then for every $\\delta>0$ and $x\\in\\mathbb R$\n$$\n\\big|C_\\delta(x)-\\mathbb P(P<x)\\big|\\le(1+B)\\,\\mathbb P(|P-x|\\le\\delta).\n$$\nThe constant is $\\sup|g-H|$, which can be $1+B$; the existing `abs_smoothCDF_sub_le` assumes $0\\le g\\le1$ (constant $1$), which the paper does not.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §5.7 \"CDF and density estimation\", p. 46.",
+   "explanation": "Pointwise $|g((x-P)/\\delta)-\\mathbf 1_{P<x}|\\le(1+B)\\mathbf 1_{|P-x|\\le\\delta}$ (outside the window $g((x-P)/\\delta)$ equals the indicator), then integrate (`integral_indicator_const`, `abs_integral_le_integral_abs`).",
+   "tags": [
+    "probability",
+    "real-analysis"
+   ]
+  },
+  "MLMC.tendsto_smoothCDF_of_bounded": {
+   "theorem_title": "Giles (2015), §5.7: for a bounded smoothing function of either sign, $C_\\delta(x)\\to\\mathbb P(P<x)$ as $\\delta\\to0^+$ when $P$ has no atom at $x$",
+   "natural_language_statement": "Giles (2015), §5.7, p. 46: \"The CDF of a scalar output $P$ … $C(x)\\equiv\\mathbb E[\\mathbf 1_{P<x}]\\equiv\\mathbb E[H(x-P)]$, where $H(x)$ is the Heaviside step function. To improve the multilevel variance, this is smoothed to give $C_\\delta(x)=\\mathbb E[g((x-P)/\\delta)]$, where $g(x)$ is a continuous function with $g(x)=0$ for $x<-1$, and $g(x)=1$ for $x>1$. The parameter $\\delta$ controls the degree of smoothing. As $\\delta\\to0$, $g(x/\\delta)\\to H(x)$, and the accuracy improves but the variance of the multilevel estimator increases.\"\n\nLet $(\\Omega,\\mathcal F,\\mathbb P)$ be a probability space, $P:\\Omega\\to\\mathbb R$ measurable, and $C_\\delta(x)=\\mathbb E[g((x-P)/\\delta)]$ (`smoothCDF`). Let $g$ be measurable with $g=0$ on $(-\\infty,-1)$, $g=1$ on $(1,\\infty)$ and $|g|\\le B$, and let $\\mathbb P(P=x)=0$. Then $C_\\delta(x)\\to\\mathbb P(P<x)$ as $\\delta\\to0^+$.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §5.7 \"CDF and density estimation\", p. 46.",
+   "explanation": "`abs_smoothCDF_sub_le_of_bounded` and $\\mathbb P(|P-x|\\le\\delta)\\to\\mathbb P(P=x)=0$ (`tendsto_measureReal_abs_sub_le`, continuity of measure along the decreasing sets).",
+   "tags": [
+    "probability",
+    "convergence"
+   ]
+  },
+  "MLMC.tendsto_smoothCDF_of_continuous": {
+   "theorem_title": "Giles (2015), §5.7: for every continuous $g$ with $g=0$ on $(-\\infty,-1)$ and $g=1$ on $(1,\\infty)$, $C_\\delta(x)\\to\\mathbb P(P<x)$ when $P$ has no atom at $x$",
+   "natural_language_statement": "Giles (2015), §5.7, p. 46: \"The CDF of a scalar output $P$ … $C(x)\\equiv\\mathbb E[\\mathbf 1_{P<x}]\\equiv\\mathbb E[H(x-P)]$, where $H(x)$ is the Heaviside step function. To improve the multilevel variance, this is smoothed to give $C_\\delta(x)=\\mathbb E[g((x-P)/\\delta)]$, where $g(x)$ is a continuous function with $g(x)=0$ for $x<-1$, and $g(x)=1$ for $x>1$. The parameter $\\delta$ controls the degree of smoothing. As $\\delta\\to0$, $g(x/\\delta)\\to H(x)$, and the accuracy improves but the variance of the multilevel estimator increases.\"\n\nLet $(\\Omega,\\mathcal F,\\mathbb P)$ be a probability space, $P:\\Omega\\to\\mathbb R$ measurable, and $C_\\delta(x)=\\mathbb E[g((x-P)/\\delta)]$ (`smoothCDF`). Let $g:\\mathbb R\\to\\mathbb R$ be continuous with $g(y)=0$ for $y<-1$ and $g(y)=1$ for $y>1$ (exactly the paper's hypotheses; $g$ may take values outside $[0,1]$), and let $\\mathbb P(P=x)=0$. Then $\\lim_{\\delta\\to0^+}C_\\delta(x)=\\mathbb P(P<x)=C(x)$.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §5.7 \"CDF and density estimation\", p. 46.",
+   "explanation": "$g$ is bounded on the compact $[-1,1]$ (`IsCompact.exists_bound_of_continuousOn`) and takes the values $0,1$ outside, so `tendsto_smoothCDF_of_bounded` applies.",
+   "tags": [
+    "probability",
+    "convergence"
+   ]
+  },
+  "MLMC.tendsto_density_multidim": {
+   "theorem_title": "Giles (2015), §5.7: for a $d$-dimensional output $P$ with density $\\rho$ continuous at $x$, $\\mathbb E[\\delta^{-d}g((x-P)/\\delta)]\\to\\rho(x)$",
+   "natural_language_statement": "Giles (2015), §5.7, p. 46: \"the density $\\rho(x)$ of the scalar output $P$ is given by $\\rho(x)=\\lim_{\\delta\\to0}\\mathbb E[\\delta^{-1}g((x-P)/\\delta)]$, where $g(x)$ is a continuous function with $g(x)=0$ for $|x|>1$, and $\\int_{-1}^1g(x)\\,dx=1$. This has similarities with kernel density estimation (Silverman 1986), and can also be generalised to multi-dimensional outputs.\"\n\nLet $F$ be a finite-dimensional real normed space of dimension $d$ with an additive Haar measure $\\nu$ (e.g. Lebesgue measure on $\\mathbb R^d$), $(\\Omega,\\mathcal F,\\mathbb P)$ a probability space and $P:\\Omega\\to F$ measurable whose law has a density $\\rho:F\\to[0,\\infty)$ with respect to $\\nu$, continuous at $x\\in F$. Let $g:F\\to\\mathbb R$ be continuous with $g(y)=0$ for $\\|y\\|>1$ and $\\int_Fg\\,d\\nu=1$. Then\n$$\n\\lim_{\\delta\\to0^+}\\mathbb E\\Big[\\delta^{-d}\\,g\\Big(\\frac{x-P}{\\delta}\\Big)\\Big]=\\rho(x).\n$$\nThe paper gives no formula for $d>1$; $\\delta^{-d}$ is the normalisation that makes the limit the density. For $d=1$ this is `tendsto_density`.\n\n**Formalization Note** $d$ is `Module.finrank ℝ F`; the law condition is `μ.map P = ν.withDensity (fun y => (ρ y : ℝ≥0∞))`.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §5.7 \"CDF and density estimation\", p. 46.",
+   "explanation": "The density is integrable (mass $1$) and $\\mathbb E[\\delta^{-d}g(\\delta^{-1}(x-P))]=\\int\\delta^{-d}g(\\delta^{-1}(x-y))\\rho(y)\\,d\\nu(y)$. Split $g=\\frac12((2A+1)\\varphi_1-(2A-1)\\varphi_2)$ with $A=\\int|g|\\ge1$ and nonnegative kernels $\\varphi_{1,2}=(2|g|\\pm g)/(2A\\pm1)$ of integral $1$, and apply Mathlib's peak-function lemma `tendsto_integral_comp_smul_smul_of_integrable'` to each (`tendsto_kernel_integral_signed_multidim`), with $c=\\delta^{-1}\\to\\infty$.",
+   "tags": [
+    "probability",
+    "real-analysis",
+    "convergence"
+   ]
+  },
+  "MLMC.tendsto_density_euclidean": {
+   "theorem_title": "Giles (2015), §5.7: for an $\\mathbb R^d$-valued output with density $\\rho$ continuous at $x$, $\\rho(x)=\\lim_{\\delta\\to0}\\mathbb E[\\delta^{-d}g((x-P)/\\delta)]$",
+   "natural_language_statement": "Giles (2015), §5.7, p. 46: \"the density $\\rho(x)$ of the scalar output $P$ is given by $\\rho(x)=\\lim_{\\delta\\to0}\\mathbb E[\\delta^{-1}g((x-P)/\\delta)]$, where $g(x)$ is a continuous function with $g(x)=0$ for $|x|>1$, and $\\int_{-1}^1g(x)\\,dx=1$. This has similarities with kernel density estimation (Silverman 1986), and can also be generalised to multi-dimensional outputs.\"\n\nLet $(\\Omega,\\mathcal F,\\mathbb P)$ be a probability space and $P:\\Omega\\to\\mathbb R^d$ (Euclidean space, Lebesgue measure) measurable whose law has a density $\\rho$ continuous at $x$. Let $g:\\mathbb R^d\\to\\mathbb R$ be continuous with $g(y)=0$ for $\\|y\\|>1$ and $\\int_{\\mathbb R^d}g=1$. Then $\\mathbb E[\\delta^{-d}g((x-P)/\\delta)]\\to\\rho(x)$ as $\\delta\\to0^+$.\n\n**Formalization Note** $\\mathbb R^d$ is `EuclideanSpace ℝ (Fin d)` with `volume`.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §5.7 \"CDF and density estimation\", p. 46.",
+   "explanation": "`tendsto_density_multidim` with $F=\\mathbb R^d$, $\\nu$ = Lebesgue measure and `finrank_euclideanSpace_fin`.",
+   "tags": [
+    "probability",
+    "real-analysis",
+    "convergence"
+   ]
   }
  },
  "definitions": {
@@ -5316,6 +5522,14 @@
    "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §8, pp. 55–56, and §5.6, pp. 44–45 (Figure 5.9, Algorithm 3).",
    "tags": [
     "probability",
+    "multilevel-monte-carlo"
+   ]
+  },
+  "MLMC_SDEMisc": {
+   "definition_title": "The explicit and the tamed Euler drift steps $S\\mapsto S+h\\,b(S)$ and $S\\mapsto S+h\\,b(S)/(1+h|b(S)|)$",
+   "natural_language_statement": "These two definitions are the drift parts (the Euler–Maruyama step without the Brownian increment) of the explicit and the tamed Euler schemes discussed in Giles (2015), §5.6, p. 44 for SDEs with a super-linear drift such as $dS_t=-S_t^3\\,dt+dW_t$. Let $b:\\mathbb R\\to\\mathbb R$ be a drift and $h\\in\\mathbb R$ a timestep.\n\n**`eulerDriftStep`.** The explicit Euler step\n\n$$\n\\mathrm{eulerDriftStep}(b,h,S)=S+h\\,b(S).\n$$\n\n**`tamedDriftStep`.** The tamed Euler step\n\n$$\n\\mathrm{tamedDriftStep}(b,h,S)=S+\\frac{h\\,b(S)}{1+h\\,|b(S)|},\n$$\n\nin which the drift increment is divided by $1+h|b(S)|$, so that it is less than $1$ in absolute value for $h\\ge0$ (\"a slight modification to the Euler-Maruyama discretisation which limits the size of the drift term … when $S_t$ is large\"; the survey gives no formula, this is the taming of Hutzenthaler, Jentzen and Kloeden). For $h<0$ the denominator may vanish, and then Lean's convention $x/0=0$ applies; the theorems assume $h\\ge0$.",
+   "source": "",
+   "tags": [
     "multilevel-monte-carlo"
    ]
   }

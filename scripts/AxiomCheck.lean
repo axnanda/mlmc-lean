@@ -463,6 +463,26 @@ import MlmcLean
 #print axioms MLMC.perturbed_path_sub_mean_variance
 #print axioms MLMC.integral_sq_perturbed_path_sub_bounds
 #print axioms MLMC.strongError_lt_integral_sq_perturbed_path_sub
+#print axioms MLMC.abs_midpoint_sub_avg_le_fderiv
+#print axioms MLMC.abs_antithetic_le_fderiv
+#print axioms MLMC.abs_antithetic_le_midpoint
+#print axioms MLMC.variance_antithetic_le_fderiv
+#print axioms MLMC.variance_antithetic_le_midpoint
+#print axioms MLMC.abs_call_antithetic_le
+#print axioms MLMC.variance_call_antithetic_le
+#print axioms MLMC.variance_call_antithetic_le_holder
+#print axioms MLMC.eulerCubic_growth
+#print axioms MLMC.eulerCubic_tendsto_atTop
+#print axioms MLMC.eulerCubic_bounded
+#print axioms MLMC.abs_tamedDrift_lt
+#print axioms MLMC.abs_tamedDriftStep_sub_eulerDriftStep_le
+#print axioms MLMC.tamedDriftStep_iterate_bounded
+#print axioms MLMC.tamedCubic_bounded
+#print axioms MLMC.abs_smoothCDF_sub_le_of_bounded
+#print axioms MLMC.tendsto_smoothCDF_of_bounded
+#print axioms MLMC.tendsto_smoothCDF_of_continuous
+#print axioms MLMC.tendsto_density_multidim
+#print axioms MLMC.tendsto_density_euclidean
 -- helper lemmas that the prove2.me generator promotes to nodes
 #print axioms MLMC.sqrt_Vb_mul_Cb
 #print axioms MLMC.two_rpow_levelL_le

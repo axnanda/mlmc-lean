@@ -85,6 +85,9 @@
 -- * `MlmcLean.HaasGilesRemarks` — Haas–Giles §6: the cost factor of Fig. 3 and 5 and when the
 --   nested estimator is cheaper, two-sided sizes of the path variables (39)–(41), and the
 --   rounding error with fixed precision (exact variance, lower bound, beats discretisation)
+-- * `MlmcLean.SDEMisc` — Giles §5.3, §5.6, §5.7: the antithetic bound for smooth payoffs in d
+--   dimensions and for the call option, explicit versus tamed Euler steps for super-linear
+--   drift, the smoothed CDF for any bounded smoother, the density of a d-dimensional output
 import MlmcLean.Allocation
 import MlmcLean.Estimator
 import MlmcLean.LevelDiff
@@ -133,3 +136,4 @@ import MlmcLean.RandomShiftQMC
 import MlmcLean.AsymptoticNormal
 import MlmcLean.PoissonGrids
 import MlmcLean.HaasGilesRemarks
+import MlmcLean.SDEMisc
