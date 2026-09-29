@@ -68,6 +68,9 @@
 -- * `MlmcLean.GBMMilstein` — Giles §5.2: the Milstein MLMC estimator for geometric Brownian
 --   motion end to end (strong error O(h²) in mean square, α = 1, β = 2, Theorem 1 with
 --   cost O(ε⁻²) and no assumed rate)
+-- * `MlmcLean.ML2RTheorem` — Giles §2.3: the ML2R estimator end to end (sharp weight bound,
+--   bias O(2^{−αL(L+1)/2}) uniformly in L from the weak-error expansion, MSE < ε² at cost
+--   O(ε⁻²|log ε|) for β = γ and O(ε⁻²2^{(γ−β)√(2 log₂(1/ε)/α)}) for β < γ)
 import MlmcLean.Allocation
 import MlmcLean.Estimator
 import MlmcLean.LevelDiff
@@ -110,3 +113,4 @@ import MlmcLean.MarkovLimit
 import MlmcLean.TauLeapingMLMC
 import MlmcLean.GBMEulerMaruyama
 import MlmcLean.GBMMilstein
+import MlmcLean.ML2RTheorem

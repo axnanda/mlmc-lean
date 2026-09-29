@@ -38,7 +38,13 @@ exponents is more complicated when `α_d = ½β_d` for some `d`".
 * `giles_theorem2_boundary` — the theorem for `α_d ≥ ½β_d`; the paper leaves the exponents
   unspecified, and we prove `e₁ = 2D₂ + (D₃ − 3)⁺`, `e₂ = (D₂ − 1)(2 + η) + (D₃ − 1)⁺` with
   `D₃ = #{d : α_d = ½β_d}`, which are the paper's exponents when `D₃ = 0`;
+* `giles_theorem2_indexSet`, `giles_theorem2_boundary_indexSet` — the same two theorems with the
+  index set made explicit: the estimator is summed over the simplex `{ℓ : θ·ℓ ≤ L}` with
+  `θ_d = α_d + (γ_d − β_d)/2`, a region "of the form `ℓ·n ≤ L`" (p. 15); that this shape is the
+  optimal choice among all index sets, as the paper says, is not formalised;
 * `mimc_complexity`, `mimc_complexity_boundary` — the deterministic statements behind them;
+* `mimc_complexity_indexSet`, `mimc_complexity_boundary_indexSet`, `mimc_complexity_core_indexSet`
+  — the deterministic statements with the index set `{θ·ℓ ≤ L}` made explicit;
 * `tendsto_sum_box_integral_crossDiff`, `hasSum_integral_crossDiff` — the telescoping sum
   `E[P] = ∑_{ℓ≥0} E[ΔP_ℓ]` of p. 13, along boxes from condition i), and as an absolutely
   convergent series under conditions i)–iii).
@@ -494,24 +500,31 @@ lemma mimc_extra_term {θ γ : Fin D → ℝ} {a c c₃ K_P K_L : ℝ} {p : ℕ}
 
 /-! ### The deterministic core -/
 
-/-- **Giles' Theorem 2 — deterministic core** (a step of this formalisation's proof of Giles 2015,
-§2.4, Theorem 2; not stated in the paper).  Let `θ_d = α_d + (γ_d − β_d)/2`, let `c` satisfy
-`γ_d ≤ c θ_d` for all `d` (this forces `c > 0`), and let `k + 1 ≥ #{d : γ_d = cθ_d}`.  With
-`V_ℓ = c₂ 2^{−β·ℓ}` and `C_ℓ = c₃ 2^{γ·ℓ}` there are, for every `0 < ε < e⁻¹`, a finite set of
-levels `𝓛` and `N_ℓ ≥ 1` such that the bias bound `c₁ ∑ 2^{−α·ℓ}` over every finite part of the
-complement of `𝓛` is at most `ε/2`, `∑_{𝓛} V_ℓ/N_ℓ ≤ ε²/2`, and the cost is at most the main term
-`K_M · (ε⁻², ε⁻²|log ε|^{2D₂}, ε^{−2−η}|log ε|^{(D₂−1)(2+η)})` plus the rounding-up overhead
-`K_X |log ε|^{k + (D₂−1)ς} ε^{−ς}` with `ς = c(2 + η)/2`. -/
-theorem mimc_complexity_core [NeZero D] {α β γ : Fin D → ℝ} {c₁ c₂ c₃ c : ℝ}
+/-- **Giles' Theorem 2 — deterministic core, on the simplex `θ·ℓ ≤ L`** (a step of this
+formalisation's proof of Giles 2015, §2.4, Theorem 2; not stated in the paper).  Let
+`θ_d = α_d + (γ_d − β_d)/2`, let `c` satisfy `γ_d ≤ c θ_d` for all `d` (this forces `c > 0`), and
+let `k + 1 ≥ #{d : γ_d = cθ_d}`.  With `V_ℓ = c₂ 2^{−β·ℓ}` and `C_ℓ = c₃ 2^{γ·ℓ}` there are, for
+every `0 < ε < e⁻¹`, a level `L` and `N_ℓ ≥ 1` such that, for the index set
+`𝓛 = indexSet θ L = {ℓ ∈ ℕ^D : θ·ℓ ≤ L}` (a region "of the form `ℓ·n ≤ L`", Giles 2015, p. 15;
+the equality is `mem_indexSet`, as every `θ_d > 0`), the bias bound `c₁ ∑ 2^{−α·ℓ}` over every
+finite part of the complement of `𝓛` is at most `ε/2`, `∑_{𝓛} V_ℓ/N_ℓ ≤ ε²/2`, and the cost is at
+most the main term `K_M · (ε⁻², ε⁻²|log ε|^{2D₂}, ε^{−2−η}|log ε|^{(D₂−1)(2+η)})` plus the
+rounding-up overhead `K_X |log ε|^{k + (D₂−1)ς} ε^{−ς}` with `ς = c(2 + η)/2`.
+`mimc_complexity_core` is this statement with the index set left unspecified. -/
+theorem mimc_complexity_core_indexSet [NeZero D] {α β γ : Fin D → ℝ} {c₁ c₂ c₃ c : ℝ}
     (hα : ∀ d, 0 < α d) (hγ : ∀ d, 0 < γ d) (hαβ : ∀ d, β d / 2 ≤ α d)
     (hc₁ : 0 < c₁) (hc₂ : 0 < c₂) (hc₃ : 0 < c₃)
     (hcγ : ∀ d, γ d ≤ c * (α d + (γ d - β d) / 2)) (k : ℕ)
     (hk : crit (fun d => c * (α d + (γ d - β d) / 2) - γ d) ≤ k + 1) :
     ∃ K_M K_X : ℝ, 0 ≤ K_M ∧ 0 ≤ K_X ∧ ∀ ε : ℝ, 0 < ε → ε < Real.exp (-1) →
-      ∃ (𝓛 : Finset (Fin D → ℕ)) (N : (Fin D → ℕ) → ℕ), (∀ ℓ, 0 < N ℓ) ∧
-        (∀ s : Finset (Fin D → ℕ), c₁ * ∑ ℓ ∈ s \ 𝓛, (2 : ℝ) ^ (-dot α ℓ) ≤ ε / 2) ∧
-        ∑ ℓ ∈ 𝓛, c₂ * (2 : ℝ) ^ (-dot β ℓ) / N ℓ ≤ ε ^ 2 / 2 ∧
-        ∑ ℓ ∈ 𝓛, (N ℓ : ℝ) * (c₃ * (2 : ℝ) ^ dot γ ℓ) ≤
+      ∃ (L : ℝ) (N : (Fin D → ℕ) → ℕ), (∀ ℓ, 0 < N ℓ) ∧
+        (∀ s : Finset (Fin D → ℕ),
+          c₁ * ∑ ℓ ∈ s \ indexSet (fun d => α d + (γ d - β d) / 2) L, (2 : ℝ) ^ (-dot α ℓ) ≤
+            ε / 2) ∧
+        ∑ ℓ ∈ indexSet (fun d => α d + (γ d - β d) / 2) L, c₂ * (2 : ℝ) ^ (-dot β ℓ) / N ℓ ≤
+          ε ^ 2 / 2 ∧
+        ∑ ℓ ∈ indexSet (fun d => α d + (γ d - β d) / 2) L,
+            (N ℓ : ℝ) * (c₃ * (2 : ℝ) ^ dot γ ℓ) ≤
           K_M * mimcBound (mimcEta α β γ) (2 * (mimcD2 α β γ : ℝ))
               (((mimcD2 α β γ : ℝ) - 1) * (2 + mimcEta α β γ)) ε +
             K_X * (-Real.log ε) ^ ((k : ℝ) +
@@ -626,7 +639,7 @@ theorem mimc_complexity_core [NeZero D] {α β γ : Fin D → ℝ} {c₁ c₂ c�
     refine ⟨2 * (c₂ * c₃) * Pg ^ 2, K_X, mul_nonneg hc23 (sq_nonneg _), hK_X,
       fun ε hε hε1 => ?_⟩
     obtain ⟨L, N, hN, hbias, hvar, hcost, hP, hL⟩ := hcons ε hε hε1
-    refine ⟨indexSet θ L, N, hN, hbias, hvar, ?_⟩
+    refine ⟨L, N, hN, hbias, hvar, ?_⟩
     have hS : ∑ ℓ ∈ indexSet θ L, (2 : ℝ) ^ dot g ℓ ≤ Pg := by
       rw [sum_indexSet_eq hθ]
       refine le_trans (Finset.sum_le_sum fun ℓ _ => ?_) (sum_box_two_rpow_le_prod hgneg _)
@@ -655,7 +668,7 @@ theorem mimc_complexity_core [NeZero D] {α β γ : Fin D → ℝ} {c₁ c₂ c�
       mul_nonneg hc23 (mul_nonneg (sq_nonneg _) (Real.rpow_nonneg hK_L.le _)), hK_X,
       fun ε hε hε1 => ?_⟩
     obtain ⟨L, N, hN, hbias, hvar, hcost, hP, hL⟩ := hcons ε hε hε1
-    refine ⟨indexSet θ L, N, hN, hbias, hvar, ?_⟩
+    refine ⟨L, N, hN, hbias, hvar, ?_⟩
     have hL0 : (0 : ℝ) ≤ L := Nat.cast_nonneg L
     have ht : 1 ≤ -Real.log ε := one_le_neg_log hε hε1
     have hS : ∑ ℓ ∈ indexSet θ L, (2 : ℝ) ^ dot g ℓ ≤ K_I * (1 + (L : ℝ)) ^ m := by
@@ -717,7 +730,7 @@ theorem mimc_complexity_core [NeZero D] {α β γ : Fin D → ℝ} {c₁ c₂ c�
         (mul_nonneg (sq_nonneg _) (mul_nonneg (Real.rpow_nonneg hK_P.le _)
           (Real.rpow_nonneg hK_L.le _)))
     obtain ⟨L, N, hN, hbias, hvar, hcost, hP, hL⟩ := hcons ε hε hε1
-    refine ⟨indexSet θ L, N, hN, hbias, hvar, ?_⟩
+    refine ⟨L, N, hN, hbias, hvar, ?_⟩
     have hL0 : (0 : ℝ) ≤ L := Nat.cast_nonneg L
     have ht : 1 ≤ -Real.log ε := one_le_neg_log hε hε1
     have hS : ∑ ℓ ∈ indexSet θ L, (2 : ℝ) ^ dot g ℓ ≤
@@ -777,19 +790,54 @@ theorem mimc_complexity_core [NeZero D] {α β γ : Fin D → ℝ} {c₁ c₂ c�
             ((ε⁻¹ ^ 2 * ε ^ (-η)) * (-Real.log ε) ^ (((m : ℝ) - 1) * (2 + η))) := by ring
       _ = _ := by rw [hε2]
 
-/-! ### Theorem 2, deterministic form -/
-
-/-- **Giles' Theorem 2, deterministic form, for `α_d > ½β_d`** (a step of this formalisation's
-proof of Giles 2015, §2.4, Theorem 2, with the paper's exponents `e₁ = 2D₂`,
-`e₂ = (D₂ − 1)(2 + η)`; not stated in the paper). -/
-theorem mimc_complexity [NeZero D] {α β γ : Fin D → ℝ} {c₁ c₂ c₃ : ℝ}
-    (hα : ∀ d, 0 < α d) (hγ : ∀ d, 0 < γ d) (hαβ : ∀ d, β d / 2 < α d)
-    (hc₁ : 0 < c₁) (hc₂ : 0 < c₂) (hc₃ : 0 < c₃) :
-    ∃ c₄ : ℝ, 0 < c₄ ∧ ∀ ε : ℝ, 0 < ε → ε < Real.exp (-1) →
+/-- **Giles' Theorem 2 — deterministic core** (a step of this formalisation's proof of Giles 2015,
+§2.4, Theorem 2; not stated in the paper).  Let `θ_d = α_d + (γ_d − β_d)/2`, let `c` satisfy
+`γ_d ≤ c θ_d` for all `d` (this forces `c > 0`), and let `k + 1 ≥ #{d : γ_d = cθ_d}`.  With
+`V_ℓ = c₂ 2^{−β·ℓ}` and `C_ℓ = c₃ 2^{γ·ℓ}` there are, for every `0 < ε < e⁻¹`, a finite set of
+levels `𝓛` and `N_ℓ ≥ 1` such that the bias bound `c₁ ∑ 2^{−α·ℓ}` over every finite part of the
+complement of `𝓛` is at most `ε/2`, `∑_{𝓛} V_ℓ/N_ℓ ≤ ε²/2`, and the cost is at most the main term
+`K_M · (ε⁻², ε⁻²|log ε|^{2D₂}, ε^{−2−η}|log ε|^{(D₂−1)(2+η)})` plus the rounding-up overhead
+`K_X |log ε|^{k + (D₂−1)ς} ε^{−ς}` with `ς = c(2 + η)/2`. -/
+theorem mimc_complexity_core [NeZero D] {α β γ : Fin D → ℝ} {c₁ c₂ c₃ c : ℝ}
+    (hα : ∀ d, 0 < α d) (hγ : ∀ d, 0 < γ d) (hαβ : ∀ d, β d / 2 ≤ α d)
+    (hc₁ : 0 < c₁) (hc₂ : 0 < c₂) (hc₃ : 0 < c₃)
+    (hcγ : ∀ d, γ d ≤ c * (α d + (γ d - β d) / 2)) (k : ℕ)
+    (hk : crit (fun d => c * (α d + (γ d - β d) / 2) - γ d) ≤ k + 1) :
+    ∃ K_M K_X : ℝ, 0 ≤ K_M ∧ 0 ≤ K_X ∧ ∀ ε : ℝ, 0 < ε → ε < Real.exp (-1) →
       ∃ (𝓛 : Finset (Fin D → ℕ)) (N : (Fin D → ℕ) → ℕ), (∀ ℓ, 0 < N ℓ) ∧
         (∀ s : Finset (Fin D → ℕ), c₁ * ∑ ℓ ∈ s \ 𝓛, (2 : ℝ) ^ (-dot α ℓ) ≤ ε / 2) ∧
         ∑ ℓ ∈ 𝓛, c₂ * (2 : ℝ) ^ (-dot β ℓ) / N ℓ ≤ ε ^ 2 / 2 ∧
         ∑ ℓ ∈ 𝓛, (N ℓ : ℝ) * (c₃ * (2 : ℝ) ^ dot γ ℓ) ≤
+          K_M * mimcBound (mimcEta α β γ) (2 * (mimcD2 α β γ : ℝ))
+              (((mimcD2 α β γ : ℝ) - 1) * (2 + mimcEta α β γ)) ε +
+            K_X * (-Real.log ε) ^ ((k : ℝ) +
+              ((mimcD2 α β γ : ℝ) - 1) * (c * (2 + mimcEta α β γ) / 2)) *
+              ε ^ (-(c * (2 + mimcEta α β γ) / 2)) := by
+  obtain ⟨K_M, K_X, hK_M, hK_X, h⟩ :=
+    mimc_complexity_core_indexSet hα hγ hαβ hc₁ hc₂ hc₃ hcγ k hk
+  refine ⟨K_M, K_X, hK_M, hK_X, fun ε hε hε1 => ?_⟩
+  obtain ⟨L, N, hN, hbias, hvar, hcost⟩ := h ε hε hε1
+  exact ⟨_, N, hN, hbias, hvar, hcost⟩
+
+/-! ### Theorem 2, deterministic form -/
+
+/-- **Giles' Theorem 2, deterministic form, for `α_d > ½β_d`, on the simplex `θ·ℓ ≤ L`** (a step
+of this formalisation's proof of Giles 2015, §2.4, Theorem 2, with the paper's exponents
+`e₁ = 2D₂`, `e₂ = (D₂ − 1)(2 + η)`; not stated in the paper).  The statement of `mimc_complexity`
+with the index set made explicit: `𝓛 = indexSet θ L = {ℓ ∈ ℕ^D : θ·ℓ ≤ L}` for a level `L`, with
+`θ_d = α_d + (γ_d − β_d)/2 > 0` (a region "of the form `ℓ·n ≤ L`", Giles 2015, p. 15). -/
+theorem mimc_complexity_indexSet [NeZero D] {α β γ : Fin D → ℝ} {c₁ c₂ c₃ : ℝ}
+    (hα : ∀ d, 0 < α d) (hγ : ∀ d, 0 < γ d) (hαβ : ∀ d, β d / 2 < α d)
+    (hc₁ : 0 < c₁) (hc₂ : 0 < c₂) (hc₃ : 0 < c₃) :
+    ∃ c₄ : ℝ, 0 < c₄ ∧ ∀ ε : ℝ, 0 < ε → ε < Real.exp (-1) →
+      ∃ (L : ℝ) (N : (Fin D → ℕ) → ℕ), (∀ ℓ, 0 < N ℓ) ∧
+        (∀ s : Finset (Fin D → ℕ),
+          c₁ * ∑ ℓ ∈ s \ indexSet (fun d => α d + (γ d - β d) / 2) L, (2 : ℝ) ^ (-dot α ℓ) ≤
+            ε / 2) ∧
+        ∑ ℓ ∈ indexSet (fun d => α d + (γ d - β d) / 2) L, c₂ * (2 : ℝ) ^ (-dot β ℓ) / N ℓ ≤
+          ε ^ 2 / 2 ∧
+        ∑ ℓ ∈ indexSet (fun d => α d + (γ d - β d) / 2) L,
+            (N ℓ : ℝ) * (c₃ * (2 : ℝ) ^ dot γ ℓ) ≤
           c₄ * mimcBound (mimcEta α β γ) (2 * (mimcD2 α β γ : ℝ))
             (((mimcD2 α β γ : ℝ) - 1) * (2 + mimcEta α β γ)) ε := by
   -- `c = max_d γ_d/θ_d < 2`
@@ -809,8 +857,8 @@ theorem mimc_complexity [NeZero D] {α β γ : Fin D → ℝ} {c₁ c₂ c₃ : 
     linarith [hαβ d]
   have hc0 : 0 ≤ c := le_trans (div_nonneg (hγ 0).le (hθ 0).le)
     (Finset.le_sup' (fun d => γ d / θ d) (Finset.mem_univ 0))
-  obtain ⟨K_M, K_X, hK_M, hK_X, hcore⟩ := mimc_complexity_core hα hγ (fun d => (hαβ d).le)
-    hc₁ hc₂ hc₃ hcγ D ((crit_le _).trans (Nat.le_succ D))
+  obtain ⟨K_M, K_X, hK_M, hK_X, hcore⟩ := mimc_complexity_core_indexSet hα hγ
+    (fun d => (hαβ d).le) hc₁ hc₂ hc₃ hcγ D ((crit_le _).trans (Nat.le_succ D))
   -- the rounding-up overhead is of lower order: `s = c(2+η)/2 < 2 + max η 0`
   have hr := le_mimcEta α β γ
   obtain ⟨d₀, hd₀⟩ := exists_eq_mimcEta α β γ
@@ -839,8 +887,8 @@ theorem mimc_complexity [NeZero D] {α β γ : Fin D → ℝ} {c₁ c₂ c₃ : 
   obtain ⟨K_abs, hK_abs, habs⟩ := neg_log_rpow_mul_rpow_le hp (sub_pos.2 hsq)
   have hKX0 : 0 ≤ K_X * K_abs := mul_nonneg hK_X hK_abs.le
   refine ⟨K_M + K_X * K_abs + 1, by linarith, fun ε hε hε1 => ?_⟩
-  obtain ⟨𝓛, N, hN, hbias, hvar, hcost⟩ := hcore ε hε hε1
-  refine ⟨𝓛, N, hN, hbias, hvar, hcost.trans ?_⟩
+  obtain ⟨L, N, hN, hbias, hvar, hcost⟩ := hcore ε hε hε1
+  refine ⟨L, N, hN, hbias, hvar, hcost.trans ?_⟩
   have hε1' : ε < 1 := eps_lt_one hε1
   have ht : 1 ≤ -Real.log ε := one_le_neg_log hε hε1
   -- `|log ε|^p ε^{−s} ≤ K_abs ε^{−q}`
@@ -876,28 +924,51 @@ theorem mimc_complexity [NeZero D] {α β γ : Fin D → ℝ} {c₁ c₂ c₃ : 
     _ ≤ (K_M + K_X * K_abs + 1) * mimcBound η (2 * m) ((m - 1) * (2 + η)) ε := by
         nlinarith [hB0]
 
-/-- **Giles' Theorem 2, deterministic form, for `α_d ≥ ½β_d`** (a step of this formalisation's proof
-of Giles 2015, §2.4, Theorem 2; not stated in the paper).  The paper does not specify the log
-exponents when some `α_d = ½β_d` ("the form of the exponents is more complicated"); here, with
-`D₃ = #{d : α_d = ½β_d}` (`mimcD3`), `e₁ = 2D₂ + (D₃ − 3)⁺` and
-`e₂ = (D₂ − 1)(2 + η) + (D₃ − 1)⁺`.  When `D₃ = 0` these are the paper's `e₁ = 2D₂` and
-`e₂ = (D₂ − 1)(2 + η)`, so this statement contains `mimc_complexity`. -/
-theorem mimc_complexity_boundary [NeZero D] {α β γ : Fin D → ℝ} {c₁ c₂ c₃ : ℝ}
-    (hα : ∀ d, 0 < α d) (hγ : ∀ d, 0 < γ d) (hαβ : ∀ d, β d / 2 ≤ α d)
+/-- **Giles' Theorem 2, deterministic form, for `α_d > ½β_d`** (a step of this formalisation's
+proof of Giles 2015, §2.4, Theorem 2, with the paper's exponents `e₁ = 2D₂`,
+`e₂ = (D₂ − 1)(2 + η)`; not stated in the paper). -/
+theorem mimc_complexity [NeZero D] {α β γ : Fin D → ℝ} {c₁ c₂ c₃ : ℝ}
+    (hα : ∀ d, 0 < α d) (hγ : ∀ d, 0 < γ d) (hαβ : ∀ d, β d / 2 < α d)
     (hc₁ : 0 < c₁) (hc₂ : 0 < c₂) (hc₃ : 0 < c₃) :
     ∃ c₄ : ℝ, 0 < c₄ ∧ ∀ ε : ℝ, 0 < ε → ε < Real.exp (-1) →
       ∃ (𝓛 : Finset (Fin D → ℕ)) (N : (Fin D → ℕ) → ℕ), (∀ ℓ, 0 < N ℓ) ∧
         (∀ s : Finset (Fin D → ℕ), c₁ * ∑ ℓ ∈ s \ 𝓛, (2 : ℝ) ^ (-dot α ℓ) ≤ ε / 2) ∧
         ∑ ℓ ∈ 𝓛, c₂ * (2 : ℝ) ^ (-dot β ℓ) / N ℓ ≤ ε ^ 2 / 2 ∧
         ∑ ℓ ∈ 𝓛, (N ℓ : ℝ) * (c₃ * (2 : ℝ) ^ dot γ ℓ) ≤
+          c₄ * mimcBound (mimcEta α β γ) (2 * (mimcD2 α β γ : ℝ))
+            (((mimcD2 α β γ : ℝ) - 1) * (2 + mimcEta α β γ)) ε := by
+  obtain ⟨c₄, hc₄, h⟩ := mimc_complexity_indexSet hα hγ hαβ hc₁ hc₂ hc₃
+  refine ⟨c₄, hc₄, fun ε hε hε1 => ?_⟩
+  obtain ⟨L, N, hN, hbias, hvar, hcost⟩ := h ε hε hε1
+  exact ⟨_, N, hN, hbias, hvar, hcost⟩
+
+/-- **Giles' Theorem 2, deterministic form, for `α_d ≥ ½β_d`, on the simplex `θ·ℓ ≤ L`** (a step
+of this formalisation's proof of Giles 2015, §2.4, Theorem 2; not stated in the paper).  The
+statement of `mimc_complexity_boundary` with the index set made explicit:
+`𝓛 = indexSet θ L = {ℓ ∈ ℕ^D : θ·ℓ ≤ L}` for a level `L`, with `θ_d = α_d + (γ_d − β_d)/2 > 0`
+(a region "of the form `ℓ·n ≤ L`", Giles 2015, p. 15).  The log exponents, which the paper does
+not specify when some `α_d = ½β_d`, are those of `mimc_complexity_boundary`:
+`e₁ = 2D₂ + (D₃ − 3)⁺` and `e₂ = (D₂ − 1)(2 + η) + (D₃ − 1)⁺` with `D₃ = #{d : α_d = ½β_d}`. -/
+theorem mimc_complexity_boundary_indexSet [NeZero D] {α β γ : Fin D → ℝ} {c₁ c₂ c₃ : ℝ}
+    (hα : ∀ d, 0 < α d) (hγ : ∀ d, 0 < γ d) (hαβ : ∀ d, β d / 2 ≤ α d)
+    (hc₁ : 0 < c₁) (hc₂ : 0 < c₂) (hc₃ : 0 < c₃) :
+    ∃ c₄ : ℝ, 0 < c₄ ∧ ∀ ε : ℝ, 0 < ε → ε < Real.exp (-1) →
+      ∃ (L : ℝ) (N : (Fin D → ℕ) → ℕ), (∀ ℓ, 0 < N ℓ) ∧
+        (∀ s : Finset (Fin D → ℕ),
+          c₁ * ∑ ℓ ∈ s \ indexSet (fun d => α d + (γ d - β d) / 2) L, (2 : ℝ) ^ (-dot α ℓ) ≤
+            ε / 2) ∧
+        ∑ ℓ ∈ indexSet (fun d => α d + (γ d - β d) / 2) L, c₂ * (2 : ℝ) ^ (-dot β ℓ) / N ℓ ≤
+          ε ^ 2 / 2 ∧
+        ∑ ℓ ∈ indexSet (fun d => α d + (γ d - β d) / 2) L,
+            (N ℓ : ℝ) * (c₃ * (2 : ℝ) ^ dot γ ℓ) ≤
           c₄ * mimcBound (mimcEta α β γ) (2 * (mimcD2 α β γ : ℝ) + ((mimcD3 α β - 3 : ℕ) : ℝ))
             (((mimcD2 α β γ : ℝ) - 1) * (2 + mimcEta α β γ) + ((mimcD3 α β - 1 : ℕ) : ℝ)) ε := by
   -- with `c = 2`: `γ_d ≤ 2θ_d` is `β_d ≤ 2α_d`, an equality exactly when `α_d = ½β_d`
   have hcγ : ∀ d, γ d ≤ 2 * (α d + (γ d - β d) / 2) := fun d => by linarith [hαβ d]
   have hk : crit (fun d => 2 * (α d + (γ d - β d) / 2) - γ d) ≤ (mimcD3 α β - 1) + 1 :=
     (crit_two_theta_sub_gamma α β γ).le.trans (by omega)
-  obtain ⟨K_M, K_X, hK_M, hK_X, hcore⟩ := mimc_complexity_core hα hγ hαβ hc₁ hc₂ hc₃
-    hcγ (mimcD3 α β - 1) hk
+  obtain ⟨K_M, K_X, hK_M, hK_X, hcore⟩ := mimc_complexity_core_indexSet hα hγ hαβ hc₁ hc₂
+    hc₃ hcγ (mimcD3 α β - 1) hk
   have hr := le_mimcEta α β γ
   obtain ⟨d₀, hd₀⟩ := exists_eq_mimcEta α β γ
   have hm1 := one_le_mimcD2 α β γ
@@ -924,8 +995,8 @@ theorem mimc_complexity_boundary [NeZero D] {α β γ : Fin D → ℝ} {c₁ c�
     (by split_ifs with h <;> linarith)
   have hKX0 : 0 ≤ K_X * K_abs := mul_nonneg hK_X hK_abs.le
   refine ⟨K_M + K_X * K_abs + K_X + 1, by linarith, fun ε hε hε1 => ?_⟩
-  obtain ⟨𝓛, N, hN, hbias, hvar, hcost⟩ := hcore ε hε hε1
-  refine ⟨𝓛, N, hN, hbias, hvar, hcost.trans ?_⟩
+  obtain ⟨L, N, hN, hbias, hvar, hcost⟩ := hcore ε hε hε1
+  refine ⟨L, N, hN, hbias, hvar, hcost.trans ?_⟩
   have hε1' : ε < 1 := eps_lt_one hε1
   have ht : 1 ≤ -Real.log ε := one_le_neg_log hε hε1
   have hlog : |Real.log ε| = -Real.log ε := abs_log_eq_neg_log hε hε1
@@ -984,6 +1055,27 @@ theorem mimc_complexity_boundary [NeZero D] {α β γ : Fin D → ℝ} {c₁ c�
         exact add_le_add (mul_le_mul_of_nonneg_left hBmono hK_M)
           (mul_le_mul_of_nonneg_left hX hK_X)
     _ ≤ (K_M + K_X * K_abs + K_X + 1) * B := by nlinarith [hB0]
+
+/-- **Giles' Theorem 2, deterministic form, for `α_d ≥ ½β_d`** (a step of this formalisation's proof
+of Giles 2015, §2.4, Theorem 2; not stated in the paper).  The paper does not specify the log
+exponents when some `α_d = ½β_d` ("the form of the exponents is more complicated"); here, with
+`D₃ = #{d : α_d = ½β_d}` (`mimcD3`), `e₁ = 2D₂ + (D₃ − 3)⁺` and
+`e₂ = (D₂ − 1)(2 + η) + (D₃ − 1)⁺`.  When `D₃ = 0` these are the paper's `e₁ = 2D₂` and
+`e₂ = (D₂ − 1)(2 + η)`, so this statement contains `mimc_complexity`. -/
+theorem mimc_complexity_boundary [NeZero D] {α β γ : Fin D → ℝ} {c₁ c₂ c₃ : ℝ}
+    (hα : ∀ d, 0 < α d) (hγ : ∀ d, 0 < γ d) (hαβ : ∀ d, β d / 2 ≤ α d)
+    (hc₁ : 0 < c₁) (hc₂ : 0 < c₂) (hc₃ : 0 < c₃) :
+    ∃ c₄ : ℝ, 0 < c₄ ∧ ∀ ε : ℝ, 0 < ε → ε < Real.exp (-1) →
+      ∃ (𝓛 : Finset (Fin D → ℕ)) (N : (Fin D → ℕ) → ℕ), (∀ ℓ, 0 < N ℓ) ∧
+        (∀ s : Finset (Fin D → ℕ), c₁ * ∑ ℓ ∈ s \ 𝓛, (2 : ℝ) ^ (-dot α ℓ) ≤ ε / 2) ∧
+        ∑ ℓ ∈ 𝓛, c₂ * (2 : ℝ) ^ (-dot β ℓ) / N ℓ ≤ ε ^ 2 / 2 ∧
+        ∑ ℓ ∈ 𝓛, (N ℓ : ℝ) * (c₃ * (2 : ℝ) ^ dot γ ℓ) ≤
+          c₄ * mimcBound (mimcEta α β γ) (2 * (mimcD2 α β γ : ℝ) + ((mimcD3 α β - 3 : ℕ) : ℝ))
+            (((mimcD2 α β γ : ℝ) - 1) * (2 + mimcEta α β γ) + ((mimcD3 α β - 1 : ℕ) : ℝ)) ε := by
+  obtain ⟨c₄, hc₄, h⟩ := mimc_complexity_boundary_indexSet hα hγ hαβ hc₁ hc₂ hc₃
+  refine ⟨c₄, hc₄, fun ε hε hε1 => ?_⟩
+  obtain ⟨L, N, hN, hbias, hvar, hcost⟩ := h ε hε hε1
+  exact ⟨_, N, hN, hbias, hvar, hcost⟩
 
 /-! ### Theorem 2 on a probability space -/
 
@@ -1310,6 +1402,93 @@ theorem giles_theorem2_boundary [NeZero D] (P : Ω → ℝ) (Pℓ : (Fin D → �
             (((mimcD2 α β γ : ℝ) - 1) * (2 + mimcEta α β γ) + ((mimcD3 α β - 1 : ℕ) : ℝ)) ε :=
   mimc_mse_cost P Pℓ Y Cost V C _ (mimc_complexity_boundary hα hγ hαβ hc₁ hc₂ hc₃) hP hPℓ hY
     hind hCost_int hCost_mean h_var h_i h_iii h_ii h_iv h_v
+
+/-- **Giles' Theorem 2 on an index set of the form `ℓ·n ≤ L`** (Giles 2015, §2.4, Theorem 2,
+p. 13–14, for `α_d > ½β_d`, with p. 15: "The optimal choice for `𝓛`, which yields the complexity
+bounds given in the theorem, is of the form `ℓ·n ≤ L` for a particular choice of direction vector
+`n` with strictly positive components").  Hypotheses as in `giles_theorem2`.  Then there is
+`c₄ > 0` such that for every `0 < ε < e⁻¹` there are a level `L ∈ ℝ` and `N_ℓ ≥ 1` for which the
+MIMC estimator `Y = ∑_{ℓ∈𝓛} Y ℓ (N ℓ)` over the simplex `𝓛 = indexSet θ L = {ℓ ∈ ℕ^D : θ·ℓ ≤ L}`,
+with the direction vector `θ_d = α_d + (γ_d − β_d)/2`, has `MSE < ε²`, and the cost
+`C = ∑_{ℓ∈𝓛} Cost ℓ (N ℓ)` satisfies `E[C] ≤ c₄ ε⁻²` (`η < 0`), `c₄ ε⁻² |log ε|^{2D₂}` (`η = 0`),
+`c₄ ε^{−2−η} |log ε|^{(D₂−1)(2+η)}` (`η > 0`): the conclusion of `giles_theorem2` with the index
+set made explicit.  Every `θ_d > 0` (as `α_d > ½β_d` and `γ_d > 0`), so `indexSet θ L` is exactly
+`{θ·ℓ ≤ L}` (`mem_indexSet`).  The paper does not say which `n` it means; `n = θ` is this
+formalisation's choice.  Only that this simplex achieves the bounds of Theorem 2 is formalised,
+not that it is the optimal choice of `𝓛` among all index sets (the paper's "optimal").  The
+hypothesis `β_d > 0` is Giles'; the proof does not use it. -/
+theorem giles_theorem2_indexSet [NeZero D] (P : Ω → ℝ) (Pℓ : (Fin D → ℕ) → Ω → ℝ)
+    (Y : (Fin D → ℕ) → ℕ → Ω → ℝ) (Cost : (Fin D → ℕ) → ℕ → Ω → ℝ) (V C : (Fin D → ℕ) → ℝ)
+    {α β γ : Fin D → ℝ} {c₁ c₂ c₃ : ℝ}
+    (hα : ∀ d, 0 < α d) (_hβ : ∀ d, 0 < β d) (hγ : ∀ d, 0 < γ d) (hαβ : ∀ d, β d / 2 < α d)
+    (hc₁ : 0 < c₁) (hc₂ : 0 < c₂) (hc₃ : 0 < c₃)
+    (hP : Integrable P μ) (hPℓ : ∀ ℓ, Integrable (Pℓ ℓ) μ)
+    (hY : ∀ ℓ n, 0 < n → MemLp (Y ℓ n) 2 μ)
+    (hind : ∀ N : (Fin D → ℕ) → ℕ, (∀ ℓ, 0 < N ℓ) →
+      Pairwise fun i j => IndepFun (Y i (N i)) (Y j (N j)) μ)
+    (hCost_int : ∀ ℓ n, 0 < n → Integrable (Cost ℓ n) μ)
+    (hCost_mean : ∀ ℓ (n : ℕ), 0 < n → μ[Cost ℓ n] = n * C ℓ)
+    (h_var : ∀ ℓ n, 0 < n → variance (Y ℓ n) μ = V ℓ / n)
+    (h_i : ∀ δ : ℝ, 0 < δ → ∃ n₀ : ℕ, ∀ ℓ : Fin D → ℕ, (∀ d, n₀ ≤ ℓ d) →
+      |μ[fun ω => Pℓ ℓ ω - P ω]| < δ)
+    (h_iii : ∀ ℓ n, 0 < n → μ[Y ℓ n] = μ[fun ω => crossDiff (fun m => Pℓ m ω) ℓ])
+    (h_ii : ∀ ℓ n, 0 < n → |μ[Y ℓ n]| ≤ c₁ * (2 : ℝ) ^ (-dot α ℓ))
+    (h_iv : ∀ ℓ, V ℓ ≤ c₂ * (2 : ℝ) ^ (-dot β ℓ))
+    (h_v : ∀ ℓ, C ℓ ≤ c₃ * (2 : ℝ) ^ dot γ ℓ) :
+    ∃ c₄ : ℝ, 0 < c₄ ∧ ∀ ε : ℝ, 0 < ε → ε < Real.exp (-1) →
+      ∃ (L : ℝ) (N : (Fin D → ℕ) → ℕ), (∀ ℓ, 0 < N ℓ) ∧
+        μ[fun ω => (∑ ℓ ∈ indexSet (fun d => α d + (γ d - β d) / 2) L, Y ℓ (N ℓ) ω - μ[P]) ^ 2] <
+          ε ^ 2 ∧
+        μ[fun ω => ∑ ℓ ∈ indexSet (fun d => α d + (γ d - β d) / 2) L, Cost ℓ (N ℓ) ω] ≤
+          c₄ * mimcBound (mimcEta α β γ) (2 * (mimcD2 α β γ : ℝ))
+            (((mimcD2 α β γ : ℝ) - 1) * (2 + mimcEta α β γ)) ε := by
+  obtain ⟨c₄, hc₄, hdet⟩ := mimc_complexity_indexSet hα hγ hαβ hc₁ hc₂ hc₃
+  refine ⟨c₄, hc₄, fun ε hε hε1 => ?_⟩
+  obtain ⟨L, N, hN, hbias, hvar, hcost⟩ := hdet ε hε hε1
+  exact ⟨L, N, hN, mimc_mse_cost_of P Pℓ Y Cost V C hε _ N hN hbias hvar hcost hP hPℓ hY hind
+    hCost_int hCost_mean h_var h_i h_iii h_ii h_iv h_v⟩
+
+/-- **Giles' Theorem 2 when some `α_d = ½β_d`, on an index set of the form `ℓ·n ≤ L`** (Giles
+2015, §2.4, Theorem 2, for `α_d ≥ ½β_d`, with p. 15: "The optimal choice for `𝓛`, which yields the
+complexity bounds given in the theorem, is of the form `ℓ·n ≤ L` for a particular choice of
+direction vector `n` with strictly positive components").  Hypotheses as in
+`giles_theorem2_boundary`; the conclusion is that of `giles_theorem2_boundary` with the index set
+made explicit: the estimator is summed over the simplex `indexSet θ L = {ℓ ∈ ℕ^D : θ·ℓ ≤ L}` for a
+level `L ∈ ℝ`, with `θ_d = α_d + (γ_d − β_d)/2 > 0`, and the log exponents, which the paper does
+not state in this case, are `e₁ = 2D₂ + (D₃ − 3)⁺` and `e₂ = (D₂ − 1)(2 + η) + (D₃ − 1)⁺` with
+`D₃ = #{d : α_d = ½β_d}`.  As in `giles_theorem2_indexSet`, `n = θ` is this formalisation's
+choice, and only that this simplex achieves the bounds is formalised, not that it is optimal.  The
+hypothesis `β_d > 0` is Giles'; the proof does not use it. -/
+theorem giles_theorem2_boundary_indexSet [NeZero D] (P : Ω → ℝ) (Pℓ : (Fin D → ℕ) → Ω → ℝ)
+    (Y : (Fin D → ℕ) → ℕ → Ω → ℝ) (Cost : (Fin D → ℕ) → ℕ → Ω → ℝ) (V C : (Fin D → ℕ) → ℝ)
+    {α β γ : Fin D → ℝ} {c₁ c₂ c₃ : ℝ}
+    (hα : ∀ d, 0 < α d) (_hβ : ∀ d, 0 < β d) (hγ : ∀ d, 0 < γ d) (hαβ : ∀ d, β d / 2 ≤ α d)
+    (hc₁ : 0 < c₁) (hc₂ : 0 < c₂) (hc₃ : 0 < c₃)
+    (hP : Integrable P μ) (hPℓ : ∀ ℓ, Integrable (Pℓ ℓ) μ)
+    (hY : ∀ ℓ n, 0 < n → MemLp (Y ℓ n) 2 μ)
+    (hind : ∀ N : (Fin D → ℕ) → ℕ, (∀ ℓ, 0 < N ℓ) →
+      Pairwise fun i j => IndepFun (Y i (N i)) (Y j (N j)) μ)
+    (hCost_int : ∀ ℓ n, 0 < n → Integrable (Cost ℓ n) μ)
+    (hCost_mean : ∀ ℓ (n : ℕ), 0 < n → μ[Cost ℓ n] = n * C ℓ)
+    (h_var : ∀ ℓ n, 0 < n → variance (Y ℓ n) μ = V ℓ / n)
+    (h_i : ∀ δ : ℝ, 0 < δ → ∃ n₀ : ℕ, ∀ ℓ : Fin D → ℕ, (∀ d, n₀ ≤ ℓ d) →
+      |μ[fun ω => Pℓ ℓ ω - P ω]| < δ)
+    (h_iii : ∀ ℓ n, 0 < n → μ[Y ℓ n] = μ[fun ω => crossDiff (fun m => Pℓ m ω) ℓ])
+    (h_ii : ∀ ℓ n, 0 < n → |μ[Y ℓ n]| ≤ c₁ * (2 : ℝ) ^ (-dot α ℓ))
+    (h_iv : ∀ ℓ, V ℓ ≤ c₂ * (2 : ℝ) ^ (-dot β ℓ))
+    (h_v : ∀ ℓ, C ℓ ≤ c₃ * (2 : ℝ) ^ dot γ ℓ) :
+    ∃ c₄ : ℝ, 0 < c₄ ∧ ∀ ε : ℝ, 0 < ε → ε < Real.exp (-1) →
+      ∃ (L : ℝ) (N : (Fin D → ℕ) → ℕ), (∀ ℓ, 0 < N ℓ) ∧
+        μ[fun ω => (∑ ℓ ∈ indexSet (fun d => α d + (γ d - β d) / 2) L, Y ℓ (N ℓ) ω - μ[P]) ^ 2] <
+          ε ^ 2 ∧
+        μ[fun ω => ∑ ℓ ∈ indexSet (fun d => α d + (γ d - β d) / 2) L, Cost ℓ (N ℓ) ω] ≤
+          c₄ * mimcBound (mimcEta α β γ) (2 * (mimcD2 α β γ : ℝ) + ((mimcD3 α β - 3 : ℕ) : ℝ))
+            (((mimcD2 α β γ : ℝ) - 1) * (2 + mimcEta α β γ) + ((mimcD3 α β - 1 : ℕ) : ℝ)) ε := by
+  obtain ⟨c₄, hc₄, hdet⟩ := mimc_complexity_boundary_indexSet hα hγ hαβ hc₁ hc₂ hc₃
+  refine ⟨c₄, hc₄, fun ε hε hε1 => ?_⟩
+  obtain ⟨L, N, hN, hbias, hvar, hcost⟩ := hdet ε hε hε1
+  exact ⟨L, N, hN, mimc_mse_cost_of P Pℓ Y Cost V C hε _ N hN hbias hvar hcost hP hPℓ hY hind
+    hCost_int hCost_mean h_var h_i h_iii h_ii h_iv h_v⟩
 
 end Probability
 

@@ -478,10 +478,11 @@ theorem singleTermN_mean_variance [IsProbabilityMeasure μ] [IsProbabilityMeasur
 
 omit [MeasurableSpace Ω] [MeasurableSpace Ω'] in
 /-- **The single-term estimator grouped by level** (Giles 2015, §2.2, p. 9: "Alternatively,
-their estimator can be expressed as `Y = ∑_{ℓ=0}^{∞} (p_ℓ N)⁻¹ ∑_{n=1}^{N_ℓ} (P_ℓ^{(n)} − P_{ℓ−1}^{(n)})`
-where `N_ℓ`, the number of samples from level `ℓ`, is a random variable with `∑_ℓ N_ℓ = N`,
-`E[N_ℓ] = p_ℓ N`").  For every outcome `x` and every finite set
-`S` of levels containing the levels `K(ξ_n x)` of the `N` samples, the `N`-sample estimator is
+their estimator can be expressed as
+`Y = ∑_{ℓ=0}^{∞} (p_ℓ N)⁻¹ ∑_{n=1}^{N_ℓ} (P_ℓ^{(n)} − P_{ℓ−1}^{(n)})` where `N_ℓ`, the number
+of samples from level `ℓ`, is a random variable with `∑_ℓ N_ℓ = N`, `E[N_ℓ] = p_ℓ N`").  For
+every outcome `x` and every finite set `S` of levels containing the levels `K(ξ_n x)` of the `N`
+samples, the `N`-sample estimator is
 `∑_{ℓ ∈ S} (p_ℓ N)⁻¹ ∑_{n : K(ξ_n x) = ℓ} (P_ℓ − P_{ℓ−1})(ξ_n x)`, and the level counts
 `N_ℓ = #{n < N : K(ξ_n x) = ℓ}` add up to `N`. -/
 theorem singleTermN_eq_sum_levels (Pl : ℕ → Ω → ℝ) (K : Ω → ℕ) (p : ℕ → ℝ)

@@ -412,6 +412,15 @@ import MlmcLean
 #print axioms MLMC.gbm_mil_weak_error_le
 #print axioms MLMC.gbm_mil_correction_variance_le
 #print axioms MLMC.gbm_mil_mlmc_theorem1
+#print axioms MLMC.abs_ml2rWeight_le_sharp
+#print axioms MLMC.ml2r_bias_le
+#print axioms MLMC.ml2r_theorem_eq
+#print axioms MLMC.ml2r_theorem_lt
+#print axioms MLMC.mimc_complexity_core_indexSet
+#print axioms MLMC.mimc_complexity_indexSet
+#print axioms MLMC.mimc_complexity_boundary_indexSet
+#print axioms MLMC.giles_theorem2_indexSet
+#print axioms MLMC.giles_theorem2_boundary_indexSet
 -- helper lemmas that the prove2.me generator promotes to nodes
 #print axioms MLMC.sqrt_Vb_mul_Cb
 #print axioms MLMC.two_rpow_levelL_le
