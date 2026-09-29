@@ -306,8 +306,12 @@ theorem milsteinPath_gbm (r σ h s₀ : ℝ) (z : ℕ → ℝ) (n : ℕ) :
   induction n with
   | zero => simp [milsteinPath]
   | succ n ih =>
-    rw [milsteinPath_succ, ih, Finset.prod_range_succ, milsteinStep, hd, gbmMilFactor]
-    ring
+    rw [milsteinPath_succ, ih, Finset.prod_range_succ, milsteinStep, gbmMilFactor]
+    -- `milsteinStep` was elaborated in another module: match its `deriv` up to instances
+    first
+      | (rw [hd]; ring)
+      | (simp only [hd]; ring)
+      | (erw [hd]; ring)
 
 /-! ### The second moment of the error -/
 
@@ -814,7 +818,9 @@ theorem gbm_mil_correction_variance_le (r σ s₀ : ℝ) {T : ℝ} (hT : 0 ≤ T
         have e4 : (4 : ℝ) ^ (ℓ + 1) = ((2 : ℝ) ^ (ℓ + 1)) ^ 2 := by
           rw [pow_right_comm]
           norm_num
-        rw [e2, e4, div_eq_mul_inv]
+        have e5 : (T / 2 ^ (ℓ + 1)) ^ 2 = T ^ 2 * ((4 : ℝ) ^ (ℓ + 1))⁻¹ := by
+          rw [div_pow, ← e4, div_eq_mul_inv]
+        rw [e2, mul_pow, e5]
         ring
 
 /-! ### Theorem 1 -/
