@@ -45,6 +45,11 @@ table and `notes/statement-audit.md`, which compares every statement with the pa
 - **Round 10 (2026-09-29): an independent coverage re-audit of both papers** (634 claims,
   `notes/coverage/`) found no misstatement; every claim it found missing or partial is now
   formalised or listed below with its reason (`notes/coverage/README.md`).
+- **Round 11 (2026-09-29): verification.** All 139 theorems added in round 10 were read back
+  blind by independent auditors (`notes/readbacks/README.md`, eleventh round): all true, none
+  vacuous, none dependent on a junk value. `lake build` is warning-free and `scripts/local_ci.sh`
+  passes: 53 modules, 565 audited theorems, each depending only on `propext`,
+  `Classical.choice` and `Quot.sound`, and 565 validated prove2.me nodes.
 
 ## Setup and verification (Linux / cloud session)
 
