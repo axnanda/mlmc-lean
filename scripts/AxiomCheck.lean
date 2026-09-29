@@ -429,6 +429,11 @@ import MlmcLean
 #print axioms MLMC.markov_linear_levels
 #print axioms MLMC.shiftedQMC_unbiased
 #print axioms MLMC.randomShift_replicates
+#print axioms MLMC.tendstoInDistribution_levelEstimator
+#print axioms MLMC.tendstoInDistribution_mlmcEstimator
+#print axioms MLMC.sum_gaussian_hasLaw
+#print axioms MLMC.tendstoInDistribution_sum_of_approxNormal
+#print axioms MLMC.tendstoInDistribution_sum_inv_sqrt_mul
 -- helper lemmas that the prove2.me generator promotes to nodes
 #print axioms MLMC.sqrt_Vb_mul_Cb
 #print axioms MLMC.two_rpow_levelL_le

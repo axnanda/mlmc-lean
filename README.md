@@ -21,7 +21,7 @@ Machine-checked proofs (Lean 4 + Mathlib) of the complexity results for MLMC fro
   (continuous-time Markov chains), §9 (nested simulation) and §10 (Markov chain equilibria) that
   follow from probability and algebra.
 * **[HG25]** I.-B. Haas, M.B. Giles, *A nested MLMC framework for efficient simulations on
-  FPGAs*, arXiv:2502.07123 (2025). §2 (eq. (2)–(12)), §3 (approximate normals, (13)–(19)),
+  FPGAs*, arXiv:2502.07123 (2025). §2 (eq. (2)–(13)), §3 (approximate normals, (14)–(19)),
   §4 (rounding errors, (20)–(29)), §5–§6 (the cost model and the bit-width optimisation,
   (30)–(41)).
 

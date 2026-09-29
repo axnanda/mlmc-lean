@@ -76,6 +76,9 @@
 --   leading order, N_ℓ linear in ℓ for Markov chains
 -- * `MlmcLean.RandomShiftQMC` — Giles §3.5: a random shift makes a QMC rule unbiased; independent
 --   shifts give i.i.d. replicates whose average has variance V₁/R, estimated without bias
+-- * `MlmcLean.AsymptoticNormal` — Giles §2.1 (Collier et al.) and Haas–Giles §3.2: each level
+--   estimator and, for a fixed number of levels, the MLMC estimator are asymptotically normal
+--   (Mathlib's CLT, Lévy's continuity theorem); sums of independent N(0, 1/n) are N(0, 1)
 import MlmcLean.Allocation
 import MlmcLean.Estimator
 import MlmcLean.LevelDiff
@@ -121,3 +124,4 @@ import MlmcLean.GBMMilstein
 import MlmcLean.ML2RTheorem
 import MlmcLean.GilesRemarks
 import MlmcLean.RandomShiftQMC
+import MlmcLean.AsymptoticNormal
