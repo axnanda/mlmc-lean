@@ -558,3 +558,31 @@ Findings and what was done:
 - **Superfluous hypotheses:** `normCDFInv_one_sub` (`u ∈ (0, 1)`), `gbmExactM_blockAvg`
   (`0 < M`), `normCDFInv_dyadic_concave` (`2 ≤ k`); the constants of `InverseNormal` have slack.
   Kept.
+
+**Nineteenth round (2026-10-07).** Blind read-backs of the 45 theorems added in round 19:
+`jump_processes.md` (R22: `JumpProcesses`; 14 theorems), `estimator_remarks.md` (R23:
+`EstimatorRemarks`; 13), `sde_extensions.md` (R24: `SDEExtensions`; 14) and `contracting_levels.md`
+(R25: `ContractingLevels`; 4).  All 45 read back as true; none is vacuous and none holds only because
+of a junk value.  The R22 auditor computed the second moment of the Asian correction in closed form
+(the `h²` rate is sharp; the bound holds with a factor at least 2 to spare) and checked the
+random-jump-time laws exactly on 11,000 random grids.  The R23 auditor computed the counterexample's
+characteristic functions exactly (the normalised estimator tends to `δ₀`), the two-sample
+probabilities `(2/π) arctan(√2/3)` and `(2/π) arctan(1/3)`, and the sample-variance formulas
+symbolically for `N ≤ 7`.  The R24 auditor checked the time-reversed covariances exactly (20,000
+cases each), the sharp second moment by quadrature, and the kink rates by exact computation.  The R25
+auditor compiled a scratch file applying all four theorems to an Ornstein–Uhlenbeck example and
+checked the coupling (the shared increments are the most recent `2N_c` fine ones).
+Findings and what was done:
+
+- **Scope of `JumpProcesses`:** `P` is the limit of the level means, not identified with the
+  continuous-time Asian price; `jumpDiffLaw` has a fixed jump size.  Both documented.  Kept.
+- **`implicitPathMult_*` assume `y a(y) ≤ 0`**, which forces `a(0) = 0` and is stronger than the
+  usual `2x a(x) + b(x)² ≤ α + βx²`; the cubic bound is loose.  Kept (the paper's example satisfies
+  it).
+- **`IsBrownianReal` results are non-vacuous mathematically**; Mathlib at this commit defines but does
+  not construct a Brownian motion.  `reverseFirstStep` is continuous only almost surely.  Kept.
+- **`contracting_levels_mlmc` proves `O(ε^{−2−η})` for every `η > 0`**, weaker than the known
+  `O(ε⁻²|log ε|³)` (which needs a version of Theorem 1 with a logarithmic cost factor); `P` is the
+  limit of the discretised chains' invariant means, not identified with the SDE's.  Documented.  Kept.
+- **The two-sample consistency check** fails with probability `≈ 0.280` (biased variance estimate) or
+  `≈ 0.205` (unbiased); the docs gave only the first and now give both.
