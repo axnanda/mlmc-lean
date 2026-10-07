@@ -109,6 +109,9 @@
 -- * `MlmcLean.ConsistencyCheck` — Giles §3.3: the consistency check with empirical variances
 --   fails with asymptotic probability at most P(|Z| ≥ 3) < 0.3% (strong law, two-sample CLT,
 --   Slutsky); the bound is attained, and fails for small samples
+-- * `MlmcLean.NestedKinkSde` — Giles §9.2: nested simulation with a piecewise linear f and
+--   discretised inner paths: α = 1, β = 3/2, cost O(ε^{−5/2}); the paper's MIMC rates
+--   β₁ = β₂ = 1.5 for this case are false (explicit counterexample)
 import MlmcLean.Allocation
 import MlmcLean.Estimator
 import MlmcLean.LevelDiff
@@ -165,3 +168,4 @@ import MlmcLean.NestedRates
 import MlmcLean.MLMCCentralLimit
 import MlmcLean.QMC1D
 import MlmcLean.ConsistencyCheck
+import MlmcLean.NestedKinkSde
