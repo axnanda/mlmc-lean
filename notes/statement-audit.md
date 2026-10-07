@@ -423,6 +423,21 @@ Lean statement or to the reason it is not formalised. The deviations of the new 
 * **End-to-end instances (`EndToEndInstances.lean`, round 18).** GBM with refinement factor `M`
   uses `α = ½ log₂ M` from the strong error, not the paper's weak order `log₂ M`; §10.2's rounding
   is Mathlib's `round` (ties up) or truncation to a grid.
+* **Jump processes (`JumpProcesses.lean`, round 19).** No Poisson or Lévy process is constructed:
+  the Asian results take i.i.d. increments with the needed exponential moments on uniform steps (a
+  discrete analogue of Table 6.3's Asian row; the target is the limit of the level means, not the
+  continuously averaged price), and the jump-adapted results take any measurable jump data
+  independent of the Brownian increments.  The thinning results are conditional on the candidates.
+* **Estimator remarks (`EstimatorRemarks.lean`, round 19).** G2.1-36 is imprecise rather than wrong:
+  with a growing number of levels the inference needs a Lindeberg-type condition, and the
+  counterexample shows it can fail.  For the consistency check only `N = 1` and `N = 2` are proved;
+  the failure probability above `0.003` for `N ≤ 274` is numerical.
+* **SDE extensions (`SDEExtensions.lean`, round 19).** The time-reversed path is a Brownian motion
+  in Mathlib's sense (`IsBrownianReal`: almost surely continuous paths); the several-kinks theorems
+  need a small-ball bound at every kink.
+* **Contracting levels (`ContractingLevels.lean`, round 19).** One dimension, Lipschitz payoffs, the
+  target is the limit of the means of the discretised chains; the cost per sample grows like
+  `ℓ 2^ℓ`, so the complexity is `O(ε^{−2−η})` for every `η > 0`.
 
 ### Corrections to the papers recorded elsewhere, collected
 
@@ -440,6 +455,7 @@ Lean statement or to the reason it is not formalised. The deviations of the new 
 | G15 | §5.2, p. 36 | coarse numerator `b√h_ℓ`; `Φ(…/(b√h_ℓ))`; digital constant `25` | `b ΔW_{N−2}`; `|b|` in the denominator; `10` as on p. 30 | `digital_smoothing_coarse`, `integral_digital_final_step` |
 | G15 | §5.2, p. 38 | "`O(h_ℓ)` difference on average" | `O(h_ℓ^{1/2})` | — |
 | G15 | §5.3, p. 39 | `b(Ŝ^c_n, c_n)` | `b(Ŝ^c_n, t_n)` | — |
+| G15 | §6.1, p. 47 | "this introduces a Radon-Nikodym into the payoff evaluation" | "a Radon–Nikodym derivative" | — |
 | G15 | §7.1, p. 49 | a constant `K` with `|P − P_ℓ| < K h_ℓ²` | impossible for the example (error `∝ Z²`); a random `K` with `E[K²] < ∞` | `elliptic_rates` (literal), `ApplicationExtras.lean` (random `K`) |
 | G15 | §5.6, p. 44 | "a change or variables" | "a change of variables" | — |
 | G15 | §7.3, p. 54 | `√h Z_n` | `√k Z_n` | `ApplicationExtras.lean`, `spdeStep_eq_milstein` |

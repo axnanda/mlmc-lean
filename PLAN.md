@@ -203,6 +203,12 @@ items listed under "Not formalised" below.
   Lean and the lookup-table results for it with no hypothesis on `f` (`InverseNormal.lean`); the
   elliptic estimator, the call, refinement factor `M` end to end, and small results
   (`EndToEndInstances.lean`).
+- ✅ Round 19: the discrete parts of §6 (a discrete exponential-Lévy Asian analogue with `β = 2`,
+  jump-adapted grids with random jump times, the thinning likelihood ratio; `JumpProcesses.lean`);
+  the G2.1-36 counterexample, the consistency check with one or two samples, the variance of the
+  sample variance (`EstimatorRemarks.lean`); drift-implicit Euler with multiplicative noise, the
+  time-reversed path as a Brownian motion, several kinks (`SDEExtensions.lean`); contracting SDEs
+  with level-dependent steps (`ContractingLevels.lean`).
 - Not formalised (each with its reason in `notes/coverage/README.md`): the convergence orders of the
   discretisations of general SDEs, SPDEs and PDEs (Itô calculus and PDE regularity are not in
   Mathlib; proved for geometric Brownian motion from its exact solution) and of QMC in `d`
@@ -214,14 +220,15 @@ items listed under "Not formalised" below.
   deterministic union grids are proved); tau-leaping's weak rate for unbounded payoffs and the
   pathwise exact (SSA) coupling (bounded payoffs are proved); the general moment results for
   super-linear drifts (the paper's example `dS = −S³dt + dW` is proved); the jump-diffusion and
-  Lévy-process theory of §6 beyond the coarse-increment identity; the Karhunen–Loève expansion and
-  the finite-element analysis of §7.2; contracting SDEs with level-dependent steps (§10.1; the
-  fixed-step case is proved); the value of the dyadic limit `C` and the exact halving ratio of the
-  MSE per bit (Haas–Giles §3.4; the existence of `C > 0` and the order `2^{−d}/d` are proved for
-  `Φ⁻¹`, the exact ratio needs finer asymptotics of `Φ⁻¹`); whether MIMC reaches `O(ε⁻²)` for a
-  piecewise linear `f` (the paper's rates are refuted and the corrected rates give
-  `O(ε⁻²|log ε|⁴)`); the remaining claims are numerical or empirical (measured rates, figures, run
-  times) or hardware facts.
+  Lévy-process theory of §6 beyond grid values (the Poisson and Lévy processes themselves; the
+  discrete parts are proved); the Karhunen–Loève expansion and the finite-element analysis of §7.2;
+  that the limit of the discretised contracting chains is the SDE's invariant law (§10.1; fixed and
+  level-dependent steps are proved for the discretised chains); the value of the dyadic limit `C`
+  and the exact halving ratio of the MSE per bit (Haas–Giles §3.4; the existence of `C > 0` and the
+  order `2^{−d}/d` are proved for `Φ⁻¹`, the exact ratio needs finer asymptotics of `Φ⁻¹`); whether
+  MIMC reaches `O(ε⁻²)` for a piecewise linear `f` (the paper's rates are refuted and the corrected
+  rates give `O(ε⁻²|log ε|⁴)`); the remaining claims are numerical or empirical (measured rates,
+  figures, run times) or hardware facts.
 
 **M4: Research, needs Alex's sign-off before formalising: nested MLMC with level-dependent
 precision.**
