@@ -21,7 +21,8 @@ Every theorem named below is listed in `scripts/AxiomCheck.lean`, and "(def)" ma
   general SDEs". PLAN l.159–160 also files "tables" under "numerical or empirical". That is wrong
   for the *analysis* columns of Table 5.2 and for Table 6.3, which list proved rates.
 * **none**: no documentation mentions the item. §6 appears nowhere in README, PLAN or notes, and
-  README's scope list names §1–§3, §5 and §7–§10 but not §6.
+  README's scope list names §1–§3, §5 and §7–§10 but not §6 (round-10 state; §6 has been in the
+  README and PLAN since round 10).
 
 ## Table
 
