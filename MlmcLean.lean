@@ -143,6 +143,14 @@
 --   moments stay bounded for every step size; the deterministic analogue; the integrating factor
 -- * `MlmcLean.BrownianPaths` — Giles §5.2, §5.3, §5.6: Brownian paths on union grids
 --   (Algorithm 3), the Brownian-bridge midpoint law, time reversal within coarse steps
+-- * `MlmcLean.GBMDigital` — Giles §5.1–§5.2: the Milstein digital variance for GBM, fourth moments
+--   of the digital correction, the sharp mismatch exponent, and E[Pc] = E[Pf] for the smoothed digital
+-- * `MlmcLean.TauLeapingExact` — Giles §8: the exact chain by uniformisation, its master equations,
+--   weak order 1 of tau-leaping against it for bounded payoffs, MLMC with the exact-chain target
+-- * `MlmcLean.InverseNormal` — Haas–Giles §3: the normal CDF Φ and Φ⁻¹, its derivatives and
+--   concavity, and the lookup-table results for f = Φ⁻¹ without hypotheses on f
+-- * `MlmcLean.EndToEndInstances` — the elliptic estimator, the discounted call, GBM with refinement
+--   factor M end to end; tamed fourth moments; the method-2 iteration exists; rounded increments
 import MlmcLean.Allocation
 import MlmcLean.Estimator
 import MlmcLean.LevelDiff
@@ -213,3 +221,7 @@ import MlmcLean.GBMPathDependent
 import MlmcLean.SPDEStability
 import MlmcLean.DriftImplicit
 import MlmcLean.BrownianPaths
+import MlmcLean.GBMDigital
+import MlmcLean.TauLeapingExact
+import MlmcLean.InverseNormal
+import MlmcLean.EndToEndInstances

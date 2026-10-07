@@ -8343,6 +8343,770 @@
     "probability",
     "multilevel-monte-carlo"
    ]
+  },
+  "MLMC.gbm_mil_digital_variance_le": {
+   "theorem_title": "Giles (2015), §5.2: for GBM, the natural Milstein estimator of the digital option has level variance $O(h_\\ell^{2/3})$, with explicit constants",
+   "natural_language_statement": "Giles (2015), §5.2, p. 35: \"In the case of a digital option, if we use the natural multilevel estimator then $P_\\ell-P_{\\ell-1}=O(1)$ for an $O(h_\\ell)$ fraction of the paths, giving $V_\\ell=O(h_\\ell)$, and a kurtosis which is $O(h_\\ell^{-1})$.\"\n\nLet $Z_0,Z_1,\\dots$ be the coordinates of $(\\mathbb R^{\\mathbb N},N(0,1)^{\\otimes\\mathbb N})$ (`stdNormalSeq`). Let $r,\\sigma,s_0,T,K\\in\\mathbb R$ with $s_0\\ne0$, $\\sigma\\ne0$, $T>0$, and $h_\\ell=T2^{-\\ell}$. Let $\\mathrm{pairAvg}(Z)_k=(Z_{2k}+Z_{2k+1})/\\sqrt2$ be the coarse increments and $$\\rho=\\frac{e^{(\\sigma^2-r)T}}{\\sqrt{2\\pi}\\,|s_0|\\,|\\sigma|\\sqrt T}$$ (the maximum of the lognormal density of $S_T$). Let $\\hat S_\\ell(Z)$ = `gbmMil`$(r,\\sigma,T,s_0,\\ell)$ be the Milstein approximation of $dS=rS\\,dt+\\sigma S\\,dW$, $S_0=s_0$, at $T$ after $2^\\ell$ steps of size $h_\\ell$ driven by the increments $\\sqrt{h_\\ell}Z_i$, and let $C(T)=s_0^2e^{(2|r|+\\sigma^2)T}(|r|+\\sigma^2)^2\\big(30(|r|+\\sigma^2)^2T^2+16(|r|+\\sigma^2)T+4\\big)$ (`gbmMilStrongConst`). Then for every $\\ell\\in\\mathbb N$\n$$\n\\mathbb V\\Big[\\mathbf 1_{\\{\\hat S_{\\ell+1}(Z)>K\\}}-\\mathbf 1_{\\{\\hat S_\\ell(\\mathrm{pairAvg}(Z))>K\\}}\\Big]\\le3\\rho^{2/3}\\,C(T)^{1/3}\\big(h_{\\ell+1}^{2/3}+h_\\ell^{2/3}\\big).\n$$\nThis is $\\beta=2/3$, not the paper's $\\beta=1$: from the mean-square strong error and a bounded density the exponent cannot be improved, for the variance as well as for the mismatch probability (`digital_mismatch_exponent_sharp`); strong errors $\\mathbb E|S_T-\\hat S_\\ell|^p=O(h_\\ell^p)$ in $L^p$ would give $O(h_\\ell^{p/(p+1)})$, hence every exponent below $1$, through `digital_mismatch_le_of_moment`, but these $L^p$ bounds are not proved for GBM here.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §5.2 \"Milstein discretisation\", paragraph \"Digital options\", p. 35.",
+   "explanation": "`gbm_digital_mismatch_le_of_strong` with $p=2$: the exact solution has density at most $\\rho$ (`gbmExact_smallBall`, from `map_lognormal_le_smul_volume`), the fine and coarse Milstein strong errors are at most $C(T)h_{\\ell+1}^2$ and $C(T)h_\\ell^2$ (`gbm_mil_strong_error_level`, with `gbmExact_pairAvg` and `measurePreserving_pairAvg`), and `digital_mismatch_le` with `digital_ne_subset_union` bound the mismatch probability; then `variance_digital_le_measureReal` and $(x^2)^{1/3}=x^{2/3}$.",
+   "tags": [
+    "probability",
+    "multilevel-monte-carlo",
+    "numerical-analysis",
+    "convergence"
+   ]
+  },
+  "MLMC.gbm_em_digital_fourth_moment_le": {
+   "theorem_title": "Giles (2015), §5.1, p. 33: for GBM with Euler–Maruyama, the digital correction has $\\mathbb E[D^4]=\\mathbb P(D\\ne0)=O(h_\\ell^{1/3})$ and kurtosis at least of order $h_\\ell^{-1/3}$",
+   "natural_language_statement": "Giles (2015), §5.1, p. 33: \"… with $P_\\ell-P_{\\ell-1}=\\pm1$. This gives $V_\\ell=O(h^{1/2})$ … Furthermore, $\\mathbb E[(P_\\ell-P_{\\ell-1})^4]=O(h_\\ell^{1/2})$ and so the kurtosis is $O(h_\\ell^{-1/2})$; this increase in kurtosis is obvious in the middle-right plot.\"\n\nLet $Z_0,Z_1,\\dots$ be the coordinates of $(\\mathbb R^{\\mathbb N},N(0,1)^{\\otimes\\mathbb N})$ (`stdNormalSeq`). Let $r,\\sigma,s_0,T,K\\in\\mathbb R$ with $s_0\\ne0$, $\\sigma\\ne0$, $T>0$, and $h_\\ell=T2^{-\\ell}$. Let $\\mathrm{pairAvg}(Z)_k=(Z_{2k}+Z_{2k+1})/\\sqrt2$ be the coarse increments and $$\\rho=\\frac{e^{(\\sigma^2-r)T}}{\\sqrt{2\\pi}\\,|s_0|\\,|\\sigma|\\sqrt T}$$ (the maximum of the lognormal density of $S_T$). Let $\\hat S_\\ell(Z)$ = `gbmEM`$(r,\\sigma,T,s_0,\\ell)$ be the Euler–Maruyama approximation of $dS=rS\\,dt+\\sigma S\\,dW$, $S_0=s_0$, at $T$ after $2^\\ell$ steps of size $h_\\ell$, let $C(T)=s_0^2e^{(2|r|+\\sigma^2)T}(|r|+\\sigma^2)(5(|r|+\\sigma^2)T+4)$ (`gbmStrongConst`), and let $D=\\mathbf 1_{\\{\\hat S_{\\ell+1}(Z)>K\\}}-\\mathbf 1_{\\{\\hat S_\\ell(\\mathrm{pairAvg}(Z))>K\\}}$ and $B_\\ell=3\\rho^{2/3}C(T)^{1/3}\\big(h_{\\ell+1}^{1/3}+h_\\ell^{1/3}\\big)$. Then for every $\\ell\\in\\mathbb N$: (i) $\\mathbb E[D^4]=\\mathbb P(D\\ne0)$; (ii) $\\mathbb P(D\\ne0)\\le B_\\ell$; (iii) if $\\mathbb P(D\\ne0)>0$, then the kurtosis $\\kappa=\\mathbb E[D^4]/\\mathbb E[D^2]^2$ (`kurtosis`) satisfies $\\kappa\\ge B_\\ell^{-1}$. So $\\mathbb E[D^4]=O(h_\\ell^{1/3})$ and the kurtosis grows at least like $h_\\ell^{-1/3}$. Not proved: the paper's $O(h^{1/2})$ (the mean-square strong error gives no better exponent than $1/3$, `digital_mismatch_exponent_sharp`; strong errors $\\mathbb E|S_T-\\hat S_\\ell|^p=O(h_\\ell^{p/2})$ in $L^p$ would give $O(h_\\ell^{p/(2(p+1))})$, hence every exponent below $1/2$, through `digital_mismatch_le_of_moment`, but these $L^p$ bounds are not proved for GBM here; the Gaussian-tail bound `digital_mismatch_le_of_tail` does not apply to GBM, whose error has lognormal tails) and the upper bound $\\kappa=O(h^{-1/2})$, which needs a lower bound on $\\mathbb P(D\\ne0)$. Here $\\kappa$ is the raw-moment kurtosis: the paper gives the formula $\\mathbb E[X^4]/\\mathbb E[X^2]^2$ for $X$ with zero mean (§3.3, p. 23) and uses it for the ternary correction with $\\mathbb E[X]\\approx0$, $\\kappa\\approx(p+q)^{-1}$; here $\\mathbb E[D]$ (of the order of the weak error) is not $0$, but $|\\mathbb E[D]|\\le\\mathbb P(D\\ne0)$, so the kurtosis of $D-\\mathbb E[D]$ is $(1+O(\\mathbb P(D\\ne0)))/\\mathbb P(D\\ne0)$ and the two agree to leading order only asymptotically, as $\\mathbb P(D\\ne0)\\to0$.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §5.1, p. 33.",
+   "explanation": "(i) `integral_pow_four_digital_sub`: $D\\in\\{-1,0,1\\}$, so $D^4=D^2=\\mathbf 1_{\\{D\\ne0\\}}$ (`sq_digital_sub_eq_indicator`). (ii) `gbm_digital_mismatch_le_of_strong` (density bound `gbmExact_smallBall`, the strong error `gbm_strong_error`, `digital_mismatch_le`, `digital_ne_subset_union`). (iii) `inv_le_kurtosis_digital`: `kurtosis_of_ternary` gives $\\kappa=1/\\mathbb P(D\\ne0)$, then `inv_anti₀`.",
+   "tags": [
+    "probability",
+    "multilevel-monte-carlo",
+    "numerical-analysis",
+    "convergence"
+   ]
+  },
+  "MLMC.gbm_mil_digital_fourth_moment_le": {
+   "theorem_title": "Giles (2015), §5.2, p. 35: for GBM with Milstein, the digital correction has $\\mathbb E[D^4]=\\mathbb P(D\\ne0)=O(h_\\ell^{2/3})$ and kurtosis at least of order $h_\\ell^{-2/3}$",
+   "natural_language_statement": "Giles (2015), §5.2, p. 35: \"In the case of a digital option, if we use the natural multilevel estimator then $P_\\ell-P_{\\ell-1}=O(1)$ for an $O(h_\\ell)$ fraction of the paths, giving $V_\\ell=O(h_\\ell)$, and a kurtosis which is $O(h_\\ell^{-1})$.\"\n\nLet $Z_0,Z_1,\\dots$ be the coordinates of $(\\mathbb R^{\\mathbb N},N(0,1)^{\\otimes\\mathbb N})$ (`stdNormalSeq`). Let $r,\\sigma,s_0,T,K\\in\\mathbb R$ with $s_0\\ne0$, $\\sigma\\ne0$, $T>0$, and $h_\\ell=T2^{-\\ell}$. Let $\\mathrm{pairAvg}(Z)_k=(Z_{2k}+Z_{2k+1})/\\sqrt2$ be the coarse increments and $$\\rho=\\frac{e^{(\\sigma^2-r)T}}{\\sqrt{2\\pi}\\,|s_0|\\,|\\sigma|\\sqrt T}$$ (the maximum of the lognormal density of $S_T$). Let $\\hat S_\\ell(Z)$ = `gbmMil`$(r,\\sigma,T,s_0,\\ell)$ be the Milstein approximation of $dS=rS\\,dt+\\sigma S\\,dW$, $S_0=s_0$, at $T$ after $2^\\ell$ steps of size $h_\\ell$, let $C(T)=s_0^2e^{(2|r|+\\sigma^2)T}(|r|+\\sigma^2)^2\\big(30(|r|+\\sigma^2)^2T^2+16(|r|+\\sigma^2)T+4\\big)$ (`gbmMilStrongConst`), and let $D=\\mathbf 1_{\\{\\hat S_{\\ell+1}(Z)>K\\}}-\\mathbf 1_{\\{\\hat S_\\ell(\\mathrm{pairAvg}(Z))>K\\}}$ and $B_\\ell=3\\rho^{2/3}C(T)^{1/3}\\big(h_{\\ell+1}^{2/3}+h_\\ell^{2/3}\\big)$. Then for every $\\ell\\in\\mathbb N$: (i) $\\mathbb E[D^4]=\\mathbb P(D\\ne0)$; (ii) $\\mathbb P(D\\ne0)\\le B_\\ell$; (iii) if $\\mathbb P(D\\ne0)>0$, then the kurtosis $\\kappa=\\mathbb E[D^4]/\\mathbb E[D^2]^2$ (`kurtosis`) satisfies $\\kappa\\ge B_\\ell^{-1}$. So the fraction of paths with $P_\\ell-P_{\\ell-1}=\\pm1$ is $O(h_\\ell^{2/3})$ and the kurtosis grows at least like $h_\\ell^{-2/3}$. Not proved: the paper's $O(h_\\ell)$ fraction (no better exponent follows from the mean-square strong error, `digital_mismatch_exponent_sharp`; strong errors $\\mathbb E|S_T-\\hat S_\\ell|^p=O(h_\\ell^p)$ in $L^p$ would give $O(h_\\ell^{p/(p+1)})$, hence every exponent below $1$, through `digital_mismatch_le_of_moment`, but these $L^p$ bounds are not proved for GBM here) and the upper bound $\\kappa=O(h_\\ell^{-1})$. Here $\\kappa$ is the raw-moment kurtosis: the paper gives the formula $\\mathbb E[X^4]/\\mathbb E[X^2]^2$ for $X$ with zero mean (§3.3, p. 23) and uses it for the ternary correction with $\\mathbb E[X]\\approx0$, $\\kappa\\approx(p+q)^{-1}$; here $\\mathbb E[D]$ (of the order of the weak error) is not $0$, but $|\\mathbb E[D]|\\le\\mathbb P(D\\ne0)$, so the kurtosis of $D-\\mathbb E[D]$ is $(1+O(\\mathbb P(D\\ne0)))/\\mathbb P(D\\ne0)$ and the two agree to leading order only asymptotically, as $\\mathbb P(D\\ne0)\\to0$.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §5.2, p. 35.",
+   "explanation": "(i) `integral_pow_four_digital_sub`: $D\\in\\{-1,0,1\\}$, so $D^4=D^2=\\mathbf 1_{\\{D\\ne0\\}}$ (`sq_digital_sub_eq_indicator`). (ii) `gbm_digital_mismatch_le_of_strong` (density bound `gbmExact_smallBall`, the strong error `gbm_mil_strong_error_level`, `digital_mismatch_le`, `digital_ne_subset_union`). (iii) `inv_le_kurtosis_digital`: `kurtosis_of_ternary` gives $\\kappa=1/\\mathbb P(D\\ne0)$, then `inv_anti₀`.",
+   "tags": [
+    "probability",
+    "multilevel-monte-carlo",
+    "numerical-analysis",
+    "convergence"
+   ]
+  },
+  "MLMC.digital_mismatch_example": {
+   "theorem_title": "Giles (2015), §5.1: the exponent $1/3$ in $\\mathbb P(\\mathbf 1_{X>K}\\ne\\mathbf 1_{Y>K})\\le C\\,\\mathbb E[(X-Y)^2]^{1/3}$ is attained, also for the variance ($X$ uniform, $Y=X-2d\\mathbf 1_{0<X<d}$)",
+   "natural_language_statement": "Giles (2015), §5.1, p. 33: \"noting that the strong error is $O(h_\\ell^{1/2})$, and there is a bounded density of paths terminating in the neighbourhood of $K$, there is therefore an $O(h_\\ell^{1/2})$ fraction of the samples with the coarse and fine paths on either side of the strike\".\n\nLet $\\mathbb P=\\mathrm{Unif}[-1,1]$ on $\\mathbb R$ (`volume[|Set.Icc (-1) 1]`), $X(x)=x$, $K=0$ and, for $0<d\\le1$, $Y_d(x)=x-2d\\,\\mathbf 1_{(0,d)}(x)$. Then for every $0<d\\le1$: (i) $\\mathbb P(|X|\\le\\delta)\\le2\\cdot\\tfrac12\\cdot\\delta$ for all $\\delta>0$ (the density hypothesis of `digital_mismatch_le` with $\\rho=\\tfrac12$); (ii) $\\mathbb E[(X-Y_d)^2]=2d^3$; (iii) $\\mathbb P(\\mathbf 1_{\\{X>0\\}}\\ne\\mathbf 1_{\\{Y_d>0\\}})=d/2$; (iv) $\\mathbb V\\big[\\mathbf 1_{\\{X>0\\}}-\\mathbf 1_{\\{Y_d>0\\}}\\big]=d/2-d^2/4$; (v) $\\mathbb P(\\mathbf 1_{\\{X>0\\}}\\ne\\mathbf 1_{\\{Y_d>0\\}})=\\big(\\mathbb E[(X-Y_d)^2]/16\\big)^{1/3}$. So the bound $3\\rho^{2/3}\\mathbb E[(X-Y)^2]^{1/3}$ of `digital_mismatch_le` is attained up to the constant factor $3\\cdot2^{2/3}$, and the variance is at least half the mismatch probability ($d/2-d^2/4\\ge d/4$ for $d\\le1$).",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §5.1, p. 33 (the digital option; the analysis is attributed to Avikainen 2009).",
+   "explanation": "(i) `measureReal_abs_sub_le_of_map_le` with `uniformPM1_le_smul_volume` (the uniform law is at most $\\tfrac12\\,$Lebesgue, from `cond_apply`). (ii) $(X-Y_d)^2=4d^2\\mathbf 1_{(0,d)}$, so the integral is $4d^2\\,\\mathbb P(0<X<d)$ with `uniformPM1_real_Ioo`. (iii) the mismatch set is exactly $(0,d)$: for $0<x<d$, $Y_d(x)=x-2d<0<x$; otherwise $Y_d=X$. (iv) the correction is $\\mathbf 1_{(0,d)}$, a Bernoulli variable with parameter $d/2$: `variance_eq_sub` (with `cond_isProbabilityMeasure_of_finite`, `memLp_indicator_const`) gives $d/2-(d/2)^2$. (v) $(2d^3/16)^{1/3}=((d/2)^3)^{1/3}=d/2$.",
+   "tags": [
+    "probability",
+    "real-analysis",
+    "multilevel-monte-carlo"
+   ]
+  },
+  "MLMC.digital_mismatch_exponent_sharp": {
+   "theorem_title": "Giles (2015), §5.1–§5.2: no exponent $q>1/3$ in $\\mathbb P(\\mathbf 1_{X>K}\\ne\\mathbf 1_{Y>K})\\le C\\,\\mathbb E[(X-Y)^2]^q$, nor in the same bound for the variance (bounded density)",
+   "natural_language_statement": "Giles (2015), §5.1, p. 33: \"noting that the strong error is $O(h_\\ell^{1/2})$, and there is a bounded density of paths terminating in the neighbourhood of $K$, there is therefore an $O(h_\\ell^{1/2})$ fraction of the samples with the coarse and fine paths on either side of the strike\"; §5.2, p. 35: \"$P_\\ell-P_{\\ell-1}=O(1)$ for an $O(h_\\ell)$ fraction of the paths\".\n\nLet $\\mathbb P=\\mathrm{Unif}[-1,1]$ on $\\mathbb R$ (`volume[|Set.Icc (-1) 1]`), $X(x)=x$, $K=0$ and, for $0<d\\le1$, $Y_d(x)=x-2d\\,\\mathbf 1_{(0,d)}(x)$. For every $C\\in\\mathbb R$ and every $q>1/3$ there is $d\\in(0,1]$ with\n$$\nC\\,\\mathbb E\\big[(X-Y_d)^2\\big]^q<\\mathbb P\\big(\\mathbf 1_{\\{X>0\\}}\\ne\\mathbf 1_{\\{Y_d>0\\}}\\big)\\quad\\text{and}\\quad C\\,\\mathbb E\\big[(X-Y_d)^2\\big]^q<\\mathbb V\\big[\\mathbf 1_{\\{X>0\\}}-\\mathbf 1_{\\{Y_d>0\\}}\\big].\n$$\nHence neither $\\mathbb P(\\mathbf 1_{X>K}\\ne\\mathbf 1_{Y>K})\\le C\\,\\mathbb E[(X-Y)^2]^q$ nor $\\mathbb V[\\mathbf 1_{X>K}-\\mathbf 1_{Y>K}]\\le C\\,\\mathbb E[(X-Y)^2]^q$ with $q>1/3$ holds for all $X$ with density at most $\\tfrac12$: from a mean-square strong error $O(h)$ (resp. $O(h^2)$) and a bounded density one gets the variance rate $h^{1/3}$ (resp. $h^{2/3}$) and no better; the paper's rates $h^{1/2}$ and $h$ use more information on the error. This says nothing about the actual GBM variances, which are smaller.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §5.1, p. 33, and §5.2, p. 35 (digital options).",
+   "explanation": "By `digital_mismatch_example` the left side is $C(2d^3)^q$, the mismatch probability is $d/2$ and the variance is $d/2-d^2/4$. With $e=3q-1>0$, $C'=\\max(C,1)$, $A=8C'2^q$ and $d=\\min(1,A^{-1/e})$: $d^e\\le A^{-1}$ (`Real.rpow_le_rpow`), $(2d^3)^q=2^q d^e d$, so $C(2d^3)^q\\le C'2^qd^ed\\le d/8$, which is below $d/2$ and below $d/4\\le d/2-d^2/4$ (as $d^2\\le d$).",
+   "tags": [
+    "probability",
+    "real-analysis",
+    "multilevel-monte-carlo",
+    "asymptotics"
+   ]
+  },
+  "MLMC.map_milsteinEM_coarse_eq_fine": {
+   "theorem_title": "Giles (2015), §5.2: the level-$\\ell$ coarse Milstein path with a re-used Euler–Maruyama last step has the law of the level-$(\\ell-1)$ fine path",
+   "natural_language_statement": "Giles (2015), §5.2, pp. 35–36: \"We start by considering the fine path simulation, and make a slight change by using the Euler-Maruyama discretisation for the final timestep, instead of the Milstein discretisation. … A similar treatment is used for the coarse path, except that in the final timestep, we re-use the known value of the Brownian increment for the second last fine timestep, which corresponds to the first half of the final coarse timestep. … It is very important in this conditional expectation formulation that $\\mathbb E[P^c_{\\ell-1}]=\\mathbb E[P^f_{\\ell-1}]$ so that the numerical payoff approximation on level $\\ell-1$ has the same expected value regardless of whether it is the coarser or finer of the two levels. This ensures that the identity in Equation (2.4) is respected so that the telescoping summation remains valid.\"\n\nLet $a,b:\\mathbb R\\to\\mathbb R$ be measurable, $h,S_0\\in\\mathbb R$ (the fine timestep and the initial value), $n\\in\\mathbb N$, and $Z,W$ the coordinates of $(\\mathbb R^{\\mathbb N},N(0,1)^{\\otimes\\mathbb N})$. Let $M_m(w)$ = `milsteinPath`$(a,b,2h,S_0,w,m)$ be the Milstein path $\\hat S_{m+1}=\\hat S_m+a(\\hat S_m)2h+b(\\hat S_m)\\Delta W_m+\\tfrac12 b(\\hat S_m)b'(\\hat S_m)(\\Delta W_m^2-2h)$ with $\\Delta W_m=\\sqrt{2h}\\,w_m$, and `emStep`$(a,b,k,S,\\Delta)=S+a(S)k+b(S)\\Delta$. The coarse path of level $\\ell$ (fine step $h=h_\\ell$, $N=2n+2$ fine steps) is $\\hat S^c_{N-2}=M_n(\\mathrm{pairAvg}(Z))$ followed by the Euler–Maruyama step $\\hat S^c_N=\\hat S^c_{N-2}+a\\,2h+b\\,(\\sqrt h Z_{2n}+\\sqrt hZ_{2n+1})$ that re-uses the fine increment $\\Delta W_{N-2}=\\sqrt hZ_{2n}$; the fine path of level $\\ell-1$ is $M_n(W)$ followed by $\\hat S^f=M_n(W)+a\\,2h+b\\,\\sqrt{2h}W_n$. (The coefficients are autonomous, $a(S)$, $b(S)$; the paper's Milstein scheme allows $a(S,t)$, $b(S,t)$.) Then the laws of $\\hat S^c_N(Z)$ and $\\hat S^f(W)$ under $N(0,1)^{\\otimes\\mathbb N}$ coincide:\n$$\n\\mathrm{Law}\\Big(\\mathrm{emStep}\\big(a,b,2h,M_n(\\mathrm{pairAvg}(Z)),\\sqrt hZ_{2n}+\\sqrt hZ_{2n+1}\\big)\\Big)=\\mathrm{Law}\\Big(\\mathrm{emStep}\\big(a,b,2h,M_n(W),\\sqrt{2h}\\,W_n\\big)\\Big).\n$$\nThis is the hypothesis `hlaw` of `integral_condExp_eq_of_map_eq` for the actual construction. No sign condition on $h$ is assumed: for $h<0$ the statement is degenerate ($\\sqrt h=\\sqrt{2h}=0$ by convention, so both paths are deterministic and equal); the meaningful case is $h>0$.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §5.2, Digital options, pp. 35–36.",
+   "explanation": "$\\sqrt{2h}\\,\\mathrm{pairAvg}(Z)_n=\\sqrt2\\sqrt h(Z_{2n}+Z_{2n+1})/\\sqrt2$, so the coarse terminal value is the fine one evaluated at $W=\\mathrm{pairAvg}(Z)$, and `pairAvg` preserves $N(0,1)^{\\otimes\\mathbb N}$ (`measurePreserving_pairAvg`); measurability from `measurable_milsteinPath_incr` (`measurable_deriv`). Then `Measure.map_map`.",
+   "tags": [
+    "probability",
+    "multilevel-monte-carlo",
+    "numerical-analysis"
+   ]
+  },
+  "MLMC.integral_condExp_milsteinEM_coarse_eq_fine": {
+   "theorem_title": "Giles (2015), §5.2: $\\mathbb E[P^c_{\\ell-1}]=\\mathbb E[P^f_{\\ell-1}]$ for conditional-expectation payoffs of the Milstein paths with an Euler–Maruyama last step",
+   "natural_language_statement": "Giles (2015), §5.2, pp. 35–36: \"We start by considering the fine path simulation, and make a slight change by using the Euler-Maruyama discretisation for the final timestep, instead of the Milstein discretisation. … A similar treatment is used for the coarse path, except that in the final timestep, we re-use the known value of the Brownian increment for the second last fine timestep, which corresponds to the first half of the final coarse timestep. … It is very important in this conditional expectation formulation that $\\mathbb E[P^c_{\\ell-1}]=\\mathbb E[P^f_{\\ell-1}]$ so that the numerical payoff approximation on level $\\ell-1$ has the same expected value regardless of whether it is the coarser or finer of the two levels. This ensures that the identity in Equation (2.4) is respected so that the telescoping summation remains valid.\"\n\nLet $a,b:\\mathbb R\\to\\mathbb R$ be measurable, $h,S_0\\in\\mathbb R$ (the fine timestep and the initial value), $n\\in\\mathbb N$, and $Z,W$ the coordinates of $(\\mathbb R^{\\mathbb N},N(0,1)^{\\otimes\\mathbb N})$. Let $M_m(w)$ = `milsteinPath`$(a,b,2h,S_0,w,m)$ be the Milstein path $\\hat S_{m+1}=\\hat S_m+a(\\hat S_m)2h+b(\\hat S_m)\\Delta W_m+\\tfrac12 b(\\hat S_m)b'(\\hat S_m)(\\Delta W_m^2-2h)$ with $\\Delta W_m=\\sqrt{2h}\\,w_m$, and `emStep`$(a,b,k,S,\\Delta)=S+a(S)k+b(S)\\Delta$. The coarse path of level $\\ell$ (fine step $h=h_\\ell$, $N=2n+2$ fine steps) is $\\hat S^c_{N-2}=M_n(\\mathrm{pairAvg}(Z))$ followed by the Euler–Maruyama step $\\hat S^c_N=\\hat S^c_{N-2}+a\\,2h+b\\,(\\sqrt h Z_{2n}+\\sqrt hZ_{2n+1})$ that re-uses the fine increment $\\Delta W_{N-2}=\\sqrt hZ_{2n}$; the fine path of level $\\ell-1$ is $M_n(W)$ followed by $\\hat S^f=M_n(W)+a\\,2h+b\\,\\sqrt{2h}W_n$. (The coefficients are autonomous, $a(S)$, $b(S)$; the paper's Milstein scheme allows $a(S,t)$, $b(S,t)$.) Let $g:\\mathbb R\\to\\mathbb R$ be strongly measurable, $P^c_{\\ell-1}=\\mathbb E\\big[g(\\hat S^c_N)\\,\\big|\\,\\sigma(\\hat S^c_{N-2},\\sqrt hZ_{2n})\\big]$ and $P^f_{\\ell-1}=\\mathbb E\\big[g(\\hat S^f)\\,\\big|\\,\\sigma(M_n(W))\\big]$. Then, with all expectations under $N(0,1)^{\\otimes\\mathbb N}$,\n$$\n\\mathbb E[P^c_{\\ell-1}]=\\mathbb E[P^f_{\\ell-1}]=\\mathbb E[g(\\hat S^f)].\n$$\nFor integrable $g(\\hat S^f)$ (e.g. any bounded $g$, as for the digital payoff) this is the identity of the paper and the tower property; if $g(\\hat S^f)$ is not integrable (then neither is $g(\\hat S^c_N)$, which has the same law), all three are $0$ by convention, and the proof does not need integrability, so it is not assumed. For $h<0$ the paths are deterministic ($\\sqrt h=\\sqrt{2h}=0$ by convention).",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §5.2, Digital options, p. 36.",
+   "explanation": "`integral_condExp_eq_of_map_eq` (both sides equal $\\mathbb E[g(\\text{terminal value})]$ by `integral_condExp`) with the law equality `map_milsteinEM_coarse_eq_fine`, and `integral_condExp` for the second equality; the conditioning σ-algebras are below the product σ-algebra because the conditioning variables are measurable (`measurable_milsteinPath_incr`).",
+   "tags": [
+    "probability",
+    "multilevel-monte-carlo",
+    "numerical-analysis"
+   ]
+  },
+  "MLMC.digital_smoothing_milsteinEM_mean_eq": {
+   "theorem_title": "Giles (2015), §5.2: the smoothed digital payoffs $\\Phi(\\cdot)$ are the conditional expectations and $\\mathbb E[P^c_{\\ell-1}]=\\mathbb E[P^f_{\\ell-1}]$",
+   "natural_language_statement": "Giles (2015), §5.2, p. 36: \"Thus the fine path payoff can be taken to be $P^f_\\ell=25\\exp(-rT)\\,\\Phi\\Big(\\frac{\\hat S^f_{N-1}+a(\\hat S^f_{N-1})h_\\ell-K}{b(\\hat S^f_{N-1})\\sqrt{h_\\ell}}\\Big)$ … the corresponding coarse path payoff function is $P^c_{\\ell-1}=25\\exp(-rT)\\,\\Phi\\Big(\\frac{\\hat S^c_{N-2}+a(\\hat S^c_{N-2})h_{\\ell-1}+b(\\hat S^c_{N-2})\\sqrt{h_\\ell}-K}{b(\\hat S^c_{N-2})\\sqrt{h_\\ell}}\\Big)$ … It is very important in this conditional expectation formulation that $\\mathbb E[P^c_{\\ell-1}]=\\mathbb E[P^f_{\\ell-1}]$\".\n\nLet $a,b:\\mathbb R\\to\\mathbb R$ be measurable, $h,S_0\\in\\mathbb R$ (the fine timestep and the initial value), $n\\in\\mathbb N$, and $Z,W$ the coordinates of $(\\mathbb R^{\\mathbb N},N(0,1)^{\\otimes\\mathbb N})$. Let $M_m(w)$ = `milsteinPath`$(a,b,2h,S_0,w,m)$ be the Milstein path $\\hat S_{m+1}=\\hat S_m+a(\\hat S_m)2h+b(\\hat S_m)\\Delta W_m+\\tfrac12 b(\\hat S_m)b'(\\hat S_m)(\\Delta W_m^2-2h)$ with $\\Delta W_m=\\sqrt{2h}\\,w_m$, and `emStep`$(a,b,k,S,\\Delta)=S+a(S)k+b(S)\\Delta$. The coarse path of level $\\ell$ (fine step $h=h_\\ell$, $N=2n+2$ fine steps) is $\\hat S^c_{N-2}=M_n(\\mathrm{pairAvg}(Z))$ followed by the Euler–Maruyama step $\\hat S^c_N=\\hat S^c_{N-2}+a\\,2h+b\\,(\\sqrt h Z_{2n}+\\sqrt hZ_{2n+1})$ that re-uses the fine increment $\\Delta W_{N-2}=\\sqrt hZ_{2n}$; the fine path of level $\\ell-1$ is $M_n(W)$ followed by $\\hat S^f=M_n(W)+a\\,2h+b\\,\\sqrt{2h}W_n$. (The coefficients are autonomous, $a(S)$, $b(S)$; the paper's Milstein scheme allows $a(S,t)$, $b(S,t)$.) Let $h>0$, $K\\in\\mathbb R$, $\\Phi$ the standard normal distribution function, and assume $b(M_n(W))\\ne0$ a.s. Then: (i) a.s., $\\mathbb E\\big[\\mathbf 1_{\\{\\hat S^c_N>K\\}}\\,\\big|\\,\\sigma(\\hat S^c_{N-2},\\sqrt hZ_{2n})\\big]=\\Phi\\Big(\\frac{\\hat S^c_{N-2}+a(\\hat S^c_{N-2})2h+b(\\hat S^c_{N-2})\\sqrt hZ_{2n}-K}{|b(\\hat S^c_{N-2})|\\sqrt h}\\Big)$; (ii) a.s., $\\mathbb E\\big[\\mathbf 1_{\\{\\hat S^f>K\\}}\\,\\big|\\,\\sigma(M_n(W))\\big]=\\Phi\\Big(\\frac{M_n(W)+a(M_n(W))2h-K}{|b(M_n(W))|\\sqrt{2h}}\\Big)$; (iii) the two $\\Phi$ expressions have the same expectation. **Corrections/deviations:** the factor $25e^{-rT}$ is omitted, $b$ is written $|b|$, and the numerator of the paper's coarse formula has $b\\sqrt{h_\\ell}$ where the re-used increment $b\\,\\Delta W_{N-2}$ belongs.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §5.2, Digital options, p. 36.",
+   "explanation": "(i) `digital_smoothing_coarse`, with the independence of $(\\hat S^c_{N-2},\\sqrt hZ_{2n})$ and $Z_{2n+1}$ proved by `indepFun_incr_of_eq_lt` (a function of $Z_0,\\dots,Z_{m-1}$ is independent of $Z_m$: `iIndepFun_infinitePi`, `iIndepFun.indepFun_finset`) and `milsteinPath_eq_of_eq_lt`; $b\\ne0$ a.s. transfers along `measurePreserving_pairAvg`. (ii) `digital_smoothing` with step $2h$. (iii) by (i), (ii) and the first equality of `integral_condExp_milsteinEM_coarse_eq_fine` for $g=\\mathbf 1_{(K,\\infty)}$.",
+   "tags": [
+    "probability",
+    "multilevel-monte-carlo",
+    "numerical-analysis",
+    "monte-carlo"
+   ]
+  },
+  "MLMC.gbm_digital_smoothing_mean_eq": {
+   "theorem_title": "Giles (2015), §5.2: for GBM, the coarse and fine smoothed digital payoffs of level $\\ell-1$ have the same mean, so (2.4) holds",
+   "natural_language_statement": "Giles (2015), §5.2, p. 36: \"It is very important in this conditional expectation formulation that $\\mathbb E[P^c_{\\ell-1}]=\\mathbb E[P^f_{\\ell-1}]$ so that the numerical payoff approximation on level $\\ell-1$ has the same expected value regardless of whether it is the coarser or finer of the two levels. This ensures that the identity in Equation (2.4) is respected so that the telescoping summation remains valid.\"\n\nLet $r,\\sigma,s_0,h,K\\in\\mathbb R$ with $s_0\\ne0$, $\\sigma\\ne0$, $h>0$, $n\\in\\mathbb N$, and $Z,W$ the coordinates of $(\\mathbb R^{\\mathbb N},N(0,1)^{\\otimes\\mathbb N})$. Let $M_n(w)$ = `milsteinPath`$(rS,\\sigma S,2h,s_0,w,n)$ be the Milstein path of $dS=rS\\,dt+\\sigma S\\,dW$ with step $2h$ driven by $\\sqrt{2h}\\,w_m$, $S^c=M_n(\\mathrm{pairAvg}(Z))$, $S^f=M_n(W)$. Then\n$$\n\\mathbb E\\Big[\\Phi\\Big(\\frac{S^c+rS^c\\,2h+\\sigma S^c\\sqrt hZ_{2n}-K}{|\\sigma S^c|\\sqrt h}\\Big)\\Big]=\\mathbb E\\Big[\\Phi\\Big(\\frac{S^f+rS^f\\,2h-K}{|\\sigma S^f|\\sqrt{2h}}\\Big)\\Big].\n$$\nWith $h=h_\\ell$ and $n+1=2^{\\ell-1}$ the left side is the mean of the coarse smoothed payoff of level $\\ell$ and the right side that of the fine smoothed payoff of level $\\ell-1$ (factor $25e^{-rT}$ omitted, coarse formula corrected).",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §5.2, Digital options, p. 36, and Figure 5.6.",
+   "explanation": "`digital_smoothing_milsteinEM_mean_eq` with $a(S)=rS$, $b(S)=\\sigma S$; the hypothesis $\\sigma M_n(W)\\ne0$ a.s. is `ae_gbm_milsteinPath_ne_zero`: $M_n=s_0\\prod_{i<n}F(W_i)$ (`milsteinPath_gbm`) with $F$ a quadratic with leading coefficient $\\sigma^2h\\ne0$ (`gbmMilFactor_eq_quadratic`), which vanishes on a Gaussian null set (`ae_gaussian_quadratic_ne_zero`: at most two roots, `quadratic_eq_zero_iff_discrim_eq_sq`, and $N(0,1)$ has no atoms).",
+   "tags": [
+    "probability",
+    "multilevel-monte-carlo",
+    "numerical-analysis",
+    "monte-carlo"
+   ]
+  },
+  "MLMC.isProbabilityMeasure_exactLaw": {
+   "theorem_title": "Giles (2015), §8: the uniformised law of the exact continuous-time chain with bounded propensity is a probability measure",
+   "natural_language_statement": "Giles (2015), §8, p. 56: \"They also include an additional coupling at the finest level to the exact Stochastic Simulation Algorithm developed by (Gillespie 1976) which updates the reaction rates after every single reaction.\"\n\nThroughout, $\\lambda:\\mathbb N\\to[0,\\infty)$ is the propensity, with $\\lambda(x)\\le\\Lambda$ for all $x$; the exact chain jumps from $x$ to $x+1$ at rate $\\lambda(x)$. `exactLaw`$(\\lambda,\\Lambda,t,x)=\\mathrm{Po}(\\Lambda t)$`.bind`$(n\\mapsto J^n(x))$ is its law at time $t\\ge0$ from $x$, by uniformisation, where $J(x)=\\frac{\\lambda(x)}{\\Lambda}\\delta_{x+1}+\\big(1-\\frac{\\lambda(x)}{\\Lambda}\\big)\\delta_x$ (`jumpKernel`) and $J^n$ is its $n$-fold composition (`jumpPow`); $P_tf(x)=\\int f\\,d\\,$`exactLaw`$(\\lambda,\\Lambda,t,x)$. `tauStep`$(\\lambda,h,x)$ is the law of $x+P$, $P\\sim\\mathrm{Po}(h\\lambda(x))$, and `tauChain`$(\\lambda,h,x_0,n)$ the law of $n$ tau-leaping steps from $x_0$.\n\nLet $\\lambda(x)\\le\\Lambda$ for all $x\\in\\mathbb N$. Then for every $t\\ge0$ and $x\\in\\mathbb N$, `exactLaw`$(\\lambda,\\Lambda,t,x)$ is a probability measure on $\\mathbb N$.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §8 \"Continuous-time Markov chains\", pp. 55–56",
+   "explanation": "`jumpKernel_univ` (the weights $\\lambda(x)/\\Lambda$ and $1-\\lambda(x)/\\Lambda$ add up to one since $\\lambda(x)\\le\\Lambda$), `jumpPow_univ` by induction, and `measure_univ_bind_of_discrete` for the Poisson mixture.",
+   "tags": [
+    "probability",
+    "numerical-analysis",
+    "convergence"
+   ]
+  },
+  "MLMC.exactLaw_add": {
+   "theorem_title": "Giles (2015), §8: Chapman–Kolmogorov equation $P_{s+t}=P_sP_t$ for the exact continuous-time chain constructed by uniformisation",
+   "natural_language_statement": "Giles (2015), §8, p. 55: \"for any $t_1,t_2>0$, the sum of two independent Poisson variates $P(t_1)$, $P(t_2)$ is equivalent in distribution to $P(t_1+t_2)$\".\n\nThroughout, $\\lambda:\\mathbb N\\to[0,\\infty)$ is the propensity, with $\\lambda(x)\\le\\Lambda$ for all $x$; the exact chain jumps from $x$ to $x+1$ at rate $\\lambda(x)$. `exactLaw`$(\\lambda,\\Lambda,t,x)=\\mathrm{Po}(\\Lambda t)$`.bind`$(n\\mapsto J^n(x))$ is its law at time $t\\ge0$ from $x$, by uniformisation, where $J(x)=\\frac{\\lambda(x)}{\\Lambda}\\delta_{x+1}+\\big(1-\\frac{\\lambda(x)}{\\Lambda}\\big)\\delta_x$ (`jumpKernel`) and $J^n$ is its $n$-fold composition (`jumpPow`); $P_tf(x)=\\int f\\,d\\,$`exactLaw`$(\\lambda,\\Lambda,t,x)$. `tauStep`$(\\lambda,h,x)$ is the law of $x+P$, $P\\sim\\mathrm{Po}(h\\lambda(x))$, and `tauChain`$(\\lambda,h,x_0,n)$ the law of $n$ tau-leaping steps from $x_0$.\n\nLet $\\lambda\\le\\Lambda$. For all $s,t\\ge0$ and $x\\in\\mathbb N$,\n$$\n\\mathrm{exactLaw}(\\lambda,\\Lambda,s+t,x)=\\int\\mathrm{exactLaw}(\\lambda,\\Lambda,t,y)\\,\\mathrm{exactLaw}(\\lambda,\\Lambda,s,x)(dy),\n$$\ni.e. `exactLaw`$(s+t,x)=$ `exactLaw`$(s,x)$`.bind` `exactLaw`$(t)$.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §8 \"Continuous-time Markov chains\", pp. 55–56",
+   "explanation": "`Measure.bind_bind`, the swap of independent compositions `bind_bind_comm_nat` (Tonelli), `jumpPow_add` ($J^{m+n}=J^mJ^n$), `bind_bind_add_eq_bind_conv` and Mathlib's `poissonMeasure_conv_poissonMeasure` ($\\mathrm{Po}(\\Lambda s)*\\mathrm{Po}(\\Lambda t)=\\mathrm{Po}(\\Lambda(s+t))$).",
+   "tags": [
+    "probability",
+    "numerical-analysis",
+    "convergence"
+   ]
+  },
+  "MLMC.exactLaw_tauStep_le": {
+   "theorem_title": "Giles (2015), §8: one tau-leaping step has local weak error at most $2(\\Lambda h)^2\\sup|f|$ against the exact continuous-time chain",
+   "natural_language_statement": "Giles (2015), §8, p. 55: \"When there is just one chemical reaction, the 'tau-leaping' method (which is essentially the Euler-Maruyama method, approximating the reaction rate as being constant throughout the timestep) gives the discrete equation $x_{n+1}=x_n+P(h\\lambda(x_n))$, where $h$ is the timestep, $\\lambda(x_n)$ is the reaction rate (or propensity function), and $P(t)$ represents a unit-rate Poisson random variable over time interval $[0,t]$.\"\n\nThroughout, $\\lambda:\\mathbb N\\to[0,\\infty)$ is the propensity, with $\\lambda(x)\\le\\Lambda$ for all $x$; the exact chain jumps from $x$ to $x+1$ at rate $\\lambda(x)$. `exactLaw`$(\\lambda,\\Lambda,t,x)=\\mathrm{Po}(\\Lambda t)$`.bind`$(n\\mapsto J^n(x))$ is its law at time $t\\ge0$ from $x$, by uniformisation, where $J(x)=\\frac{\\lambda(x)}{\\Lambda}\\delta_{x+1}+\\big(1-\\frac{\\lambda(x)}{\\Lambda}\\big)\\delta_x$ (`jumpKernel`) and $J^n$ is its $n$-fold composition (`jumpPow`); $P_tf(x)=\\int f\\,d\\,$`exactLaw`$(\\lambda,\\Lambda,t,x)$. `tauStep`$(\\lambda,h,x)$ is the law of $x+P$, $P\\sim\\mathrm{Po}(h\\lambda(x))$, and `tauChain`$(\\lambda,h,x_0,n)$ the law of $n$ tau-leaping steps from $x_0$.\n\nLet $\\lambda\\le\\Lambda$, $f:\\mathbb N\\to\\mathbb R$ with $|f(y)|\\le M$ for all $y$, $h\\ge0$ and $x\\in\\mathbb N$. Then\n$$\n\\Big|\\int f\\,d\\,\\mathrm{exactLaw}(\\lambda,\\Lambda,h,x)-\\int f\\,d\\,\\mathrm{tauStep}(\\lambda,h,x)\\Big|\\le2(\\Lambda h)^2M.\n$$\n(The constant $2$ is within a factor $2$ of optimal: for $\\lambda=\\mathbf 1_{\\text{even}}$, $\\Lambda=1$, $x=0$ the supremum over $|f|\\le M$ is $(1+o(1))h^2M$.)",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §8 \"Continuous-time Markov chains\", pp. 55–56",
+   "explanation": "Both sides are Poisson averages (`integral_bind_of_abs_le`, `integral_poissonMeasure`); `poisson_integral_split` keeps the terms with zero and one event and bounds the rest by $M\\,\\mathbb P(\\mathrm{Po}(a)\\ge2)\\le Ma^2$ (`one_sub_exp_neg_sub_mul_le_sq`); with $a=\\Lambda h$, $r=h\\lambda(x)=(\\lambda(x)/\\Lambda)a$ (`rate_div_mul_eq`) the remaining coefficients are bounded by `uniformised_exp_coeff_bounds`: $|e^{-a}(1+a-r)-e^{-r}|\\le(a-r)^2$, $|r(e^{-a}-e^{-r})|\\le r(a-r)$; finally $(a-r)^2+r(a-r)+a^2+r^2\\le2a^2$.",
+   "tags": [
+    "probability",
+    "numerical-analysis",
+    "convergence"
+   ]
+  },
+  "MLMC.tauLeaping_weak_error_exact": {
+   "theorem_title": "Giles (2015), §8: tau-leaping has weak order one against the exact chain, $|\\mathbb E\\Phi(x_N)-\\mathbb E\\Phi(X_T)|\\le2\\Lambda^2T^2\\sup|\\Phi|/N$",
+   "natural_language_statement": "Giles (2015), §8, p. 55: \"When there is just one chemical reaction, the 'tau-leaping' method (which is essentially the Euler-Maruyama method, approximating the reaction rate as being constant throughout the timestep) gives the discrete equation $x_{n+1}=x_n+P(h\\lambda(x_n))$, where $h$ is the timestep, $\\lambda(x_n)$ is the reaction rate (or propensity function), and $P(t)$ represents a unit-rate Poisson random variable over time interval $[0,t]$.\" Giles (2015), §8, p. 56: \"This elegant approach naturally gives a small difference in the Poisson variates when the difference in rates is small, and leads to a very effective multilevel algorithm with a correction variance which is $O(h)$, leading to an $O(\\varepsilon^{-2}(\\log\\varepsilon)^2)$ complexity.\" (By Theorem 1 the complexity needs a weak rate $\\alpha\\ge\\frac12$ against the exact chain; the paper leaves the weak rate $\\alpha=1$ of tau-leaping implicit.)\n\nThroughout, $\\lambda:\\mathbb N\\to[0,\\infty)$ is the propensity, with $\\lambda(x)\\le\\Lambda$ for all $x$; the exact chain jumps from $x$ to $x+1$ at rate $\\lambda(x)$. `exactLaw`$(\\lambda,\\Lambda,t,x)=\\mathrm{Po}(\\Lambda t)$`.bind`$(n\\mapsto J^n(x))$ is its law at time $t\\ge0$ from $x$, by uniformisation, where $J(x)=\\frac{\\lambda(x)}{\\Lambda}\\delta_{x+1}+\\big(1-\\frac{\\lambda(x)}{\\Lambda}\\big)\\delta_x$ (`jumpKernel`) and $J^n$ is its $n$-fold composition (`jumpPow`); $P_tf(x)=\\int f\\,d\\,$`exactLaw`$(\\lambda,\\Lambda,t,x)$. `tauStep`$(\\lambda,h,x)$ is the law of $x+P$, $P\\sim\\mathrm{Po}(h\\lambda(x))$, and `tauChain`$(\\lambda,h,x_0,n)$ the law of $n$ tau-leaping steps from $x_0$.\n\nLet $\\lambda\\le\\Lambda$, $\\Phi:\\mathbb N\\to\\mathbb R$ with $|\\Phi(x)|\\le M$ for all $x$, $T\\ge0$, $x_0\\in\\mathbb N$ and $N\\ge1$. Then\n$$\n\\Big|\\int\\Phi\\,d\\,\\mathrm{tauChain}(\\lambda,T/N,x_0,N)-\\int\\Phi\\,d\\,\\mathrm{exactLaw}(\\lambda,\\Lambda,T,x_0)\\Big|\\le\\frac{2\\Lambda^2T^2M}{N}.\n$$\nBounded payoffs only.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §8 \"Continuous-time Markov chains\", pp. 55–56",
+   "explanation": "`exactLaw_steps_of_one_step` (telescoping: the error after $n$ steps is at most $n$ times the one-step error, since the exact semigroup and the step kernel are sup-norm contractions; uses `exactLaw_add`, `integral_exactLaw_bind`, `integral_bind_of_abs_le`) with the one-step bound `exactLaw_tauStep_le`, $\\delta=2(\\Lambda T/N)^2$, so $N\\delta M=2\\Lambda^2T^2M/N$.",
+   "tags": [
+    "probability",
+    "numerical-analysis",
+    "convergence"
+   ]
+  },
+  "MLMC.tauLeaping_mlmc_exact": {
+   "theorem_title": "Giles (2015), §8, Theorem 1: tau-leaping MLMC estimates $\\mathbb E\\Phi(X_T)$ of the exact chain with MSE $<\\varepsilon^2$ at cost $O(\\varepsilon^{-2}(\\log\\varepsilon)^2)$, no assumed weak rate",
+   "natural_language_statement": "Giles (2015), §8, p. 56: \"This elegant approach naturally gives a small difference in the Poisson variates when the difference in rates is small, and leads to a very effective multilevel algorithm with a correction variance which is $O(h)$, leading to an $O(\\varepsilon^{-2}(\\log\\varepsilon)^2)$ complexity.\"\n\nThroughout, $\\lambda:\\mathbb N\\to[0,\\infty)$ is the propensity, with $\\lambda(x)\\le\\Lambda$ for all $x$; the exact chain jumps from $x$ to $x+1$ at rate $\\lambda(x)$. `exactLaw`$(\\lambda,\\Lambda,t,x)=\\mathrm{Po}(\\Lambda t)$`.bind`$(n\\mapsto J^n(x))$ is its law at time $t\\ge0$ from $x$, by uniformisation, where $J(x)=\\frac{\\lambda(x)}{\\Lambda}\\delta_{x+1}+\\big(1-\\frac{\\lambda(x)}{\\Lambda}\\big)\\delta_x$ (`jumpKernel`) and $J^n$ is its $n$-fold composition (`jumpPow`); $P_tf(x)=\\int f\\,d\\,$`exactLaw`$(\\lambda,\\Lambda,t,x)$. `tauStep`$(\\lambda,h,x)$ is the law of $x+P$, $P\\sim\\mathrm{Po}(h\\lambda(x))$, and `tauChain`$(\\lambda,h,x_0,n)$ the law of $n$ tau-leaping steps from $x_0$.\n\nLet $\\lambda(x)\\le\\Lambda$ for all $x\\in\\mathbb N$ (on $\\mathbb N$ this makes $\\lambda$ $\\Lambda$-Lipschitz, so no Lipschitz hypothesis is needed), $T\\ge0$, $x_0\\in\\mathbb N$ and $\\Phi:\\mathbb N\\to\\mathbb R$ with $|\\Phi(x)|\\le M$. Level $\\ell$ uses $2^\\ell$ tau-leaping steps of size $T2^{-\\ell}$; for $\\ell\\ge1$ the coarse path is coupled by the Poisson coupling; an input $y$ has independent coordinates with law `tauInputLaw`, the corrections are $Y_0=\\Phi(y_0^f)$, $Y_{\\ell+1}=\\Phi(y_{\\ell+1}^f)-\\Phi(y_{\\ell+1}^c)$ (`fineCoarseDiff` of `tauFine`, `tauCoarse`), the samples $y^{(\\ell,n)}$ are the coordinates of the product of copies of `tauInputLaw` and a level-$\\ell$ sample costs $2^\\ell$. Then there is $c_4>0$ such that for every $0<\\varepsilon<e^{-1}$ there are $L$ and $N_\\ell\\ge1$ with\n$$\n\\mathbb E\\Big[\\Big(\\sum_{\\ell=0}^{L}\\frac1{N_\\ell}\\sum_{n<N_\\ell}Y_\\ell(y^{(\\ell,n)})-\\int\\Phi\\,d\\,\\mathrm{exactLaw}(\\lambda,\\Lambda,T,x_0)\\Big)^2\\Big]<\\varepsilon^2,\\qquad\\sum_{\\ell=0}^{L}N_\\ell2^\\ell\\le c_4\\,\\varepsilon^{-2}(\\log\\varepsilon)^2.\n$$\nThe target is $\\mathbb E[\\Phi(X_T)]$ for the exact chain; no weak rate is assumed. Bounded propensities and bounded payoffs only.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §8 \"Continuous-time Markov chains\", pp. 55–56",
+   "explanation": "`tauLeaping_mlmc_theorem1` with $P=\\mathbb E[\\Phi(X_T)]$, $\\alpha=1$, $c_1=2\\Lambda^2T^2M+1$: its weak-rate hypothesis is `tauLeaping_weak_error_exact` with $N=2^\\ell$; its Lipschitz hypothesis on $\\lambda$ holds with constant $\\Lambda$ (`abs_sub_le_mul_of_le_nat`: $0\\le\\lambda\\le\\Lambda$) and that on $\\Phi$ with constant $2M$ (`abs_sub_le_two_mul_of_abs_le_nat`), as distinct naturals are at distance $\\ge1$ (`one_le_abs_natCast_sub`).",
+   "tags": [
+    "multilevel-monte-carlo",
+    "complexity",
+    "probability",
+    "numerical-analysis"
+   ]
+  },
+  "MLMC.exactLaw_eq_of_bound": {
+   "theorem_title": "Giles (2015), §8: the uniformised law of the exact continuous-time chain does not depend on the uniformisation rate $\\Lambda\\ge\\sup\\lambda$",
+   "natural_language_statement": "Giles (2015), §8, p. 56: \"They also include an additional coupling at the finest level to the exact Stochastic Simulation Algorithm developed by (Gillespie 1976) which updates the reaction rates after every single reaction.\"\n\nThroughout, $\\lambda:\\mathbb N\\to[0,\\infty)$ is the propensity, with $\\lambda(x)\\le\\Lambda$ for all $x$; the exact chain jumps from $x$ to $x+1$ at rate $\\lambda(x)$. `exactLaw`$(\\lambda,\\Lambda,t,x)=\\mathrm{Po}(\\Lambda t)$`.bind`$(n\\mapsto J^n(x))$ is its law at time $t\\ge0$ from $x$, by uniformisation, where $J(x)=\\frac{\\lambda(x)}{\\Lambda}\\delta_{x+1}+\\big(1-\\frac{\\lambda(x)}{\\Lambda}\\big)\\delta_x$ (`jumpKernel`) and $J^n$ is its $n$-fold composition (`jumpPow`); $P_tf(x)=\\int f\\,d\\,$`exactLaw`$(\\lambda,\\Lambda,t,x)$. `tauStep`$(\\lambda,h,x)$ is the law of $x+P$, $P\\sim\\mathrm{Po}(h\\lambda(x))$, and `tauChain`$(\\lambda,h,x_0,n)$ the law of $n$ tau-leaping steps from $x_0$.\n\nIf $\\lambda(x)\\le\\Lambda$ and $\\lambda(x)\\le\\Lambda'$ for all $x$, then `exactLaw`$(\\lambda,\\Lambda,t,x)=$ `exactLaw`$(\\lambda,\\Lambda',t,x)$ for all $t\\ge0$, $x\\in\\mathbb N$.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §8 \"Continuous-time Markov chains\", pp. 55–56",
+   "explanation": "Both laws are within $2\\Lambda^2t^2/N$, resp. $2\\Lambda'^2t^2/N$, of the same tau-leaping law for every $N$ (`tauLeaping_weak_error_exact`) on functions with $|f|\\le1$, so they integrate every such $f$ alike (`eq_of_abs_sub_le_div_nat`); testing with indicators of points gives equality (`measure_ext_of_integral_bounded_nat`). (Poisson thinning, without computing it.)",
+   "tags": [
+    "probability",
+    "numerical-analysis",
+    "convergence"
+   ]
+  },
+  "MLMC.exactLaw_const": {
+   "theorem_title": "Giles (2015), §8: with a constant propensity $\\lambda\\equiv\\Lambda$ the exact chain is the Poisson process, $X_t\\sim x+\\mathrm{Po}(\\Lambda t)$",
+   "natural_language_statement": "Giles (2015), §8, p. 55: \"When there is just one chemical reaction, the 'tau-leaping' method (which is essentially the Euler-Maruyama method, approximating the reaction rate as being constant throughout the timestep) gives the discrete equation $x_{n+1}=x_n+P(h\\lambda(x_n))$, where $h$ is the timestep, $\\lambda(x_n)$ is the reaction rate (or propensity function), and $P(t)$ represents a unit-rate Poisson random variable over time interval $[0,t]$.\"\n\nThroughout, $\\lambda:\\mathbb N\\to[0,\\infty)$ is the propensity, with $\\lambda(x)\\le\\Lambda$ for all $x$; the exact chain jumps from $x$ to $x+1$ at rate $\\lambda(x)$. `exactLaw`$(\\lambda,\\Lambda,t,x)=\\mathrm{Po}(\\Lambda t)$`.bind`$(n\\mapsto J^n(x))$ is its law at time $t\\ge0$ from $x$, by uniformisation, where $J(x)=\\frac{\\lambda(x)}{\\Lambda}\\delta_{x+1}+\\big(1-\\frac{\\lambda(x)}{\\Lambda}\\big)\\delta_x$ (`jumpKernel`) and $J^n$ is its $n$-fold composition (`jumpPow`); $P_tf(x)=\\int f\\,d\\,$`exactLaw`$(\\lambda,\\Lambda,t,x)$. `tauStep`$(\\lambda,h,x)$ is the law of $x+P$, $P\\sim\\mathrm{Po}(h\\lambda(x))$, and `tauChain`$(\\lambda,h,x_0,n)$ the law of $n$ tau-leaping steps from $x_0$.\n\nFor every $\\Lambda,t\\ge0$ and $x\\in\\mathbb N$, `exactLaw` with the constant propensity $\\lambda\\equiv\\Lambda$ is the law of $x+P$ with $P\\sim\\mathrm{Po}(\\Lambda t)$, i.e. the image of $\\mathrm{Po}(\\Lambda t)$ under $n\\mapsto x+n$. (So for a constant propensity tau-leaping is exact.)",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §8 \"Continuous-time Markov chains\", pp. 55–56",
+   "explanation": "For $\\Lambda>0$, $J(y)=\\delta_{y+1}$ and $J^n(y)=\\delta_{y+n}$ (`jumpPow_const`), and `Measure.bind_dirac_eq_map`; for $\\Lambda=0$ both sides are $\\delta_x$ (`poissonMeasure_zero`).",
+   "tags": [
+    "probability",
+    "numerical-analysis",
+    "convergence"
+   ]
+  },
+  "MLMC.exactLaw_generator": {
+   "theorem_title": "Giles (2015), §8: the exact chain has generator $Gf(x)=\\lambda(x)(f(x+1)-f(x))$: $|P_tf(x)-f(x)-tGf(x)|\\le5(\\Lambda t)^2\\sup|f|$",
+   "natural_language_statement": "Giles (2015), §8, p. 55: \"When there is just one chemical reaction, the 'tau-leaping' method (which is essentially the Euler-Maruyama method, approximating the reaction rate as being constant throughout the timestep) gives the discrete equation $x_{n+1}=x_n+P(h\\lambda(x_n))$, where $h$ is the timestep, $\\lambda(x_n)$ is the reaction rate (or propensity function), and $P(t)$ represents a unit-rate Poisson random variable over time interval $[0,t]$.\"\n\nThroughout, $\\lambda:\\mathbb N\\to[0,\\infty)$ is the propensity, with $\\lambda(x)\\le\\Lambda$ for all $x$; the exact chain jumps from $x$ to $x+1$ at rate $\\lambda(x)$. `exactLaw`$(\\lambda,\\Lambda,t,x)=\\mathrm{Po}(\\Lambda t)$`.bind`$(n\\mapsto J^n(x))$ is its law at time $t\\ge0$ from $x$, by uniformisation, where $J(x)=\\frac{\\lambda(x)}{\\Lambda}\\delta_{x+1}+\\big(1-\\frac{\\lambda(x)}{\\Lambda}\\big)\\delta_x$ (`jumpKernel`) and $J^n$ is its $n$-fold composition (`jumpPow`); $P_tf(x)=\\int f\\,d\\,$`exactLaw`$(\\lambda,\\Lambda,t,x)$. `tauStep`$(\\lambda,h,x)$ is the law of $x+P$, $P\\sim\\mathrm{Po}(h\\lambda(x))$, and `tauChain`$(\\lambda,h,x_0,n)$ the law of $n$ tau-leaping steps from $x_0$.\n\nLet $\\lambda\\le\\Lambda$ and $|f(y)|\\le M$ for all $y$. Then for all $t\\ge0$, $x\\in\\mathbb N$,\n$$\n\\Big|\\int f\\,d\\,\\mathrm{exactLaw}(\\lambda,\\Lambda,t,x)-f(x)-t\\lambda(x)\\big(f(x+1)-f(x)\\big)\\Big|\\le5(\\Lambda t)^2M.\n$$",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §8 \"Continuous-time Markov chains\", pp. 55–56",
+   "explanation": "`exactLaw_tauStep_le` ($2(\\Lambda t)^2M$) and the first-order expansion of one tau-leaping step, `tauStep_expansion` ($3(t\\lambda(x))^2M$, from `poisson_integral_split`, $0\\le e^{-r}-1+r\\le r^2$ and $0\\le r(1-e^{-r})\\le r^2$).",
+   "tags": [
+    "probability",
+    "numerical-analysis",
+    "convergence"
+   ]
+  },
+  "MLMC.exactLaw_hasDerivWithinAt_zero": {
+   "theorem_title": "Giles (2015), §8: at time $0$ the right derivative of $\\mathbb E_xf(X_t)$ for the exact chain is the generator $\\lambda(x)(f(x+1)-f(x))$",
+   "natural_language_statement": "Giles (2015), §8, p. 55: \"When there is just one chemical reaction, the 'tau-leaping' method (which is essentially the Euler-Maruyama method, approximating the reaction rate as being constant throughout the timestep) gives the discrete equation $x_{n+1}=x_n+P(h\\lambda(x_n))$, where $h$ is the timestep, $\\lambda(x_n)$ is the reaction rate (or propensity function), and $P(t)$ represents a unit-rate Poisson random variable over time interval $[0,t]$.\"\n\nThroughout, $\\lambda:\\mathbb N\\to[0,\\infty)$ is the propensity, with $\\lambda(x)\\le\\Lambda$ for all $x$; the exact chain jumps from $x$ to $x+1$ at rate $\\lambda(x)$. `exactLaw`$(\\lambda,\\Lambda,t,x)=\\mathrm{Po}(\\Lambda t)$`.bind`$(n\\mapsto J^n(x))$ is its law at time $t\\ge0$ from $x$, by uniformisation, where $J(x)=\\frac{\\lambda(x)}{\\Lambda}\\delta_{x+1}+\\big(1-\\frac{\\lambda(x)}{\\Lambda}\\big)\\delta_x$ (`jumpKernel`) and $J^n$ is its $n$-fold composition (`jumpPow`); $P_tf(x)=\\int f\\,d\\,$`exactLaw`$(\\lambda,\\Lambda,t,x)$. `tauStep`$(\\lambda,h,x)$ is the law of $x+P$, $P\\sim\\mathrm{Po}(h\\lambda(x))$, and `tauChain`$(\\lambda,h,x_0,n)$ the law of $n$ tau-leaping steps from $x_0$.\n\nLet $\\lambda\\le\\Lambda$, $|f(y)|\\le M$ for all $y$, and $x\\in\\mathbb N$. Then the function $s\\mapsto P_{\\max(s,0)}f(x)$ on $\\mathbb R$ has the derivative $\\lambda(x)\\big(f(x+1)-f(x)\\big)$ at $0$ within $[0,\\infty)$ (a right derivative). So Kolmogorov's backward and forward equations, stated for $t>0$, also hold at $t=0$, where $P_0f=f$.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §8 \"Continuous-time Markov chains\", pp. 55–56",
+   "explanation": "`hasDerivWithinAt_iff_isLittleO`; for $s\\ge0$, `exactLaw_generator` gives $|P_sf(x)-f(x)-s\\lambda(x)(f(x+1)-f(x))|\\le5\\Lambda^2Ms^2$ (with $P_0f(x)=f(x)$ by `exactLaw_zero`), and $s^2=o(s)$ (`isLittleO_pow_sub_sub`).",
+   "tags": [
+    "probability",
+    "numerical-analysis",
+    "convergence"
+   ]
+  },
+  "MLMC.exactLaw_backward_equation": {
+   "theorem_title": "Giles (2015), §8: Kolmogorov's backward equation $\\frac{d}{dt}P_tf(x)=\\lambda(x)(P_tf(x+1)-P_tf(x))$ for the exact chain",
+   "natural_language_statement": "Giles (2015), §8, p. 55: \"When there is just one chemical reaction, the 'tau-leaping' method (which is essentially the Euler-Maruyama method, approximating the reaction rate as being constant throughout the timestep) gives the discrete equation $x_{n+1}=x_n+P(h\\lambda(x_n))$, where $h$ is the timestep, $\\lambda(x_n)$ is the reaction rate (or propensity function), and $P(t)$ represents a unit-rate Poisson random variable over time interval $[0,t]$.\"\n\nThroughout, $\\lambda:\\mathbb N\\to[0,\\infty)$ is the propensity, with $\\lambda(x)\\le\\Lambda$ for all $x$; the exact chain jumps from $x$ to $x+1$ at rate $\\lambda(x)$. `exactLaw`$(\\lambda,\\Lambda,t,x)=\\mathrm{Po}(\\Lambda t)$`.bind`$(n\\mapsto J^n(x))$ is its law at time $t\\ge0$ from $x$, by uniformisation, where $J(x)=\\frac{\\lambda(x)}{\\Lambda}\\delta_{x+1}+\\big(1-\\frac{\\lambda(x)}{\\Lambda}\\big)\\delta_x$ (`jumpKernel`) and $J^n$ is its $n$-fold composition (`jumpPow`); $P_tf(x)=\\int f\\,d\\,$`exactLaw`$(\\lambda,\\Lambda,t,x)$. `tauStep`$(\\lambda,h,x)$ is the law of $x+P$, $P\\sim\\mathrm{Po}(h\\lambda(x))$, and `tauChain`$(\\lambda,h,x_0,n)$ the law of $n$ tau-leaping steps from $x_0$.\n\nLet $\\lambda\\le\\Lambda$, $|f|\\le M$, $x\\in\\mathbb N$ and $t>0$. Then the function $s\\mapsto P_{\\max(s,0)}f(x)$ on $\\mathbb R$ is differentiable at $t$ with derivative $\\lambda(x)\\big(P_tf(x+1)-P_tf(x)\\big)$. (At $t=0$ only a right derivative makes sense; it is the generator $\\lambda(x)(f(x+1)-f(x))$, see `exactLaw_hasDerivWithinAt_zero`.)",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §8 \"Continuous-time Markov chains\", pp. 55–56",
+   "explanation": "`hasDerivAt_toNNReal_of_step_bounds` (a uniform second-order expansion from the right plus a Lipschitz slope give a two-sided derivative), with `exactLaw_backward_step` ($P_{t+s}f=P_s(P_tf)$ by `exactLaw_add`, then `exactLaw_generator` applied to $P_tf$) and `exactLaw_time_lipschitz`.",
+   "tags": [
+    "probability",
+    "numerical-analysis",
+    "convergence"
+   ]
+  },
+  "MLMC.exactLaw_forward_equation": {
+   "theorem_title": "Giles (2015), §8: Kolmogorov's forward equation $\\frac{d}{dt}\\mathbb E_x f(X_t)=\\mathbb E_x[\\lambda(X_t)(f(X_t+1)-f(X_t))]$ for the exact chain",
+   "natural_language_statement": "Giles (2015), §8, p. 55: \"When there is just one chemical reaction, the 'tau-leaping' method (which is essentially the Euler-Maruyama method, approximating the reaction rate as being constant throughout the timestep) gives the discrete equation $x_{n+1}=x_n+P(h\\lambda(x_n))$, where $h$ is the timestep, $\\lambda(x_n)$ is the reaction rate (or propensity function), and $P(t)$ represents a unit-rate Poisson random variable over time interval $[0,t]$.\"\n\nThroughout, $\\lambda:\\mathbb N\\to[0,\\infty)$ is the propensity, with $\\lambda(x)\\le\\Lambda$ for all $x$; the exact chain jumps from $x$ to $x+1$ at rate $\\lambda(x)$. `exactLaw`$(\\lambda,\\Lambda,t,x)=\\mathrm{Po}(\\Lambda t)$`.bind`$(n\\mapsto J^n(x))$ is its law at time $t\\ge0$ from $x$, by uniformisation, where $J(x)=\\frac{\\lambda(x)}{\\Lambda}\\delta_{x+1}+\\big(1-\\frac{\\lambda(x)}{\\Lambda}\\big)\\delta_x$ (`jumpKernel`) and $J^n$ is its $n$-fold composition (`jumpPow`); $P_tf(x)=\\int f\\,d\\,$`exactLaw`$(\\lambda,\\Lambda,t,x)$. `tauStep`$(\\lambda,h,x)$ is the law of $x+P$, $P\\sim\\mathrm{Po}(h\\lambda(x))$, and `tauChain`$(\\lambda,h,x_0,n)$ the law of $n$ tau-leaping steps from $x_0$.\n\nLet $\\lambda\\le\\Lambda$, $|f|\\le M$, $x\\in\\mathbb N$ and $t>0$. Then the function $s\\mapsto P_{\\max(s,0)}f(x)$ on $\\mathbb R$ is differentiable at $t$ with derivative $\\int\\lambda(z)\\big(f(z+1)-f(z)\\big)\\,\\mathrm{exactLaw}(\\lambda,\\Lambda,t,x)(dz)$. (At $t=0$ the right derivative is $\\lambda(x)(f(x+1)-f(x))$, see `exactLaw_hasDerivWithinAt_zero`.)",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §8 \"Continuous-time Markov chains\", pp. 55–56",
+   "explanation": "`hasDerivAt_toNNReal_of_step_bounds` with `exactLaw_forward_step` ($P_{t+s}f=P_t(P_sf)$ by `exactLaw_add`, and `exactLaw_generator` for $P_sf$ uniformly in the state) and `exactLaw_time_lipschitz` applied to $Gf$, $|Gf|\\le2\\Lambda M$.",
+   "tags": [
+    "probability",
+    "numerical-analysis",
+    "convergence"
+   ]
+  },
+  "MLMC.exactLaw_master_equation": {
+   "theorem_title": "Giles (2015), §8: the master equation $p_t'(y+1)=\\lambda(y)p_t(y)-\\lambda(y+1)p_t(y+1)$, $p_t'(0)=-\\lambda(0)p_t(0)$ of the exact chain",
+   "natural_language_statement": "Giles (2015), §8, p. 56: \"They also include an additional coupling at the finest level to the exact Stochastic Simulation Algorithm developed by (Gillespie 1976) which updates the reaction rates after every single reaction.\"\n\nThroughout, $\\lambda:\\mathbb N\\to[0,\\infty)$ is the propensity, with $\\lambda(x)\\le\\Lambda$ for all $x$; the exact chain jumps from $x$ to $x+1$ at rate $\\lambda(x)$. `exactLaw`$(\\lambda,\\Lambda,t,x)=\\mathrm{Po}(\\Lambda t)$`.bind`$(n\\mapsto J^n(x))$ is its law at time $t\\ge0$ from $x$, by uniformisation, where $J(x)=\\frac{\\lambda(x)}{\\Lambda}\\delta_{x+1}+\\big(1-\\frac{\\lambda(x)}{\\Lambda}\\big)\\delta_x$ (`jumpKernel`) and $J^n$ is its $n$-fold composition (`jumpPow`); $P_tf(x)=\\int f\\,d\\,$`exactLaw`$(\\lambda,\\Lambda,t,x)$. `tauStep`$(\\lambda,h,x)$ is the law of $x+P$, $P\\sim\\mathrm{Po}(h\\lambda(x))$, and `tauChain`$(\\lambda,h,x_0,n)$ the law of $n$ tau-leaping steps from $x_0$.\n\nLet $\\lambda\\le\\Lambda$, $x\\in\\mathbb N$, $t>0$, and $p_s(z)=\\mathrm{exactLaw}(\\lambda,\\Lambda,\\max(s,0),x)(\\{z\\})$ for $s\\in\\mathbb R$. Then $s\\mapsto p_s(0)$ has derivative $-\\lambda(0)p_t(0)$ at $t$, and for every $y\\in\\mathbb N$, $s\\mapsto p_s(y+1)$ has derivative $\\lambda(y)p_t(y)-\\lambda(y+1)p_t(y+1)$ at $t$. With $p_0=\\delta_x$ these are the forward equations of the pure-birth chain with rates $\\lambda$.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §8 \"Continuous-time Markov chains\", pp. 55–56",
+   "explanation": "`exactLaw_forward_equation` with $f=\\mathbf 1_{\\{y\\}}$ (`integral_indicator_one`); the integrand $\\lambda(z)(\\mathbf 1_{\\{y+1\\}}(z+1)-\\mathbf 1_{\\{y+1\\}}(z))$ is $\\lambda(y)\\mathbf 1_{\\{y\\}}-\\lambda(y+1)\\mathbf 1_{\\{y+1\\}}$ (and $-\\lambda(0)\\mathbf 1_{\\{0\\}}$ for the state $0$), integrated by `integral_indicator_const`.",
+   "tags": [
+    "probability",
+    "numerical-analysis",
+    "convergence"
+   ]
+  },
+  "MLMC.exactLaw_unique": {
+   "theorem_title": "Giles (2015), §8: every Markov semigroup on $\\mathbb N$ with generator $\\lambda(x)(f(x+1)-f(x))$ (to second order) is the uniformised exact law",
+   "natural_language_statement": "Giles (2015), §8, p. 55: \"Anderson and Higham (2012) developed a very interesting application of MLMC to continuous-time Markov Chain simulation.\"\n\nThroughout, $\\lambda:\\mathbb N\\to[0,\\infty)$ is the propensity, with $\\lambda(x)\\le\\Lambda$ for all $x$; the exact chain jumps from $x$ to $x+1$ at rate $\\lambda(x)$. `exactLaw`$(\\lambda,\\Lambda,t,x)=\\mathrm{Po}(\\Lambda t)$`.bind`$(n\\mapsto J^n(x))$ is its law at time $t\\ge0$ from $x$, by uniformisation, where $J(x)=\\frac{\\lambda(x)}{\\Lambda}\\delta_{x+1}+\\big(1-\\frac{\\lambda(x)}{\\Lambda}\\big)\\delta_x$ (`jumpKernel`) and $J^n$ is its $n$-fold composition (`jumpPow`); $P_tf(x)=\\int f\\,d\\,$`exactLaw`$(\\lambda,\\Lambda,t,x)$. `tauStep`$(\\lambda,h,x)$ is the law of $x+P$, $P\\sim\\mathrm{Po}(h\\lambda(x))$, and `tauChain`$(\\lambda,h,x_0,n)$ the law of $n$ tau-leaping steps from $x_0$.\n\nLet $\\lambda\\le\\Lambda$ and let $Q_t(x)$, $t\\ge0$, $x\\in\\mathbb N$, be probability measures on $\\mathbb N$ with $Q_{s+t}(x)=\\int Q_t(y)\\,Q_s(x)(dy)$ for all $s,t,x$, and $C\\in\\mathbb R$ such that for every $f$ with $|f|\\le M$, every $x$ and every $0\\le t\\le1$,\n$$\n\\Big|\\int f\\,dQ_t(x)-f(x)-t\\lambda(x)\\big(f(x+1)-f(x)\\big)\\Big|\\le Ct^2M.\n$$\nThen $Q_t(x)=\\mathrm{exactLaw}(\\lambda,\\Lambda,t,x)$ for all $t\\ge0$ and $x\\in\\mathbb N$. (The generator condition is this uniform $O(t^2)$ expansion, not merely the derivative at $0$; the classical uniqueness of every solution of Kolmogorov's equations is not stated.)",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §8 \"Continuous-time Markov chains\", pp. 55–56",
+   "explanation": "$Q_0(x)=\\delta_x$ from the hypothesis at $t=0$; for $h=t/N\\le1$ the one-step difference to `exactLaw` is at most $(5\\Lambda^2+C)h^2M$ (`exactLaw_generator`), so by `exactLaw_steps_of_one_step` (with $\\mu_n=Q_{nh}(x)$, using the semigroup property) the two laws at time $t$ differ by at most $(5\\Lambda^2+C)t^2/N$ on functions with $|f|\\le1$, for every large $N$ (`eq_of_abs_sub_le_div_nat`, `measure_ext_of_integral_bounded_nat`).",
+   "tags": [
+    "probability",
+    "numerical-analysis",
+    "convergence"
+   ]
+  },
+  "MLMC.hasDerivAt_normCDF": {
+   "theorem_title": "Haas–Giles (2025), §3: the standard normal CDF $\\Phi$ is differentiable with $\\Phi'=\\varphi$",
+   "natural_language_statement": "Haas–Giles (2025), §3.1, p. 5: \"In the first approach, the inverse CDF $\\Phi^{-1}$ is approximated by a constant value on uniform intervals $\\mathcal I_j=[u_j,u_{j+1}]\\subset[0,1/2]$\"; Giles (2015), §5.2, p. 36: \"where $\\Phi$ is the Normal cumulative distribution function.\"\n\nLet $\\Phi(x)=P(Z\\le x)$, $Z\\sim N(0,1)$, be the standard normal distribution function (`normCDF`, Mathlib's `cdf (gaussianReal 0 1)`) and $\\varphi(x)=e^{-x^2/2}/\\sqrt{2\\pi}$ the standard normal density (`gaussianPDFReal 0 1`). Then for every $x\\in\\mathbb R$, $\\Phi$ is differentiable at $x$ with $\\Phi'(x)=\\varphi(x)$. This standard fact is not stated in the paper, which uses it implicitly.",
+   "source": "I.-B. Haas, M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §3, p. 4, and §3.1, p. 5 (the normal CDF $\\Phi$ of the inversion methods).",
+   "explanation": "$\\Phi(x)=\\int_{-\\infty}^x\\varphi$ (`normCDF_eq_integral`, from Mathlib's `gaussianReal_apply_eq_integral`), hence $\\Phi(x)=\\Phi(0)+\\int_0^x\\varphi$ (`normCDF_eq_add_integral`, via `intervalIntegral.integral_Iic_sub_Iic`); $\\varphi$ is continuous (`continuous_gaussianPDFReal_std`), so the fundamental theorem of calculus (`Continuous.integral_hasStrictDerivAt`) gives $\\Phi'=\\varphi$.",
+   "tags": [
+    "real-analysis",
+    "probability"
+   ]
+  },
+  "MLMC.continuous_normCDF": {
+   "theorem_title": "Haas–Giles (2025), §3: the standard normal CDF $\\Phi$ is continuous",
+   "natural_language_statement": "Haas–Giles (2025), §3.1, p. 5: \"In the first approach, the inverse CDF $\\Phi^{-1}$ is approximated by a constant value on uniform intervals $\\mathcal I_j=[u_j,u_{j+1}]\\subset[0,1/2]$\"; Giles (2015), §5.2, p. 36: \"where $\\Phi$ is the Normal cumulative distribution function.\"\n\nLet $\\Phi(x)=P(Z\\le x)$, $Z\\sim N(0,1)$, be the standard normal distribution function (`normCDF`, Mathlib's `cdf (gaussianReal 0 1)`) and $\\varphi(x)=e^{-x^2/2}/\\sqrt{2\\pi}$ the standard normal density (`gaussianPDFReal 0 1`). Then $\\Phi$ is continuous on $\\mathbb R$. This standard fact is not stated in the paper, which uses it implicitly.",
+   "source": "I.-B. Haas, M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §3.1, p. 5.",
+   "explanation": "$\\Phi$ is differentiable everywhere (`hasDerivAt_normCDF`), hence continuous.",
+   "tags": [
+    "real-analysis",
+    "probability"
+   ]
+  },
+  "MLMC.strictMono_normCDF": {
+   "theorem_title": "Haas–Giles (2025), §3: the standard normal CDF $\\Phi$ is strictly increasing",
+   "natural_language_statement": "Haas–Giles (2025), §3.1, p. 5: \"In the first approach, the inverse CDF $\\Phi^{-1}$ is approximated by a constant value on uniform intervals $\\mathcal I_j=[u_j,u_{j+1}]\\subset[0,1/2]$\"; Giles (2015), §5.2, p. 36: \"where $\\Phi$ is the Normal cumulative distribution function.\"\n\nLet $\\Phi(x)=P(Z\\le x)$, $Z\\sim N(0,1)$, be the standard normal distribution function (`normCDF`, Mathlib's `cdf (gaussianReal 0 1)`) and $\\varphi(x)=e^{-x^2/2}/\\sqrt{2\\pi}$ the standard normal density (`gaussianPDFReal 0 1`). Then $\\Phi$ is strictly increasing: $x<y\\Rightarrow\\Phi(x)<\\Phi(y)$. This standard fact is not stated in the paper, which uses it implicitly.",
+   "source": "I.-B. Haas, M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §3.1, p. 5.",
+   "explanation": "$\\Phi'=\\varphi>0$ (`hasDerivAt_normCDF`, `gaussianPDFReal_pos`) and Mathlib's `strictMono_of_hasDerivAt_pos`.",
+   "tags": [
+    "real-analysis",
+    "probability"
+   ]
+  },
+  "MLMC.tendsto_normCDF_atBot": {
+   "theorem_title": "Haas–Giles (2025), §3: $\\Phi(x)\\to0$ as $x\\to-\\infty$",
+   "natural_language_statement": "Haas–Giles (2025), §3, p. 4: \"… approximates $\\Phi^{-1}$ by a Piecewise Linear (PWL) function on dyadic intervals, ie. intervals that are progressively divided by 2 as we get closer to the singularities of $\\Phi^{-1}$.\"\n\nLet $\\Phi(x)=P(Z\\le x)$, $Z\\sim N(0,1)$, be the standard normal distribution function (`normCDF`, Mathlib's `cdf (gaussianReal 0 1)`) and $\\varphi(x)=e^{-x^2/2}/\\sqrt{2\\pi}$ the standard normal density (`gaussianPDFReal 0 1`). Then $\\Phi(x)\\to0$ as $x\\to-\\infty$ (so $\\Phi^{-1}$ is singular at $0$). This standard fact is not stated in the paper, which uses it implicitly.",
+   "source": "I.-B. Haas, M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §3, p. 4.",
+   "explanation": "Mathlib's `tendsto_cdf_atBot` for the probability measure `gaussianReal 0 1`.",
+   "tags": [
+    "real-analysis",
+    "probability",
+    "convergence"
+   ]
+  },
+  "MLMC.tendsto_normCDF_atTop": {
+   "theorem_title": "Haas–Giles (2025), §3: $\\Phi(x)\\to1$ as $x\\to\\infty$",
+   "natural_language_statement": "Haas–Giles (2025), §3, p. 4: \"… approximates $\\Phi^{-1}$ by a Piecewise Linear (PWL) function on dyadic intervals, ie. intervals that are progressively divided by 2 as we get closer to the singularities of $\\Phi^{-1}$.\"\n\nLet $\\Phi(x)=P(Z\\le x)$, $Z\\sim N(0,1)$, be the standard normal distribution function (`normCDF`, Mathlib's `cdf (gaussianReal 0 1)`) and $\\varphi(x)=e^{-x^2/2}/\\sqrt{2\\pi}$ the standard normal density (`gaussianPDFReal 0 1`). Then $\\Phi(x)\\to1$ as $x\\to\\infty$ (so $\\Phi^{-1}$ is singular at $1$). This standard fact is not stated in the paper, which uses it implicitly.",
+   "source": "I.-B. Haas, M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §3, p. 4.",
+   "explanation": "Mathlib's `tendsto_cdf_atTop` for the probability measure `gaussianReal 0 1`.",
+   "tags": [
+    "real-analysis",
+    "probability",
+    "convergence"
+   ]
+  },
+  "MLMC.normCDF_neg": {
+   "theorem_title": "Haas–Giles (2025), §3: the symmetry of the normal CDF, $\\Phi(-x)=1-\\Phi(x)$",
+   "natural_language_statement": "Haas–Giles (2025), §3, p. 5: \"Note that, in practice, we exploit the symmetry of $\\Phi^{-1}$ so we only need to approximate it on $[0,1/2]$.\"\n\nLet $\\Phi(x)=P(Z\\le x)$, $Z\\sim N(0,1)$, be the standard normal distribution function (`normCDF`, Mathlib's `cdf (gaussianReal 0 1)`) and $\\varphi(x)=e^{-x^2/2}/\\sqrt{2\\pi}$ the standard normal density (`gaussianPDFReal 0 1`). Then $\\Phi(-x)=1-\\Phi(x)$ for every $x\\in\\mathbb R$.",
+   "source": "I.-B. Haas, M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §3, p. 5.",
+   "explanation": "The law of $-Z$ is $N(0,1)$ (`gaussianReal_map_neg`), so $P(Z\\le-x)=P(Z\\ge x)$ (`map_measureReal_apply`); $N(0,1)$ has no atoms (`nullSingletonClass_gaussianReal`, `Ioi_ae_eq_Ici`), so $P(Z\\ge x)=P(Z>x)=1-\\Phi(x)$ (`probReal_compl_eq_one_sub`).",
+   "tags": [
+    "probability",
+    "real-analysis"
+   ]
+  },
+  "MLMC.normCDF_normCDFInv": {
+   "theorem_title": "Haas–Giles (2025), §3: $\\Phi(\\Phi^{-1}(u))=u$ for $u\\in(0,1)$",
+   "natural_language_statement": "Haas–Giles (2025), §3.1, p. 5: \"In the first approach, the inverse CDF $\\Phi^{-1}$ is approximated by a constant value on uniform intervals $\\mathcal I_j=[u_j,u_{j+1}]\\subset[0,1/2]$\"; Giles (2015), §5.2, p. 36: \"where $\\Phi$ is the Normal cumulative distribution function.\"\n\nLet $\\Phi(x)=P(Z\\le x)$, $Z\\sim N(0,1)$, be the standard normal distribution function (`normCDF`, Mathlib's `cdf (gaussianReal 0 1)`) and $\\varphi(x)=e^{-x^2/2}/\\sqrt{2\\pi}$ the standard normal density (`gaussianPDFReal 0 1`). Let $\\Phi^{-1}:\\mathbb R\\to\\mathbb R$ (`normCDFInv`) be the inverse of the bijection $\\Phi:\\mathbb R\\to(0,1)$ on $(0,1)$, extended by the value $0$ outside $(0,1)$. Then $\\Phi(\\Phi^{-1}(u))=u$ for every $u\\in(0,1)$. This standard fact is not stated in the paper, which uses it implicitly.\n\n**Formalization Note** `normCDFInv` takes the junk value $0$ outside $(0,1)$; this does not affect any integral over $[0,1]$ and keeps $\\Phi^{-1}(1-u)=-\\Phi^{-1}(u)$ exact for every real $u$.",
+   "source": "I.-B. Haas, M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §3.1, p. 5.",
+   "explanation": "Every $u\\in(0,1)$ is a value of $\\Phi$ by the intermediate value theorem (`intermediate_value_univ`, `continuous_normCDF`, the limits `tendsto_normCDF_atBot`, `tendsto_normCDF_atTop`; `exists_normCDF_eq`), and `Function.invFun_eq`.",
+   "tags": [
+    "real-analysis",
+    "probability"
+   ]
+  },
+  "MLMC.normCDFInv_normCDF": {
+   "theorem_title": "Haas–Giles (2025), §3: $\\Phi^{-1}(\\Phi(x))=x$ for every real $x$",
+   "natural_language_statement": "Haas–Giles (2025), §3.1, p. 5: \"In the first approach, the inverse CDF $\\Phi^{-1}$ is approximated by a constant value on uniform intervals $\\mathcal I_j=[u_j,u_{j+1}]\\subset[0,1/2]$\"; Giles (2015), §5.2, p. 36: \"where $\\Phi$ is the Normal cumulative distribution function.\"\n\nLet $\\Phi(x)=P(Z\\le x)$, $Z\\sim N(0,1)$, be the standard normal distribution function (`normCDF`, Mathlib's `cdf (gaussianReal 0 1)`) and $\\varphi(x)=e^{-x^2/2}/\\sqrt{2\\pi}$ the standard normal density (`gaussianPDFReal 0 1`). Let $\\Phi^{-1}:\\mathbb R\\to\\mathbb R$ (`normCDFInv`) be the inverse of the bijection $\\Phi:\\mathbb R\\to(0,1)$ on $(0,1)$, extended by the value $0$ outside $(0,1)$. Then $\\Phi^{-1}(\\Phi(x))=x$ for every $x\\in\\mathbb R$. This standard fact is not stated in the paper, which uses it implicitly.\n\n**Formalization Note** `normCDFInv` takes the junk value $0$ outside $(0,1)$; this does not affect any integral over $[0,1]$ and keeps $\\Phi^{-1}(1-u)=-\\Phi^{-1}(u)$ exact for every real $u$.",
+   "source": "I.-B. Haas, M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §3.1, p. 5.",
+   "explanation": "$0\\le\\Phi(x-1)<\\Phi(x)<\\Phi(x+1)\\le1$ (`normCDF_mem_Ioo`, from `strictMono_normCDF`, `cdf_nonneg`, `cdf_le_one`) and $\\Phi$ is injective (`strictMono_normCDF`), so `Function.leftInverse_invFun` applies.",
+   "tags": [
+    "real-analysis",
+    "probability"
+   ]
+  },
+  "MLMC.strictMonoOn_normCDFInv": {
+   "theorem_title": "Haas–Giles (2025), §3: the inverse normal CDF $\\Phi^{-1}$ is strictly increasing on $(0,1)$",
+   "natural_language_statement": "Haas–Giles (2025), §3.1, p. 5: \"In the first approach, the inverse CDF $\\Phi^{-1}$ is approximated by a constant value on uniform intervals $\\mathcal I_j=[u_j,u_{j+1}]\\subset[0,1/2]$\"; Giles (2015), §5.2, p. 36: \"where $\\Phi$ is the Normal cumulative distribution function.\"\n\nLet $\\Phi(x)=P(Z\\le x)$, $Z\\sim N(0,1)$, be the standard normal distribution function (`normCDF`, Mathlib's `cdf (gaussianReal 0 1)`) and $\\varphi(x)=e^{-x^2/2}/\\sqrt{2\\pi}$ the standard normal density (`gaussianPDFReal 0 1`). Let $\\Phi^{-1}:\\mathbb R\\to\\mathbb R$ (`normCDFInv`) be the inverse of the bijection $\\Phi:\\mathbb R\\to(0,1)$ on $(0,1)$, extended by the value $0$ outside $(0,1)$. Then $\\Phi^{-1}$ is strictly increasing on $(0,1)$. This standard fact is not stated in the paper, which uses it implicitly.\n\n**Formalization Note** `normCDFInv` takes the junk value $0$ outside $(0,1)$; this does not affect any integral over $[0,1]$ and keeps $\\Phi^{-1}(1-u)=-\\Phi^{-1}(u)$ exact for every real $u$.",
+   "source": "I.-B. Haas, M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §3.1, p. 5.",
+   "explanation": "For $u<v$ in $(0,1)$, $\\Phi(\\Phi^{-1}(u))=u<v=\\Phi(\\Phi^{-1}(v))$ (`normCDF_normCDFInv`) and $\\Phi$ is strictly increasing (`strictMono_normCDF`).",
+   "tags": [
+    "real-analysis",
+    "probability"
+   ]
+  },
+  "MLMC.normCDFInv_one_sub": {
+   "theorem_title": "Haas–Giles (2025), §3: the symmetry of the inverse normal CDF, $\\Phi^{-1}(1-u)=-\\Phi^{-1}(u)$",
+   "natural_language_statement": "Haas–Giles (2025), §3, p. 5: \"Note that, in practice, we exploit the symmetry of $\\Phi^{-1}$ so we only need to approximate it on $[0,1/2]$.\"\n\nLet $\\Phi(x)=P(Z\\le x)$, $Z\\sim N(0,1)$, be the standard normal distribution function (`normCDF`, Mathlib's `cdf (gaussianReal 0 1)`) and $\\varphi(x)=e^{-x^2/2}/\\sqrt{2\\pi}$ the standard normal density (`gaussianPDFReal 0 1`). Let $\\Phi^{-1}:\\mathbb R\\to\\mathbb R$ (`normCDFInv`) be the inverse of the bijection $\\Phi:\\mathbb R\\to(0,1)$ on $(0,1)$, extended by the value $0$ outside $(0,1)$. Then $\\Phi^{-1}(1-u)=-\\Phi^{-1}(u)$ for every $u\\in(0,1)$.\n\n**Formalization Note** `normCDFInv` takes the junk value $0$ outside $(0,1)$; this does not affect any integral over $[0,1]$ and keeps $\\Phi^{-1}(1-u)=-\\Phi^{-1}(u)$ exact for every real $u$. The companion lemma `normCDFInv_one_sub_forall` states the identity for every real $u$ (for $u\\notin(0,1)$ both sides are the junk value $0$); that is the form the lookup-table theorems take as a hypothesis.",
+   "source": "I.-B. Haas, M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §3, p. 5.",
+   "explanation": "$\\Phi(-\\Phi^{-1}(u))=1-\\Phi(\\Phi^{-1}(u))=1-u$ (`normCDF_neg`, `normCDF_normCDFInv`), so $\\Phi^{-1}(1-u)=\\Phi^{-1}(\\Phi(-\\Phi^{-1}(u)))=-\\Phi^{-1}(u)$ (`normCDFInv_normCDF`).",
+   "tags": [
+    "real-analysis",
+    "probability"
+   ]
+  },
+  "MLMC.map_normCDFInv": {
+   "theorem_title": "Haas–Giles (2025), §3: inversion sampling, the image of the uniform law on $(0,1)$ under $\\Phi^{-1}$ is $N(0,1)$",
+   "natural_language_statement": "Haas–Giles (2025), §3, p. 4: \"All methods below are classified as inversion methods, because they are based on applying an approximation of the inverse normal CDF $\\Phi$ [sic: $\\Phi^{-1}$] to a random uniform variable $U$.\" (The paper's $\\Phi$ is the normal CDF and $\\Phi^{-1}$ its inverse, as in §3.1: \"the inverse CDF $\\Phi^{-1}$\".)\n\nLet $\\Phi(x)=P(Z\\le x)$, $Z\\sim N(0,1)$, be the standard normal distribution function (`normCDF`, Mathlib's `cdf (gaussianReal 0 1)`) and $\\varphi(x)=e^{-x^2/2}/\\sqrt{2\\pi}$ the standard normal density (`gaussianPDFReal 0 1`). Let $\\Phi^{-1}:\\mathbb R\\to\\mathbb R$ (`normCDFInv`) be the inverse of the bijection $\\Phi:\\mathbb R\\to(0,1)$ on $(0,1)$, extended by the value $0$ outside $(0,1)$. Let $\\lambda$ be Lebesgue measure restricted to $(0,1)$. Then the image measure $\\lambda\\circ(\\Phi^{-1})^{-1}$ is the standard normal law $N(0,1)$: if $U$ is uniform on $(0,1)$ then $\\Phi^{-1}(U)\\sim N(0,1)$.\n\n**Formalization Note** `normCDFInv` takes the junk value $0$ outside $(0,1)$; this does not affect any integral over $[0,1]$ and keeps $\\Phi^{-1}(1-u)=-\\Phi^{-1}(u)$ exact for every real $u$.",
+   "source": "I.-B. Haas, M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §3, p. 4.",
+   "explanation": "Two finite measures on $\\mathbb R$ with the same values on all half-lines $(-\\infty,x]$ are equal (`Measure.ext_of_Iic`). $\\Phi^{-1}$ is measurable (`measurable_normCDFInv`, via `measurable_of_Iic`), and $\\{u\\in(0,1):\\Phi^{-1}(u)\\le x\\}=(0,\\Phi(x)]$ (`normCDFInv_le_iff`), whose Lebesgue measure is $\\Phi(x)=N(0,1)((-\\infty,x])$ (`ofReal_cdf`).",
+   "tags": [
+    "probability",
+    "monte-carlo"
+   ]
+  },
+  "MLMC.hasLaw_normCDFInv": {
+   "theorem_title": "Haas–Giles (2025), §3: $\\Phi^{-1}$ has law $N(0,1)$ under the uniform law on $(0,1)$ (HasLaw form)",
+   "natural_language_statement": "Haas–Giles (2025), §3, p. 4: \"All methods below are classified as inversion methods, because they are based on applying an approximation of the inverse normal CDF $\\Phi$ [sic: $\\Phi^{-1}$] to a random uniform variable $U$.\" (The paper's $\\Phi$ is the normal CDF and $\\Phi^{-1}$ its inverse, as in §3.1: \"the inverse CDF $\\Phi^{-1}$\".)\n\nLet $\\Phi(x)=P(Z\\le x)$, $Z\\sim N(0,1)$, be the standard normal distribution function (`normCDF`, Mathlib's `cdf (gaussianReal 0 1)`) and $\\varphi(x)=e^{-x^2/2}/\\sqrt{2\\pi}$ the standard normal density (`gaussianPDFReal 0 1`). Let $\\Phi^{-1}:\\mathbb R\\to\\mathbb R$ (`normCDFInv`) be the inverse of the bijection $\\Phi:\\mathbb R\\to(0,1)$ on $(0,1)$, extended by the value $0$ outside $(0,1)$. Then $\\Phi^{-1}$, as a random variable on $(0,1)$ with Lebesgue measure, is almost-everywhere measurable and has law $N(0,1)$.\n\n**Formalization Note** `normCDFInv` takes the junk value $0$ outside $(0,1)$; this does not affect any integral over $[0,1]$ and keeps $\\Phi^{-1}(1-u)=-\\Phi^{-1}(u)$ exact for every real $u$. The statement is `HasLaw normCDFInv (gaussianReal 0 1) (volume.restrict (Set.Ioo 0 1))`, the hypothesis on $f$ of `lutStream_tendstoInDistribution`.",
+   "source": "I.-B. Haas, M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §3, p. 4.",
+   "explanation": "`measurable_normCDFInv` and `map_normCDFInv`.",
+   "tags": [
+    "probability",
+    "monte-carlo"
+   ]
+  },
+  "MLMC.hasLaw_normCDFInv_comp": {
+   "theorem_title": "Haas–Giles (2025), §3: if $U$ is uniform on $(0,1)$ then $\\Phi^{-1}(U)\\sim N(0,1)$",
+   "natural_language_statement": "Haas–Giles (2025), §3, p. 4: \"All methods below are classified as inversion methods, because they are based on applying an approximation of the inverse normal CDF $\\Phi$ [sic: $\\Phi^{-1}$] to a random uniform variable $U$.\" (The paper's $\\Phi$ is the normal CDF and $\\Phi^{-1}$ its inverse, as in §3.1: \"the inverse CDF $\\Phi^{-1}$\".)\n\nLet $\\Phi(x)=P(Z\\le x)$, $Z\\sim N(0,1)$, be the standard normal distribution function (`normCDF`, Mathlib's `cdf (gaussianReal 0 1)`) and $\\varphi(x)=e^{-x^2/2}/\\sqrt{2\\pi}$ the standard normal density (`gaussianPDFReal 0 1`). Let $\\Phi^{-1}:\\mathbb R\\to\\mathbb R$ (`normCDFInv`) be the inverse of the bijection $\\Phi:\\mathbb R\\to(0,1)$ on $(0,1)$, extended by the value $0$ outside $(0,1)$. Let $(\\Omega,P)$ be a measure space and $U:\\Omega\\to\\mathbb R$ a random variable whose law is Lebesgue measure on $(0,1)$. Then $\\Phi^{-1}(U)$ has law $N(0,1)$.\n\n**Formalization Note** `normCDFInv` takes the junk value $0$ outside $(0,1)$; this does not affect any integral over $[0,1]$ and keeps $\\Phi^{-1}(1-u)=-\\Phi^{-1}(u)$ exact for every real $u$.",
+   "source": "I.-B. Haas, M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §3, p. 4.",
+   "explanation": "Compose the laws: `hasLaw_normCDFInv` and `HasLaw.comp`.",
+   "tags": [
+    "probability",
+    "monte-carlo"
+   ]
+  },
+  "MLMC.intervalIntegrable_normCDFInv": {
+   "theorem_title": "Haas–Giles (2025), §3.1: $\\Phi^{-1}$ and $(\\Phi^{-1})^2$ are integrable on $[0,1]$",
+   "natural_language_statement": "Haas–Giles (2025), §3.1, p. 5: \"This gives that $Z_j$ is the mean of $\\Phi^{-1}$ over the interval $\\mathcal I_j$: $Z_j=2^d\\int_{u_j}^{u_{j+1}}\\Phi^{-1}(u)\\,du$.\" (15)\n\nLet $\\Phi(x)=P(Z\\le x)$, $Z\\sim N(0,1)$, be the standard normal distribution function (`normCDF`, Mathlib's `cdf (gaussianReal 0 1)`) and $\\varphi(x)=e^{-x^2/2}/\\sqrt{2\\pi}$ the standard normal density (`gaussianPDFReal 0 1`). Let $\\Phi^{-1}:\\mathbb R\\to\\mathbb R$ (`normCDFInv`) be the inverse of the bijection $\\Phi:\\mathbb R\\to(0,1)$ on $(0,1)$, extended by the value $0$ outside $(0,1)$. Then $\\Phi^{-1}$ and $(\\Phi^{-1})^2$ are (interval) integrable on $[0,1]$, so the LUT values $Z_j$ and the mean-square errors (14) are well defined.\n\n**Formalization Note** `normCDFInv` takes the junk value $0$ outside $(0,1)$; this does not affect any integral over $[0,1]$ and keeps $\\Phi^{-1}(1-u)=-\\Phi^{-1}(u)$ exact for every real $u$.",
+   "source": "I.-B. Haas, M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §3.1, p. 5, eqs. (14)–(15).",
+   "explanation": "$\\Phi^{-1}$ has law $N(0,1)$ under the uniform law (`hasLaw_normCDFInv`), and a standard normal variable has finite first and second moments (`intervalIntegrable_of_hasLaw_gaussian`).",
+   "tags": [
+    "probability",
+    "real-analysis"
+   ]
+  },
+  "MLMC.hasDerivAt_normCDFInv": {
+   "theorem_title": "Haas–Giles (2025), §3: $(\\Phi^{-1})'(u)=1/\\varphi(\\Phi^{-1}(u))$ on $(0,1)$",
+   "natural_language_statement": "Haas–Giles (2025), §3, p. 4: \"… approximates $\\Phi^{-1}$ by a Piecewise Linear (PWL) function on dyadic intervals, ie. intervals that are progressively divided by 2 as we get closer to the singularities of $\\Phi^{-1}$.\"\n\nLet $\\Phi(x)=P(Z\\le x)$, $Z\\sim N(0,1)$, be the standard normal distribution function (`normCDF`, Mathlib's `cdf (gaussianReal 0 1)`) and $\\varphi(x)=e^{-x^2/2}/\\sqrt{2\\pi}$ the standard normal density (`gaussianPDFReal 0 1`). Let $\\Phi^{-1}:\\mathbb R\\to\\mathbb R$ (`normCDFInv`) be the inverse of the bijection $\\Phi:\\mathbb R\\to(0,1)$ on $(0,1)$, extended by the value $0$ outside $(0,1)$. Then for every $u\\in(0,1)$, $\\Phi^{-1}$ is differentiable at $u$ with $(\\Phi^{-1})'(u)=1/\\varphi(\\Phi^{-1}(u))$. This standard fact is not stated in the paper, which uses it implicitly.\n\n**Formalization Note** `normCDFInv` takes the junk value $0$ outside $(0,1)$; this does not affect any integral over $[0,1]$ and keeps $\\Phi^{-1}(1-u)=-\\Phi^{-1}(u)$ exact for every real $u$.",
+   "source": "I.-B. Haas, M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §3, p. 4.",
+   "explanation": "$\\Phi^{-1}$ is continuous on $(0,1)$ (`continuousOn_normCDFInv`: monotone with image $\\mathbb R$, `continuousAt_of_monotoneOn_of_image_mem_nhds`), $\\Phi(\\Phi^{-1}(v))=v$ near $u$, and $\\Phi'=\\varphi\\neq0$; apply the inverse function rule `HasDerivAt.of_local_left_inverse`.",
+   "tags": [
+    "real-analysis"
+   ]
+  },
+  "MLMC.deriv_normCDFInv": {
+   "theorem_title": "Haas–Giles (2025), §3: $(\\Phi^{-1})'=1/\\varphi(\\Phi^{-1})$ and $(\\Phi^{-1})''=\\Phi^{-1}/\\varphi(\\Phi^{-1})^2$ on $(0,1)$",
+   "natural_language_statement": "Haas–Giles (2025), §3, p. 4: \"… approximates $\\Phi^{-1}$ by a Piecewise Linear (PWL) function on dyadic intervals, ie. intervals that are progressively divided by 2 as we get closer to the singularities of $\\Phi^{-1}$.\"\n\nLet $\\Phi(x)=P(Z\\le x)$, $Z\\sim N(0,1)$, be the standard normal distribution function (`normCDF`, Mathlib's `cdf (gaussianReal 0 1)`) and $\\varphi(x)=e^{-x^2/2}/\\sqrt{2\\pi}$ the standard normal density (`gaussianPDFReal 0 1`). Let $\\Phi^{-1}:\\mathbb R\\to\\mathbb R$ (`normCDFInv`) be the inverse of the bijection $\\Phi:\\mathbb R\\to(0,1)$ on $(0,1)$, extended by the value $0$ outside $(0,1)$. Then for every $u\\in(0,1)$, with $x=\\Phi^{-1}(u)$: $(\\Phi^{-1})'(u)=1/\\varphi(x)$, the function $(\\Phi^{-1})'$ is differentiable at $u$, and $(\\Phi^{-1})''(u)=x/\\varphi(x)^2=2\\pi\\,x\\,e^{x^2}$. This standard fact is not stated in the paper, which uses it implicitly.\n\n**Formalization Note** `normCDFInv` takes the junk value $0$ outside $(0,1)$; this does not affect any integral over $[0,1]$ and keeps $\\Phi^{-1}(1-u)=-\\Phi^{-1}(u)$ exact for every real $u$. The derivatives are Mathlib's `deriv normCDFInv` and `deriv (deriv normCDFInv)`.",
+   "source": "I.-B. Haas, M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §3, p. 4.",
+   "explanation": "`hasDerivAt_normCDFInv` gives the first derivative on the open set $(0,1)$; $\\varphi'(x)=-x\\varphi(x)$ (`hasDerivAt_gaussianPDFReal_std`), so by the chain rule and `HasDerivAt.inv` the derivative of $v\\mapsto1/\\varphi(\\Phi^{-1}(v))$ is $x/\\varphi(x)^2$ (`hasDerivAt_inv_gaussianPDFReal_normCDFInv`); `HasDerivAt.congr_of_eventuallyEq` transfers it to `deriv normCDFInv`.",
+   "tags": [
+    "real-analysis"
+   ]
+  },
+  "MLMC.deriv_deriv_normCDFInv_le": {
+   "theorem_title": "Haas–Giles (2025), §3.4: $(\\Phi^{-1})''\\le-\\pi$ on $(0,1/4]$",
+   "natural_language_statement": "Haas–Giles (2025), §3.4, p. 7: \"As illustrated by Figure 1 and the convergence analysis from [12], as $d$ tends to infinity, the uniform intervals give $MSE\\longrightarrow0$ and the dyadic intervals give $MSE\\longrightarrow C$, for some positive constant $C$.\"\n\nLet $\\Phi(x)=P(Z\\le x)$, $Z\\sim N(0,1)$, be the standard normal distribution function (`normCDF`, Mathlib's `cdf (gaussianReal 0 1)`) and $\\varphi(x)=e^{-x^2/2}/\\sqrt{2\\pi}$ the standard normal density (`gaussianPDFReal 0 1`). Let $\\Phi^{-1}:\\mathbb R\\to\\mathbb R$ (`normCDFInv`) be the inverse of the bijection $\\Phi:\\mathbb R\\to(0,1)$ on $(0,1)$, extended by the value $0$ outside $(0,1)$. Then for every $u$ with $0<u\\le1/4$, $(\\Phi^{-1})''(u)\\le-\\pi$. The paper does not state this; it is the strong concavity of $\\Phi^{-1}$ near its singularity at $0$ behind the claim $MSE\\to C>0$.\n\n**Formalization Note** `normCDFInv` takes the junk value $0$ outside $(0,1)$; this does not affect any integral over $[0,1]$ and keeps $\\Phi^{-1}(1-u)=-\\Phi^{-1}(u)$ exact for every real $u$.",
+   "source": "I.-B. Haas, M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §3.4, p. 7 (the strong concavity of $\\Phi^{-1}$ near its singularity at $0$).",
+   "explanation": "$(\\Phi^{-1})''(u)=x/\\varphi(x)^2$ (`deriv_normCDFInv`); $\\Phi(1/2)\\le\\frac12+\\frac1{2\\sqrt{2\\pi}}\\le\\frac34$ (`normCDF_half_le`), so $x=\\Phi^{-1}(u)\\le-1/2$ for $u\\le1/4$ (`normCDFInv_le_neg_half`); $\\varphi(x)^2\\le1/(2\\pi)$, hence $x/\\varphi(x)^2\\le-\\pi$ (`normCDFInv_div_sq_le`).",
+   "tags": [
+    "real-analysis"
+   ]
+  },
+  "MLMC.concaveOn_normCDFInv_add_sq": {
+   "theorem_title": "Haas–Giles (2025), §3.4: $\\Phi^{-1}$ is strongly concave on $(0,1/4]$: $u\\mapsto\\Phi^{-1}(u)+\\frac\\pi2u^2$ is concave",
+   "natural_language_statement": "Haas–Giles (2025), §3.4, p. 7: \"As illustrated by Figure 1 and the convergence analysis from [12], as $d$ tends to infinity, the uniform intervals give $MSE\\longrightarrow0$ and the dyadic intervals give $MSE\\longrightarrow C$, for some positive constant $C$.\"\n\nLet $\\Phi(x)=P(Z\\le x)$, $Z\\sim N(0,1)$, be the standard normal distribution function (`normCDF`, Mathlib's `cdf (gaussianReal 0 1)`) and $\\varphi(x)=e^{-x^2/2}/\\sqrt{2\\pi}$ the standard normal density (`gaussianPDFReal 0 1`). Let $\\Phi^{-1}:\\mathbb R\\to\\mathbb R$ (`normCDFInv`) be the inverse of the bijection $\\Phi:\\mathbb R\\to(0,1)$ on $(0,1)$, extended by the value $0$ outside $(0,1)$. Then the function $u\\mapsto\\Phi^{-1}(u)+\\frac\\pi2u^2$ is concave on $(0,1/4]$. The paper does not state this; it is the property of $\\Phi^{-1}$ behind the claim $MSE\\to C>0$.\n\n**Formalization Note** `normCDFInv` takes the junk value $0$ outside $(0,1)$; this does not affect any integral over $[0,1]$ and keeps $\\Phi^{-1}(1-u)=-\\Phi^{-1}(u)$ exact for every real $u$.",
+   "source": "I.-B. Haas, M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §3.4, p. 7.",
+   "explanation": "Its derivative is $1/\\varphi(\\Phi^{-1})+\\pi u$ and its second derivative $\\Phi^{-1}/\\varphi(\\Phi^{-1})^2+\\pi\\le0$ on $(0,1/4)$ (`hasDerivAt_normCDFInv`, `hasDerivAt_inv_gaussianPDFReal_normCDFInv`, `normCDFInv_div_sq_le`); Mathlib's `concaveOn_of_hasDerivWithinAt2_nonpos`.",
+   "tags": [
+    "real-analysis"
+   ]
+  },
+  "MLMC.normCDFInv_second_diff": {
+   "theorem_title": "Haas–Giles (2025), §3.4: second differences of $\\Phi^{-1}$ near $0$, $2\\Phi^{-1}(u+s)-\\Phi^{-1}(u)-\\Phi^{-1}(u+2s)\\ge\\pi s^2$",
+   "natural_language_statement": "Haas–Giles (2025), §3.4, p. 7: \"As illustrated by Figure 1 and the convergence analysis from [12], as $d$ tends to infinity, the uniform intervals give $MSE\\longrightarrow0$ and the dyadic intervals give $MSE\\longrightarrow C$, for some positive constant $C$.\"\n\nLet $\\Phi(x)=P(Z\\le x)$, $Z\\sim N(0,1)$, be the standard normal distribution function (`normCDF`, Mathlib's `cdf (gaussianReal 0 1)`) and $\\varphi(x)=e^{-x^2/2}/\\sqrt{2\\pi}$ the standard normal density (`gaussianPDFReal 0 1`). Let $\\Phi^{-1}:\\mathbb R\\to\\mathbb R$ (`normCDFInv`) be the inverse of the bijection $\\Phi:\\mathbb R\\to(0,1)$ on $(0,1)$, extended by the value $0$ outside $(0,1)$. Then for all $u>0$, $s\\ge0$ with $u+2s\\le1/4$: $$2\\Phi^{-1}(u+s)-\\Phi^{-1}(u)-\\Phi^{-1}(u+2s)\\ge\\pi s^2.$$ The paper does not state this; it is the property of $\\Phi^{-1}$ behind the claim $MSE\\to C>0$.\n\n**Formalization Note** `normCDFInv` takes the junk value $0$ outside $(0,1)$; this does not affect any integral over $[0,1]$ and keeps $\\Phi^{-1}(1-u)=-\\Phi^{-1}(u)$ exact for every real $u$.",
+   "source": "I.-B. Haas, M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §3.4, p. 7.",
+   "explanation": "Midpoint concavity of $F(u)=\\Phi^{-1}(u)+\\frac\\pi2u^2$ (`concaveOn_normCDFInv_add_sq`) at $u$, $u+2s$: $2F(u+s)\\ge F(u)+F(u+2s)$, and $\\frac\\pi2(u^2+(u+2s)^2)-\\pi(u+s)^2=\\pi s^2$.",
+   "tags": [
+    "real-analysis"
+   ]
+  },
+  "MLMC.normCDFInv_dyadic_concave": {
+   "theorem_title": "Haas–Giles (2025), §3.4: $\\Phi^{-1}$ is strongly concave on every dyadic interval $[2^{-(k+1)},2^{-k}]$, $k\\ge2$",
+   "natural_language_statement": "Haas–Giles (2025), §3.4, p. 7: \"As illustrated by Figure 1 and the convergence analysis from [12], as $d$ tends to infinity, the uniform intervals give $MSE\\longrightarrow0$ and the dyadic intervals give $MSE\\longrightarrow C$, for some positive constant $C$.\"\n\nLet $\\Phi(x)=P(Z\\le x)$, $Z\\sim N(0,1)$, be the standard normal distribution function (`normCDF`, Mathlib's `cdf (gaussianReal 0 1)`) and $\\varphi(x)=e^{-x^2/2}/\\sqrt{2\\pi}$ the standard normal density (`gaussianPDFReal 0 1`). Let $\\Phi^{-1}:\\mathbb R\\to\\mathbb R$ (`normCDFInv`) be the inverse of the bijection $\\Phi:\\mathbb R\\to(0,1)$ on $(0,1)$, extended by the value $0$ outside $(0,1)$. Let $k\\ge2$. Then for all $u,s\\in\\mathbb R$ with $2^{-(k+1)}\\le u$, $s\\ge0$ and $u+2s\\le2^{-k}$: $$\\pi s^2\\le2\\Phi^{-1}(u+s)-\\Phi^{-1}(u)-\\Phi^{-1}(u+2s).$$ This is the strong-concavity hypothesis (with $\\mu=\\pi$) of the dyadic-interval lower bounds and of the limit $MSE\\to C>0$. The paper does not state it. For $k\\in\\{0,1\\}$ the hypothesis fails for every $\\mu>0$ ($(\\Phi^{-1})''(1/2)=0$, and $\\Phi^{-1}$ is convex on $[1/2,1)$).\n\n**Formalization Note** `normCDFInv` takes the junk value $0$ outside $(0,1)$; this does not affect any integral over $[0,1]$ and keeps $\\Phi^{-1}(1-u)=-\\Phi^{-1}(u)$ exact for every real $u$.",
+   "source": "I.-B. Haas, M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §3.4, p. 7.",
+   "explanation": "$2^{-k}\\le1/4$ for $k\\ge2$ (`inv_two_pow_anti`) and `normCDFInv_second_diff`.",
+   "tags": [
+    "real-analysis",
+    "numerical-analysis"
+   ]
+  },
+  "MLMC.tendsto_method1MSE_normCDFInv": {
+   "theorem_title": "Haas–Giles (2025), §3.4: for $f=\\Phi^{-1}$, the mean-square error of method 1 (uniform intervals) tends to $0$ as $d\\to\\infty$",
+   "natural_language_statement": "Haas–Giles (2025), §3.4, p. 7: \"As illustrated by Figure 1 and the convergence analysis from [12], as $d$ tends to infinity, the uniform intervals give $MSE\\longrightarrow0$ and the dyadic intervals give $MSE\\longrightarrow C$, for some positive constant $C$.\"\n\nLet $\\Phi(x)=P(Z\\le x)$, $Z\\sim N(0,1)$, be the standard normal distribution function (`normCDF`, Mathlib's `cdf (gaussianReal 0 1)`) and $\\varphi(x)=e^{-x^2/2}/\\sqrt{2\\pi}$ the standard normal density (`gaussianPDFReal 0 1`). Let $\\Phi^{-1}:\\mathbb R\\to\\mathbb R$ (`normCDFInv`) be the inverse of the bijection $\\Phi:\\mathbb R\\to(0,1)$ on $(0,1)$, extended by the value $0$ outside $(0,1)$. For $d\\in\\mathbb N$ let $u_j=2^{-d}j$, $\\mathcal I_j=[u_j,u_{j+1}]$ ($j<2^d$) and $Z_j=2^d\\int_{\\mathcal I_j}\\Phi^{-1}(u)\\,du$ (the LUT values (15), `lutValue normCDFInv d j`). Then the mean-square error of method 1, $$\\mathrm{MSE}_1(d)=\\sum_{j<2^d}\\int_{\\mathcal I_j}(Z_j-\\Phi^{-1}(u))^2\\,du\\ (\\texttt{method1MSE}),$$ tends to $0$ as $d\\to\\infty$.\n\n**Formalization Note** `normCDFInv` takes the junk value $0$ outside $(0,1)$; this does not affect any integral over $[0,1]$ and keeps $\\Phi^{-1}(1-u)=-\\Phi^{-1}(u)$ exact for every real $u$.",
+   "source": "I.-B. Haas, M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §3.4, p. 7.",
+   "explanation": "`tendsto_method1MSE` with $f=\\Phi^{-1}$: $\\Phi^{-1}$ is monotone on $(0,1)$ (`strictMonoOn_normCDFInv`) and $\\Phi^{-1}$, $(\\Phi^{-1})^2$ are integrable on $[0,1]$ (`intervalIntegrable_normCDFInv`).",
+   "tags": [
+    "numerical-analysis",
+    "convergence",
+    "real-analysis"
+   ]
+  },
+  "MLMC.lutStream_normCDFInv_tendstoInDistribution": {
+   "theorem_title": "Haas–Giles (2025), §3.1–3.2: the method-1 table of $\\Phi^{-1}$ read at the first $d$ bits of a uniform variable converges in distribution to $N(0,1)$",
+   "natural_language_statement": "Haas–Giles (2025), §3.2, p. 5: \"For example take an integer $n$ that divides $d$ and produce an approximate random number $X^{(1)}$ from the first $d/n$ bits of $j$, then $X^{(2)}$ from the next $d/n$ bits and so on, where each $X^{(i)}$ follows approximately the distribution $\\mathcal N(0,1/n)$. Then $\\sum_{i=1}^n X^{(i)}$ has approximately the distribution $\\mathcal N(0,1)$.\" This theorem is the premise that each lookup-table stream is approximately normal, for the actual $f=\\Phi^{-1}$.\n\nLet $\\Phi(x)=P(Z\\le x)$, $Z\\sim N(0,1)$, be the standard normal distribution function (`normCDF`, Mathlib's `cdf (gaussianReal 0 1)`) and $\\varphi(x)=e^{-x^2/2}/\\sqrt{2\\pi}$ the standard normal density (`gaussianPDFReal 0 1`). Let $\\Phi^{-1}:\\mathbb R\\to\\mathbb R$ (`normCDFInv`) be the inverse of the bijection $\\Phi:\\mathbb R\\to(0,1)$ on $(0,1)$, extended by the value $0$ outside $(0,1)$. For $d\\in\\mathbb N$ let $u_j=2^{-d}j$, $\\mathcal I_j=[u_j,u_{j+1}]$ ($j<2^d$) and $Z_j=2^d\\int_{\\mathcal I_j}\\Phi^{-1}(u)\\,du$ (the LUT values (15), `lutValue normCDFInv d j`). Let $U$ be uniform on $(0,1)$ on a probability space $(\\Omega,P)$ and $G$ a random variable with law $N(0,1)$ on a probability space $(\\Omega',P')$. Then $$Z^{(d)}_{\\lfloor2^dU\\rfloor}\\xrightarrow{\\ d\\ }G\\qquad(d\\to\\infty).$$\n\n**Formalization Note** `normCDFInv` takes the junk value $0$ outside $(0,1)$; this does not affect any integral over $[0,1]$ and keeps $\\Phi^{-1}(1-u)=-\\Phi^{-1}(u)$ exact for every real $u$. $U$ uniform is `HasLaw U (volume.restrict (Set.Ioo 0 1)) P`; $\\lfloor\\cdot\\rfloor$ is `Nat.floor`.",
+   "source": "I.-B. Haas, M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §3.1, eq. (15), and §3.2, p. 5.",
+   "explanation": "`lutStream_tendstoInDistribution` with $f=\\Phi^{-1}$, whose hypotheses are proved: $\\Phi^{-1}$ is monotone on $(0,1)$ (`strictMonoOn_normCDFInv`) and $\\Phi^{-1}(U)\\sim N(0,1)$ (`hasLaw_normCDFInv`).",
+   "tags": [
+    "probability",
+    "convergence",
+    "numerical-analysis"
+   ]
+  },
+  "MLMC.lutStreams_sum_normCDFInv_tendstoInDistribution": {
+   "theorem_title": "Haas–Giles (2025), §3.2: for $f=\\Phi^{-1}$, $n$ scaled lookup-table streams are approximately $N(0,1/n)$ and their sum approximately $N(0,1)$",
+   "natural_language_statement": "Haas–Giles (2025), §3.2, p. 5: \"For example take an integer $n$ that divides $d$ and produce an approximate random number $X^{(1)}$ from the first $d/n$ bits of $j$, then $X^{(2)}$ from the next $d/n$ bits and so on, where each $X^{(i)}$ follows approximately the distribution $\\mathcal N(0,1/n)$. Then $\\sum_{i=1}^n X^{(i)}$ has approximately the distribution $\\mathcal N(0,1)$.\"\n\nLet $\\Phi(x)=P(Z\\le x)$, $Z\\sim N(0,1)$, be the standard normal distribution function (`normCDF`, Mathlib's `cdf (gaussianReal 0 1)`) and $\\varphi(x)=e^{-x^2/2}/\\sqrt{2\\pi}$ the standard normal density (`gaussianPDFReal 0 1`). Let $\\Phi^{-1}:\\mathbb R\\to\\mathbb R$ (`normCDFInv`) be the inverse of the bijection $\\Phi:\\mathbb R\\to(0,1)$ on $(0,1)$, extended by the value $0$ outside $(0,1)$. For $d\\in\\mathbb N$ let $u_j=2^{-d}j$, $\\mathcal I_j=[u_j,u_{j+1}]$ ($j<2^d$) and $Z_j=2^d\\int_{\\mathcal I_j}\\Phi^{-1}(u)\\,du$ (the LUT values (15), `lutValue normCDFInv d j`). Let $n\\ge1$, let $U_1,\\dots,U_n$ be independent and uniform on $(0,1)$ on a probability space $(\\Omega,P)$, and $G\\sim N(0,1)$ on $(\\Omega',P')$. Put $X^{(i)}_d=n^{-1/2}Z^{(d)}_{\\lfloor2^dU_i\\rfloor}$. Then, as $d\\to\\infty$, each $X^{(i)}_d$ converges in distribution to $N(0,1/n)$, and $\\sum_{i=1}^nX^{(i)}_d$ converges in distribution to $G$.\n\n**Formalization Note** `normCDFInv` takes the junk value $0$ outside $(0,1)$; this does not affect any integral over $[0,1]$ and keeps $\\Phi^{-1}(1-u)=-\\Phi^{-1}(u)$ exact for every real $u$. Each stream reads the method-1 table (15) scaled by $n^{-1/2}$, not the table optimised by the least-squares iteration (16) of method 2; the $U_i$ stand for the disjoint bit blocks of $j$.",
+   "source": "I.-B. Haas, M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §3.2, p. 5.",
+   "explanation": "`lutStreams_sum_tendstoInDistribution` with $f=\\Phi^{-1}$ (hypotheses `strictMonoOn_normCDFInv`, `hasLaw_normCDFInv`); it combines the convergence of each stream with the independence of the streams.",
+   "tags": [
+    "probability",
+    "convergence",
+    "numerical-analysis"
+   ]
+  },
+  "MLMC.dyadic_mse_ge_normCDFInv": {
+   "theorem_title": "Haas–Giles (2025), §3.4: for $f=\\Phi^{-1}$, affine values on a dyadic interval keep a mean-square error $\\ge c>0$ for all $d$",
+   "natural_language_statement": "Haas–Giles (2025), §3.4, p. 7: \"As illustrated by Figure 1 and the convergence analysis from [12], as $d$ tends to infinity, the uniform intervals give $MSE\\longrightarrow0$ and the dyadic intervals give $MSE\\longrightarrow C$, for some positive constant $C$.\"\n\nLet $\\Phi(x)=P(Z\\le x)$, $Z\\sim N(0,1)$, be the standard normal distribution function (`normCDF`, Mathlib's `cdf (gaussianReal 0 1)`) and $\\varphi(x)=e^{-x^2/2}/\\sqrt{2\\pi}$ the standard normal density (`gaussianPDFReal 0 1`). Let $\\Phi^{-1}:\\mathbb R\\to\\mathbb R$ (`normCDFInv`) be the inverse of the bijection $\\Phi:\\mathbb R\\to(0,1)$ on $(0,1)$, extended by the value $0$ outside $(0,1)$. For $d\\in\\mathbb N$ let $u_j=2^{-d}j$, $\\mathcal I_j=[u_j,u_{j+1}]$ ($j<2^d$) and $Z_j=2^d\\int_{\\mathcal I_j}\\Phi^{-1}(u)\\,du$ (the LUT values (15), `lutValue normCDFInv d j`). Let $k\\ge2$. Then there is $c>0$ such that for every $d\\ge k+3$ and all $a,b\\in\\mathbb R$, $$\\sum_{2^{d-k-1}\\le j<2^{d-k}}\\int_{\\mathcal I_j}\\big(a+bj-\\Phi^{-1}(u)\\big)^2du\\ \\ge\\ c,$$ i.e. the cells of the dyadic interval $[2^{-(k+1)},2^{-k}]$ contribute at least $c$ to the mean-square error of any approximation that is affine in $j$ there (as method 3 is).\n\n**Formalization Note** `normCDFInv` takes the junk value $0$ outside $(0,1)$; this does not affect any integral over $[0,1]$ and keeps $\\Phi^{-1}(1-u)=-\\Phi^{-1}(u)$ exact for every real $u$. The statement is proved for $k\\ge2$, the range where $\\Phi^{-1}$ is strongly concave on $[2^{-(k+1)},2^{-k}]$; one such $k$ suffices for the paper's claim. The same lower bound holds numerically for $k\\in\\{0,1\\}$ too (the least affine errors on $[1/2,1]$ and $[1/4,1/2]$ are $E_0\\approx1.8\\cdot10^{-2}$ and $E_1\\approx7.9\\cdot10^{-6}$), but it is not covered here.",
+   "source": "I.-B. Haas, M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §3.3–§3.4, pp. 6–8.",
+   "explanation": "`dyadic_mse_ge` with $f=\\Phi^{-1}$ and $\\mu=\\pi$: integrability (`intervalIntegrable_normCDFInv`) and strong concavity on $[2^{-(k+1)},2^{-k}]$ (`normCDFInv_dyadic_concave`).",
+   "tags": [
+    "numerical-analysis",
+    "real-analysis"
+   ]
+  },
+  "MLMC.method3_mse_ge_normCDFInv": {
+   "theorem_title": "Haas–Giles (2025), §3.4: for $f=\\Phi^{-1}$, with dyadic intervals the MSE cannot be arbitrarily small",
+   "natural_language_statement": "Haas–Giles (2025), §3.4, p. 8: \"Also with dyadic intervals, the MSE value cannot be arbitrarily small, which might limit the number of levels where this method is relevant.\"\n\nLet $\\Phi(x)=P(Z\\le x)$, $Z\\sim N(0,1)$, be the standard normal distribution function (`normCDF`, Mathlib's `cdf (gaussianReal 0 1)`) and $\\varphi(x)=e^{-x^2/2}/\\sqrt{2\\pi}$ the standard normal density (`gaussianPDFReal 0 1`). Let $\\Phi^{-1}:\\mathbb R\\to\\mathbb R$ (`normCDFInv`) be the inverse of the bijection $\\Phi:\\mathbb R\\to(0,1)$ on $(0,1)$, extended by the value $0$ outside $(0,1)$. For $d\\in\\mathbb N$ let $u_j=2^{-d}j$, $\\mathcal I_j=[u_j,u_{j+1}]$ ($j<2^d$) and $Z_j=2^d\\int_{\\mathcal I_j}\\Phi^{-1}(u)\\,du$ (the LUT values (15), `lutValue normCDFInv d j`). Let $k\\ge2$. Then (i) there is $c>0$ such that for every $d\\ge k+3$ and every $w:\\mathbb N\\to\\mathbb R$ that is affine in $j$ on $2^{d-k-1}\\le j<2^{d-k}$ ($w_j=a+bj$ there), $$\\sum_{j<2^d}\\int_{\\mathcal I_j}\\big(w_j-\\Phi^{-1}(u)\\big)^2du\\ge c;$$ and (ii) for every family $w_d$ of such approximations (affine in $j$ on the cells of $[2^{-(k+1)},2^{-k}]$ for each $d$), the mean-square error $\\sum_{j<2^d}\\int_{\\mathcal I_j}(w_{d,j}-\\Phi^{-1})^2$ does not tend to $0$.\n\n**Formalization Note** `normCDFInv` takes the junk value $0$ outside $(0,1)$; this does not affect any integral over $[0,1]$ and keeps $\\Phi^{-1}(1-u)=-\\Phi^{-1}(u)$ exact for every real $u$. The statement is proved for $k\\ge2$, the range where $\\Phi^{-1}$ is strongly concave on $[2^{-(k+1)},2^{-k}]$; one such $k$ suffices for the paper's claim. The same lower bound holds numerically for $k\\in\\{0,1\\}$ too (the least affine errors on $[1/2,1]$ and $[1/4,1/2]$ are $E_0\\approx1.8\\cdot10^{-2}$ and $E_1\\approx7.9\\cdot10^{-6}$), but it is not covered here.",
+   "source": "I.-B. Haas, M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §3.4, p. 8.",
+   "explanation": "`method3_mse_ge` and `method3_mse_not_tendsto_zero` with $f=\\Phi^{-1}$, $\\mu=\\pi$ (`intervalIntegrable_normCDFInv`, `normCDFInv_dyadic_concave`).",
+   "tags": [
+    "numerical-analysis",
+    "real-analysis"
+   ]
+  },
+  "MLMC.tendsto_method3MSE_normCDFInv": {
+   "theorem_title": "Haas–Giles (2025), §3.4: for $f=\\Phi^{-1}$, the MSE of method 3 (dyadic intervals) converges to a positive constant $C$",
+   "natural_language_statement": "Haas–Giles (2025), §3.4, p. 7: \"As illustrated by Figure 1 and the convergence analysis from [12], as $d$ tends to infinity, the uniform intervals give $MSE\\longrightarrow0$ and the dyadic intervals give $MSE\\longrightarrow C$, for some positive constant $C$.\" (the claim for the dyadic intervals, for the actual $\\Phi^{-1}$).\n\nLet $\\Phi(x)=P(Z\\le x)$, $Z\\sim N(0,1)$, be the standard normal distribution function (`normCDF`, Mathlib's `cdf (gaussianReal 0 1)`) and $\\varphi(x)=e^{-x^2/2}/\\sqrt{2\\pi}$ the standard normal density (`gaussianPDFReal 0 1`). Let $\\Phi^{-1}:\\mathbb R\\to\\mathbb R$ (`normCDFInv`) be the inverse of the bijection $\\Phi:\\mathbb R\\to(0,1)$ on $(0,1)$, extended by the value $0$ outside $(0,1)$. For $d\\in\\mathbb N$ let $u_j=2^{-d}j$, $\\mathcal I_j=[u_j,u_{j+1}]$ ($j<2^d$) and $Z_j=2^d\\int_{\\mathcal I_j}\\Phi^{-1}(u)\\,du$ (the LUT values (15), `lutValue normCDFInv d j`). Method 3: on $[0,\\tfrac12]$ the indices $j<2^{d-1}$ are grouped into the dyadic intervals $\\{0,1\\}$ and $[2^i,2^{i+1})$, $1\\le i\\le d-2$; on each group the values $\\bar Z_j$ are the least-squares line in $j$ through the $Z_j$ (19), and on $[\\tfrac12,1]$ the value on $\\mathcal I_j$ is $-\\bar Z_{2^d-1-j}$ (sign bit); $\\mathrm{MSE}_3(d)=\\sum_{j<2^d}\\int_{\\mathcal I_j}(\\bar Z_j-\\Phi^{-1})^2$ (`method3MSE`). Let $C=2\\sum_{k\\ge1}E_k$ (`method3Limit`), where $E_k$ is the least mean-square error of an affine function of $u$ against $\\Phi^{-1}$ on $[2^{-(k+1)},2^{-k}]$. Then $C>0$ and $\\mathrm{MSE}_3(d)\\to C$ as $d\\to\\infty$.\n\n**Formalization Note** `normCDFInv` takes the junk value $0$ outside $(0,1)$; this does not affect any integral over $[0,1]$ and keeps $\\Phi^{-1}(1-u)=-\\Phi^{-1}(u)$ exact for every real $u$.",
+   "source": "I.-B. Haas, M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §3.3–§3.4, pp. 6–7, eq. (19).",
+   "explanation": "`tendsto_method3MSE` and `method3Limit_pos` with $f=\\Phi^{-1}$: integrability (`intervalIntegrable_normCDFInv`), the symmetry $\\Phi^{-1}(1-u)=-\\Phi^{-1}(u)$ (`normCDFInv_one_sub_forall`), and strong concavity on $[1/8,1/4]$ (`normCDFInv_dyadic_concave` with $k=2$, $\\mu=\\pi$).",
+   "tags": [
+    "numerical-analysis",
+    "convergence",
+    "real-analysis"
+   ]
+  },
+  "MLMC.method1MSE_order_normCDFInv": {
+   "theorem_title": "Haas–Giles (2025), §3.4: for $f=\\Phi^{-1}$, the mean-square error of method 1 is of order $2^{-d}/d$",
+   "natural_language_statement": "Haas–Giles (2025), §3.4, p. 7: \"The Figure 1 also illustrates that both method 1 and 2 have their MSE divided by 2 each time $d$ increases by 1. This was theoretically expected for method 1 (see [12])\".\n\nLet $\\Phi(x)=P(Z\\le x)$, $Z\\sim N(0,1)$, be the standard normal distribution function (`normCDF`, Mathlib's `cdf (gaussianReal 0 1)`) and $\\varphi(x)=e^{-x^2/2}/\\sqrt{2\\pi}$ the standard normal density (`gaussianPDFReal 0 1`). Let $\\Phi^{-1}:\\mathbb R\\to\\mathbb R$ (`normCDFInv`) be the inverse of the bijection $\\Phi:\\mathbb R\\to(0,1)$ on $(0,1)$, extended by the value $0$ outside $(0,1)$. For $d\\in\\mathbb N$ let $u_j=2^{-d}j$, $\\mathcal I_j=[u_j,u_{j+1}]$ ($j<2^d$) and $Z_j=2^d\\int_{\\mathcal I_j}\\Phi^{-1}(u)\\,du$ (the LUT values (15), `lutValue normCDFInv d j`). Let $\\mathrm{MSE}_1(d)=\\sum_{j<2^d}\\int_{\\mathcal I_j}(Z_j-\\Phi^{-1}(u))^2\\,du$ (`method1MSE`). Then there are constants $c,K>0$ such that for every $d\\ge2$ $$c\\,\\frac{2^{-d}}d\\le\\mathrm{MSE}_1(d)\\le K\\,\\frac{2^{-d}}d.$$ (One can take $c=1/(256e^4)$ and $K=48(4+\\varphi(1)^{-2})$.)\n\n**Formalization Note** `normCDFInv` takes the junk value $0$ outside $(0,1)$; this does not affect any integral over $[0,1]$ and keeps $\\Phi^{-1}(1-u)=-\\Phi^{-1}(u)$ exact for every real $u$. Only the order is proved; the exact halving $\\mathrm{MSE}_1(d+1)/\\mathrm{MSE}_1(d)\\to\\frac12$ is not.",
+   "source": "I.-B. Haas, M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §3.4, p. 7.",
+   "explanation": "`method1MSE_order` with $f=\\Phi^{-1}$. Its block hypotheses, $c'(2^m(v-u))^2\\le m(\\Phi^{-1}(v)-\\Phi^{-1}(u))^2\\le K'(2^m(v-u))^2$ for $m\\ge1$ and $2^{-(m+1)}\\le u\\le v\\le2^{-m}$ (`normCDFInv_block_bounds`, $c'=1/(4e^4)$, $K'=8(4+\\varphi(1)^{-2})$), follow from the mean value theorem, $\\Phi^{-1}(v)-\\Phi^{-1}(u)=(v-u)/\\varphi(x)$ with $\\Phi(x)\\in[2^{-(m+1)},2^{-m}]$, and Mills-ratio bounds that give $(2^m\\varphi(x))^2\\asymp m$: $e^{-3/2}\\varphi(x)\\le|x|\\Phi(x)\\le\\varphi(x)$ for $x\\le-1$ (`exp_mul_gaussianPDFReal_le`, `neg_mul_normCDF_le`, the latter from the decrease of $T\\mapsto t\\Phi(T)+\\varphi(T)$ on $[t,\\infty)$) and $\\varphi(x-1)\\le\\Phi(x)$ for $x\\le0$ (`sq_two_pow_mul_gaussianPDFReal_le`, `le_sq_two_pow_mul_gaussianPDFReal`).",
+   "tags": [
+    "numerical-analysis",
+    "asymptotics",
+    "real-analysis"
+   ]
+  },
+  "MLMC.tendsto_log_method1MSE_normCDFInv": {
+   "theorem_title": "Haas–Giles (2025), §3.4: for $f=\\Phi^{-1}$, the MSE of method 1 is divided by 2 per bit on average: $\\log(\\mathrm{MSE}_1(d))/d\\to-\\log2$",
+   "natural_language_statement": "Haas–Giles (2025), §3.4, p. 7: \"The Figure 1 also illustrates that both method 1 and 2 have their MSE divided by 2 each time $d$ increases by 1. This was theoretically expected for method 1 (see [12])\".\n\nLet $\\Phi(x)=P(Z\\le x)$, $Z\\sim N(0,1)$, be the standard normal distribution function (`normCDF`, Mathlib's `cdf (gaussianReal 0 1)`) and $\\varphi(x)=e^{-x^2/2}/\\sqrt{2\\pi}$ the standard normal density (`gaussianPDFReal 0 1`). Let $\\Phi^{-1}:\\mathbb R\\to\\mathbb R$ (`normCDFInv`) be the inverse of the bijection $\\Phi:\\mathbb R\\to(0,1)$ on $(0,1)$, extended by the value $0$ outside $(0,1)$. For $d\\in\\mathbb N$ let $u_j=2^{-d}j$, $\\mathcal I_j=[u_j,u_{j+1}]$ ($j<2^d$) and $Z_j=2^d\\int_{\\mathcal I_j}\\Phi^{-1}(u)\\,du$ (the LUT values (15), `lutValue normCDFInv d j`). Let $\\mathrm{MSE}_1(d)=\\sum_{j<2^d}\\int_{\\mathcal I_j}(Z_j-\\Phi^{-1}(u))^2\\,du$. Then $$\\frac{\\log\\mathrm{MSE}_1(d)}d\\longrightarrow-\\log2\\qquad(d\\to\\infty),$$ i.e. $\\mathrm{MSE}_1(d)^{1/d}\\to\\frac12$.\n\n**Formalization Note** `normCDFInv` takes the junk value $0$ outside $(0,1)$; this does not affect any integral over $[0,1]$ and keeps $\\Phi^{-1}(1-u)=-\\Phi^{-1}(u)$ exact for every real $u$. This is the halving on average (geometric mean of the ratios); the exact limit of $\\mathrm{MSE}_1(d+1)/\\mathrm{MSE}_1(d)$ is not proved.",
+   "source": "I.-B. Haas, M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §3.4, p. 7.",
+   "explanation": "`tendsto_log_method1MSE_div` with $f=\\Phi^{-1}$ and the block bounds `normCDFInv_block_bounds` (see `method1MSE_order_normCDFInv`).",
+   "tags": [
+    "numerical-analysis",
+    "asymptotics",
+    "convergence"
+   ]
+  },
+  "MLMC.lutValue_mirror_normCDFInv": {
+   "theorem_title": "Haas–Giles (2025), §3: for $f=\\Phi^{-1}$, the LUT values of mirrored intervals are opposite, $Z_{2^d-1-j}=-Z_j$",
+   "natural_language_statement": "Haas–Giles (2025), §3, p. 5: \"Note that, in practice, we exploit the symmetry of $\\Phi^{-1}$ so we only need to approximate it on $[0,1/2]$.\"\n\nLet $\\Phi(x)=P(Z\\le x)$, $Z\\sim N(0,1)$, be the standard normal distribution function (`normCDF`, Mathlib's `cdf (gaussianReal 0 1)`) and $\\varphi(x)=e^{-x^2/2}/\\sqrt{2\\pi}$ the standard normal density (`gaussianPDFReal 0 1`). Let $\\Phi^{-1}:\\mathbb R\\to\\mathbb R$ (`normCDFInv`) be the inverse of the bijection $\\Phi:\\mathbb R\\to(0,1)$ on $(0,1)$, extended by the value $0$ outside $(0,1)$. For $d\\in\\mathbb N$ let $u_j=2^{-d}j$, $\\mathcal I_j=[u_j,u_{j+1}]$ ($j<2^d$) and $Z_j=2^d\\int_{\\mathcal I_j}\\Phi^{-1}(u)\\,du$ (the LUT values (15), `lutValue normCDFInv d j`). Then for every $d\\in\\mathbb N$ and $j<2^d$, $$Z_{2^d-1-j}=-Z_j.$$\n\n**Formalization Note** `normCDFInv` takes the junk value $0$ outside $(0,1)$; this does not affect any integral over $[0,1]$ and keeps $\\Phi^{-1}(1-u)=-\\Phi^{-1}(u)$ exact for every real $u$. The index $2^d-1-j$ is natural-number subtraction; it is exact because $j<2^d$.",
+   "source": "I.-B. Haas, M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §3, p. 5, and §3.1, eq. (15).",
+   "explanation": "`lutValue_mirror` with $f=\\Phi^{-1}$; its hypothesis $f(1-u)=-f(u)$ for all $u$ is `normCDFInv_one_sub_forall` (from `normCDF_neg`). The mirror of $\\mathcal I_j$ under $u\\mapsto1-u$ is $\\mathcal I_{2^d-1-j}$, and the substitution `intervalIntegral.integral_comp_sub_left` turns the mean of $\\Phi^{-1}$ over one into minus the mean over the other.",
+   "tags": [
+    "numerical-analysis",
+    "real-analysis"
+   ]
+  },
+  "MLMC.lutValue_upper_half_normCDFInv": {
+   "theorem_title": "Haas–Giles (2025), §3.1: for $f=\\Phi^{-1}$, a LUT on $[0,1/2]$ and a sign bit suffice",
+   "natural_language_statement": "Haas–Giles (2025), §3.1, p. 5: \"We simply construct a Look-Up-Table (LUT) of size $2^{d-1}$ containing the constant values $Z_j$ that the approximate random number takes when the input uniform variable is inside the interval $\\mathcal I$. The leading bit of $j$ gives the sign of the normal increment, which allows us to extend the approximation of $\\Phi^{-1}$ on the interval $[1/2,1]$.\"\n\nLet $\\Phi(x)=P(Z\\le x)$, $Z\\sim N(0,1)$, be the standard normal distribution function (`normCDF`, Mathlib's `cdf (gaussianReal 0 1)`) and $\\varphi(x)=e^{-x^2/2}/\\sqrt{2\\pi}$ the standard normal density (`gaussianPDFReal 0 1`). Let $\\Phi^{-1}:\\mathbb R\\to\\mathbb R$ (`normCDFInv`) be the inverse of the bijection $\\Phi:\\mathbb R\\to(0,1)$ on $(0,1)$, extended by the value $0$ outside $(0,1)$. For $d\\in\\mathbb N$ let $u_j=2^{-d}j$, $\\mathcal I_j=[u_j,u_{j+1}]$ ($j<2^d$) and $Z_j=2^d\\int_{\\mathcal I_j}\\Phi^{-1}(u)\\,du$ (the LUT values (15), `lutValue normCDFInv d j`). Let $d\\ge1$ and $2^{d-1}\\le j<2^d$ (the upper half, leading bit of $j$ equal to $1$). Then the mirror index $2^d-1-j$ lies in the LUT range $[0,2^{d-1})$ and $$Z_j=-Z_{2^d-1-j}.$$\n\n**Formalization Note** `normCDFInv` takes the junk value $0$ outside $(0,1)$; this does not affect any integral over $[0,1]$ and keeps $\\Phi^{-1}(1-u)=-\\Phi^{-1}(u)$ exact for every real $u$. The index $2^d-1-j$ is natural-number subtraction; it is exact because $j<2^d$.",
+   "source": "I.-B. Haas, M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §3.1, p. 5.",
+   "explanation": "`lutValue_upper_half` with $f=\\Phi^{-1}$ and `normCDFInv_one_sub_forall`; it is `lutValue_mirror` applied to the index $2^d-1-j<2^{d-1}$.",
+   "tags": [
+    "numerical-analysis",
+    "real-analysis"
+   ]
+  },
+  "MLMC.exp_mul_gaussianPDFReal_le": {
+   "theorem_title": "Haas–Giles (2025), §3.4 (auxiliary): a lower Mills-ratio bound, $e^{-3/2}\\varphi(x)\\le|x|\\,\\Phi(x)$ for $x\\le-1$",
+   "natural_language_statement": "Haas–Giles (2025), §3.4, p. 7: \"The Figure 1 also illustrates that both method 1 and 2 have their MSE divided by 2 each time $d$ increases by 1. This was theoretically expected for method 1 (see [12])\".\n\nLet $\\Phi(x)=P(Z\\le x)$, $Z\\sim N(0,1)$, be the standard normal distribution function (`normCDF`, Mathlib's `cdf (gaussianReal 0 1)`) and $\\varphi(x)=e^{-x^2/2}/\\sqrt{2\\pi}$ the standard normal density (`gaussianPDFReal 0 1`). Then for every $x\\le-1$, $$e^{-3/2}\\,\\varphi(x)\\le-x\\,\\Phi(x).$$ This standard tail estimate is not stated in the paper; it is one of the two Mills-ratio bounds behind the order $2^{-d}/d$ of the method-1 error for $\\Phi^{-1}$.",
+   "source": "I.-B. Haas, M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §3.4, p. 7 (via [12]).",
+   "explanation": "By the mean value theorem, $\\Phi(x)\\ge\\Phi(x)-\\Phi(x+1/x)\\ge(-1/x)\\,\\varphi(x+1/x)$, as $\\varphi$ increases on $(-\\infty,0]$ (`mul_gaussianPDFReal_le_normCDF_sub`, `exists_hasDerivAt_eq_slope`). Since $(x+1/x)^2=x^2+2+1/x^2\\le x^2+3$ for $|x|\\ge1$, $\\varphi(x+1/x)\\ge e^{-3/2}\\varphi(x)$; multiply by $-x>0$.",
+   "tags": [
+    "real-analysis",
+    "probability"
+   ]
+  },
+  "MLMC.neg_mul_normCDF_le": {
+   "theorem_title": "Haas–Giles (2025), §3.4 (auxiliary): the upper Mills-ratio bound in the left tail, $-x\\,\\Phi(x)\\le\\varphi(x)$",
+   "natural_language_statement": "Haas–Giles (2025), §3.4, p. 7: \"The Figure 1 also illustrates that both method 1 and 2 have their MSE divided by 2 each time $d$ increases by 1. This was theoretically expected for method 1 (see [12])\".\n\nLet $\\Phi(x)=P(Z\\le x)$, $Z\\sim N(0,1)$, be the standard normal distribution function (`normCDF`, Mathlib's `cdf (gaussianReal 0 1)`) and $\\varphi(x)=e^{-x^2/2}/\\sqrt{2\\pi}$ the standard normal density (`gaussianPDFReal 0 1`). Then for every $x\\in\\mathbb R$, $$-x\\,\\Phi(x)\\le\\varphi(x)$$ (of interest for $x<0$, where it says $\\Phi(x)\\le\\varphi(x)/|x|$; for $x\\ge0$ it is trivial). This standard tail estimate is not stated in the paper; it is one of the two Mills-ratio bounds behind the order $2^{-d}/d$ of the method-1 error for $\\Phi^{-1}$.",
+   "source": "I.-B. Haas, M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §3.4, p. 7 (via [12]).",
+   "explanation": "For every $t$, $T\\mapsto t\\Phi(T)+\\varphi(T)$ has derivative $(t-T)\\varphi(T)\\le0$ on $[t,\\infty)$ (`hasDerivAt_normCDF`, `hasDerivAt_gaussianPDFReal_std`), so $t(\\Phi(T)-\\Phi(t))\\le\\varphi(t)-\\varphi(T)\\le\\varphi(t)$; letting $T\\to\\infty$ gives $t(1-\\Phi(t))\\le\\varphi(t)$ (`mul_one_sub_normCDF_le`). Apply it to $t=-x$ with $\\Phi(x)=1-\\Phi(-x)$ (`normCDF_neg`) and $\\varphi(-x)=\\varphi(x)$.",
+   "tags": [
+    "real-analysis",
+    "probability"
+   ]
+  },
+  "MLMC.normCDFInv_block_bounds": {
+   "theorem_title": "Haas–Giles (2025), §3.4: block bounds for $\\Phi^{-1}$ near $0$, $m(\\Phi^{-1}(v)-\\Phi^{-1}(u))^2\\asymp(2^m(v-u))^2$ on $[2^{-(m+1)},2^{-m}]$",
+   "natural_language_statement": "Haas–Giles (2025), §3.4, p. 7: \"The Figure 1 also illustrates that both method 1 and 2 have their MSE divided by 2 each time $d$ increases by 1. This was theoretically expected for method 1 (see [12])\".\n\nLet $\\Phi(x)=P(Z\\le x)$, $Z\\sim N(0,1)$, be the standard normal distribution function (`normCDF`, Mathlib's `cdf (gaussianReal 0 1)`) and $\\varphi(x)=e^{-x^2/2}/\\sqrt{2\\pi}$ the standard normal density (`gaussianPDFReal 0 1`). Let $\\Phi^{-1}:\\mathbb R\\to\\mathbb R$ (`normCDFInv`) be the inverse of the bijection $\\Phi:\\mathbb R\\to(0,1)$ on $(0,1)$, extended by the value $0$ outside $(0,1)$. Let $c=1/(4e^4)$ and $K=8(4+\\varphi(1)^{-2})$. Then for every integer $m\\ge1$ and all $u\\le v$ in $[2^{-(m+1)},2^{-m}]$, $$c\\,\\big(2^m(v-u)\\big)^2\\le m\\,\\big(\\Phi^{-1}(v)-\\Phi^{-1}(u)\\big)^2\\le K\\,\\big(2^m(v-u)\\big)^2.$$ These are the block hypotheses of the general order theorem for the method-1 error, so the bounds give the order $2^{-d}/d$ of the method-1 MSE for $\\Phi^{-1}$; the paper does not state them. (Numerically $m\\,(2^{-m}(\\Phi^{-1})'(u))^2$ ranges over $(1/(2\\ln2),3.18]$ on these blocks, so the constants are not sharp.)\n\n**Formalization Note** `normCDFInv` takes the junk value $0$ outside $(0,1)$; this does not affect any integral over $[0,1]$ and keeps $\\Phi^{-1}(1-u)=-\\Phi^{-1}(u)$ exact for every real $u$.",
+   "source": "I.-B. Haas, M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §3.4, p. 7 (via [12]).",
+   "explanation": "Mean value theorem (`exists_hasDerivAt_eq_slope`, `hasDerivAt_normCDFInv`): $\\Phi^{-1}(v)-\\Phi^{-1}(u)=(v-u)/\\varphi(x)$ for some $x\\le0$ with $\\Phi(x)\\in[2^{-(m+1)},2^{-m}]$. Then $(2^m\\varphi(x))^2\\le4e^4m$ (`sq_two_pow_mul_gaussianPDFReal_le`: for $x\\le-1$ from `exp_mul_gaussianPDFReal_le` and $x^2\\le4m$, otherwise from $\\varphi(x)\\le e^2\\varphi(2)\\le e^2\\Phi(x)$) and $m\\le K(2^m\\varphi(x))^2$ (`le_sq_two_pow_mul_gaussianPDFReal`: $m\\le2x^2+6$ from $\\Phi(x)\\ge\\varphi(x-1)$, and $x^2\\le4(2^m\\varphi(x))^2$ from `neg_mul_normCDF_le` for $x\\le-1$, or $\\varphi(x)\\ge\\varphi(1)$ for $-1<x\\le0$).",
+   "tags": [
+    "real-analysis",
+    "numerical-analysis",
+    "asymptotics"
+   ]
+  },
+  "MLMC.elliptic_mlmc_theorem1": {
+   "theorem_title": "Giles (2015), §7.1: the MLMC estimator for the 1-D elliptic PDE with random coefficient and forcing has MSE $<\\varepsilon^2$ at cost $O(\\varepsilon^{-2})$ ($\\alpha=2$, $\\beta=4$, $\\gamma=1$)",
+   "natural_language_statement": "Giles (2015), §7.1, pp. 49–51: \"The equation is $\\frac{d}{dx}\\big(c(x)\\frac{du}{dx}\\big)=-50Z^2$, on $0<x<1$, with boundary data $u(0)=u(1)=0$. $Z$ is a Normal random variable with zero mean and unit variance, and $c(x)=1+ax$ with $a$ being a uniform random variable on the unit interval $(0,1)$. The output quantity of interest is chosen to be $P=\\int_0^1u(x)\\,dx$. The multilevel implementation is very easy. Level $\\ell$ uses a uniform grid with spacing $h_\\ell=2^{-(\\ell+1)}$ … The uniform second order accuracy means that there is a constant $K$ such that $|P-P_\\ell|<Kh_\\ell^2$ and therefore we have $\\alpha=2$, $\\beta=4$ and $\\gamma=1$, resulting in an $O(\\varepsilon^{-2})$ complexity.\"\n\nLet $(\\Omega_0,\\nu)$ be a probability space and $a,Z:\\Omega_0\\to\\mathbb R$ measurable with $a\\in[0,1]$ $\\nu$-a.s. and $Z\\sim N(0,1)$. Let $P=$ `ellipticP`$(a,50Z^2)$ be the output $\\int_0^1u$ of the exact solution and $P_\\ell=$ `ellipticPl`$(a,50Z^2,\\ell)$ the trapezoidal output of the conservative central-difference solution on the grid with $2^{\\ell+1}$ cells. The samples $\\omega^{(\\ell,n)}$ are the coordinates of $(\\Omega_0^{\\mathbb N\\times\\mathbb N},\\nu^{\\otimes(\\mathbb N\\times\\mathbb N)})$, and the multilevel estimator is $Y=\\sum_{\\ell=0}^L N_\\ell^{-1}\\sum_{n<N_\\ell}(P_\\ell-P_{\\ell-1})(\\omega^{(\\ell,n)})$, $P_{-1}=0$ (`mlmcEstimator`). Then there is $c_4>0$ such that for every $0<\\varepsilon<e^{-1}$ there are $L\\in\\mathbb N$ and $N_\\ell\\ge1$ such that $(Y-\\mathbb E[P])^2$ is integrable and\n$$\\mathbb E\\big[(Y-\\mathbb E[P])^2\\big]<\\varepsilon^2,\\qquad \\sum_{\\ell=0}^{L}N_\\ell\\,2^{\\ell+1}\\le c_4\\,\\varepsilon^{-2}.$$\nThe uniform law of $a$ and the independence of $a$ and $Z$ are not needed (the paper's law is `elliptic_mlmc_theorem1_uniform`); $a$ and $Z$ are assumed measurable, as Theorem 1 for independent samples needs measurable $P_\\ell$; the cost of a level-$\\ell$ sample is the number $2^{\\ell+1}$ of cells of its fine grid.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §7.1 \"Two simple examples\", pp. 49–51; §2.1, Theorem 1 and (2.2).",
+   "explanation": "`elliptic_fd_rates` gives $|\\mathbb E[P_\\ell-P]|\\le\\frac{50}{3}h_\\ell^2=\\frac{25}{6}2^{-2\\ell}$ and $\\mathbb V[P_{\\ell+1}-P_\\ell]\\le\\frac{62500}{3}h_{\\ell+1}^4=\\frac{62500}{48}2^{-4(\\ell+1)}$ (from the pathwise bound with the random constant $K=\\frac{50}{3}Z^2$, $\\mathbb E[K^2]<\\infty$), and square integrability of $P$, $P_\\ell$. Level $0$ is absorbed into $c_2=\\mathbb V[P_0]+1303$. With $\\alpha=2$, $\\beta=4$, $\\gamma=1$ and the cost $2^{\\ell+1}\\le2\\cdot2^\\ell$, `giles_theorem1_iid` (Theorem 1 for i.i.d. samples) applies; measurability of $P_\\ell$ is `measurable_ellipticPl`, and `complexityBound_of_lt` turns the bound into $\\varepsilon^{-2}$ since $\\beta>\\gamma$. The error is square integrable because each level estimator is in $L^2$ (`memLp_levelEstimator`, `memLp_finsetSum`).",
+   "tags": [
+    "multilevel-monte-carlo",
+    "complexity",
+    "probability",
+    "numerical-analysis"
+   ]
+  },
+  "MLMC.elliptic_mlmc_theorem1_uniform": {
+   "theorem_title": "Giles (2015), §7.1: with the paper's coefficient law $a\\sim U(0,1)$ and $Z\\sim N(0,1)$, the elliptic MLMC estimator has MSE $<\\varepsilon^2$ at cost $O(\\varepsilon^{-2})$",
+   "natural_language_statement": "Giles (2015), §7.1, p. 49: \"$Z$ is a Normal random variable with zero mean and unit variance, and $c(x)=1+ax$ with $a$ being a uniform random variable on the unit interval $(0,1)$.\"\n\nLet $(\\Omega_0,\\nu)$ be a probability space and $a,Z:\\Omega_0\\to\\mathbb R$ measurable, with $a$ uniformly distributed on $[0,1]$ (law $\\lambda|_{[0,1]}$) and $Z\\sim N(0,1)$. With $P=$ `ellipticP`$(a,50Z^2)$, $P_\\ell=$ `ellipticPl`$(a,50Z^2,\\ell)$ (central differences with $2^{\\ell+1}$ cells), independent samples (the coordinates of $\\nu^{\\otimes(\\mathbb N\\times\\mathbb N)}$) and the multilevel estimator $Y$ (`mlmcEstimator`), there is $c_4>0$ such that for every $0<\\varepsilon<e^{-1}$ there are $L$ and $N_\\ell\\ge1$ with $(Y-\\mathbb E[P])^2$ integrable,\n$$\\mathbb E\\big[(Y-\\mathbb E[P])^2\\big]<\\varepsilon^2,\\qquad\\sum_{\\ell=0}^{L}N_\\ell\\,2^{\\ell+1}\\le c_4\\,\\varepsilon^{-2}.$$\nThe independence of $a$ and $Z$ is not needed.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §7.1 \"Two simple examples\", pp. 49–51.",
+   "explanation": "The uniform law gives $a\\in[0,1]$ almost surely (`ae_restrict_mem` transported by `ae_of_ae_map`), and `elliptic_mlmc_theorem1` applies.",
+   "tags": [
+    "multilevel-monte-carlo",
+    "complexity",
+    "probability",
+    "numerical-analysis"
+   ]
+  },
+  "MLMC.gbm_call_mlmc_theorem1": {
+   "theorem_title": "Giles (2015), §5.1, Figure 5.3: Euler–Maruyama MLMC for the discounted call $e^{-rT}\\max(S_T-K,0)$ under GBM has MSE $<\\varepsilon^2$ at cost $O(\\varepsilon^{-2}(\\log\\varepsilon)^2)$",
+   "natural_language_statement": "Giles (2015), §5.1, pp. 29–30: \"In either case, Theorem 1 gives the complexity to achieve a root-mean-square error of $\\varepsilon$ to be $O(\\varepsilon^{-2}(\\log\\varepsilon)^2)$ … Figure 5.3 shows results for a financial call option with a single underlying asset satisfying Geometric Brownian Motion SDE, $dS_t=rS_t\\,dt+\\sigma S_t\\,dW$, and payoff $P(S)\\equiv\\exp(-rT)\\max(S_T-K,0)$ with $r=0.05$, $\\sigma=0.2$, $T=1$, $S_0=100$, $K=100$.\"\n\nLet $r,\\sigma,s_0,K\\in\\mathbb R$ and $T\\ge0$, and $g(S)=e^{-rT}\\max(S-K,0)$. Level $\\ell$ uses $2^\\ell$ Euler–Maruyama steps of size $T2^{-\\ell}$ for $dS=rS\\,dt+\\sigma S\\,dW$, $S_0=s_0$, driven by standard normal increments; the fine payoff is $g$ of the fine path (`emFine`, `europeanPayoff`), the coarse payoff $g$ of the coarse path driven by the summed increments (`emCoarse`), the corrections are `fineCoarseDiff`, the samples are the coordinates of a product of copies of $N(0,1)^{\\otimes\\mathbb N}$, and a level-$\\ell$ sample costs $2^\\ell$. Then there is $c_4>0$ such that for every $0<\\varepsilon<e^{-1}$ there are $L$ and $N_\\ell\\ge1$ such that the squared error is integrable and\n$$\\mathbb E\\Big[\\Big(\\sum_{\\ell=0}^{L}\\frac1{N_\\ell}\\sum_{n<N_\\ell}Y_\\ell^{(n)}-\\mathbb E\\big[e^{-rT}\\max(s_0e^{(r-\\sigma^2/2)T+\\sigma\\sqrt T W}-K,0)\\big]\\Big)^2\\Big]<\\varepsilon^2,\\qquad\\sum_{\\ell=0}^{L}N_\\ell2^\\ell\\le c_4\\,\\varepsilon^{-2}(\\log\\varepsilon)^2,$$\nwhere $W\\sim N(0,1)$. No rate is assumed.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §5.1 \"Euler-Maruyama discretisation\", pp. 29–30 and Figure 5.3; §2.1, Theorem 1.",
+   "explanation": "`abs_discountedCall_sub_le`: $|e^{-rT}(x-K)^+-e^{-rT}(y-K)^+|\\le e^{-rT}|x-y|$ (from `abs_max_sub_max_le_abs`), so the payoff is Lipschitz and `gbm_mlmc_theorem1` applies (weak rate $\\alpha=\\frac12$ and variance rate $\\beta=1$ from the proved strong error $\\mathbb E[(S_T-\\hat S_\\ell)^2]=O(h_\\ell)$, (2.4) from the law-preserving pair sums, $\\gamma=1$, Theorem 1 with $\\beta=\\gamma$). The squared error is integrable since the corrections are in $L^2$ (`memLp_two_comp_of_abs_sub_le`, `measurePreserving_pairAvg`, `integrable_sq_sum_blockMean_sub`).",
+   "tags": [
+    "multilevel-monte-carlo",
+    "complexity",
+    "probability",
+    "numerical-analysis"
+   ]
+  },
+  "MLMC.gbm_mil_call_mlmc_theorem1": {
+   "theorem_title": "Giles (2015), §5.2, Figure 5.5: Milstein MLMC for the discounted call $e^{-rT}\\max(S_T-K,0)$ under GBM has MSE $<\\varepsilon^2$ at cost $O(\\varepsilon^{-2})$",
+   "natural_language_statement": "Giles (2015), §5.2, p. 35: \"Figure 5.5 demonstrates the improved results obtained for the call option based on a single underlying GBM asset. $V_\\ell$ is now $O(h_\\ell^2)$, leading to $\\alpha=1$, $\\beta=2$, $\\gamma=1$\"; the payoff is that of §5.1, p. 30, $P(S)\\equiv\\exp(-rT)\\max(S_T-K,0)$.\n\nLet $r,\\sigma,s_0,K\\in\\mathbb R$, $T\\ge0$ and $g(S)=e^{-rT}\\max(S-K,0)$. Level $\\ell$ uses $2^\\ell$ Milstein steps of size $T2^{-\\ell}$ (`gbmMil`) driven by standard normal increments $z$; the fine payoff is $g(\\hat S_\\ell(z))$, the coarse payoff $g(\\hat S_\\ell(\\mathrm{pairAvg}(z)))$ (summed increments), the corrections are `fineCoarseDiff`, the samples are independent and a level-$\\ell$ sample costs $2^\\ell$. Then there is $c_4>0$ such that for every $0<\\varepsilon<e^{-1}$ there are $L$ and $N_\\ell\\ge1$ for which the multilevel estimator of $\\mathbb E[e^{-rT}\\max(S_T-K,0)]$, $S_T=s_0e^{(r-\\sigma^2/2)T+\\sigma\\sqrt TW}$, $W\\sim N(0,1)$, has a square-integrable error with mean square $<\\varepsilon^2$ and cost $\\sum_{\\ell\\le L}N_\\ell2^\\ell\\le c_4\\varepsilon^{-2}$. No rate is assumed.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §5.2 \"Milstein discretisation\", pp. 32–35 and Figure 5.5; §5.1, p. 30 (payoff); §2.1, Theorem 1.",
+   "explanation": "`abs_discountedCall_sub_le` shows the payoff is $e^{-rT}$-Lipschitz, and `gbm_mil_mlmc_theorem1` applies (Milstein strong error $O(h^2)$ in mean square, $\\alpha=1$, $\\beta=2$, $\\gamma=1$, Theorem 1 with $\\beta>\\gamma$). The squared error is integrable since the corrections are in $L^2$ (`memLp_two_comp_of_abs_sub_le`, `measurePreserving_pairAvg`, `integrable_sq_sum_blockMean_sub`).",
+   "tags": [
+    "multilevel-monte-carlo",
+    "complexity",
+    "probability",
+    "numerical-analysis"
+   ]
+  },
+  "MLMC.tamedCubic_fourth_moment_le": {
+   "theorem_title": "Giles (2015), §5.6 (supporting result): the tamed Euler scheme for $dS=-S^3dt+dW$ has $\\mathbb E X_N^4\\le x_0^4+6x_0^2T+3T^2$ uniformly in $N\\ge T/54$",
+   "natural_language_statement": "Giles (2015), §5.6, p. 44: \"A related problem is addressed by Hutzenthaler, Jentzen and Kloeden (2013), who are concerned with SDEs such as $dS_t=-S_t^3\\,dt+dW_t$ … Their solution is to introduce a slight modification to the Euler-Maruyama discretisation which limits the size of the drift term on each level of approximation when $S_t$ is large, to avoid this instability.\" Giles states no moment bound; the result below supports his remark (Hutzenthaler, Jentzen and Kloeden prove bounds on all moments of the tamed scheme).\n\nLet $x_0\\in\\mathbb R$, $T\\ge0$, $N\\in\\mathbb N$ with $T\\le54N$, $h=T/N$, and let $Z_0,\\dots,Z_{N-1}$ be independent with law $N(0,1)$ on some probability space. The tamed scheme is $X_0=x_0$, $X_{n+1}=X_n-\\frac{hX_n^3}{1+h|X_n|^3}+\\sqrt hZ_n$ (`tamedPath`). Then $X_N\\in L^4$ and\n$$\\mathbb E[X_N^2]\\le x_0^2+T,\\qquad \\mathbb E[X_N^4]\\le x_0^4+6x_0^2T+3T^2,$$\nthe second and fourth moments of $x_0+W_T$, uniformly in $N$. (The second-moment bound is `tamedCubic_second_moment_le` again.)",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §5.6 \"Stiff and highly nonlinear SDEs\", p. 44.",
+   "explanation": "For $h\\le54$ the tamed step does not increase $|S|$ (`abs_tamedCubic_le`). $X_n$ is a measurable function of $Z_0,\\dots,Z_{n-1}$, hence independent of $Z_n$ (`indepFun_of_forall_lt`), so with $Y$ the tamed drift step, `integral_add_mul_pow_four` and `integral_mul_add_mul_sq` give $\\mathbb E X_{n+1}^4=\\mathbb EY^4+6h\\,\\mathbb EY^2+3h^2\\le\\mathbb EX_n^4+6h\\,\\mathbb EX_n^2+3h^2$ and $\\mathbb EX_{n+1}^2\\le\\mathbb EX_n^2+h$; induction gives $x_0^4+6x_0^2nh+3(nh)^2$ and $x_0^2+nh$, and $Nh=T$.",
+   "tags": [
+    "probability",
+    "numerical-analysis"
+   ]
+  },
+  "MLMC.gbmExactM_blockAvg": {
+   "theorem_title": "Giles (2015), §5.1: with refinement factor $M$ and coarsest step $T/m$, the exact GBM solution driven by the block sums of the fine increments on level $\\ell$ is that of level $\\ell+1$",
+   "natural_language_statement": "Giles (2015), §5.1, p. 29: \"The multilevel coupling is achieved by using the same underlying driving Brownian path for the coarse and fine paths; this is accomplished by summing the Brownian increments for the fine path timesteps to obtain the Brownian increments for the coarse timesteps.\"\n\nFor $M\\ge1$, $m\\in\\mathbb N$, $T,r,\\sigma,s_0\\in\\mathbb R$ and $z\\in\\mathbb R^{\\mathbb N}$ let $X_\\ell(z)=s_0\\exp\\big((r-\\sigma^2/2)T+\\sigma\\sqrt{h_\\ell}\\sum_{i<mM^\\ell}z_i\\big)$ with $h_\\ell=(T/m)M^{-\\ell}$ (`gbmExactM`), the exact solution at $T$ with $W_T$ sampled on the grid of $mM^\\ell$ steps, and $\\mathrm{blockAvg}_M(z)_k=(z_{Mk}+\\dots+z_{Mk+M-1})/\\sqrt M$. Then $X_\\ell(\\mathrm{blockAvg}_M(z))=X_{\\ell+1}(z)$ for all $\\ell$ and $z$.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §5.1, p. 29.",
+   "explanation": "Group the $mM^{\\ell+1}=M\\cdot mM^\\ell$ fine indices into $mM^\\ell$ blocks of $M$ (`sum_range_mul_eq`), so $\\sum_{k<mM^\\ell}\\mathrm{blockAvg}_M(z)_k=M^{-1/2}\\sum_{i<mM^{\\ell+1}}z_i$, and $\\sqrt{h_\\ell}=\\sqrt{h_{\\ell+1}}\\sqrt M$ (`Real.sqrt_mul'`).",
+   "tags": [
+    "probability",
+    "numerical-analysis",
+    "multilevel-monte-carlo"
+   ]
+  },
+  "MLMC.gbm_weak_error_le_M": {
+   "theorem_title": "Giles (2015), §5.1: Euler–Maruyama for GBM with $h_\\ell=(T/m)M^{-\\ell}$ and a $K$-Lipschitz payoff has weak error at most $K\\sqrt{C(T)h_\\ell}$",
+   "natural_language_statement": "Giles (2015), §5.1, p. 29: \"On level $\\ell$, the uniform timestep is taken to be $h_\\ell=h_0M^\\ell$ [read $h_0M^{-\\ell}$], for some integer $M$. The timestep $h_0$ on the coarsest level is often taken to be the interval length $T$, so that there is just one timestep for the entire interval, but this is not required.\"\n\nLet $r,\\sigma,s_0\\in\\mathbb R$, $T\\ge0$, $m,M\\ge1$, $h_0=T/m$, $h_\\ell=h_0M^{-\\ell}$, and $|g(x)-g(y)|\\le K|x-y|$. Let $\\hat S_\\ell$ be the Euler–Maruyama value of $dS=rS\\,dt+\\sigma S\\,dW$, $S_0=s_0$, after $mM^\\ell$ steps of size $h_\\ell$ driven by i.i.d. $N(0,1)$ increments (`emFineM`). Then\n$$\\Big|\\mathbb E[g(\\hat S_\\ell)]-\\int g\\big(s_0e^{(r-\\sigma^2/2)T+\\sigma\\sqrt T w}\\big)\\,dN(0,1)(w)\\Big|\\le K\\sqrt{C(T)\\,h_\\ell},\\qquad C(T)=s_0^2e^{(2|r|+\\sigma^2)T}(|r|+\\sigma^2)(5(|r|+\\sigma^2)T+4)$$\n(`gbmStrongConst`), i.e. the weak rate $\\alpha=\\frac12\\log_2M$ in base $2$. This is weaker than the paper's weak order one (p. 30: \"If $h_\\ell=4^{-\\ell}h_0$ … then this gives $\\alpha=2$\", i.e. $\\alpha=\\log_2M$), which is not proved; the rate here suffices for Theorem 1.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §5.1, pp. 29–30.",
+   "explanation": "The exact solution $X_\\ell$ on the level-$\\ell$ grid is $s_0e^{(r-\\sigma^2/2)T+\\sigma\\sqrt T\\,\\mathrm{blockAvg}_n(z)_0}$, $n=mM^\\ell$ (`gbmExactM_eq_blockAvg`), and `blockAvg` preserves $N(0,1)^{\\otimes\\mathbb N}$, so $\\mathbb E[g(X_\\ell)]$ is the Gaussian integral (`integral_comp_gbmExactM`); by Jensen and the Lipschitz bound $(\\mathbb E[g(\\hat S_\\ell)-g(X_\\ell)])^2\\le K^2\\mathbb E[(X_\\ell-\\hat S_\\ell)^2]\\le K^2C(T)h_\\ell$ (`gbm_strong_error_M`, from `gbm_em_strong_error`).",
+   "tags": [
+    "probability",
+    "numerical-analysis",
+    "multilevel-monte-carlo",
+    "convergence"
+   ]
+  },
+  "MLMC.gbm_correction_variance_le_M": {
+   "theorem_title": "Giles (2015), §5.1: with refinement factor $M$ and coarsest step $h_0=T/m$, the Euler–Maruyama GBM correction variance is at most $2K^2C(T)h_0(M+1)M^{-(\\ell+1)}$, so $\\beta=\\log_2M$",
+   "natural_language_statement": "Giles (2015), §5.1, p. 29: \"$V_\\ell\\equiv\\mathbb V[P_\\ell-P_{\\ell-1}]\\le2\\big(\\mathbb V[P-P_\\ell]+\\mathbb V[P-P_{\\ell-1}]\\big)$, and hence $V_\\ell=O(h_\\ell)$\", and p. 30: \"If $h_\\ell=4^{-\\ell}h_0$ … $\\beta=2$\".\n\nLet $r,\\sigma,s_0\\in\\mathbb R$, $T\\ge0$, $m,M\\ge1$, $h_0=T/m$, and $g$ $K$-Lipschitz. On level $\\ell+1$ the fine payoff is $g$ of the Euler–Maruyama path with $mM^{\\ell+1}$ steps of size $h_0M^{-\\ell-1}$ (`emFineM`) and the coarse payoff is $g$ of the path with $mM^\\ell$ steps of size $h_0M^{-\\ell}$ driven by the normalised block sums of $M$ fine increments (`emCoarseM`, `blockAvg`); the increments are i.i.d. $N(0,1)$. Then the correction $Y_{\\ell+1}$ (`fineCoarseDiff`) satisfies\n$$\\mathbb V[Y_{\\ell+1}]\\le\\frac{2K^2C(T)\\,h_0\\,(M+1)}{M^{\\ell+1}},$$\nwith $C(T)$ of `gbmStrongConst`; hence $V_\\ell=O(2^{-\\beta\\ell})$ with $\\beta=\\log_2M$.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §5.1, pp. 29–30.",
+   "explanation": "The exact solution is consistent across levels (`gbmExactM_blockAvg`), so $Y_{\\ell+1}^2\\le2K^2(X_{\\ell+1}-\\hat S_{\\ell+1})^2+2K^2(X_\\ell-\\hat S_\\ell)^2\\circ\\mathrm{blockAvg}_M$; `blockAvg` preserves $N(0,1)^{\\otimes\\mathbb N}$ and the strong error bound $\\mathbb E[(X_\\ell-\\hat S_\\ell)^2]\\le C(T)h_0M^{-\\ell}$ (`gbm_strong_error_M`) gives $2K^2C(T)h_0(M^{-\\ell-1}+M^{-\\ell})$; variance $\\le$ second moment.",
+   "tags": [
+    "probability",
+    "numerical-analysis",
+    "multilevel-monte-carlo"
+   ]
+  },
+  "MLMC.gbm_mlmc_theorem1_M": {
+   "theorem_title": "Giles (2015), §5.1: Euler–Maruyama MLMC for GBM with refinement factor $M\\ge2$, coarsest step $T/m$ and a Lipschitz payoff has MSE $<\\varepsilon^2$ at cost $O(\\varepsilon^{-2}(\\log\\varepsilon)^2)$",
+   "natural_language_statement": "Giles (2015), §5.1, pp. 29–30: \"On level $\\ell$, the uniform timestep is taken to be $h_\\ell=h_0M^\\ell$ [read $h_0M^{-\\ell}$], for some integer $M$. The timestep $h_0$ on the coarsest level is often taken to be the interval length $T$ … but this is not required\" … \"If $h_\\ell=4^{-\\ell}h_0$, as in the numerical examples in (Giles 2008b), then this gives $\\alpha=2$, $\\beta=2$ and $\\gamma=2$. Alternatively, if $h_\\ell=2^{-\\ell}h_0$ with twice as many timesteps on each successive level, as used in the numerical examples in this article, then $\\alpha=1$, $\\beta=1$ and $\\gamma=1$. In either case, Theorem 1 gives the complexity to achieve a root-mean-square error of $\\varepsilon$ to be $O(\\varepsilon^{-2}(\\log\\varepsilon)^2)$.\"\n\nLet $r,\\sigma,s_0\\in\\mathbb R$, $T\\ge0$, $m\\ge1$, $M\\ge2$, $h_0=T/m$, and $g$ $K$-Lipschitz. Level $\\ell$ uses $mM^\\ell$ Euler–Maruyama steps of size $h_\\ell=h_0M^{-\\ell}$ for $dS=rS\\,dt+\\sigma S\\,dW$ (`emFineM`), with payoff $g(\\hat S_{mM^\\ell})$; the coarse path of a level-$(\\ell+1)$ sample takes $mM^\\ell$ steps of size $Mh_{\\ell+1}$ driven by the sums of $M$ fine increments (`emCoarseM`, `blockAvg`); the corrections are `fineCoarseDiff`, the samples are the coordinates of a product of copies of $N(0,1)^{\\otimes\\mathbb N}$, and a level-$\\ell$ sample costs $mM^\\ell$. Then there is $c_4>0$ such that for every $0<\\varepsilon<e^{-1}$ there are $L$ and $N_\\ell\\ge1$ such that the squared error is integrable and\n$$\\mathbb E\\Big[\\Big(\\sum_{\\ell=0}^{L}\\frac1{N_\\ell}\\sum_{n<N_\\ell}Y_\\ell^{(n)}-\\mathbb E\\big[g(s_0e^{(r-\\sigma^2/2)T+\\sigma\\sqrt TW})\\big]\\Big)^2\\Big]<\\varepsilon^2,\\qquad\\sum_{\\ell=0}^{L}N_\\ell\\,mM^\\ell\\le c_4\\,\\varepsilon^{-2}(\\log\\varepsilon)^2,$$\nwhere $W\\sim N(0,1)$. No rate is assumed. The weak rate used is $\\alpha=\\frac12\\log_2M$; the paper's weak order one ($\\alpha=\\log_2M$, e.g. $\\alpha=2$ for $M=4$) is not proved, and not needed for the complexity.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §5.1, pp. 29–30; §2.1, Theorem 1 and (2.4).",
+   "explanation": "`em_mlmc_theorem1_M` (Theorem 1 with (2.4) for the block-sum coupling, which also gives the integrability of the squared error) with $h_0=T/m$, $\\alpha=\\frac12\\log_2M$ (`gbm_weak_error_le_M`, $K\\sqrt{C(T)h_0M^{-\\ell}}=K\\sqrt{C(T)h_0}\\,2^{-\\alpha\\ell}$), $\\beta=\\log_2M$ (`gbm_correction_variance_le_M`, level $0$ absorbed into $c_2$) and $\\gamma=\\log_2M$ (cost $mM^\\ell=m\\,2^{\\ell\\log_2M}$, `two_rpow_logb_mul`); $\\alpha=\\frac12\\min(\\beta,\\gamma)$, and $\\beta=\\gamma$ gives the bound $\\varepsilon^{-2}(\\log\\varepsilon)^2$ (`complexityBound_of_eq`). Independent inputs: `exists_iid_inputs`; the target is the Gaussian integral by `integral_comp_of_measurePreserving`.",
+   "tags": [
+    "multilevel-monte-carlo",
+    "complexity",
+    "probability",
+    "numerical-analysis"
+   ]
+  },
+  "MLMC.exists_lsq_minimiser": {
+   "theorem_title": "Haas–Giles (2025), §3.2, (16): the linear least-squares problem of method 2 has a minimiser for every permutation",
+   "natural_language_statement": "Haas–Giles (2025), §3.2: \"Then we perform a least-squared minimisation of (16) $\\sum_{j=1}^{2^d}(Z_{\\pi(j)}-\\tilde Z_j)^2$ where the $Z_{\\pi(j)}$ are obtained with a LUT of size $2^{d-1}$ as in the previous subsection. In this minimisation problem, the variables $\\tilde Z_j$ are considered as linear variables of the decision variables, which are the values $X_j$ from the small LUT that we want to optimise.\"\n\nLet $\\iota$ be a finite set, $X$ a real vector space, $A:X\\to\\mathbb R^\\iota$ linear and $b\\in\\mathbb R^\\iota$. Then there is $x\\in X$ with\n$$\\sum_{i\\in\\iota}(b_i-(Ax)_i)^2\\le\\sum_{i\\in\\iota}(b_i-(Ay)_i)^2\\quad\\text{for all }y\\in X.$$\n(With $b_j=Z_{\\pi(j)}$ and $\\tilde Z=Ax$ this is the existence of a minimiser of (16) for the permutation $\\pi$.)",
+   "source": "I.-B. Haas, M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §3.2 \"Sum of several variables (Method 2)\", (16).",
+   "explanation": "Map $\\mathbb R^\\iota$ isometrically onto $\\ell^2(\\iota)$ (`EuclideanSpace`). The range $K$ of $A$ there is finite-dimensional, hence complete (`Submodule.complete_of_finiteDimensional`), so `Submodule.exists_norm_eq_iInf_of_complete_subspace` gives $v=Ax\\in K$ with $\\|b-v\\|=\\inf_{w\\in K}\\|b-w\\|\\le\\|b-Ay\\|$; square and use `EuclideanSpace.real_norm_sq_eq`.",
+   "tags": [
+    "optimization",
+    "algebra",
+    "real-analysis"
+   ]
+  },
+  "MLMC.method2_iteration_exists": {
+   "theorem_title": "Haas–Giles (2025), §3.2: the alternating least-squares/permutation iteration of method 2 exists from every start, and its objective (16) is eventually constant",
+   "natural_language_statement": "Haas–Giles (2025), §3.2: \"Then we perform a least-squared minimisation of (16) $\\sum_{j=1}^{2^d}(Z_{\\pi(j)}-\\tilde Z_j)^2$ … After this step update the permutation $\\pi$ by ordering the resulting $\\tilde Z_j$ and repeat the least-squares optimisation. The algorithm stops when the permutation has converged.\"\n\nLet $\\iota$ be finite, $X$ a real vector space, $A:X\\to\\mathbb R^\\iota$ linear, $Z\\in\\mathbb R^\\iota$ and $F(\\pi,x)=\\sum_{j\\in\\iota}(Z_{\\pi(j)}-(Ax)_j)^2$ for permutations $\\pi$ of $\\iota$. For every permutation $\\pi_0$ there are sequences $(\\pi_k)$, $(x_k)$ with $\\pi_0$ as given, $F(\\pi_k,x_k)\\le F(\\pi_k,y)$ for all $k$ and $y\\in X$, and $F(\\pi_{k+1},x_k)\\le F(p,x_k)$ for all $k$ and permutations $p$; moreover there is $K$ with $F(\\pi_k,x_k)=F(\\pi_K,x_K)$ for all $k\\ge K$. (The permutation step is any minimiser of $F(\\cdot,x_k)$; ordering the $\\tilde Z_j$ is one when $Z$ is sorted, `sorting_minimises`; the sorting iteration itself is `method2_sorting_iteration_exists`.)",
+   "source": "I.-B. Haas, M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §3.2 \"Sum of several variables (Method 2)\", (16).",
+   "explanation": "Choose a least-squares minimiser $T(\\pi)$ for each permutation (`exists_lsq_minimiser`) and a minimiser $S(x)$ of $F(\\cdot,x)$ over the finitely many permutations (`Finite.exists_min`); set $\\pi_{k+1}=S(T(\\pi_k))$, $x_k=T(\\pi_k)$. The eventual constancy is `alternating_min_eventually_const`.",
+   "tags": [
+    "optimization",
+    "algorithms",
+    "combinatorics"
+   ]
+  },
+  "MLMC.method2_sorting_iteration_exists": {
+   "theorem_title": "Haas–Giles (2025), §3.2: the method-2 iteration with the paper's sorting step exists from every start when the targets are sorted, and its objective (16) is eventually constant",
+   "natural_language_statement": "Haas–Giles (2025), §3.2: \"Then we perform a least-squared minimisation of (16) $\\sum_{j=1}^{2^d}(Z_{\\pi(j)}-\\tilde Z_j)^2$ … After this step update the permutation $\\pi$ by ordering the resulting $\\tilde Z_j$ and repeat the least-squares optimisation. The algorithm stops when the permutation has converged\"; the ordering step \"defines a permutation $\\pi$ such that $\\pi(j)$ gives the position of the random number $\\tilde Z_j$ in the ordered list\".\n\nLet $n\\in\\mathbb N$, $X$ a real vector space, $A:X\\to\\mathbb R^n$ linear and $Z_1\\le\\dots\\le Z_n$. For every permutation $\\pi_0$ of $\\{1,\\dots,n\\}$ there are sequences $(\\pi_k)$, $(x_k)$ with $\\pi_0$ as given such that for all $k$: $x_k$ minimises $y\\mapsto\\sum_j(Z_{\\pi_k(j)}-(Ay)_j)^2$ over $X$; $\\pi_{k+1}$ ranks the outputs $\\tilde Z=Ax_k$, i.e. $\\tilde Z_i<\\tilde Z_j\\Rightarrow\\pi_{k+1}(i)<\\pi_{k+1}(j)$; and there is $K$ with $\\sum_j(Z_{\\pi_k(j)}-(Ax_k)_j)^2=\\sum_j(Z_{\\pi_K(j)}-(Ax_K)_j)^2$ for all $k\\ge K$.",
+   "source": "I.-B. Haas, M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §3.2 \"Sum of several variables (Method 2)\", (16).",
+   "explanation": "Least-squares minimisers exist for every permutation (`exists_lsq_minimiser`), and a ranking exists for every vector (`exists_ranking`: the inverse of `Tuple.sort`). With sorted targets a ranking minimises (16) over the permutations (`sorting_minimises`, the rearrangement inequality), so the hypotheses of `alternating_min_eventually_const` hold.",
+   "tags": [
+    "optimization",
+    "algorithms",
+    "combinatorics"
+   ]
+  },
+  "MLMC.roundFixed_coarse_increment_mean": {
+   "theorem_title": "Giles (2015), §10.2: summing $(B+1)$-bit rounded Brownian increments gives a coarse increment whose mean differs from that of the directly rounded one, so (2.4) fails in law",
+   "natural_language_statement": "Giles (2015), §10.2, p. 62: \"This ensures that the Brownian increments computed for the coarser path $\\ell-1$ by summing the increments of the finer path $\\ell$, are consistent with the increments which would be generated on level $\\ell-1$ when it is the finer of the two levels. This would not be the case if the increments on level $\\ell$ were generated with $B_\\ell$ bits of accuracy, then summed to give increments for level $\\ell-1$, regardless of whether the truncation to the lower accuracy $B_{\\ell-1}$ took place before or after the summation.\"\n\nFor $e\\in\\mathbb Z$ and $d\\in\\mathbb N$ let $R_d(x)=2^{e-d}\\,\\mathrm{round}(x/2^{e-d})$ (`roundFixed`; ties are rounded up). Let $X_1,X_2$ be independent with law $N(0,v)$, $v\\ne0$, and $B\\in\\mathbb N$. Then $R_B(X_1+X_2)$, $R_B(R_{B+1}(X_1)+R_{B+1}(X_2))$ and $R_B(R_{B+1}(X_1))+R_B(R_{B+1}(X_2))$ are integrable and\n$$\\mathbb E[R_B(X_1+X_2)]=0,\\quad \\mathbb E[R_B(R_{B+1}(X_1)+R_{B+1}(X_2))]>0,\\quad \\mathbb E[R_B(R_{B+1}(X_1))+R_B(R_{B+1}(X_2))]>0.$$\nSo the coarse increment obtained from the rounded fine increments (truncated after or before the summation) does not have the law of the increment generated directly on level $\\ell-1$, and (2.4) fails for the payoff \"the coarse Brownian increment\". The paper's \"truncation\" is modelled by round-to-nearest with ties up; the positive means come from the ties only. Under an odd tie rule (half to even, half away from zero) all three means are $0$ and the laws differ in other functionals (numerically, $v=1$, $q=1/4$, half to even: second moments $2.020833$, $2.041667$, $2.072917$); tie-rule-free witnesses are `nearestRound_coarse_increment_pos_prob` and `truncGrid_coarse_increment_mean_lt`.",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §10.2 \"Variable precision arithmetic\", p. 62; rounding as in I.-B. Haas, M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §4.1, (20).",
+   "explanation": "$X_1+X_2\\sim N(0,2v)$ (`IndepFun.hasLaw_fun_add`, `gaussianReal_conv_gaussianReal`), and $\\int R_d\\,dN(0,w)=0$ for $w\\ne0$ (`integral_roundFixed_gaussianReal`: $R_d$ is odd off the countable set of ties, which is null, and $N(0,w)$ is symmetric). With $q=2^{e-B-1}$, a fine grid point $qk$ is never rounded down to the coarse grid (`le_roundFixed_mul_int`), and $R_B(R_{B+1}(x_1)+R_{B+1}(x_2))-(R_{B+1}(x_1)+R_{B+1}(x_2))=q$ on $[q/2,3q/2)\\times[-q/2,q/2)$ (`roundFixed_values`), which has positive $N(0,v)^{\\otimes2}$-mass (`gaussianReal_real_Ico_pos`; the pair has law $N(0,v)\\otimes N(0,v)$ by independence, `hasLaw_pair_gaussianReal`). Hence the mean is at least $q\\,\\mathbb P(\\cdot)>0$; similarly for one variable (`integral_roundFixed_roundFixed_pos`).",
+   "tags": [
+    "probability",
+    "numerical-analysis",
+    "multilevel-monte-carlo"
+   ]
+  },
+  "MLMC.nearestRound_coarse_increment_pos_prob": {
+   "theorem_title": "Giles (2015), §10.2: for round-to-nearest with any tie rule, the coarse increment from rounded fine increments is positive with a different probability than the directly rounded one",
+   "natural_language_statement": "Giles (2015), §10.2, p. 62: \"This ensures that the Brownian increments computed for the coarser path $\\ell-1$ by summing the increments of the finer path $\\ell$, are consistent with the increments which would be generated on level $\\ell-1$ when it is the finer of the two levels. This would not be the case if the increments on level $\\ell$ were generated with $B_\\ell$ bits of accuracy, then summed to give increments for level $\\ell-1$, regardless of whether the truncation to the lower accuracy $B_{\\ell-1}$ took place before or after the summation.\"\n\nLet $q>0$, let $r_f:\\mathbb R\\to q\\mathbb Z$ with $|x-r_f(x)|\\le q/2$ and $r_c:\\mathbb R\\to2q\\mathbb Z$ with $|x-r_c(x)|\\le q$ (round to nearest on the fine and coarse grids, with arbitrary tie rules; no measurability assumed). Let $X_1,X_2$ be independent with law $N(0,v)$, $v\\ne0$. Then\n$$r_c(q)>0\\ \\Rightarrow\\ \\mu\\{r_c(X_1+X_2)>0\\}<\\mu\\{r_c(r_f(X_1)+r_f(X_2))>0\\},\\qquad r_c(q)\\le0\\ \\Rightarrow\\ \\mu\\{r_c(r_f(X_1)+r_f(X_2))>0\\}<\\mu\\{r_c(X_1+X_2)>0\\}.$$\nSo, whatever the tie rule, the coarse increment obtained by rounding after the summation does not have the law of the increment generated directly on level $\\ell-1$. (Numerically, $v=q=1$: $0.2398$ directly, $0.3645$ after the summation with ties up, $0.1494$ with ties down or half to even.)",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §10.2 \"Variable precision arithmetic\", p. 62.",
+   "explanation": "Pathwise, $\\{X_1+X_2>q\\}\\subseteq\\{r_c(X_1+X_2)>0\\}\\subseteq\\{X_1+X_2\\ge q\\}$, and $X_1+X_2\\sim N(0,2v)$ has no atom at $q$. The fine sum is $qm$ with $m\\in\\mathbb Z$ and $|X_1+X_2-qm|\\le q$, and $r_c(qm)>0$ for $m\\ge2$, $r_c(qm)\\le0$ for $m\\le0$, $r_c(q)$ for $m=1$. If $r_c(q)>0$ then $\\{X_1+X_2>q\\}\\subseteq\\{r_c(\\text{sum})>0\\}$, which also contains $\\{X_1\\in[5q/8,3q/4),X_2\\in[-q/4,0)\\}$ (where $m=1$ and $X_1+X_2<q$); if $r_c(q)\\le0$ then $\\{r_c(\\text{sum})>0\\}\\subseteq\\{X_1+X_2\\ge q\\}$, which misses $\\{X_1\\in[5q/4,11q/8),X_2\\in[q/8,q/4)\\}\\subseteq\\{X_1+X_2>q\\}$. These boxes have positive $N(0,v)^{\\otimes2}$-probability (`measure_preimage_box`), and `measure_union₀` with `ENNReal.lt_add_right` gives the strict inequalities.",
+   "tags": [
+    "probability",
+    "numerical-analysis",
+    "multilevel-monte-carlo"
+   ]
+  },
+  "MLMC.roundFixed_coarse_increment_pos_prob": {
+   "theorem_title": "Giles (2015), §10.2: with fixed-point rounding, the $B$-bit rounded sum of $(B+1)$-bit rounded increments is more often positive than the $B$-bit rounded sum of the increments",
+   "natural_language_statement": "Giles (2015), §10.2, p. 62: \"This ensures that the Brownian increments computed for the coarser path $\\ell-1$ by summing the increments of the finer path $\\ell$, are consistent with the increments which would be generated on level $\\ell-1$ when it is the finer of the two levels. This would not be the case if the increments on level $\\ell$ were generated with $B_\\ell$ bits of accuracy, then summed to give increments for level $\\ell-1$, regardless of whether the truncation to the lower accuracy $B_{\\ell-1}$ took place before or after the summation.\"\n\nFor $e\\in\\mathbb Z$ and $d\\in\\mathbb N$ let $R_d(x)=2^{e-d}\\,\\mathrm{round}(x/2^{e-d})$ (`roundFixed`, ties rounded up). Let $X_1,X_2$ be independent with law $N(0,v)$, $v\\ne0$, and $B\\in\\mathbb N$. Then\n$$\\mu\\{R_B(X_1+X_2)>0\\}<\\mu\\{R_B(R_{B+1}(X_1)+R_{B+1}(X_2))>0\\}.$$",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §10.2, p. 62; rounding as in I.-B. Haas, M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §4.1, (20).",
+   "explanation": "The instance $r_c=R_B$, $r_f=R_{B+1}$, $q=2^{e-B-1}$ of `nearestRound_coarse_increment_pos_prob`: $R_B$ takes values in $2^{e-B}\\mathbb Z=2q\\mathbb Z$ with error $\\le q$ and $R_{B+1}$ values in $q\\mathbb Z$ with error $\\le q/2$ (`abs_sub_roundFixed_le`, `roundFixed_succ_eq`), and $R_B(q)=2q>0$ (`roundFixed_values`).",
+   "tags": [
+    "probability",
+    "numerical-analysis",
+    "multilevel-monte-carlo"
+   ]
+  },
+  "MLMC.truncGrid_coarse_increment_mean_lt": {
+   "theorem_title": "Giles (2015), §10.2: with truncation (rounding down), the coarse increments truncated before and after the summation have strictly smaller means than the directly truncated one",
+   "natural_language_statement": "Giles (2015), §10.2, p. 62: \"This ensures that the Brownian increments computed for the coarser path $\\ell-1$ by summing the increments of the finer path $\\ell$, are consistent with the increments which would be generated on level $\\ell-1$ when it is the finer of the two levels. This would not be the case if the increments on level $\\ell$ were generated with $B_\\ell$ bits of accuracy, then summed to give increments for level $\\ell-1$, regardless of whether the truncation to the lower accuracy $B_{\\ell-1}$ took place before or after the summation.\"\n\nRead \"truncation\" as rounding down: $t_c(x)=c\\lfloor x/c\\rfloor$ (`truncGrid`; for $c=2^{e-B}$ this drops the low-order bits of a two's-complement number). Let $q>0$ and $X_1,X_2$ be independent with law $N(0,v)$, $v\\ne0$, and put $D=t_{2q}(X_1+X_2)$ (the increment generated directly), $A=t_{2q}(t_q(X_1)+t_q(X_2))$ (truncation after the summation) and $B=t_{2q}(t_q(X_1))+t_{2q}(t_q(X_2))$ (before). Then $B\\le A\\le D$ pointwise, $D,A,B$ are integrable, and\n$$\\mathbb E[B]<\\mathbb E[A]<\\mathbb E[D].$$\nSo both summed increments have laws different from that of $D$. (Numerically and by symmetry, $\\mathbb E[D]=-q$, $\\mathbb E[A]=-3q/2$, $\\mathbb E[B]=-2q$; not formalised. Truncation towards zero is not covered.)",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §10.2 \"Variable precision arithmetic\", p. 62.",
+   "explanation": "$t_c$ is monotone, $t_c(x)\\le x<t_c(x)+c$ and superadditive ($\\lfloor s\\rfloor+\\lfloor t\\rfloor\\le\\lfloor s+t\\rfloor$, `Int.le_floor_add`), which gives $B\\le A\\le D$ and $|D-(X_1+X_2)|,|A-(X_1+X_2)|,|B-(X_1+X_2)|\\le6q$, hence integrability. On $[3q/2,2q)\\times[q/2,q)$ one has $D-A=2q$, and on $[q,2q)^2$ one has $A-B=2q$ (`truncGrid_eq`); these boxes have positive $N(0,v)^{\\otimes2}$-probability, so `integral_lt_of_indicator_le` gives the strict inequalities, transported to $\\Omega$ along the joint law (`hasLaw_pair_gaussianReal`, `integrable_integral_comp_of_hasLaw`).",
+   "tags": [
+    "probability",
+    "numerical-analysis",
+    "multilevel-monte-carlo"
+   ]
   }
  },
  "definitions": {
@@ -8850,6 +9614,34 @@
     "probability",
     "multilevel-monte-carlo",
     "numerical-analysis"
+   ]
+  },
+  "MLMC_TauLeapingExact": {
+   "definition_title": "Giles (2015), §8: the exact continuous-time chain with bounded propensity by uniformisation — the jump kernel, its powers and the law at time $t$",
+   "natural_language_statement": "Giles (2015), §8, p. 56: \"They also include an additional coupling at the finest level to the exact Stochastic Simulation Algorithm developed by (Gillespie 1976) which updates the reaction rates after every single reaction.\"\n\nGiles (2015), §8, p. 55: \"When there is just one chemical reaction, the 'tau-leaping' method (which is essentially the Euler-Maruyama method, approximating the reaction rate as being constant throughout the timestep) gives the discrete equation $x_{n+1}=x_n+P(h\\lambda(x_n))$, where $h$ is the timestep, $\\lambda(x_n)$ is the reaction rate (or propensity function), and $P(t)$ represents a unit-rate Poisson random variable over time interval $[0,t]$.\"\n\nThroughout, $\\lambda:\\mathbb N\\to[0,\\infty)$ is the propensity, $\\Lambda\\ge0$ a rate bound (the results assume $\\lambda(x)\\le\\Lambda$ for all $x$), and $\\mathrm{Po}(r)$ the Poisson law with mean $r\\ge0$ on $\\mathbb N$ (Mathlib's `poissonMeasure`). The exact chain jumps from $x$ to $x+1$ at rate $\\lambda(x)$ (the state space and jump of `tauStep`).\n\n**`jumpKernel`.** For $x\\in\\mathbb N$, the measure $J(x)=\\frac{\\lambda(x)}{\\Lambda}\\,\\delta_{x+1}+\\big(1-\\frac{\\lambda(x)}{\\Lambda}\\big)\\,\\delta_x$ on $\\mathbb N$ (with the conventions of $[0,\\infty)$: $\\lambda(x)/0=0$ and truncated subtraction; both are immaterial when $\\lambda\\le\\Lambda$): at each tick of a rate-$\\Lambda$ Poisson clock the state jumps to $x+1$ with probability $\\lambda(x)/\\Lambda$.\n\n**`jumpPow`.** $J^0(x)=\\delta_x$ and $J^{n+1}(x)=\\int J(y)\\,J^n(x)(dy)$ (`.bind`): the law after $n$ clock ticks.\n\n**`exactLaw`.** For $t\\ge0$, $\\mathrm{exactLaw}(\\lambda,\\Lambda,t,x)=\\sum_{n\\ge0}e^{-\\Lambda t}\\frac{(\\Lambda t)^n}{n!}J^n(x)$, i.e. $\\mathrm{Po}(\\Lambda t)$`.bind`$(n\\mapsto J^n(x))$: the law at time $t$ of the chain started at $x$ (uniformisation).",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §8 \"Continuous-time Markov chains\", pp. 55–56; the uniformisation construction is standard and not in the paper.",
+   "tags": [
+    "probability",
+    "numerical-analysis"
+   ]
+  },
+  "MLMC_InverseNormal": {
+   "definition_title": "Haas–Giles (2025), §3: the standard normal CDF $\\Phi$ and the inverse normal CDF $\\Phi^{-1}$",
+   "natural_language_statement": "Haas–Giles (2025), §3, p. 4: \"All methods below are classified as inversion methods, because they are based on applying an approximation of the inverse normal CDF $\\Phi$ [sic: $\\Phi^{-1}$] to a random uniform variable $U$.\" §3.1, p. 5: \"the inverse CDF $\\Phi^{-1}$ is approximated by a constant value on uniform intervals\".\n\n**`normCDF`**. For $x\\in\\mathbb R$, $\\Phi(x)=P(Z\\le x)$ for $Z\\sim N(0,1)$, i.e. Mathlib's `cdf (gaussianReal 0 1) x` $=\\int_{-\\infty}^x\\frac{e^{-t^2/2}}{\\sqrt{2\\pi}}\\,dt$.\n\n**`normCDFInv`**. For $u\\in\\mathbb R$: if $0<u<1$, $\\Phi^{-1}(u)$ is the unique $x\\in\\mathbb R$ with $\\Phi(x)=u$ (defined as `Function.invFun normCDF u`); if $u\\notin(0,1)$, $\\Phi^{-1}(u)=0$.\n\n**Formalization Note** `normCDFInv` is `(Set.Ioo 0 1).indicator (Function.invFun normCDF)`; the value $0$ outside $(0,1)$ is a junk value (there $\\Phi^{-1}$ is undefined, it tends to $\\mp\\infty$ at $0$ and $1$); it keeps $\\Phi^{-1}(1-u)=-\\Phi^{-1}(u)$ true for every real $u$.",
+   "source": "I.-B. Haas, M.B. Giles, A nested MLMC framework for efficient simulations on FPGAs, arXiv:2502.07123 (2025), §3, p. 4 (and §3.1, p. 5: \"the inverse CDF $\\Phi^{-1}$\").",
+   "tags": [
+    "probability",
+    "real-analysis"
+   ]
+  },
+  "MLMC_EndToEndInstances": {
+   "definition_title": "Giles (2015), §5.1 and §10.2: the exact GBM solution on the level-$\\ell$ grid for refinement factor $M$ and coarsest step $T/m$, and truncation onto a fixed-point grid",
+   "natural_language_statement": "Giles (2015), §5.1, p. 29: \"On level $\\ell$, the uniform timestep is taken to be $h_\\ell=h_0M^\\ell$ [read $h_0M^{-\\ell}$], for some integer $M$. The timestep $h_0$ on the coarsest level is often taken to be the interval length $T$ … but this is not required … The multilevel coupling is achieved by using the same underlying driving Brownian path for the coarse and fine paths\"; §10.2, p. 62: \"… regardless of whether the truncation to the lower accuracy $B_{\\ell-1}$ took place before or after the summation.\"\n\n**`gbmExactM`.** For $r,\\sigma,T,s_0\\in\\mathbb R$, $m,M,\\ell\\in\\mathbb N$ and $z:\\mathbb N\\to\\mathbb R$,\n$$\\mathrm{gbmExactM}(r,\\sigma,T,s_0,m,M,\\ell,z)=s_0\\exp\\Big((r-\\sigma^2/2)T+\\sigma\\sqrt{T/m/M^\\ell}\\sum_{i<mM^\\ell}z_i\\Big),$$\nthe exact solution $S_T=s_0e^{(r-\\sigma^2/2)T+\\sigma W_T}$ of $dS=rS\\,dt+\\sigma S\\,dW$ with $W_T=\\sqrt{h_\\ell}\\sum_{i<mM^\\ell}z_i$ sampled on the grid of $mM^\\ell$ steps of size $h_\\ell=(T/m)M^{-\\ell}$ (coarsest step $h_0=T/m$), driven by the same normal increments as the level-$\\ell$ Euler–Maruyama path. $\\sqrt{\\cdot}$ is the real square root ($0$ at negative arguments; the theorems assume $T\\ge0$ where it matters), and for $m=0$ or $M=0$ Lean's $x/0=0$ applies (the theorems assume $m,M\\ge1$).\n\n**`truncGrid`.** For $c,x\\in\\mathbb R$, $\\mathrm{truncGrid}(c,x)=c\\lfloor x/c\\rfloor$, the largest multiple of $c$ not above $x$ when $c>0$ (truncation onto the fixed-point grid $c\\mathbb Z$; for $c=2^{e-B}$ it drops the low-order bits of a two's-complement number). For $c=0$ it is $0$ (the theorems assume $c>0$).",
+   "source": "M.B. Giles, Multilevel Monte Carlo methods, Acta Numerica 24 (2015) 259–328, doi:10.1017/S096249291500001X, §5.1, p. 29, and §10.2, p. 62.",
+   "tags": [
+    "probability",
+    "numerical-analysis",
+    "multilevel-monte-carlo"
    ]
   }
  }
