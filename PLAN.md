@@ -42,7 +42,7 @@ table and `notes/statement-audit.md`, which compares every statement with the pa
   and Haas–Giles §2–§6 (the Euler–Maruyama coupling, approximate normals, the rounding-error
   model, the fixed-point path, the cost model and the bit-width optimisation). The README table
   lists the modules; `scripts/AxiomCheck.lean` lists the audited theorems.
-- **Round 10 (2026-09-29): an independent coverage re-audit of both papers** (634 claims,
+- **Round 10 (2026-09-29): an independent coverage re-audit of both papers** (644 claims,
   `notes/coverage/`) found no misstatement; every claim it found missing or partial is now
   formalised or listed below with its reason (`notes/coverage/README.md`).
 - **Round 11 (2026-09-29): verification.** All 139 theorems added in round 10 were read back

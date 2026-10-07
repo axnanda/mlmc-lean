@@ -227,7 +227,7 @@ Not paper statements; they are the steps of the proof sketch on p. 7 ("L is chos
 ## Round 10 (2026-09-29): coverage re-audit of both papers
 
 Five independent auditors re-read Giles (2015) §1–§11 and Haas–Giles (2025) in full and classified
-all 634 claims against the Lean statements (tables in `notes/coverage/`; each row gives the claim,
+all 644 claims against the Lean statements (tables in `notes/coverage/`; each row gives the claim,
 the Lean name and the status). No Lean statement misstates a paper. The claims found missing or
 partial were formalised in this round; `notes/coverage/README.md` maps every one of them to its
 Lean statement or to the reason it is not formalised. The deviations of the new statements:
