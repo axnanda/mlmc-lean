@@ -463,3 +463,39 @@ Findings and what was done:
 - **The lower bounds of `MLQMCBoundary`** assume nothing on `a`; for `a ≤ 0` they are vacuous or
   trivial, and their content is for `a > 0`.  `mlqmc_finest_level_cost_lower` assumes at least one
   sample on the finest level (automatic for integer allocations).  Kept.
+
+**Sixteenth round (2026-10-07).** Blind read-backs of the 43 theorems added in round 16:
+`nested_mimc_smooth.md` (R10: `NestedMimcSmooth`; 3 theorems), `bitwidth_optimum.md` (R11:
+`BitWidthOptimum`; 13), `elliptic_fd.md` (R12: `EllipticFD`; 12) and `giles_corollaries.md` (R13:
+`GilesCorollaries`; 15).  All 43 read back as true; none is vacuous and none holds only because of
+a junk value.  The R10 auditor built an instance meeting every hypothesis (`f = sin`, Rademacher
+inner noise) and computed `E[Y²]` and `E[Y]` exactly for `ℓ₁ ≤ 10`, `ℓ₂ ≤ 12`: the scaled
+quantities settle at non-zero constants, so the rates are attained, and a random search over 6000
+instances found no violation of the explicit constant.  The R11 auditor checked the first-order
+formulas against finite differences and at numerical global minimisers (one convex and one
+non-convex instance).  The R12 auditor verified with sympy that `ellipticSol` and `ellipticFDSol`
+solve the problem and the scheme, and the finite-element identity, and swept `a` and `N`
+numerically (the output error over `f h²` stays in `[0.0573, 1/12]`).  The R13 auditor checked the
+contraction factor of the Euler step (attained with equality for linear coefficients), simulated
+the LUT streams and the block averages, and gave non-vacuous instances of the necessity theorems.
+Findings and what was done:
+
+- **`NestedMimcSmooth`** assumes weak convergence uniformly in the outer sample and strong order 1
+  in `L⁴` (which excludes Euler–Maruyama with multiplicative noise); both are deviations the
+  docstrings already state.  `hm₄` follows from `hgh4` at `ℓ = 0` and `hs`; the mean-rate theorem is
+  the variance rate plus Cauchy–Schwarz; `g` carries no integrability hypothesis in the complexity
+  theorem (a non-integrable section integrates to `0`, which `hw` then pins to the limit of the
+  inner means, so the statement stays true).  Kept.
+- **`bitLevelCost` is not squared** (`√(V C̃) + √(V^Δ C)`), as in HG25 (34); minimisers, convexity
+  and stationary points carry over to the square.  The existence theorems put no sign condition on
+  `E`, `C`, `M′`, so `S` may contain points where a square root is clipped to `0`; they stay true.
+  The "minimisation over `λ`" conjunct of `isMinOn_lambda_bitLevelCost` is immediate from the
+  others.  Kept.
+- **`EllipticFD`**: the constants `1/3`, `1/96` and the nodal `1/3` are loose (true values `1/12`,
+  `≈ 0.0573`, `≈ 0.0076`); theorems 1–4 assume `a ≥ 0` where `a > −1` suffices; the forcing
+  `50Z²` is constant in `x`, a deliberately simple model.  Kept.
+- **`GilesCorollaries`**: `contracting_sde_mlmc` assumes the a.s. limit of the backward chain
+  (always satisfiable, not proved) and targets the invariant law of the Euler chain at fixed `h`;
+  the LUT theorems' `MonotoneOn f` is not needed (martingale convergence gives it for any
+  `f ∈ L¹`); `mc_exit_time_complexity` is parameter arithmetic on the MSE bound, as its docstring
+  says, and `mc_complexity_lower` is the estimator-level lower bound.  Kept.
