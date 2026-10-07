@@ -112,6 +112,14 @@
 -- * `MlmcLean.NestedKinkSde` — Giles §9.2: nested simulation with a piecewise linear f and
 --   discretised inner paths: α = 1, β = 3/2, cost O(ε^{−5/2}); the paper's MIMC rates
 --   β₁ = β₂ = 1.5 for this case are false (explicit counterexample)
+-- * `MlmcLean.MLMCConfidenceEstimated` — Giles §2.1: Collier et al.'s confidence intervals with
+--   estimated variances, for a fixed and for a growing number of levels (strong law, kurtosis
+--   bound, Slutsky), around E[P_L] and E[P], and the tolerance test
+-- * `MlmcLean.NestedMimcKink` — Giles §9.2: the corrected MIMC rates for a piecewise linear f,
+--   V = O(2^{−ℓ₁−ℓ₂}) (sharp) and |E[Y]| = O(2^{−ℓ₁/2−ℓ₂}), and the cost O(ε⁻²|log ε|⁴) from
+--   Theorem 2, still below MLMC's O(ε^{−5/2})
+-- * `MlmcLean.LUTAsymptotics` — Haas–Giles §3.4: the MSE of the dyadic lookup tables converges
+--   to a constant C > 0, and the MSE of the uniform tables is of order 2^{−d}/d
 import MlmcLean.Allocation
 import MlmcLean.Estimator
 import MlmcLean.LevelDiff
@@ -169,3 +177,6 @@ import MlmcLean.MLMCCentralLimit
 import MlmcLean.QMC1D
 import MlmcLean.ConsistencyCheck
 import MlmcLean.NestedKinkSde
+import MlmcLean.MLMCConfidenceEstimated
+import MlmcLean.NestedMimcKink
+import MlmcLean.LUTAsymptotics

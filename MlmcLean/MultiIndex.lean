@@ -67,7 +67,7 @@ noncomputable def crossDiff : {D : ℕ} → ((Fin D → ℕ) → ℝ) → (Fin D
       crossDiff (fun m => p (Fin.cons (ℓ 0) m)) (Fin.tail ℓ) -
         if ℓ 0 = 0 then 0 else crossDiff (fun m => p (Fin.cons (ℓ 0 - 1) m)) (Fin.tail ℓ)
 
-lemma crossDiff_zero (p : (Fin 0 → ℕ) → ℝ) (ℓ : Fin 0 → ℕ) : crossDiff p ℓ = p ℓ := rfl
+@[simp] lemma crossDiff_zero (p : (Fin 0 → ℕ) → ℝ) (ℓ : Fin 0 → ℕ) : crossDiff p ℓ = p ℓ := rfl
 
 lemma crossDiff_succ (p : (Fin (D + 1) → ℕ) → ℝ) (ℓ : Fin (D + 1) → ℕ) :
     crossDiff p ℓ = crossDiff (fun m => p (Fin.cons (ℓ 0) m)) (Fin.tail ℓ) -

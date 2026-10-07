@@ -32,8 +32,9 @@ uniform intervals and `Z_j` is the LUT value (15), the mean of `f` over `I_j`.
   `a`, `b` the mean-square error on these intervals is at least `c = μ² 2^{−5(k+3)}/6`: an affine
   sequence has zero second differences, while by (18) and concavity the second differences
   `2Z_{j+m} − Z_j − Z_{j+2m}` of the LUT values at the spacing `m = 2^{d−k−3}` are at least
-  `μ 4^{−(k+3)}`.  So the MSE of method 3 stays above `c` and does not tend to `0`.  The limit `C`
-  of the paper (its existence and value) is not formalised; the lower bound is the claim of p. 8.
+  `μ 4^{−(k+3)}`.  So the MSE of method 3 stays above `c` and does not tend to `0`.  The existence
+  of the limit `C > 0` of the paper is `exists_tendsto_method3MSE` in
+  `MlmcLean/LUTAsymptotics.lean`; the lower bound here is the claim of p. 8.
 -/
 
 open MeasureTheory Finset Filter Topology
