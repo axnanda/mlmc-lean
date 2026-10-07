@@ -408,6 +408,21 @@ Lean statement or to the reason it is not formalised. The deviations of the new 
 * **Brownian paths (`BrownianPaths.lean`, round 17).** Union grids are deterministic (the adaptive
   grids of §5.6 depend on the path); time reversal is proved for the finite-dimensional laws
   (`IsPreBrownianReal`), not for path continuity.
+* **The digital option for GBM (`GBMDigital.lean`, round 18).** The rates proved are those the
+  mean-square strong error gives (`h^{1/3}` for Euler–Maruyama, `h^{2/3}` for Milstein), not the
+  paper's `O(h^{1/2})` and `O(h)`, which need `L^p` strong errors; the exponent is the best mean
+  square gives (`digital_mismatch_exponent_sharp`).  The kurtosis bounds use the raw fourth moment
+  (the paper's definition is for zero-mean `X`).  The law equality for the smoothed coarse payoff is
+  for autonomous coefficients `a(S)`, `b(S)`.
+* **Tau-leaping against the exact chain (`TauLeapingExact.lean`, round 18).** The exact chain is
+  built by uniformisation for bounded propensities `λ ≤ Λ` and identified by its master equation;
+  the weak rate is for bounded payoffs.  The pathwise SSA coupling of §8 is not formalised.
+* **`Φ⁻¹` (`InverseNormal.lean`, round 18).** `normCDFInv` is defined on all of `ℝ` with a junk value
+  outside `(0, 1)`; every statement about it restricts to `(0, 1)` or to a uniform variable.  The
+  dyadic lower bound is proved for the cells `k ≥ 2` (the paper's claims need one such cell).
+* **End-to-end instances (`EndToEndInstances.lean`, round 18).** GBM with refinement factor `M`
+  uses `α = ½ log₂ M` from the strong error, not the paper's weak order `log₂ M`; §10.2's rounding
+  is Mathlib's `round` (ties up) or truncation to a grid.
 
 ### Corrections to the papers recorded elsewhere, collected
 
@@ -438,6 +453,7 @@ Lean statement or to the reason it is not formalised. The deviations of the new 
 | HG25 | (27) | derived under perfect correlation | holds for every joint law | `variance_linearised_corr` |
 | HG25 | (28) | factor `1/12` on the MSE term | no factor `1/12` | `variance_extended_indep` |
 | HG25 | Fig. 3, 5 captions | `√(Ṽ/V)` | `√(V^Δ/V)` | `HaasGilesRemarks.lean` |
+| HG25 | §3, p. 4 | "the inverse normal CDF `Φ`" | `Φ⁻¹` (`Φ` is the CDF, as in §3.1) | `normCDF`, `normCDFInv` |
 | HG25 | §3, p. 4 | "The first and the third methods … PWC on uniform intervals … The second … PWL on dyadic intervals" | the numbering does not match §3.1–§3.4, where method 3 is the dyadic one | `LUTLimits.lean`, `LUTAsymptotics.lean` (follow §3.1–§3.4) |
 | HG25 | §3.4, p. 7 | dyadic tables: "the MSE is reduced only in the interval closest to 0" | only asymptotically; the error on every dyadic interval decreases with `d` | `dyadic_groupMSE_eq`, `groupMSE_odd_quadratic` |
 | HG25 | §6.1, p. 12 | cost factor `< 1` ⇒ nested framework cheaper | true for (34); for (32) e.g. `ρ²(1 + ρ²) < 1` | `nestedCost_lt_of_costFactor_le`, `exists_costFactor_lt_one_nestedCost_gt` |

@@ -75,6 +75,10 @@ estimates:
 - **Too fine:** the exact halving ratio of H3-30 (it needs the constant in `MSE ~ κ2^{−d}/d`).
 - **Open:** whether nested MIMC reaches `O(ε⁻²)` for a piecewise linear `f`.
 
-**Follow-up (round 18).** In progress: the GBM digital items and G5.2-18 (`GBMDigital.lean`),
-tau-leaping against the exact chain (`TauLeapingExact.lean`), `Φ⁻¹` and the lookup-table results
-(`InverseNormal.lean`), end-to-end instances and small results (`EndToEndInstances.lean`).
+**Follow-up (round 18).** Formalised: the GBM digital items and G5.2-18 (`GBMDigital.lean`;
+the paper's rates `O(h^{1/2})`, `O(h)` and the kurtosis rates remain open here), tau-leaping
+against the exact chain for bounded payoffs (`TauLeapingExact.lean`), `Φ⁻¹` and the lookup-table
+results for it (`InverseNormal.lean`), the elliptic estimator, the call, refinement factor `M`,
+tamed fourth moments, the method-2 iteration and the rounded increments
+(`EndToEndInstances.lean`).  Not yet: the G2.1-36 counterexample as a theorem, the medium and
+large items above.
