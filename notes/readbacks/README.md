@@ -523,6 +523,6 @@ Findings and what was done:
   constant `4` of `floatLookbackPayoff_sq_sub_le` could be `2`.  Kept.
 - **`implicitPath_moments_le`** assumes global dissipativity `y a(y) ≤ 0`, which excludes
   double-well drifts; `emLinear_second_moment_tendsto_atTop` assumes `2 < Lh` where `2 ≤ Lh`
-  suffices when `σ ≠ 0`.  Kept (documented in the docstrings as the setting of §5.6's example).
+  suffices when `σ ≠ 0`.  Kept (the cubic drift of §5.6 satisfies the hypothesis).
 - **`linRecPath`** appears in no statement; it is the common recursion behind the integrating-factor
   and explicit linear schemes, used in their proofs.  Kept.
