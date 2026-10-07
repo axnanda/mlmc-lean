@@ -135,6 +135,14 @@
 -- * `MlmcLean.GilesCorollaries` — contracting SDEs with a fixed step (§10.1), the lookup-table
 --   streams tend to N(0, 1) (HG25 §3.2), plain MC complexities (§5.5), β ≤ 2α (§2.1), the D = 1
 --   necessity (§2.4), Euler–Maruyama with refinement factor M (§5.1)
+-- * `MlmcLean.GBMPathDependent` — Giles §5.1–§5.2, Table 5.2: discretely monitored Asian and
+--   lookback options for GBM with Euler–Maruyama (β = 1) and Milstein (β = 2), Theorem 1 end to end
+-- * `MlmcLean.SPDEStability` — Giles §7.3: mean-square von Neumann stability of the SPDE scheme,
+--   λ(1 + 2ρ²) ≤ 1, instability otherwise, hence k_ℓ = k_{ℓ−1}/4 and the cost factor 8
+-- * `MlmcLean.DriftImplicit` — Giles §5.6: the drift-implicit Euler step is well posed and its
+--   moments stay bounded for every step size; the deterministic analogue; the integrating factor
+-- * `MlmcLean.BrownianPaths` — Giles §5.2, §5.3, §5.6: Brownian paths on union grids
+--   (Algorithm 3), the Brownian-bridge midpoint law, time reversal within coarse steps
 import MlmcLean.Allocation
 import MlmcLean.Estimator
 import MlmcLean.LevelDiff
@@ -201,3 +209,7 @@ import MlmcLean.NestedMimcSmooth
 import MlmcLean.BitWidthOptimum
 import MlmcLean.EllipticFD
 import MlmcLean.GilesCorollaries
+import MlmcLean.GBMPathDependent
+import MlmcLean.SPDEStability
+import MlmcLean.DriftImplicit
+import MlmcLean.BrownianPaths
