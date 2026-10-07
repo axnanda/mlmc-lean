@@ -30,8 +30,10 @@ variance target is `∑_{ℓ ≤ L} V_ℓ ≤ ½ε²` (3.2), and (3.3) doubles `
 
 As for Algorithm 1 (`MlmcLean.Algorithm`), the algorithm is analysed with exact values.  After
 `k` doublings `N_ℓ = 2^k`, and `v ℓ k` is the variance on level `ℓ` after `k` doublings.  How fast
-`v ℓ k` decays is a question of QMC theory and is out of scope; the loop only needs `v ℓ k > 0` and
-`v ℓ k → 0` as `k → ∞` on each level.
+`v ℓ k` decays is a question of QMC theory; the loop only needs `v ℓ k > 0` and `v ℓ k → 0` as
+`k → ∞` on each level.  In one dimension, with randomly shifted rank-1 lattices, `MlmcLean.QMC1D`
+proves `v ℓ k ≤ V(f_ℓ)²/N²` and the MLQMC complexity; QMC error theory in `d` dimensions is not
+formalised.
 
 * `mlqmcLevel` is a level `ℓ* ≤ L` of (3.3); `mlqmcStep` doubles `N_{ℓ*}`; `mlqmcIter` iterates.
 * **The inner loop terminates** (`mlqmc_inner_terminates`): for every `θ > 0` some iterate has

@@ -166,12 +166,18 @@ items listed under "Not formalised" below.
   law and MLMC for Markov chains (`MarkovLimitLaw.lean`), the §9 rates with discretised inner
   paths, a piecewise linear `f` and MIMC (`NestedRates.lean`), and the Haas–Giles §6 remarks
   (`HaasGilesRemarks.lean`).
+- ✅ Round 12: the central limit theorem with a growing number of levels — the Lindeberg and
+  Lyapunov CLTs for triangular arrays, asymptotic normality of the MLMC estimator under
+  Lyapunov's condition, and Collier et al.'s confidence intervals with the exact variance
+  (`MLMCCentralLimit.lean`); QMC in one dimension — error `O(N⁻¹)` for integrands of bounded
+  variation, randomly shifted rank-1 lattices, and the MLQMC complexity `O(ε^{−p})`, `p < 2`
+  (`QMC1D.lean`).
 - Not formalised (each with its reason in `notes/coverage/README.md`): the convergence orders of
   the discretisations of general SDEs, SPDEs and PDEs (Itô calculus and PDE regularity are not in
-  Mathlib; proved for geometric Brownian motion from its exact solution) and of QMC (discrepancy
-  theory), hence the MLQMC complexity; Collier et al.'s confidence intervals with a growing number
-  of levels (a Lindeberg–Feller CLT); the consistency check with estimated variances (Slutsky's
-  theorem); the optimality of the simplex among all MIMC index sets; the kurtosis rates of the
+  Mathlib; proved for geometric Brownian motion from its exact solution) and of QMC in `d`
+  dimensions (discrepancy theory; the one-dimensional case and the MLQMC complexity it gives are
+  proved); confidence intervals built from estimated variances; the consistency check with
+  estimated variances (Slutsky's theorem); the optimality of the simplex among all MIMC index sets; the kurtosis rates of the
   digital option; path-dependent (adaptive) grids for Brownian and Poisson noise (a martingale
   argument); tau-leaping's weak rate against the exact chain and the exact (SSA) coupling; the
   moment results for super-linear drifts; the jump-diffusion and Lévy-process theory of §6 beyond

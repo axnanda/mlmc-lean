@@ -100,6 +100,12 @@
 -- * `MlmcLean.NestedRates` — Giles §9.1–§9.2: the MIMC Taylor expansion (coefficient −1/8),
 --   MLMC with discretised inner paths (α = 1, β = γ = 2, cost O(ε⁻²(log ε)²)), a piecewise
 --   linear f (β = 3/2, cost O(ε⁻²)), and the nested MIMC rates O(2^{−ℓ₁−ℓ₂}), O(2^{−2ℓ₁−2ℓ₂})
+-- * `MlmcLean.MLMCCentralLimit` — Giles §2.1: the Lindeberg and Lyapunov central limit theorems
+--   for triangular arrays, asymptotic normality of the MLMC estimator with a growing number of
+--   levels, and the confidence intervals of Collier et al. (around E[P_L] and around E[P])
+-- * `MlmcLean.QMC1D` — Giles §2.7, §3.5 in one dimension: QMC error O(N⁻¹) for integrands of
+--   bounded variation, randomly shifted rank-1 lattices (unbiased, variance O(N⁻²), replicates),
+--   and the MLQMC cost O(ε^{−p}) with p < 2
 import MlmcLean.Allocation
 import MlmcLean.Estimator
 import MlmcLean.LevelDiff
@@ -153,3 +159,5 @@ import MlmcLean.SDEDigital
 import MlmcLean.ApplicationExtras
 import MlmcLean.MarkovLimitLaw
 import MlmcLean.NestedRates
+import MlmcLean.MLMCCentralLimit
+import MlmcLean.QMC1D

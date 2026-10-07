@@ -307,6 +307,25 @@ Lean statement or to the reason it is not formalised. The deviations of the new 
   model (22) the root mean square is of order `h^{−1/2} 2^{e−d}`
   (`integral_sq_perturbed_path_sub_bounds`), which still dominates the `O(h^{1/2})` strong error
   for small `h` (`strongError_lt_integral_sq_perturbed_path_sub`).
+* **The central limit theorem with a growing number of levels (G15 §2.1, p. 8;
+  `MLMCCentralLimit.lean`, round 12).** The paper cites Collier et al. and states no hypotheses.
+  The Lean statements assume finite centred moments `M_ℓ = E|ΔP_ℓ − E[ΔP_ℓ]|^{2+δ}` on the levels
+  used and Lyapunov's condition `∑_{ℓ ≤ L_k} M_ℓ N_{k,ℓ}^{−1−δ}/σ_k^{2+δ} → 0`, or a uniform bound
+  `M_ℓ ≤ K V_ℓ^{1+δ/2}` with `min_ℓ N_{k,ℓ} → ∞`. Some such hypothesis is needed: with a growing
+  `L` the paper's "each `Y_ℓ` is asymptotically normal, and therefore so is `Y`" fails (module
+  docstring: `ΔP_ℓ = ±2^{ℓ/2}` with probability `2^{−ℓ−1}` each, `L_k = k`, `N_{k,k} = k + 1`,
+  `N_{k,ℓ} = (k + 1)³`; the normalised error tends to `0`). The confidence intervals use the exact
+  standard deviation `σ_k`; intervals built from estimated variances are not formalised. Around
+  `E[P]` the bias must be `o(σ_k)`, or split from the tolerance as Collier et al. do.
+* **QMC in one dimension (G15 §1, §2.7, §3.5; `QMC1D.lean`, round 12).** Only `d = 1`, integrands of
+  bounded variation on `[0, 1]`, and the rank-1 lattice `{i/N}` (one point per cell); the shift
+  modulo `1` is `Int.fract` on `ℝ`, linked to the torus version of `RandomShiftQMC.lean` by
+  `rank1Lattice_torus_replicates`. The MLQMC complexity takes level variances `≤ (V(f_ℓ)/N_ℓ)²`
+  with `V(f_ℓ) = O(2^{−bℓ})`: cost `O(ε^{−max(1, g/a)})` when `b > g` (or `a ≤ b`, `a < g`) and
+  `O(ε^{−max(1 + (g−b)/a, g/a)})` when `b < g`; the boundary `b = g ≤ a`
+  (`O(ε⁻¹|log ε|^{3/2})`) and lower bounds are not formalised. The paper's "under certain
+  conditions … `p < 2`" gives no conditions; in this model `g < 2a` and `g < a + b` suffice
+  (`mlqmc_complexity_lt_two`).
 
 ### Corrections to the papers recorded elsewhere, collected
 
