@@ -647,6 +647,22 @@ import MlmcLean
 #print axioms MLMC.mlqmc_boundary_exponents_optimal
 #print axioms MLMC.mlqmc_finest_level_cost_lower
 #print axioms MLMC.mlqmc_finest_level_exponent_optimal
+#print axioms MLMC.nested_mimc_smooth_variance_rate
+#print axioms MLMC.nested_mimc_smooth_mean_rate
+#print axioms MLMC.nested_mimc_smooth_complexity
+#print axioms MLMC.exists_isMinOn_bitLevelCost_of_nonneg
+#print axioms MLMC.exists_isMinOn_bitLevelCost
+#print axioms MLMC.exists_best_uniform_bitLevelCost
+#print axioms MLMC.eq36_eq35_of_isLocalMin
+#print axioms MLMC.lagrange_of_isMinOn_bitLevelCost
+#print axioms MLMC.isMinOn_lambda_bitLevelCost
+#print axioms MLMC.bitLevelCost_lt_uniform
+#print axioms MLMC.kkt_of_isMinOn_box
+#print axioms MLMC.convexOn_sqrt_vIndepR
+#print axioms MLMC.convexOn_bitLevelCost
+#print axioms MLMC.strictConvexOn_bitLevelCost
+#print axioms MLMC.existsUnique_isMinOn_bitLevelCost
+#print axioms MLMC.not_convexOn_bitLevelCost
 -- helper lemmas that the prove2.me generator promotes to nodes
 #print axioms MLMC.sqrt_Vb_mul_Cb
 #print axioms MLMC.two_rpow_levelL_le
