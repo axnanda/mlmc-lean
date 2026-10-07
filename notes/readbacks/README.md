@@ -389,3 +389,26 @@ Findings and what was done:
   `latticeRule_replicates` needs them only for `r < R` and pairwise.
 - **Coverage gap, documented:** the boundary case `b = g ≤ a` (cost `ε⁻¹|log ε|^{3/2}`) has no
   exact-exponent theorem; `mlqmc_complexity_lt_two` covers it with some `p < 2`.
+
+**Thirteenth round (2026-10-07).** Blind read-backs of the 18 theorems added in round 13:
+`consistency_check.md` (R3: `ConsistencyCheck`; 9 theorems) and `nested_kink_sde.md` (R4:
+`NestedKinkSde`; 9 theorems).  All 18 read back as true; none is vacuous and none holds only
+because of a junk value.  The R3 auditor compiled a concrete instance of the sharpness theorem
+(Gaussian inputs on `ℕ × ℕ`) and recomputed the small-sample failure probabilities exactly: below
+`0.003` only from `N = 275`, tending to `0.0026998` from above.  The R4 auditor checked that the
+example instantiates every hypothesis of the rate theorems, and enumerated the MIMC correction of
+the example exactly (inner coins exactly, the outer integral as a piecewise quadratic): the
+variance is `14` to `18` times the proved lower bound, it behaves like
+`2^{−ℓ₁/2} min(2^{−ℓ₁}, 2^{−2ℓ₂})`, and the threshold `2β₁ + β₂ = 3` of the refutation is sharp.
+Findings and what was done:
+
+- **No hypothesis on `P^f_{ℓ+1}`** in the main consistency theorems (it cancels from `a − b + c`,
+  and the empirical standard deviation satisfies the triangle inequality), as their docstrings
+  say; `consistency_check_of_variance_estimates` keeps it so that its hypotheses on the true
+  variances are not junk values.  Kept.
+- **The check's power** (failure with probability tending to `1` when (2.4) fails) is not stated;
+  the paper does not claim it.  Kept.
+- **The example's inner error is deterministic**, so it meets the strong-error hypothesis at a
+  better rate than assumed; a variant with random error at exactly the assumed rate also meets all
+  hypotheses (R4 report, point 2).  Non-vacuity does not depend on it.  Kept.
+- **`hingeAntithetic`** is a helper definition used only in proofs.  Kept.
