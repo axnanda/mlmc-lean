@@ -26,7 +26,9 @@ trap 'rm -f "$axioms"' EXIT
 lake env lean scripts/AxiomCheck.lean | tee "$axioms"
 if grep -q "sorryAx" "$axioms"; then echo "sorry found"; exit 1; fi
 ok='(propext|Classical\.choice|Quot\.sound)'
-if grep "depends on axioms" "$axioms" | grep -vE "depends on axioms: \[$ok(, $ok)*\][[:space:]]*$"; then
+# Lean wraps the axiom list of a long theorem name over several lines: join them first
+if sed -E ':a;N;$!ba;s/,\n[[:space:]]+/, /g' "$axioms" | grep "depends on axioms" |
+    grep -vE "depends on axioms: \[$ok(, $ok)*\][[:space:]]*$"; then
   echo "unexpected axioms"; exit 1
 fi
 
