@@ -347,6 +347,28 @@ Lean statement or to the reason it is not formalised. The deviations of the new 
   on the straddling event of probability `O(2^{−ℓ₁/2})`, and `V[Y_ℓ] ≥ 2^{−(2ℓ₂ + j + 17)}` at
   `ℓ = (2j + 1, ℓ₂ + 1)` (`kinkMimc_variance_ge`), so no rates with `2β₁ + β₂ > 3` hold
   (`nested_mimc_kink_rates_false`).
+* **Confidence intervals with estimated variances (G15 §2.1, p. 8; `MLMCConfidenceEstimated.lean`,
+  round 14).** `σ̂_k² = ∑_ℓ s_ℓ²/N_{k,ℓ}` with the biased empirical variances of the samples the
+  estimator uses. For a growing number of levels the consistency of `σ̂_k` assumes a uniform
+  kurtosis bound (with `E|s_N² − V| ≤ (√((κ−1)/N) + 1/N) V`, an `L¹` analogue of the paper's
+  §3.3 heuristic for the standard deviation of `s_N²`, which itself needs a larger `O(1/N)` term).
+  `L_k` and `N_{k,ℓ}` are deterministic: the test `zσ̂_k ≤ θ TOL_k` is evaluated at a fixed `k`,
+  not at the random stopping index of the adaptive algorithm, which is not formalised.
+* **The MIMC rates for a piecewise linear `f` (G15 §9.2, p. 60; `NestedMimcKink.lean`, round
+  14).** The corrected rates are `V = O(2^{−ℓ₁−ℓ₂})` (strong order `½` in mean square; sharp along
+  `ℓ₁ = 2ℓ₂`) and `|E[Y]| = O(2^{−ℓ₁/2−ℓ₂})` (first-order strong convergence; the smooth-case
+  `O(2^{−ℓ₁−ℓ₂})` fails numerically when the weak error depends on the outer sample). With
+  `β = γ = (1, 1)` Theorem 2 gives `O(ε⁻²|log ε|⁴)`, an upper bound; whether another index set
+  reaches `O(ε⁻²)` is not decided.
+* **The lookup-table asymptotics (HG25 §3.4, p. 7; `LUTAsymptotics.lean`, round 14).** Method 3:
+  the values on each dyadic interval are the least-squares affine fit (19) to the LUT values
+  (15), with `j = 0` joined to the group `{0, 1}`; the MSE converges to `C = 2∑_k E_k > 0`
+  (assuming `f(1 − u) = −f(u)` and strong concavity on one dyadic interval, as for `Φ⁻¹`). The
+  paper's "when `d` increases by 1 the MSE is reduced only in the interval closest to 0" is only
+  asymptotic: the error on every dyadic interval decreases with `d` (exactly, for quadratic
+  pieces, by `f′(c_k)²|D_k|4^{−d}/12`). Method 1: under block-wise bounds on the increments of
+  `f` (which `Φ⁻¹` satisfies) the MSE is of order `2^{−d}/d`, so `log(MSE)/d → −log 2`; the exact
+  halving ratio and method 2 are not formalised.
 
 ### Corrections to the papers recorded elsewhere, collected
 
@@ -368,7 +390,7 @@ Lean statement or to the reason it is not formalised. The deviations of the new 
 | G15 | §7.3, p. 54 | `√h Z_n` | `√k Z_n` | `ApplicationExtras.lean` |
 | G15 | §9.1, p. 58; §9.2, p. 60 | `−1/(4N_ℓ)` | `−1/(8N_ℓ)` | `antithetic_quadratic`, `NestedRates.lean` |
 | G15 | §9.2, p. 59 | `O(ε⁻²(log ε)⁻²)` | `O(ε⁻²(log ε)²)` | `nested_complexity` |
-| G15 | §9.2, p. 60 | MIMC with a kink: `β₁ = β₂ = 1.5`, cost `O(ε⁻²)` | false: no `β₁, β₂` with `2β₁ + β₂ > 3` (counterexample) | `nested_mimc_kink_rates_false`, `NestedKinkSde.lean` |
+| G15 | §9.2, p. 60 | MIMC with a kink: `β₁ = β₂ = 1.5`, cost `O(ε⁻²)` | false: no `β₁, β₂` with `2β₁ + β₂ > 3` (counterexample); the true rates are `β₁ = β₂ = 1` | `nested_mimc_kink_rates_false`, `nested_mimc_kink_variance_rate` |
 | G15 | §10.1, p. 61 | decay exponential in `N_ℓ − N_{ℓ−1}` | in `N_{ℓ−1}` | `variance_levels_le`, `markov_linear_levels` |
 | G15 | §10.2, p. 62 | `U_n = (I_n + ½)/I_max` | `(I_n + ½)/(I_max + 1)` (the printed `U_n` exceeds `1` for `I_n = I_max`) | — |
 | HG25 | (21) | `E[δx²] = 4^{e−d−1}` | `≤` | `integral_sq_roundError_le` |
@@ -376,6 +398,7 @@ Lean statement or to the reason it is not formalised. The deviations of the new 
 | HG25 | (27) | derived under perfect correlation | holds for every joint law | `variance_linearised_corr` |
 | HG25 | (28) | factor `1/12` on the MSE term | no factor `1/12` | `variance_extended_indep` |
 | HG25 | Fig. 3, 5 captions | `√(Ṽ/V)` | `√(V^Δ/V)` | `HaasGilesRemarks.lean` |
+| HG25 | §3.4, p. 7 | dyadic tables: "the MSE is reduced only in the interval closest to 0" | only asymptotically; the error on every dyadic interval decreases with `d` | `dyadic_groupMSE_eq`, `groupMSE_odd_quadratic` |
 | HG25 | §6.1, p. 12 | cost factor `< 1` ⇒ nested framework cheaper | true for (34); for (32) e.g. `ρ²(1 + ρ²) < 1` | `nestedCost_lt_of_costFactor_le`, `exists_costFactor_lt_one_nestedCost_gt` |
 | HG25 | §6.3, p. 14 | fixed-precision rounding error `O(h⁻¹2^{e−d})` | worst case; root mean square `Θ(h^{−1/2}2^{e−d})` under (22) | `integral_sq_perturbed_path_sub_bounds` |
 

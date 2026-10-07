@@ -70,7 +70,8 @@ used, and `N_{k,ℓ} ≥ 1`, `σ_k > 0` only for all large `k` (finitely many ro
   confidence at least `2Φ(z) − 1`.
 
 The intervals use the exact standard deviation `σ_k`; Collier et al. use estimated variances,
-which needs a further Slutsky argument for the consistency of the estimates, not formalised here.
+which needs a further Slutsky argument for the consistency of the estimates: that is
+`MlmcLean/MLMCConfidenceEstimated.lean`.
 
 **Method.**  Characteristic functions and Lévy's continuity theorem
 (`MeasureTheory.ProbabilityMeasure.tendsto_iff_tendsto_charFun`).  With
@@ -928,7 +929,7 @@ confidence `2Φ(z) − 1`.  For `E[P]` itself see
 `tendsto_measureReal_abs_mlmcEstimator_sub_le_of_bias` and
 `eventually_lt_measureReal_abs_mlmcEstimator_sub_le_tol`.  Here `σ_k` is the exact standard
 deviation of `Y_k`; replacing it by a consistent estimate (Slutsky's lemma), as Collier et al. do
-in practice, is not formalised. -/
+in practice, is `tendsto_measureReal_abs_mlmcEstimator_sub_le_estSd`. -/
 theorem tendsto_measureReal_abs_mlmcEstimator_sub_le [IsProbabilityMeasure μ]
     (hω : ∀ p, MeasurePreserving (ω p) μ ν) (hind : iIndepFun ω μ)
     {L : ℕ → ℕ} (hPl : ∀ k, ∀ ℓ ≤ L k, MemLp (Pl ℓ) 2 ν) {δ : ℝ} (hδ : 0 ≤ δ)
@@ -1064,8 +1065,9 @@ confidence at least `2Φ(z) − 1`: for every `η > 0`, eventually
 `P(|Y_k − E[P]| ≤ TOL_k) > 2Φ(z) − 1 − η`, i.e. `liminf_k P(|Y_k − E[P]| ≤ TOL_k) ≥ 2Φ(z) − 1`.
 (Confidence `1 − α` corresponds to `z = Φ⁻¹(1 − α/2)`.)  The proof is the inclusion
 `{|Y_k − E[P_{L_k}]| ≤ z σ_k} ⊆ {|Y_k − E[P]| ≤ TOL_k}`.  Here `σ_k` is the exact standard
-deviation of `Y_k`; the variance estimation of Collier et al. is not formalised, and no
-integrability of `P` is needed, as only the number `∫ P dν` enters. -/
+deviation of `Y_k` (for the estimated variances of Collier et al. see
+`eventually_lt_measureReal_test_and_abs_sub_le_tol`), and no integrability of `P` is needed, as
+only the number `∫ P dν` enters. -/
 theorem eventually_lt_measureReal_abs_mlmcEstimator_sub_le_tol [IsProbabilityMeasure μ]
     (hω : ∀ p, MeasurePreserving (ω p) μ ν) (hind : iIndepFun ω μ)
     {L : ℕ → ℕ} (hPl : ∀ k, ∀ ℓ ≤ L k, MemLp (Pl ℓ) 2 ν) {δ : ℝ} (hδ : 0 ≤ δ)
