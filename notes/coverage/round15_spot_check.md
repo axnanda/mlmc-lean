@@ -47,3 +47,11 @@ principle), Feynman–Kac, information-based lower bounds, Lévy-process and SPD
 (`NestedMimcSmooth.lean`), H6-12/-14/-16 (`BitWidthOptimum.lean`), G7.1-04/-05 for the actual
 scheme (`EllipticFD.lean`), and G10.1-16 with a fixed step, the premise of H3-07, G5.5-04/-05,
 G2.1-30, G2.4-35 and G5.1-03 for a general refinement factor (`GilesCorollaries.lean`).
+
+**Follow-up (round 17).**  Formalised from the remaining list: the discretely monitored Asian and
+lookback rows of Table 5.2 for GBM (`GBMPathDependent.lean`), the mean-square stability of the
+§7.3 scheme, G7.3-04 (`SPDEStability.lean`), the deterministic and stochastic facts behind the
+drift-implicit remedy of §5.6 (`DriftImplicit.lean`), and Gaussian union grids, the
+Brownian-bridge midpoint law and the time reversal via `IsPreBrownianReal` (`BrownianPaths.lean`).
+Still open from the list: the digital option with higher moments (the kurtosis rates need a lower
+bound on the mismatch probability).
