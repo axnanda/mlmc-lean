@@ -16,7 +16,11 @@ the docstrings, and treated the README and `notes/` as unverified leads.
 
 No Lean statement misstates a paper. The tables are the state **before** round 10; every item
 they mark missing or partial, and every out-of-scope item they found undocumented, is resolved
-below. "Not formalised" entries give the reason; they are also listed in `PLAN.md`.
+below. "Not formalised" entries give the reason; they are also listed in `PLAN.md`.  Later
+rounds append a note "Round N: …" to a row without changing its status column or the counts
+above, so for such a row the note and the resolution table give the current state; status
+columns are changed only to correct the round-10 classification itself (G5.2-18, DONE →
+PARTIAL: the law equality it needs is a hypothesis).
 
 ## Resolution of the missing and partial items
 
@@ -41,7 +45,7 @@ below. "Not formalised" entries give the reason; they are also listed in `PLAN.m
 | G5.3-09 | antithetic `O(h²)` for smooth payoffs (d dimensions) | `abs_midpoint_sub_avg_le_fderiv`, `abs_antithetic_le_fderiv`, `abs_antithetic_le_midpoint`, `variance_antithetic_le_fderiv`, `variance_antithetic_le_midpoint` |
 | G5.3-10 | antithetic `O(h^{3/2})` for the call | `abs_call_antithetic_le`, `variance_call_antithetic_le` (under a bounded conditional density; marginal information alone does not give `3/2`), `variance_call_antithetic_le_holder` |
 | G5.4-02 | the call payoff's derivative is discontinuous | `hasDerivAt_call_payoff` |
-| G5.6-04, -05 | super-linear drift is unstable; taming | `eulerCubic_growth`, `eulerCubic_tendsto_atTop`, `eulerCubic_bounded`, `abs_tamedDrift_lt`, `abs_tamedDriftStep_sub_eulerDriftStep_le`, `tamedDriftStep_iterate_bounded`, `tamedCubic_bounded` (deterministic analogues). Round 15 (`EulerSuperlinear.lean`), for the paper's example `dS = −S³dt + dW`: the explicit Euler–Maruyama scheme has `E|X_N|^p → ∞` as `N → ∞` for every `p > 0` (`emCubic_moment_tendsto_atTop`, `emCubic_integral_abs_tendsto_atTop`; Hutzenthaler–Jentzen–Kloeden's theorem), while the tamed scheme has `E X_N² ≤ x₀² + T` uniformly in `N` (`tamedCubic_second_moment_le`). Not formalised: the general theorems of Hutzenthaler–Jentzen–Kloeden for other coefficients and higher moments of the tamed scheme, and the moments of the exact solution |
+| G5.6-04, -05 | super-linear drift is unstable; taming | `eulerCubic_growth`, `eulerCubic_tendsto_atTop`, `eulerCubic_bounded`, `abs_tamedDrift_lt`, `abs_tamedDriftStep_sub_eulerDriftStep_le`, `tamedDriftStep_iterate_bounded`, `tamedCubic_bounded` (deterministic analogues). Round 15 (`EulerSuperlinear.lean`), for the paper's example `dS = −S³dt + dW`: the explicit Euler–Maruyama scheme has `E|X_N|^p → ∞` as `N → ∞` for every `p > 0` (`emCubic_moment_tendsto_atTop`, `emCubic_integral_abs_tendsto_atTop`; Hutzenthaler–Jentzen–Kloeden's theorem), while the tamed scheme has `E X_N² ≤ x₀² + T` uniformly in `N ≥ T/54` (`tamedCubic_second_moment_le`). Not formalised: the general theorems of Hutzenthaler–Jentzen–Kloeden for other coefficients and higher moments of the tamed scheme, and the moments of the exact solution |
 | G5.7-06 | the smoothed CDF for general smoothers | `abs_smoothCDF_sub_le_of_bounded`, `tendsto_smoothCDF_of_bounded`, `tendsto_smoothCDF_of_continuous` |
 | G5.7-11 | density of multi-dimensional outputs | `tendsto_density_multidim`, `tendsto_density_euclidean` |
 | G6-14 | Lévy increments summed for the coarse path | `measurePreserving_levyPairSum`, `integral_levyCoarse`, `levy_telescoping`, `levyPath_levyPairSum`, `map_levyPath_levyPairSum` |
