@@ -499,3 +499,30 @@ Findings and what was done:
   the LUT theorems' `MonotoneOn f` is not needed (martingale convergence gives it for any
   `f ∈ L¹`); `mc_exit_time_complexity` is parameter arithmetic on the MSE bound, as its docstring
   says, and `mc_complexity_lower` is the estimator-level lower bound.  Kept.
+
+**Seventeenth round (2026-10-07).** Blind read-backs of the 77 theorems added in round 17:
+`gbm_path_dependent.md` (R14: `GBMPathDependent`; 32 theorems), `spde_stability.md` (R15:
+`SPDEStability`; 17), `drift_implicit.md` (R16: `DriftImplicit`; 14) and `brownian_paths.md` (R17:
+`BrownianPaths`; 14).  All 77 read back as true; none is vacuous and none holds only because of a
+junk value.  The R14 auditor checked the coupling and the strong-error constants by exact
+computation and simulation (the level variances halve per level for Euler–Maruyama and quarter for
+Milstein, far below the stated bounds) and the quantifier order of the Theorem 1 statements.  The
+R15 auditor verified the closed forms with sympy, gave a sympy certificate for the stability bound,
+showed that `λ(1 + 2ρ²) ≤ 1` is sharp and that `ρ ≤ 1` and `k ≥ 0` are needed, and checked the
+periodic Parseval statement for `N ≤ 7`.  The R16 auditor checked that the unspecified value of
+`Function.invFun` is never reached, that the explicit-Euler threshold `h x₀² = 2` is exact, and the
+divergence of explicit Euler's moments.  The R17 auditor checked the covariance of the time-reversed
+processes exactly (no mismatch over 39,605 triples each) and the union-grid laws on 2,000 random
+grids with repeated points, and proved the four pathwise identities in Lean.
+Findings and what was done:
+
+- **`unionGrid_brownian_map_eq`** gives each path's own law, not the joint law of the fine and
+  coarse paths (which follows from `unionGridBM_increments`); its docstring already says so.  Kept.
+- **Superfluous hypotheses:** `0 < m` in the Asian lemmas, `0 < N` in the periodic SPDE
+  statements; some sign conditions in `SPDEStability` are slightly stronger than needed; the
+  constant `4` of `floatLookbackPayoff_sq_sub_le` could be `2`.  Kept.
+- **`implicitPath_moments_le`** assumes global dissipativity `y a(y) ≤ 0`, which excludes
+  double-well drifts; `emLinear_second_moment_tendsto_atTop` assumes `2 < Lh` where `2 ≤ Lh`
+  suffices when `σ ≠ 0`.  Kept (the cubic drift of §5.6 satisfies the hypothesis).
+- **`linRecPath`** appears in no statement; it is the common recursion behind the integrating-factor
+  and explicit linear schemes, used in their proofs.  Kept.

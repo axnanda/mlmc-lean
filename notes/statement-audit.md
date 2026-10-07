@@ -393,6 +393,21 @@ Lean statement or to the reason it is not formalised. The deviations of the new 
 * **Small corollaries (`GilesCorollaries.lean`, round 16).** Contracting SDEs with a fixed step
   only (the level-dependent steps of §10.1 need SDE strong convergence); the lookup-table streams
   for the method-1 tables only.
+* **Path-dependent payoffs for GBM (`GBMPathDependent.lean`, round 17).** Table 5.2's Asian and
+  lookback options are continuously monitored; the Lean options are monitored at `m` fixed dates
+  `kT/m` that lie on every grid (level `j` has `m 2^j` steps), so the hierarchy starts at
+  `ℓ₀ = log₂ m`.  The Euler–Maruyama weak order proved is `½`, not the paper's `1`; Theorem 1
+  only needs `α ≥ ½ min(β, γ)`.  The `O(h_ℓ)` variance of §5.2, p. 38, concerns the maximum over
+  all time steps of a level and does not contradict the `O(h²)` proved here for fixed dates.
+* **SPDE stability (`SPDEStability.lean`, round 17).** The paper states no condition and cites
+  Giles–Reisinger (2012), not in `docs/`; the condition `λ(1 + 2ρ²) ≤ 1`, `λ = k/h²`, is derived
+  here (von Neumann analysis on `ℤ` and on periodic grids, not on the half line with `p(0) = 0`).
+* **Drift-implicit methods (`DriftImplicit.lean`, round 17).** §5.6 only names the remedies; the
+  Lean results are the elementary facts behind them, with additive noise, moments of order 2 and 4,
+  and the integrating factor for a linear drift only (not the Heston treatment).
+* **Brownian paths (`BrownianPaths.lean`, round 17).** Union grids are deterministic (the adaptive
+  grids of §5.6 depend on the path); time reversal is proved for the finite-dimensional laws
+  (`IsPreBrownianReal`), not for path continuity.
 
 ### Corrections to the papers recorded elsewhere, collected
 
@@ -411,7 +426,8 @@ Lean statement or to the reason it is not formalised. The deviations of the new 
 | G15 | §5.2, p. 38 | "`O(h_ℓ)` difference on average" | `O(h_ℓ^{1/2})` | — |
 | G15 | §5.3, p. 39 | `b(Ŝ^c_n, c_n)` | `b(Ŝ^c_n, t_n)` | — |
 | G15 | §7.1, p. 49 | a constant `K` with `|P − P_ℓ| < K h_ℓ²` | impossible for the example (error `∝ Z²`); a random `K` with `E[K²] < ∞` | `elliptic_rates` (literal), `ApplicationExtras.lean` (random `K`) |
-| G15 | §7.3, p. 54 | `√h Z_n` | `√k Z_n` | `ApplicationExtras.lean` |
+| G15 | §5.6, p. 44 | "a change or variables" | "a change of variables" | — |
+| G15 | §7.3, p. 54 | `√h Z_n` | `√k Z_n` | `ApplicationExtras.lean`, `spdeStep_eq_milstein` |
 | G15 | §9.1, p. 58; §9.2, p. 60 | `−1/(4N_ℓ)` | `−1/(8N_ℓ)` | `antithetic_quadratic`, `NestedRates.lean` |
 | G15 | §9.2, p. 59 | `O(ε⁻²(log ε)⁻²)` | `O(ε⁻²(log ε)²)` | `nested_complexity` |
 | G15 | §9.2, p. 60 | MIMC with a kink: `β₁ = β₂ = 1.5`, cost `O(ε⁻²)` | false: no `β₁, β₂` with `2β₁ + β₂ > 3` (counterexample); the true rates are `β₁ = β₂ = 1` | `nested_mimc_kink_rates_false`, `nested_mimc_kink_variance_rate` |
