@@ -32,8 +32,8 @@ For the estimator (2.2) built from independent inputs `ω^{(ℓ,n)}` of law `ν`
 This is the statement for a fixed number of levels and sample sizes proportional to a common `n`.
 Collier et al. let the number of levels grow as the tolerance `ε → 0`, so that the number of
 levels, the laws of the corrections and the sample sizes all change together; asymptotic normality
-in that regime is a Lindeberg–Feller central limit theorem for triangular arrays, which Mathlib
-does not have.
+in that regime is a central limit theorem for triangular arrays, which Mathlib does not have.  It is
+proved in `MlmcLean/MLMCCentralLimit.lean` (Lindeberg and Lyapunov), with the confidence intervals.
 
 **Haas–Giles (2025), §3.2, p. 5.** "For example take an integer `n` that divides `d` and produce
 an approximate random number `X^{(1)}` from the first `d/n` bits of `j`, then `X^{(2)}` from the
@@ -283,7 +283,8 @@ The characteristic function of `√n (Y − E[P_L])` is the product over the lev
 This is the statement for a fixed number of levels and sample sizes proportional to a common `n`.
 Collier et al. let `L` grow as the tolerance `ε → 0`, with the `N_ℓ` depending on `ε`, so the
 number of summands, their laws and the number of levels change together; normality in that regime
-is a Lindeberg–Feller central limit theorem for triangular arrays, which Mathlib does not have. -/
+is a central limit theorem for triangular arrays, and needs a further hypothesis such as Lyapunov's
+condition (`tendstoInDistribution_mlmcEstimator_lyapunov` in `MlmcLean/MLMCCentralLimit.lean`). -/
 theorem tendstoInDistribution_mlmcEstimator {Ω' : Type*} {mΩ' : MeasurableSpace Ω'}
     {P' : Measure Ω'} [IsProbabilityMeasure μ] [IsProbabilityMeasure P'] {Pl : ℕ → Ω₀ → ℝ}
     (hω : ∀ p, MeasurePreserving (ω p) μ ν) (hind : iIndepFun ω μ) {L : ℕ}

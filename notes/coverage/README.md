@@ -23,7 +23,9 @@ below. "Not formalised" entries give the reason; they are also listed in `PLAN.m
 | Item | Claim | Resolution (Lean, all in the axiom audit) |
 |---|---|---|
 | G2.1-35 | each level estimator is asymptotically normal | `tendstoInDistribution_levelEstimator` (`AsymptoticNormal.lean`, from Mathlib's CLT) |
-| G2.1-36 | "and therefore so is `Y`" | `tendstoInDistribution_mlmcEstimator`, for a fixed number of levels and `N_ℓ = m_ℓ n`. Not formalised: `L` growing with `ε` (Collier et al.), which needs a Lindeberg–Feller CLT that Mathlib lacks |
+| G2.1-36 | "and therefore so is `Y`" | `tendstoInDistribution_mlmcEstimator`, for a fixed number of levels and `N_ℓ = m_ℓ n`. Round 12: `L` growing with `ε` (Collier et al.) in `MLMCCentralLimit.lean`: the Lindeberg and Lyapunov CLTs for triangular arrays (`tendstoInDistribution_lindeberg`, `tendstoInDistribution_lyapunov`) and `tendstoInDistribution_mlmcEstimator_lyapunov`, `tendstoInDistribution_mlmcEstimator_of_moment_le`. With a growing `L` the "therefore" needs a hypothesis such as Lyapunov's condition (counterexample in the module docstring) |
+| G2.1-34 | Collier et al.'s confidence interval for `E[P]` | Round 12 (`MLMCCentralLimit.lean`), with the exact `σ_k`: `P(|Y_k − E[P_{L_k}]| ≤ zσ_k) → 2Φ(z) − 1` (`tendsto_measureReal_abs_mlmcEstimator_sub_le`, `…_of_moment_le`), around `E[P]` when the bias is `o(σ_k)` (`tendsto_measureReal_abs_mlmcEstimator_sub_le_of_bias`) and with the tolerance split (`eventually_lt_measureReal_abs_mlmcEstimator_sub_le_tol`). Not formalised: intervals from estimated variances |
+| G3.5-03, G1-04 (QMC), G2.7-04 | QMC error `O(N⁻¹)`; MLQMC complexity `O(ε^{−p})`, `p < 2` | Round 12, in one dimension (`QMC1D.lean`): `qmc_error_le_of_boundedVariationOn`, `latticeRule_error_le_variation_div`, `latticeRule_randomShift`, `latticeRule_replicates`, `rank1Lattice_torus_replicates`, `latticeRule_vs_monteCarlo`; `mlqmc_complexity`, `mlqmc_complexity_of_lt`, `mlqmc_complexity_lt_two` (`p < 2` whenever `g < 2a` and `g < a + b`). Not formalised: `d > 1` (discrepancy theory) |
 | G2.2-16 | `E_ℓ² ≪ V_ℓ` ⇒ `N ≈ ε⁻² Σ V_ℓ/p_ℓ` | `singleTerm_variance_le_of_sq_le`, `singleTermN_samples_of_sq_le` (factor `1 + δ`) |
 | G2.3-08 | ML2R bias `O(2^{−αL²})` | `abs_ml2rWeight_le_sharp`, `ml2r_bias_le`: `O(2^{−αL(L+1)/2})` uniformly in `L`; the printed rate is not attainable (`ml2r_bias`) |
 | G2.3-12, -13 | ML2R cost `O(ε⁻²|log ε|)`, `O(ε⁻²2^{(γ−β)√(|log₂ε|/α)})` | `ml2r_theorem_eq`, `ml2r_theorem_lt` for the estimator's MSE (exponent `√(2|log₂ε|/α)`) |
@@ -68,8 +70,7 @@ below. "Not formalised" entries give the reason; they are also listed in `PLAN.m
 
 | Items | Claim | Reason |
 |---|---|---|
-| G1-04, G2.7-04, G3.5-03 | QMC error `O(N⁻¹)`, MLQMC complexity | QMC error theory (discrepancy, Koksma–Hlawka) is not in Mathlib |
-| G2.1-34 | Collier et al.'s confidence-interval theorem | cited, not stated; needs a Lindeberg–Feller CLT |
+| G1-04, G2.7-04, G3.5-03 | QMC error `O(N⁻¹)`, MLQMC complexity, in `d` dimensions | QMC error theory (discrepancy, Koksma–Hlawka) is not in Mathlib. Round 12 proves the one-dimensional case (`QMC1D.lean`, see the resolution table) |
 | G2.5-12 | other norms via Banach-space results | cited (type-2 Banach spaces); the Hilbert-space case is proved (`giles_theorem1_hilbert`) and the sup-norm counterexample is `sq_norm_add_of_indepFun_fails_sup` |
 | G3.5-06 | digital scrambling of Sobol points | QMC construction |
 | G5.1-15, -16 | Creutzig et al.'s lower bound and worst-case optimality | cited information-based complexity |

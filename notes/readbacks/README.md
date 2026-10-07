@@ -364,3 +364,28 @@ Findings and what was done:
   the paper's "lengthy analysis", documented, with the weaker `…_holder` version needing only
   marginal information); the modelling assumptions of the rounding-error model (22)
   (uniform, independent errors), which are the paper's.
+
+**Twelfth round (2026-10-07).** Blind read-backs of the 28 theorems added in round 12, under the
+same rules: `mlmc_central_limit.md` (R1: `MLMCCentralLimit`; 11 theorems) and `qmc1d.md` (R2:
+`QMC1D`; 17 theorems, with the 5 definitions they use).  All 28 read back as true; none is vacuous
+and none holds only because of a junk value.  The R1 auditor compiled the packet and proved in Lean
+that `δ = 0` makes the Lyapunov hypotheses contradictory and that `hσ` and `hN` are needed (with
+`P_ℓ ≡ 0` every other hypothesis holds and the conclusion fails); it checked a bounded and a
+Gaussian instance with a growing number of levels, the former against the exact law of the
+estimator (coverage `0.9501` at `z = 1.96`).  The R2 auditor checked the constants in exact
+arithmetic (all sharp: they are the star discrepancies of the point sets), proved in Lean that the
+uniform-shift hypotheses force a probability measure and that `AddCircle.equivIco 1 0 ↑x` is
+`Int.fract x`, and checked the MLQMC exponents against an explicit construction and a lower bound
+(they cannot be lowered, and the excluded regimes are genuinely different).
+Findings and what was done:
+
+- **`δ = 0` is allowed but vacuous** in the Lyapunov theorems; the docstrings already say that
+  only `δ > 0` is of use, and instances with `δ > 0` exist.  Kept.
+- **No integrability of `P`** in the theorems centred at `E[P]`: they hold for any constant in
+  place of `∫ P dν`, as their docstrings say.  Kept.
+- **Negative costs** `C_ℓ`, `c₃` in the MLQMC theorems only add trivially true instances.  Kept.
+- **`rank1Lattice_torus_replicates`** assumes uniform, mutually independent shifts for all `r`
+  (the hypotheses of `randomShift_replicates`, which it applies); its docstring now says that
+  `latticeRule_replicates` needs them only for `r < R` and pairwise.
+- **Coverage gap, documented:** the boundary case `b = g ≤ a` (cost `ε⁻¹|log ε|^{3/2}`) has no
+  exact-exponent theorem; `mlqmc_complexity_lt_two` covers it with some `p < 2`.

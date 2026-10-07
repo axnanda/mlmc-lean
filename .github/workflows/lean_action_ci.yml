@@ -30,7 +30,9 @@ jobs:
           if grep -q "sorryAx" axioms.txt; then echo "::error::sorry found"; exit 1; fi
           # each axiom list must consist of propext, Classical.choice and Quot.sound only
           ok='(propext|Classical\.choice|Quot\.sound)'
-          if grep "depends on axioms" axioms.txt | grep -vE "depends on axioms: \[$ok(, $ok)*\][[:space:]]*$"; then
+          # Lean wraps the axiom list of a long theorem name over several lines: join them first
+          if sed -E ':a;N;$!ba;s/,\n[[:space:]]+/, /g' axioms.txt | grep "depends on axioms" |
+              grep -vE "depends on axioms: \[$ok(, $ok)*\][[:space:]]*$"; then
             echo "::error::unexpected axioms"; exit 1
           fi
       # prove2.me upload pipeline, Phase 1: the declaration graph (Stage 1) and the per-file
