@@ -178,7 +178,8 @@ lemma emCubic_abs_ge {h x₀ : ℝ} (hh0 : 0 < h) (hh1 : h ≤ 1) {z : ℕ → �
   set X := emPath (fun S _ => -S ^ 3) (fun _ _ => 1) h x₀ z with hXdef
   have hrec : ∀ k, X (k + 1) = eulerDriftStep (fun S => -S ^ 3) h (X k) + √h * z k := by
     intro k
-    simp only [hXdef, emPath_succ, eulerDriftStep]
+    rw [hXdef, emPath_succ]
+    simp only [eulerDriftStep]
     ring
   have h4 : 4 ≤ h * X 1 ^ 2 := by
     have e1 : X 1 = x₀ - h * x₀ ^ 3 + √h * z 0 := by
@@ -265,7 +266,12 @@ lemma memLp_emCubic {Ω : Type*} [MeasurableSpace Ω] {μ : Measure Ω} [IsFinit
       intro q hq
       convert memLp_mul_of_forall ih' (memLp_mul_of_forall ih' ih') q hq using 2 with ω
       ring
-    simp only [emPath_succ]
+    have e : (fun ω => emPath (fun S _ => -S ^ 3) (fun _ _ => 1) h x₀ (fun k => Z k ω) (n + 1)) =
+        fun ω => emPath (fun S _ => -S ^ 3) (fun _ _ => 1) h x₀ (fun k => Z k ω) n +
+          -emPath (fun S _ => -S ^ 3) (fun _ _ => 1) h x₀ (fun k => Z k ω) n ^ 3 * h +
+          1 * √h * Z n ω :=
+      funext fun ω => emPath_succ _ _ h x₀ (fun k => Z k ω) n
+    rw [e]
     exact ((ih' q hq).add ((hcube q hq).neg.mul_const h)).add
       ((hZ n (Nat.lt_succ_self n) q hq).const_mul (1 * √h))
 

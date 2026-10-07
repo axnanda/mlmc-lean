@@ -20,7 +20,10 @@ Status legend:
 * **N/A**: empirical, historical, a definition, or informal prose.
 
 All Lean files are in `MlmcLean/`. Lean names in `code` are declarations. Unless
-the notes say otherwise, each one is a main theorem listed in `scripts/AxiomCheck.lean`.
+the notes say otherwise, each one is a main theorem listed in `scripts/AxiomCheck.lean`; the
+helper lemmas `alg1Level_spec`, `anchor_le_alg1Rem`, `crossDiff_one`, `mem_indexSet`,
+`mlqmcInner_variance` and `mlqmcState_variance` cited in the §2.4–§3 tables are not listed there
+themselves (they are covered through the theorems that use them).
 
 ## Counts
 
