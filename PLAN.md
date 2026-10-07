@@ -172,20 +172,23 @@ items listed under "Not formalised" below.
   (`MLMCCentralLimit.lean`); QMC in one dimension — error `O(N⁻¹)` for integrands of bounded
   variation, randomly shifted rank-1 lattices, and the MLQMC complexity `O(ε^{−p})`, `p < 2`
   (`QMC1D.lean`).
+- ✅ Round 13: the consistency check with empirical variances, asymptotically, with the paper's
+  `0.3%` failing for small samples (`ConsistencyCheck.lean`); nested simulation with a piecewise
+  linear `f` and discretised inner paths: `α = 1`, `β = 3/2`, cost `O(ε^{−5/2})`, and a
+  counterexample to the paper's MIMC rates `β₁ = β₂ = 1.5` for this case (`NestedKinkSde.lean`).
 - Not formalised (each with its reason in `notes/coverage/README.md`): the convergence orders of
   the discretisations of general SDEs, SPDEs and PDEs (Itô calculus and PDE regularity are not in
   Mathlib; proved for geometric Brownian motion from its exact solution) and of QMC in `d`
   dimensions (discrepancy theory; the one-dimensional case and the MLQMC complexity it gives are
-  proved); confidence intervals built from estimated variances; the consistency check with
-  estimated variances (Slutsky's theorem); the optimality of the simplex among all MIMC index sets; the kurtosis rates of the
-  digital option; path-dependent (adaptive) grids for Brownian and Poisson noise (a martingale
+  proved); confidence intervals built from estimated variances; the optimality of the simplex
+  among all MIMC index sets; the kurtosis rates of the digital option; path-dependent (adaptive) grids for Brownian and Poisson noise (a martingale
   argument); tau-leaping's weak rate against the exact chain and the exact (SSA) coupling; the
   moment results for super-linear drifts; the jump-diffusion and Lévy-process theory of §6 beyond
   the coarse-increment identity; the Karhunen–Loève expansion and the finite-element analysis of
   §7.2 and the stability constraint of §7.3; contracting SDEs (§10.1); the value of the dyadic
-  limit `C` and "MSE halves per bit" (Haas–Giles §3.4, asymptotics of `Φ⁻¹`); the rate `β = 1.5`
-  for a piecewise linear `f` with inner time steps (§9.2; proved for exact inner samples); the
-  remaining claims are numerical or empirical (measured rates, figures, run times) or hardware
+  limit `C` and "MSE halves per bit" (Haas–Giles §3.4, asymptotics of `Φ⁻¹`); a positive MIMC
+  rate for a piecewise linear `f` (the paper's `β₁ = β₂ = 1.5` is refuted, `NestedKinkSde.lean`);
+  the remaining claims are numerical or empirical (measured rates, figures, run times) or hardware
   facts.
 
 **M4: Research, needs Alex's sign-off before formalising: nested MLMC with level-dependent

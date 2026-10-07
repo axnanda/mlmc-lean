@@ -379,7 +379,9 @@ less than 0.3%", the ratio being `|a − b + c|/(3(√V_a + √V_b + √V_c))`).
 normally distributed with mean zero (its mean is zero under (2.4), `consistency_mean`; normality
 is the paper's implicit assumption), then
 `P(|a − b + c| > 3(√V_a + √V_b + √V_c)) < 0.003`, because
-`√V[a − b + c] ≤ √V_a + √V_b + √V_c` (`consistency_sd`) and `gaussian_tail_three`. -/
+`√V[a − b + c] ≤ √V_a + √V_b + √V_c` (`consistency_sd`) and `gaussian_tail_three`.  Here
+`V_a, V_b, V_c` are the true variances; with the paper's empirical estimates the bound holds
+asymptotically (`consistency_check_empirical` in `MlmcLean/ConsistencyCheck.lean`). -/
 theorem consistency_check_gaussian {a b c : Ω → ℝ} (ha : MemLp a 2 μ) (hb : MemLp b 2 μ)
     (hc : MemLp c 2 μ) {v : ℝ≥0} (hv : v ≠ 0)
     (hlaw : HasLaw (fun ω => a ω - b ω + c ω) (gaussianReal 0 v) μ) :

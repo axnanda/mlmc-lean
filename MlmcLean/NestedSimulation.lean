@@ -234,7 +234,9 @@ this corresponds to `α₁ = α₂ = 1, β₁ = β₂ = 2`, and `γ₁ = γ₂ =
 `O(ε⁻²)`").  For `D = 2`, `α = (1, 1)`, `γ = (1, 1)` and `β = (2, 2)` resp. `(1.5, 1.5)`, the
 exponent of Theorem 2 is `η = max_d (γ_d − β_d)/α_d = −1` resp. `−½`, so the bound of Theorem 2
 (`mimcBound`, in `giles_theorem2_boundary`, which allows `α_d = ½β_d`) is `ε⁻²` whatever the
-logarithmic exponents `e₁`, `e₂`. -/
+logarithmic exponents `e₁`, `e₂`.  This only evaluates the bound: for a piecewise linear `f`
+the rates `β₁ = β₂ = 1.5` are false (`nested_mimc_kink_rates_false`, `MlmcLean/NestedKinkSde.lean`).
+-/
 theorem nested_mimc_complexity (e₁ e₂ ε : ℝ) :
     mimcEta (D := 2) (fun _ => 1) (fun _ => 2) (fun _ => 1) = -1 ∧
       mimcEta (D := 2) (fun _ => 1) (fun _ => 1.5) (fun _ => 1) = -1 / 2 ∧

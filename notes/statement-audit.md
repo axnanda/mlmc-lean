@@ -326,6 +326,27 @@ Lean statement or to the reason it is not formalised. The deviations of the new 
   (`O(ε⁻¹|log ε|^{3/2})`) and lower bounds are not formalised. The paper's "under certain
   conditions … `p < 2`" gives no conditions; in this model `g < 2a` and `g < a + b` suffice
   (`mlqmc_complexity_lt_two`).
+* **The consistency check with empirical variances (G15 §3.3, p. 22; `ConsistencyCheck.lean`,
+  round 13).** The `0.3%` (`P(|Z| > 3) ≈ 0.0027`) needs `a − b + c` normal and the variances
+  exact. With empirical variances it holds only in the limit of many samples: the failure
+  probability is at most `P(|Z| ≥ 3) + η` for all large sample sizes, at any rates
+  (`consistency_check_empirical`), so eventually `< 0.003` (`consistency_check_empirical_lt`),
+  and the limit is attained (`consistency_check_empirical_sharp`). For a fixed sample size it can
+  fail: with `P^f = 0` on both levels and `P^c_ℓ ~ N(0, 1)` the failure probability is `0.280` for
+  `N = 2` and exceeds `0.003` for every `N ≤ 274`. The paper's levels `ℓ − 1, ℓ` are `ℓ, ℓ + 1`
+  in Lean; no hypothesis on `P^f_{ℓ+1}` and no non-degeneracy is needed.
+* **Nested simulation with a kink and inner time steps (G15 §9.2, p. 60; `NestedKinkSde.lean`,
+  round 13).** Only `f(x) = a₀ + a₁x + c·max(x − k, 0)` (one kink; several kinks add up if each
+  has a small-ball bound; curved pieces are not covered). The hypotheses are this
+  formalisation's: a small ball for the exact conditional mean near the kink, bounded centred
+  conditional fourth moments, weak order 1 uniformly in the outer sample and strong order 1/4 in
+  mean square of the inner discretisation (Euler–Maruyama suffices). Then `α = 1`, `β = 3/2` and
+  the cost is `O(ε^{−5/2})`, as the paper says. Its MIMC claim `β₁ = β₂ = 1.5` (hence `O(ε⁻²)`)
+  is false: in an explicit example meeting every hypothesis (`kinkInnerApprox_hypotheses`), the
+  weak error shifts the kink seen by the two inner approximations by `O(2^{−ℓ₂})`, which matters
+  on the straddling event of probability `O(2^{−ℓ₁/2})`, and `V[Y_ℓ] ≥ 2^{−(2ℓ₂ + j + 17)}` at
+  `ℓ = (2j + 1, ℓ₂ + 1)` (`kinkMimc_variance_ge`), so no rates with `2β₁ + β₂ > 3` hold
+  (`nested_mimc_kink_rates_false`).
 
 ### Corrections to the papers recorded elsewhere, collected
 
@@ -338,6 +359,7 @@ Lean statement or to the reason it is not formalised. The deviations of the new 
 | G15 | §2.4, p. 15 | rectangles "optimal order" | only for `O(ε⁻²)` | `mimc_rect_lower_bounds` |
 | G15 | §3.1, p. 21 | (3.1) gives variance `< ½ε²` | `≤ ½ε²` | `allocation_eq_3_1` |
 | G15 | §3.3, p. 23 | "`p, q → 0` due to weak convergence" | needs `E[X²] → 0` | `consistency_mean` |
+| G15 | §3.3, p. 22 | the check fails with probability `< 0.3%` | only as the sample sizes grow; `> 0.003` for every `N ≤ 274` in an example | `consistency_check_empirical`, `ConsistencyCheck.lean` |
 | G15 | §5, p. 29 | `h_ℓ = h₀M^ℓ` | `h₀M^{−ℓ}` | `timestep_rate` |
 | G15 | §5.2, p. 36 | coarse numerator `b√h_ℓ`; `Φ(…/(b√h_ℓ))`; digital constant `25` | `b ΔW_{N−2}`; `|b|` in the denominator; `10` as on p. 30 | `digital_smoothing_coarse`, `integral_digital_final_step` |
 | G15 | §5.2, p. 38 | "`O(h_ℓ)` difference on average" | `O(h_ℓ^{1/2})` | — |
@@ -346,6 +368,7 @@ Lean statement or to the reason it is not formalised. The deviations of the new 
 | G15 | §7.3, p. 54 | `√h Z_n` | `√k Z_n` | `ApplicationExtras.lean` |
 | G15 | §9.1, p. 58; §9.2, p. 60 | `−1/(4N_ℓ)` | `−1/(8N_ℓ)` | `antithetic_quadratic`, `NestedRates.lean` |
 | G15 | §9.2, p. 59 | `O(ε⁻²(log ε)⁻²)` | `O(ε⁻²(log ε)²)` | `nested_complexity` |
+| G15 | §9.2, p. 60 | MIMC with a kink: `β₁ = β₂ = 1.5`, cost `O(ε⁻²)` | false: no `β₁, β₂` with `2β₁ + β₂ > 3` (counterexample) | `nested_mimc_kink_rates_false`, `NestedKinkSde.lean` |
 | G15 | §10.1, p. 61 | decay exponential in `N_ℓ − N_{ℓ−1}` | in `N_{ℓ−1}` | `variance_levels_le`, `markov_linear_levels` |
 | G15 | §10.2, p. 62 | `U_n = (I_n + ½)/I_max` | `(I_n + ½)/(I_max + 1)` (the printed `U_n` exceeds `1` for `I_n = I_max`) | — |
 | HG25 | (21) | `E[δx²] = 4^{e−d−1}` | `≤` | `integral_sq_roundError_le` |

@@ -579,6 +579,24 @@ import MlmcLean
 #print axioms MLMC.mlqmc_complexity
 #print axioms MLMC.mlqmc_complexity_of_lt
 #print axioms MLMC.mlqmc_complexity_lt_two
+#print axioms MLMC.tendsto_empVar_ae
+#print axioms MLMC.tendstoInMeasure_empVar
+#print axioms MLMC.tendstoInDistribution_twoSample
+#print axioms MLMC.tendstoInDistribution_consistencyStat
+#print axioms MLMC.consistency_check_of_variance_estimates
+#print axioms MLMC.consistency_check_of_empVar_le
+#print axioms MLMC.consistency_check_empirical
+#print axioms MLMC.consistency_check_empirical_lt
+#print axioms MLMC.consistency_check_empirical_sharp
+#print axioms MLMC.nested_kink_bias_rate_one
+#print axioms MLMC.nested_kink_sde_bias_rate
+#print axioms MLMC.nested_kink_sde_variance_rate
+#print axioms MLMC.nested_kink_sde_mlmc_complexity
+#print axioms MLMC.kinkInnerApprox_hypotheses
+#print axioms MLMC.kinkInnerApprox_mlmc_rates
+#print axioms MLMC.kinkMimc_variance_ge
+#print axioms MLMC.nested_mimc_kink_rates_false
+#print axioms MLMC.nested_mimc_kink_three_halves_false
 -- helper lemmas that the prove2.me generator promotes to nodes
 #print axioms MLMC.sqrt_Vb_mul_Cb
 #print axioms MLMC.two_rpow_levelL_le
