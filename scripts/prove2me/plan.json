@@ -813,6 +813,7 @@
     "MLMC.intervalIntegrable_of_boundedVariationOn",
     "MLMC.intervalIntegrable_sq_sub",
     "MLMC.inv_one_sub_le_exp",
+    "MLMC.isProbabilityMeasure_kinkOuter",
     "MLMC.isProbabilityMeasure_of_uniform01",
     "MLMC.isProbabilityMeasure_tauChain",
     "MLMC.isProbabilityMeasure_tauInputLaw",

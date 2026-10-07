@@ -412,3 +412,8 @@ Findings and what was done:
   better rate than assumed; a variant with random error at exactly the assumed rate also meets all
   hypotheses (R4 report, point 2).  Non-vacuity does not depend on it.  Kept.
 - **`hingeAntithetic`** is a helper definition used only in proofs.  Kept.
+- **After the read-back**, the two `instance` declarations of the example (the prove2.me generator
+  does not support instances) were replaced: `kinkCoin` is now Mathlib's uniform distribution on
+  `Bool` (`(PMF.uniformOfFintype Bool).toMeasure`, the same measure `½(δ_true + δ_false)`, with
+  Mathlib's probability-measure instance), and the fact that `kinkOuter` is a probability measure
+  is the lemma `isProbabilityMeasure_kinkOuter`.  The statements are unchanged.

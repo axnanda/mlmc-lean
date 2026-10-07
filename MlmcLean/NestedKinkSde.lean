@@ -1,4 +1,6 @@
 import MlmcLean.NestedRates
+import Mathlib.Probability.Distributions.Uniform
+import Mathlib.MeasureTheory.Integral.Bochner.SumMeasure
 
 /-!
 # Nested simulation with a piecewise linear `f` and discretised inner paths (Giles 2015, §9.2)
@@ -1349,9 +1351,11 @@ open scoped ENNReal
 `kinkInnerApprox`). -/
 def kinkSign (b : Bool) : ℝ := if b then 1 else -1
 
-/-- The fair coin on `Bool`: the law of an inner sample in the example `kinkInnerApprox`. -/
-noncomputable def kinkCoin : Measure Bool :=
-  (2⁻¹ : ℝ≥0∞) • (Measure.dirac true + Measure.dirac false)
+/-- The fair coin on `Bool`: the law of an inner sample in the example `kinkInnerApprox` (the
+uniform distribution on `Bool`, a probability measure by Mathlib's
+`PMF.toMeasure.isProbabilityMeasure`). -/
+noncomputable abbrev kinkCoin : Measure Bool :=
+  (PMF.uniformOfFintype Bool).toMeasure
 
 /-- The uniform law on `[0, 1]`: the law of the outer sample in the example `kinkInnerApprox`. -/
 noncomputable def kinkOuter : Measure ℝ := volume.restrict (Set.Icc 0 1)
@@ -1366,22 +1370,18 @@ first-order bias). -/
 noncomputable def kinkInnerApprox (ℓ : ℕ) (z : ℝ) (b : Bool) : ℝ :=
   z + kinkSign b / 8 + ((2 : ℝ) ^ ℓ)⁻¹ / 8
 
-/-- The fair coin is a probability measure. -/
-instance : IsProbabilityMeasure kinkCoin := by
-  constructor
-  rw [kinkCoin, Measure.smul_apply, Measure.add_apply, measure_univ, measure_univ, smul_eq_mul,
-    ← two_mul, mul_one, ENNReal.inv_mul_cancel two_ne_zero ENNReal.ofNat_ne_top]
-
-/-- The uniform law on `[0, 1]` is a probability measure. -/
-instance : IsProbabilityMeasure kinkOuter := by
+/-- The uniform law on `[0, 1]` is a probability measure (a lemma, not an instance: the prove2.me
+generator does not support instances; proofs that need it use `have`). -/
+lemma isProbabilityMeasure_kinkOuter : IsProbabilityMeasure kinkOuter := by
   constructor
   rw [kinkOuter, Measure.restrict_apply_univ, Real.volume_Icc, sub_zero, ENNReal.ofReal_one]
 
 /-- The mean under the fair coin: `E[φ(W)] = (φ(true) + φ(false))/2`. -/
 lemma integral_kinkCoin (φ : Bool → ℝ) : ∫ b, φ b ∂kinkCoin = (φ true + φ false) / 2 := by
-  rw [kinkCoin, integral_smul_measure, integral_add_measure Integrable.of_finite
-    Integrable.of_finite, integral_dirac, integral_dirac]
-  simp only [ENNReal.toReal_inv, ENNReal.toReal_ofNat, smul_eq_mul]
+  rw [integral_fintype Integrable.of_finite, Fintype.sum_bool]
+  simp only [measureReal_def, kinkCoin,
+    PMF.toMeasure_apply_singleton _ _ (measurableSet_singleton _), PMF.uniformOfFintype_apply,
+    Fintype.card_bool, Nat.cast_ofNat, ENNReal.toReal_inv, ENNReal.toReal_ofNat, smul_eq_mul]
   ring
 
 /-- The fair sign has mean `0`, second and fourth moments `1`, and modulus `1`. -/
@@ -1718,6 +1718,7 @@ sample `Z` uniform on `[0, 1]` sees the same hinge difference at both shifts
 lemma integral_kinkMimc (ℓ₁ ℓ₂ : ℕ) :
     ∫ p, nestedMimcDelta (fun x => max (x - 1 / 2) 0) kinkInnerApprox (ℓ₁ + 1) (ℓ₂ + 1) p
       ∂(nestedLaw kinkOuter kinkCoin) = 0 := by
+  have := isProbabilityMeasure_kinkOuter
   obtain ⟨hYm, hYb⟩ := kinkMimc_bound ℓ₁ ℓ₂
   have hYi : Integrable (nestedMimcDelta (fun x => max (x - 1 / 2) 0) kinkInnerApprox (ℓ₁ + 1)
       (ℓ₂ + 1)) (nestedLaw kinkOuter kinkCoin) :=
@@ -1752,6 +1753,7 @@ lemma integral_sq_kinkMimc_ge {j ℓ₂ : ℕ} (h : j + 1 ≤ ℓ₂) :
     ((2 : ℝ) ^ (2 * ℓ₂ + j + 17))⁻¹ ≤
       ∫ p, nestedMimcDelta (fun x => max (x - 1 / 2) 0) kinkInnerApprox (2 * j + 1) (ℓ₂ + 1) p ^ 2
         ∂(nestedLaw kinkOuter kinkCoin) := by
+  have := isProbabilityMeasure_kinkOuter
   obtain ⟨hYm, hYb⟩ := kinkMimc_bound (2 * j) ℓ₂
   have hY2i : Integrable (fun p => nestedMimcDelta (fun x => max (x - 1 / 2) 0) kinkInnerApprox
       (2 * j + 1) (ℓ₂ + 1) p ^ 2) (nestedLaw kinkOuter kinkCoin) :=
@@ -1901,6 +1903,7 @@ theorem kinkInnerApprox_mlmc_rates (ℓ : ℕ) :
         ∂(nestedLaw kinkOuter kinkCoin)| ≤ 10 ∧
       (2 : ℝ) ^ ((3 / 2 : ℝ) * ℓ) * ∫ p, nestedSdeDelta (fun x => max (x - 1 / 2) 0)
         kinkInnerApprox (ℓ + 1) p ^ 2 ∂(nestedLaw kinkOuter kinkCoin) ≤ 14 := by
+  have := isProbabilityMeasure_kinkOuter
   obtain ⟨hm, hmom, -, hweak, hball, hstrong⟩ := kinkInnerApprox_hypotheses
   have hf : ∀ x : ℝ, max (x - 1 / 2) 0 = 0 + 0 * x + 1 * max (x - 1 / 2) 0 := fun x => by ring
   have hfib : ∀ ℓ, ∀ᵐ z ∂kinkOuter, Integrable (fun v => kinkInnerApprox ℓ z v ^ 4) kinkCoin ∧
@@ -1945,6 +1948,7 @@ theorem kinkMimc_variance_ge {j ℓ₂ : ℕ} (h : j + 1 ≤ ℓ₂) :
       ((2 : ℝ) ^ (2 * ℓ₂ + j + 17))⁻¹ ≤
         variance (nestedMimcDelta (fun x => max (x - 1 / 2) 0) kinkInnerApprox (2 * j + 1)
           (ℓ₂ + 1)) (nestedLaw kinkOuter kinkCoin) := by
+  have := isProbabilityMeasure_kinkOuter
   have h0 := integral_kinkMimc (2 * j) ℓ₂
   refine ⟨h0, ?_⟩
   obtain ⟨hYm, hYb⟩ := kinkMimc_bound (2 * j) ℓ₂
