@@ -120,6 +120,11 @@
 --   Theorem 2, still below MLMC's O(ε^{−5/2})
 -- * `MlmcLean.LUTAsymptotics` — Haas–Giles §3.4: the MSE of the dyadic lookup tables converges
 --   to a constant C > 0, and the MSE of the uniform tables is of order 2^{−d}/d
+-- * `MlmcLean.EulerSuperlinear` — Giles §5.6: for dS = −S³dt + dW the explicit Euler–Maruyama
+--   scheme has E|X_N|^p → ∞ as the timestep → 0 (Hutzenthaler–Jentzen–Kloeden); the tamed scheme
+--   has E X_N² ≤ x₀² + T uniformly in N
+-- * `MlmcLean.MLQMCBoundary` — Giles §2.7, §3.5 in one dimension: the MLQMC cost in the boundary
+--   case b = g ≤ a is Θ(ε⁻¹|log ε|^{3/2}) (upper and lower bounds), and g < 2a is necessary
 import MlmcLean.Allocation
 import MlmcLean.Estimator
 import MlmcLean.LevelDiff
@@ -180,3 +185,5 @@ import MlmcLean.NestedKinkSde
 import MlmcLean.MLMCConfidenceEstimated
 import MlmcLean.NestedMimcKink
 import MlmcLean.LUTAsymptotics
+import MlmcLean.EulerSuperlinear
+import MlmcLean.MLQMCBoundary

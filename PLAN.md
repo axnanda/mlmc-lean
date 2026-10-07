@@ -181,6 +181,10 @@ items listed under "Not formalised" below.
   `V = O(2^{−ℓ₁−ℓ₂})` (sharp), and the cost `O(ε⁻²|log ε|⁴)` (`NestedMimcKink.lean`); the
   existence of the dyadic MSE limit `C > 0` and the order `2^{−d}/d` of the uniform MSE
   (Haas–Giles §3.4, `LUTAsymptotics.lean`).
+- ✅ Round 15: for `dS = −S³dt + dW`, the moments of the explicit Euler–Maruyama scheme diverge
+  as the timestep tends to `0` (Hutzenthaler–Jentzen–Kloeden), while the tamed scheme's second
+  moment stays bounded (`EulerSuperlinear.lean`); the MLQMC boundary case `b = g ≤ a` costs
+  `Θ(ε⁻¹|log ε|^{3/2})`, with lower bounds (`MLQMCBoundary.lean`).
 - Not formalised (each with its reason in `notes/coverage/README.md`): the convergence orders of
   the discretisations of general SDEs, SPDEs and PDEs (Itô calculus and PDE regularity are not in
   Mathlib; proved for geometric Brownian motion from its exact solution) and of QMC in `d`
@@ -188,7 +192,8 @@ items listed under "Not formalised" below.
   proved); the optimality of the simplex among all MIMC index sets; the kurtosis rates of the
   digital option; path-dependent (adaptive) grids for Brownian and Poisson noise (a martingale
   argument); tau-leaping's weak rate against the exact chain and the exact (SSA) coupling; the
-  moment results for super-linear drifts; the jump-diffusion and Lévy-process theory of §6 beyond
+  general moment results for super-linear drifts (the paper's example `dS = −S³dt + dW` is proved);
+  the jump-diffusion and Lévy-process theory of §6 beyond
   the coarse-increment identity; the Karhunen–Loève expansion and the finite-element analysis of
   §7.2 and the stability constraint of §7.3; contracting SDEs (§10.1); the value of the dyadic
   limit `C` and the exact halving ratio of the MSE per bit (Haas–Giles §3.4; the existence of

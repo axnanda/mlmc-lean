@@ -369,6 +369,17 @@ Lean statement or to the reason it is not formalised. The deviations of the new 
   pieces, by `f′(c_k)²|D_k|4^{−d}/12`). Method 1: under block-wise bounds on the increments of
   `f` (which `Φ⁻¹` satisfies) the MSE is of order `2^{−d}/d`, so `log(MSE)/d → −log 2`; the exact
   halving ratio and method 2 are not formalised.
+* **Super-linear drift (G15 §5.6, p. 44; `EulerSuperlinear.lean`, round 15).** The paper cites
+  Hutzenthaler, Jentzen and Kloeden for "numerical instability if a uniform timestep is used"; the
+  Lean statements are their divergence theorem for the paper's example `dS = −S³dt + dW` only
+  (`E|X_N|^p → ∞` for every `p > 0`, with Gaussian inputs independent within each `N`), and, for
+  the tamed scheme, the second-moment bound `E X_N² ≤ x₀² + T` for `T ≤ 54N` (the condition is
+  needed for this exact bound when `N = 1`; for larger `N` it only restricts the coarse levels). The moments of the exact solution and the general theorems are
+  not formalised.
+* **The MLQMC boundary case (G15 §2.7, §3.5; `MLQMCBoundary.lean`, round 15).** In the
+  one-dimensional model of `QMC1D.lean`, `b = g ≤ a` gives cost `Θ(ε⁻¹|log ε|^{3/2})`: the upper
+  bound by the Lagrange allocation, and lower bounds for every allocation and every `L`. The
+  finest-level bound shows that `g < 2a` is necessary for the paper's `p < 2` in this model.
 
 ### Corrections to the papers recorded elsewhere, collected
 
@@ -398,8 +409,10 @@ Lean statement or to the reason it is not formalised. The deviations of the new 
 | HG25 | (27) | derived under perfect correlation | holds for every joint law | `variance_linearised_corr` |
 | HG25 | (28) | factor `1/12` on the MSE term | no factor `1/12` | `variance_extended_indep` |
 | HG25 | Fig. 3, 5 captions | `√(Ṽ/V)` | `√(V^Δ/V)` | `HaasGilesRemarks.lean` |
+| HG25 | §3, p. 4 | "The first and the third methods … PWC on uniform intervals … The second … PWL on dyadic intervals" | the numbering does not match §3.1–§3.4, where method 3 is the dyadic one | `LUTLimits.lean`, `LUTAsymptotics.lean` (follow §3.1–§3.4) |
 | HG25 | §3.4, p. 7 | dyadic tables: "the MSE is reduced only in the interval closest to 0" | only asymptotically; the error on every dyadic interval decreases with `d` | `dyadic_groupMSE_eq`, `groupMSE_odd_quadratic` |
 | HG25 | §6.1, p. 12 | cost factor `< 1` ⇒ nested framework cheaper | true for (34); for (32) e.g. `ρ²(1 + ρ²) < 1` | `nestedCost_lt_of_costFactor_le`, `exists_costFactor_lt_one_nestedCost_gt` |
+| HG25 | §6.2, p. 13 | "first round down the solution to `d*_{i,ℓ} = d_{i,ℓ}`" | `d*_{i,ℓ} = ⌊d_{i,ℓ}⌋` | `greedy_rounding_feasible` |
 | HG25 | §6.3, p. 14 | fixed-precision rounding error `O(h⁻¹2^{e−d})` | worst case; root mean square `Θ(h^{−1/2}2^{e−d})` under (22) | `integral_sq_perturbed_path_sub_bounds` |
 
 "—" marks typos that no Lean statement depends on.

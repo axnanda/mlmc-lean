@@ -444,3 +444,22 @@ Findings and what was done:
 - **CI.** The new MIMC proof made the old helper `crossDiff_one` reachable for the prove2.me
   generator, whose solution file then lacked the `rfl` lemma `crossDiff_zero` used through `simp`;
   `crossDiff_zero` is now `@[simp]`, like `levelDiff_zero`, so the generator keeps it.
+
+**Fifteenth round (2026-10-07).** Blind read-backs of the 15 theorems added in round 15:
+`euler_superlinear.md` (R8: `EulerSuperlinear`; 9 theorems) and `mlqmc_boundary.md` (R9:
+`MLQMCBoundary`; 6).  All 15 read back as true; none is vacuous and none holds only because of a
+junk value.  The R8 auditor proved in Lean that the Gaussian hypotheses can hold, checked the
+threshold `54` of the tamed step exactly (the condition factors as `2(3S − 1)²(6S + 1)` at
+`h = 54`), and evaluated the lower bound of the divergence theorem (it grows doubly exponentially
+from `N ≈ 25`; the moments sit on events of probability below `10⁻⁷⁰`, invisible to Monte Carlo).
+The R9 auditor checked the upper bound with the Lagrange allocation down to `ε = 10⁻³⁰` and the
+lower bound in Hölder's closed form (the ratios tend to `√2 (ln 2)^{−3/2}` and `(ln 2)^{−3/2}`).
+Findings and what was done:
+
+- **`T ≤ 54N`** in `tamedCubic_second_moment_le` is needed for `N = 1` and apparently not for
+  larger `N`; the docstring gives the `N = 1` counterexample and the statement audit now says so.
+- **`tamedPath_integral_abs_le`** grows like `√(TN)`; it assumes no independence, and without
+  independence that rate is attained.  The uniform bound is `tamedCubic_second_moment_le`.  Kept.
+- **The lower bounds of `MLQMCBoundary`** assume nothing on `a`; for `a ≤ 0` they are vacuous or
+  trivial, and their content is for `a > 0`.  `mlqmc_finest_level_cost_lower` assumes at least one
+  sample on the finest level (automatic for integer allocations).  Kept.

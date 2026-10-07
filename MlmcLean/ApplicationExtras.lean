@@ -882,7 +882,7 @@ lemma roundFixed_eq_of_floor {e : ℤ} {d : ℕ} {x : ℝ} {n : ℤ}
 truncation to the lower accuracy `B_{ℓ−1}` took place before or after the summation").  In fixed
 point with exponent `0`, `B_ℓ = 2` and `B_{ℓ−1} = 1` bits (`roundFixed`, grids `¼ℤ` and `½ℤ`),
 let the two fine Brownian increments be `ΔW₁ ∈ (0, 1/20)` and `ΔW₂ ∈ (3/20, 1/5)` (for instance
-`ΔW₁ = 1/100`, `ΔW₂ = 1/5`).  A level-`(ℓ − 1)` simulation of the same Brownian path rounds the
+`ΔW₁ = 1/100`, `ΔW₂ = 9/50`).  A level-`(ℓ − 1)` simulation of the same Brownian path rounds the
 coarse increment `ΔW₁ + ΔW₂` to `0`, whereas summing the fine increments rounded to `B_ℓ` bits
 gives `1/2`, with the truncation to `B_{ℓ−1}` bits before or after the summation.  This is a
 pathwise statement, on a rectangle of increments of positive probability for Brownian increments;

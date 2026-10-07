@@ -632,6 +632,21 @@ import MlmcLean
 #print axioms MLMC.method1MSE_ge_order
 #print axioms MLMC.method1MSE_order
 #print axioms MLMC.tendsto_log_method1MSE_div
+#print axioms MLMC.eulerCubic_noise_growth
+#print axioms MLMC.le_gaussianReal_real_Icc
+#print axioms MLMC.le_gaussianReal_real_Ici
+#print axioms MLMC.emCubic_moment_ge
+#print axioms MLMC.emCubic_moment_tendsto_atTop
+#print axioms MLMC.emCubic_integral_abs_tendsto_atTop
+#print axioms MLMC.tamedPath_integral_abs_le
+#print axioms MLMC.tamedCubic_nonexpansive_iff
+#print axioms MLMC.tamedCubic_second_moment_le
+#print axioms MLMC.mlqmc_boundary_complexity_core
+#print axioms MLMC.mlqmc_boundary_complexity
+#print axioms MLMC.mlqmc_boundary_cost_lower
+#print axioms MLMC.mlqmc_boundary_exponents_optimal
+#print axioms MLMC.mlqmc_finest_level_cost_lower
+#print axioms MLMC.mlqmc_finest_level_exponent_optimal
 -- helper lemmas that the prove2.me generator promotes to nodes
 #print axioms MLMC.sqrt_Vb_mul_Cb
 #print axioms MLMC.two_rpow_levelL_le
