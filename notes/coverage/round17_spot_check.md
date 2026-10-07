@@ -82,3 +82,11 @@ results for it (`InverseNormal.lean`), the elliptic estimator, the call, refinem
 tamed fourth moments, the method-2 iteration and the rounded increments
 (`EndToEndInstances.lean`).  Not yet: the G2.1-36 counterexample as a theorem, the medium and
 large items above.
+
+**Follow-up (round 19).** Formalised: the discrete parts of §6 (`JumpProcesses.lean`), the
+G2.1-36 counterexample, the consistency check with one or two samples and the variance of the
+sample variance (`EstimatorRemarks.lean`), drift-implicit Euler with multiplicative noise, the
+time-reversed path as a Brownian motion and several kinks (`SDEExtensions.lean`), and contracting
+SDEs with level-dependent steps (`ContractingLevels.lean`).  Still open from the list: adaptive
+(path-dependent) grids, `L^p` strong errors for GBM, the shifted-lattice variance in `d`
+dimensions, and the large items.
