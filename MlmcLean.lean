@@ -130,6 +130,11 @@
 -- * `MlmcLean.BitWidthOptimum` — Haas–Giles §6.1: an optimal (relaxed) bit-width configuration
 --   exists without convexity, satisfies (35)–(36), and beats every uniform bit-width; convexity
 --   and uniqueness without additions
+-- * `MlmcLean.EllipticFD` — Giles §7.1: the exact finite-difference solution of the 1-D elliptic
+--   example, |P − P_ℓ| ≤ (50/3) Z² h_ℓ² with a random constant, and α = 2, β = 4 end to end
+-- * `MlmcLean.GilesCorollaries` — contracting SDEs with a fixed step (§10.1), the lookup-table
+--   streams tend to N(0, 1) (HG25 §3.2), plain MC complexities (§5.5), β ≤ 2α (§2.1), the D = 1
+--   necessity (§2.4), Euler–Maruyama with refinement factor M (§5.1)
 import MlmcLean.Allocation
 import MlmcLean.Estimator
 import MlmcLean.LevelDiff
@@ -194,3 +199,5 @@ import MlmcLean.EulerSuperlinear
 import MlmcLean.MLQMCBoundary
 import MlmcLean.NestedMimcSmooth
 import MlmcLean.BitWidthOptimum
+import MlmcLean.EllipticFD
+import MlmcLean.GilesCorollaries
