@@ -77,7 +77,8 @@ lemma crossDiff_succ (p : (Fin (D + 1) → ℕ) → ℝ) (ℓ : Fin (D + 1) → 
 lemma crossDiff_one (p : (Fin 1 → ℕ) → ℝ) (ℓ : Fin 1 → ℕ) :
     crossDiff p ℓ =
       p ℓ - if ℓ 0 = 0 then 0 else p (Fin.cons (ℓ 0 - 1) (Fin.tail ℓ)) := by
-  simp only [crossDiff_succ, crossDiff_zero, Fin.cons_self_tail]
+  rw [crossDiff_succ]
+  simp only [crossDiff_zero, Fin.cons_self_tail]
 
 /-- **Giles 2015, §2.4 and Figure 2.1: the cross-difference in two dimensions.**  For
 `ℓ₁, ℓ₂ ≥ 1`, `ΔP_{(ℓ₁,ℓ₂)} = P_{(ℓ₁,ℓ₂)} − P_{(ℓ₁−1,ℓ₂)} − P_{(ℓ₁,ℓ₂−1)} + P_{(ℓ₁−1,ℓ₂−1)}`: one
