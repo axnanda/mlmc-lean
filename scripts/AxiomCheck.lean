@@ -579,6 +579,15 @@ import MlmcLean
 #print axioms MLMC.mlqmc_complexity
 #print axioms MLMC.mlqmc_complexity_of_lt
 #print axioms MLMC.mlqmc_complexity_lt_two
+#print axioms MLMC.tendsto_empVar_ae
+#print axioms MLMC.tendstoInMeasure_empVar
+#print axioms MLMC.tendstoInDistribution_twoSample
+#print axioms MLMC.tendstoInDistribution_consistencyStat
+#print axioms MLMC.consistency_check_of_variance_estimates
+#print axioms MLMC.consistency_check_of_empVar_le
+#print axioms MLMC.consistency_check_empirical
+#print axioms MLMC.consistency_check_empirical_lt
+#print axioms MLMC.consistency_check_empirical_sharp
 -- helper lemmas that the prove2.me generator promotes to nodes
 #print axioms MLMC.sqrt_Vb_mul_Cb
 #print axioms MLMC.two_rpow_levelL_le

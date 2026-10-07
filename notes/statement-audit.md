@@ -326,6 +326,15 @@ Lean statement or to the reason it is not formalised. The deviations of the new 
   (`O(ε⁻¹|log ε|^{3/2})`) and lower bounds are not formalised. The paper's "under certain
   conditions … `p < 2`" gives no conditions; in this model `g < 2a` and `g < a + b` suffice
   (`mlqmc_complexity_lt_two`).
+* **The consistency check with empirical variances (G15 §3.3, p. 22; `ConsistencyCheck.lean`,
+  round 13).** The `0.3%` (`P(|Z| > 3) ≈ 0.0027`) needs `a − b + c` normal and the variances
+  exact. With empirical variances it holds only in the limit of many samples: the failure
+  probability is at most `P(|Z| ≥ 3) + η` for all large sample sizes, at any rates
+  (`consistency_check_empirical`), so eventually `< 0.003` (`consistency_check_empirical_lt`),
+  and the limit is attained (`consistency_check_empirical_sharp`). For a fixed sample size it can
+  fail: with `P^f = 0` on both levels and `P^c_ℓ ~ N(0, 1)` the failure probability is `0.280` for
+  `N = 2` and exceeds `0.003` for every `N ≤ 274`. The paper's levels `ℓ − 1, ℓ` are `ℓ, ℓ + 1`
+  in Lean; no hypothesis on `P^f_{ℓ+1}` and no non-degeneracy is needed.
 
 ### Corrections to the papers recorded elsewhere, collected
 
@@ -338,6 +347,7 @@ Lean statement or to the reason it is not formalised. The deviations of the new 
 | G15 | §2.4, p. 15 | rectangles "optimal order" | only for `O(ε⁻²)` | `mimc_rect_lower_bounds` |
 | G15 | §3.1, p. 21 | (3.1) gives variance `< ½ε²` | `≤ ½ε²` | `allocation_eq_3_1` |
 | G15 | §3.3, p. 23 | "`p, q → 0` due to weak convergence" | needs `E[X²] → 0` | `consistency_mean` |
+| G15 | §3.3, p. 22 | the check fails with probability `< 0.3%` | only as the sample sizes grow; `> 0.003` for every `N ≤ 274` in an example | `consistency_check_empirical`, `ConsistencyCheck.lean` |
 | G15 | §5, p. 29 | `h_ℓ = h₀M^ℓ` | `h₀M^{−ℓ}` | `timestep_rate` |
 | G15 | §5.2, p. 36 | coarse numerator `b√h_ℓ`; `Φ(…/(b√h_ℓ))`; digital constant `25` | `b ΔW_{N−2}`; `|b|` in the denominator; `10` as on p. 30 | `digital_smoothing_coarse`, `integral_digital_final_step` |
 | G15 | §5.2, p. 38 | "`O(h_ℓ)` difference on average" | `O(h_ℓ^{1/2})` | — |

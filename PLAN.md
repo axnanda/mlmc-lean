@@ -176,9 +176,8 @@ items listed under "Not formalised" below.
   the discretisations of general SDEs, SPDEs and PDEs (Itô calculus and PDE regularity are not in
   Mathlib; proved for geometric Brownian motion from its exact solution) and of QMC in `d`
   dimensions (discrepancy theory; the one-dimensional case and the MLQMC complexity it gives are
-  proved); confidence intervals built from estimated variances; the consistency check with
-  estimated variances (Slutsky's theorem); the optimality of the simplex among all MIMC index sets; the kurtosis rates of the
-  digital option; path-dependent (adaptive) grids for Brownian and Poisson noise (a martingale
+  proved); confidence intervals built from estimated variances; the optimality of the simplex
+  among all MIMC index sets; the kurtosis rates of the digital option; path-dependent (adaptive) grids for Brownian and Poisson noise (a martingale
   argument); tau-leaping's weak rate against the exact chain and the exact (SSA) coupling; the
   moment results for super-linear drifts; the jump-diffusion and Lévy-process theory of §6 beyond
   the coarse-increment identity; the Karhunen–Loève expansion and the finite-element analysis of
