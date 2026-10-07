@@ -359,7 +359,9 @@ def main() -> None:
             if d.module == m and d.fact is not None and d.name not in keep:
                 cuts.append((d.fact["declStart"]["offset"], d.fact["declEnd"]["offset"]))
         # declarations with no Stage 1 row (e.g. `example`s) are also cut
-        known = {(d.fact["declStart"]["offset"]) for d in decls.values() if d.fact is not None}
+        # (offsets are per file: compare only with this module's declarations)
+        known = {d.fact["declStart"]["offset"] for d in decls.values()
+                 if d.fact is not None and d.module == m}
         for f in mod.decl_facts:
             if f["declStart"]["offset"] not in known:
                 cuts.append((f["declStart"]["offset"], f["declEnd"]["offset"]))

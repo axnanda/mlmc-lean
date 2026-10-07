@@ -42,3 +42,8 @@ SDEs with a fixed step (G10.1-16); Gaussian union grids; the time reversal via M
 refinement factor); several GBM special cases of Table 5.2 (discrete Asian and lookback, the
 digital with higher moments).  Out of reach: general SDE orders, continuous monitoring (reflection
 principle), Feynman–Kac, information-based lower bounds, Lévy-process and SPDE theory.
+
+**Follow-up (round 16).**  Formalised from the list above: G9.2-12 end to end
+(`NestedMimcSmooth.lean`), H6-12/-14/-16 (`BitWidthOptimum.lean`), G7.1-04/-05 for the actual
+scheme (`EllipticFD.lean`), and G10.1-16 with a fixed step, the premise of H3-07, G5.5-04/-05,
+G2.1-30, G2.4-35 and G5.1-03 for a general refinement factor (`GilesCorollaries.lean`).

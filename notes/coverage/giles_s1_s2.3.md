@@ -112,7 +112,7 @@ themselves (they are covered through the theorems that use them).
 | G2.1-27 | l.325, p.7 | β < γ: "dominant computational cost is on the finest levels" | DONE-DEV | `optimal_cost_increasing` (with r = 2^{(γ−β)/2}) | holds for exact rates / geometric growth only; with upper bounds (iii), (iv) alone it cannot be proved. The rigorous form is documented in the docstring |
 | G2.1-28 | l.326, p.7 | "`2^{−αL} = O(ε)`, and hence `C_L = O(ε^{−γ/α})`" | DONE | `finest_cost_le`, `two_rpow_levelL_le` | |
 | G2.1-29 | l.327–330, p.7 | "If β = 2α … total cost is `O(C_L)`, corresponding to `O(1)` samples on the finest level" | DONE | `complexityBound_of_two_mul`, `cost_of_beta_eq_two_alpha` (GeometricRates.lean) | for the real Lagrange allocation; rounding adds ≤ 1 sample per level |
-| G2.1-30 | l.327–329, p.7 | β = 2α "usually the best that can be achieved since … V ≈ E[(ΔP)²] > (E[ΔP])²" | N/A | (the inequality is a step in `weak_rate_of_second_moment`) | heuristic |
+| G2.1-30 | l.327–329, p.7 | β = 2α "usually the best that can be achieved since … V ≈ E[(ΔP)²] > (E[ΔP])²" | N/A | (the inequality is a step in `weak_rate_of_second_moment`) | heuristic Round 16: `beta_le_two_alpha`, `beta_le_two_alpha_of_bias` (`GilesCorollaries.lean`). |
 | G2.1-31 | l.330, p.7 | "…which is the best that can be achieved" | N/A | – | informal; trivial, since at least one finest-level sample is needed |
 | G2.1-32 | l.331–334, p.7 | β = γ: effort and variance "spread approximately evenly across all of the levels; the `(log ε)²` term corresponds to the `L²` factor" | DONE | `equal_cost_per_level`, `exists_L_N` (`L+1 ≤ K₂|log ε|`) | |
 | G2.1-33 | l.338–345, p.8 | "assumes lots of properties … c₁, c₂ almost never known" | N/A | – | |

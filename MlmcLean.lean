@@ -125,6 +125,16 @@
 --   has E X_N² ≤ x₀² + T uniformly in N
 -- * `MlmcLean.MLQMCBoundary` — Giles §2.7, §3.5 in one dimension: the MLQMC cost in the boundary
 --   case b = g ≤ a is Θ(ε⁻¹|log ε|^{3/2}) (upper and lower bounds), and g < 2a is necessary
+-- * `MlmcLean.NestedMimcSmooth` — Giles §9.2: nested MIMC with a smooth payoff end to end:
+--   E[Y_ℓ] = O(2^{−ℓ₁−ℓ₂}), V_ℓ = O(2^{−2ℓ₁−2ℓ₂}) on all of ℕ², and MSE < ε² at cost O(ε⁻²)
+-- * `MlmcLean.BitWidthOptimum` — Haas–Giles §6.1: an optimal (relaxed) bit-width configuration
+--   exists without convexity, satisfies (35)–(36), and beats every uniform bit-width; convexity
+--   and uniqueness without additions
+-- * `MlmcLean.EllipticFD` — Giles §7.1: the exact finite-difference solution of the 1-D elliptic
+--   example, |P − P_ℓ| ≤ (50/3) Z² h_ℓ² with a random constant, and α = 2, β = 4 end to end
+-- * `MlmcLean.GilesCorollaries` — contracting SDEs with a fixed step (§10.1), the lookup-table
+--   streams tend to N(0, 1) (HG25 §3.2), plain MC complexities (§5.5), β ≤ 2α (§2.1), the D = 1
+--   necessity (§2.4), Euler–Maruyama with refinement factor M (§5.1)
 import MlmcLean.Allocation
 import MlmcLean.Estimator
 import MlmcLean.LevelDiff
@@ -187,3 +197,7 @@ import MlmcLean.NestedMimcKink
 import MlmcLean.LUTAsymptotics
 import MlmcLean.EulerSuperlinear
 import MlmcLean.MLQMCBoundary
+import MlmcLean.NestedMimcSmooth
+import MlmcLean.BitWidthOptimum
+import MlmcLean.EllipticFD
+import MlmcLean.GilesCorollaries

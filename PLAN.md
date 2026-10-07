@@ -185,6 +185,12 @@ items listed under "Not formalised" below.
   as the timestep tends to `0` (Hutzenthaler–Jentzen–Kloeden), while the tamed scheme's second
   moment stays bounded (`EulerSuperlinear.lean`); the MLQMC boundary case `b = g ≤ a` costs
   `Θ(ε⁻¹|log ε|^{3/2})`, with lower bounds (`MLQMCBoundary.lean`).
+- ✅ Round 16 (after an independent completeness spot-check, `notes/coverage/round15_spot_check.md`):
+  nested MIMC with a smooth payoff end to end at cost `O(ε⁻²)` (`NestedMimcSmooth.lean`); the
+  optimal bit-widths of Haas–Giles §6.1 exist without convexity and satisfy (35)
+  (`BitWidthOptimum.lean`); the elliptic example of §7.1 with its finite-difference scheme solved
+  exactly, `α = 2`, `β = 4` end to end (`EllipticFD.lean`); contracting SDEs with a fixed step, the
+  lookup-table streams, refinement factor `M` and small corollaries (`GilesCorollaries.lean`).
 - Not formalised (each with its reason in `notes/coverage/README.md`): the convergence orders of
   the discretisations of general SDEs, SPDEs and PDEs (Itô calculus and PDE regularity are not in
   Mathlib; proved for geometric Brownian motion from its exact solution) and of QMC in `d`
@@ -195,7 +201,8 @@ items listed under "Not formalised" below.
   general moment results for super-linear drifts (the paper's example `dS = −S³dt + dW` is proved);
   the jump-diffusion and Lévy-process theory of §6 beyond
   the coarse-increment identity; the Karhunen–Loève expansion and the finite-element analysis of
-  §7.2 and the stability constraint of §7.3; contracting SDEs (§10.1); the value of the dyadic
+  §7.2 and the stability constraint of §7.3; contracting SDEs with level-dependent steps (§10.1;
+  the fixed-step case is proved); the value of the dyadic
   limit `C` and the exact halving ratio of the MSE per bit (Haas–Giles §3.4; the existence of
   `C > 0` and the order `2^{−d}/d` are proved, the exact ratio needs finer asymptotics of `Φ⁻¹`);
   whether MIMC reaches `O(ε⁻²)` for a piecewise linear `f` (the paper's rates are refuted and the

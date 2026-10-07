@@ -380,6 +380,19 @@ Lean statement or to the reason it is not formalised. The deviations of the new 
   one-dimensional model of `QMC1D.lean`, `b = g ≤ a` gives cost `Θ(ε⁻¹|log ε|^{3/2})`: the upper
   bound by the Lagrange allocation, and lower bounds for every allocation and every `L`. The
   finest-level bound shows that `g < 2a` is necessary for the paper's `p < 2` in this model.
+* **Optimal bit-widths (HG25 §6.1, p. 12; `BitWidthOptimum.lean`, round 16).** The paper says
+  "we can see that the resulting function is convex which ensures the existence of an optimum",
+  the function being the λ-function of Figure 3. Existence holds without convexity (continuity and
+  coercivity of (34) in relaxed bit-widths). The λ-function is not convex in general (numerical
+  examples in the module docstring, not formalised); (34) itself is strictly convex in the
+  bit-widths without additions, but not in general. Bit-widths are real, not integers.
+* **The elliptic example (G15 §7.1; `EllipticFD.lean`, round 16).** The paper leaves the scheme and
+  the computation of `P_ℓ` unspecified; the Lean reading is the standard flux-form central
+  difference and the trapezoidal rule, with `h_ℓ = 2^{−(ℓ+1)}`. As noted before, the constant `K`
+  must be random (`K = (50/3) Z²`).
+* **Small corollaries (`GilesCorollaries.lean`, round 16).** Contracting SDEs with a fixed step
+  only (the level-dependent steps of §10.1 need SDE strong convergence); the lookup-table streams
+  for the method-1 tables only.
 
 ### Corrections to the papers recorded elsewhere, collected
 
@@ -412,6 +425,7 @@ Lean statement or to the reason it is not formalised. The deviations of the new 
 | HG25 | §3, p. 4 | "The first and the third methods … PWC on uniform intervals … The second … PWL on dyadic intervals" | the numbering does not match §3.1–§3.4, where method 3 is the dyadic one | `LUTLimits.lean`, `LUTAsymptotics.lean` (follow §3.1–§3.4) |
 | HG25 | §3.4, p. 7 | dyadic tables: "the MSE is reduced only in the interval closest to 0" | only asymptotically; the error on every dyadic interval decreases with `d` | `dyadic_groupMSE_eq`, `groupMSE_odd_quadratic` |
 | HG25 | §6.1, p. 12 | cost factor `< 1` ⇒ nested framework cheaper | true for (34); for (32) e.g. `ρ²(1 + ρ²) < 1` | `nestedCost_lt_of_costFactor_le`, `exists_costFactor_lt_one_nestedCost_gt` |
+| HG25 | §6.1, p. 12 | "the resulting function is convex which ensures the existence of an optimum" | the λ-function is not convex in general (numerically); the optimum exists anyway | `exists_isMinOn_bitLevelCost_of_nonneg` |
 | HG25 | §6.2, p. 13 | "first round down the solution to `d*_{i,ℓ} = d_{i,ℓ}`" | `d*_{i,ℓ} = ⌊d_{i,ℓ}⌋` | `greedy_rounding_feasible` |
 | HG25 | §6.3, p. 14 | fixed-precision rounding error `O(h⁻¹2^{e−d})` | worst case; root mean square `Θ(h^{−1/2}2^{e−d})` under (22) | `integral_sq_perturbed_path_sub_bounds` |
 
