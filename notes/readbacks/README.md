@@ -526,3 +526,35 @@ Findings and what was done:
   suffices when `σ ≠ 0`.  Kept (the cubic drift of §5.6 satisfies the hypothesis).
 - **`linRecPath`** appears in no statement; it is the common recursion behind the integrating-factor
   and explicit linear schemes, used in their proofs.  Kept.
+
+**Eighteenth round (2026-10-07).** Blind read-backs of the 71 theorems added in round 18:
+`gbm_digital.md` (R18: `GBMDigital`; 9 theorems), `tau_leaping_exact.md` (R19: `TauLeapingExact`;
+13), `inverse_normal.md` (R20: `InverseNormal`; 33) and `end_to_end_instances.md` (R21:
+`EndToEndInstances`; 16).  All 71 read back as true; none is vacuous and none holds only because of
+a junk value.  The R18 auditor computed the strong errors in closed form (ratios to the stated
+constants at most `0.0997` and `0.0083`) and simulated the mismatch probabilities.  The R19 auditor
+matched the uniformised law with the matrix exponential of the generator on a truncated state space
+(to `10⁻³⁰`), checked that it does not depend on the uniformisation rate, and proved in a scratch
+file that the level laws are probability measures, so the MSE in `tauLeaping_mlmc_exact` is genuine.
+The R20 auditor checked every constant with mpmath (the second-derivative bound, Mills ratios, the
+block bounds `[0.721, 3.18]` against the stated `[0.00458, 168.6]`, `d 2^d MSE₁ ∈ [1.116, 1.575]`)
+and proved in Lean that the junk value of `normCDFInv` outside `(0, 1)` is never used.  The R21
+auditor computed the rounding means exactly, checked that `T ≤ 54N` is sharp for the tamed fourth
+moment, and found that the method-2 iteration can stall above the global minimum (which is not
+claimed).
+Findings and what was done:
+
+- **Loose rates in `GBMDigital`:** `h^{1/3}` and `h^{2/3}` are what the mean-square strong error
+  gives; simulations show about `h^{1/2}` and `h`.  The kurtosis bound is for raw moments, and
+  `integral_condExp_milsteinEM_coarse_eq_fine` reads `0 = 0` for a non-integrable payoff.  All
+  documented.  Kept.
+- **`exactLaw_unique`** assumes a uniform `O(t²)` generator expansion, stronger than solving
+  Kolmogorov's equations; the README and coverage wording now say so.  Payoffs are bounded (so the
+  mean copy number is not covered).  Kept.
+- **`roundFixed_coarse_increment_mean` and `roundFixed_coarse_increment_pos_prob`** depend on
+  Mathlib's ties-up `round`; under round-half-to-even the means are `0` and the probability order
+  reverses.  The docstrings say so and name the tie-rule-free `nearestRound_coarse_increment_pos_prob`.
+  Kept.
+- **Superfluous hypotheses:** `normCDFInv_one_sub` (`u ∈ (0, 1)`), `gbmExactM_blockAvg`
+  (`0 < M`), `normCDFInv_dyadic_concave` (`2 ≤ k`); the constants of `InverseNormal` have slack.
+  Kept.
