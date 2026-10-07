@@ -972,7 +972,9 @@ links the shift modulo `1` on `ℝ` (`shiftedLatticeRule`) with `shiftedQMC` on 
   `randomShift_replicates`, satisfies `V₁ ≤ V²/N²` (`shiftedLatticeRule_randomShift`);
 * with independent shifts `U_0, U_1, …` uniform on `𝕋¹` (the hypotheses of
   `randomShift_replicates`), the average `Ȳ` of the `R` set averages has `E[Ȳ] = ∫_0^1 f` and
-  `Var[Ȳ] = V₁/R ≤ V²/(R N²)`. -/
+  `Var[Ȳ] = V₁/R ≤ V²/(R N²)`.
+The shifts are assumed uniform and mutually independent for all `r`, as `randomShift_replicates`
+does; `latticeRule_replicates` needs them only for `r < R`, and only pairwise independent. -/
 theorem rank1Lattice_torus_replicates {Ω : Type*} [MeasurableSpace Ω] {μ : Measure Ω}
     {U : ℕ → Ω → UnitAddTorus (Fin 1)} (hU : ∀ r, MeasurePreserving (U r) μ volume)
     (hUind : iIndepFun U μ) {f : ℝ → ℝ} (hf : BoundedVariationOn f (Set.Icc 0 1)) {N R : ℕ}
