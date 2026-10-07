@@ -151,6 +151,14 @@
 --   concavity, and the lookup-table results for f = Φ⁻¹ without hypotheses on f
 -- * `MlmcLean.EndToEndInstances` — the elliptic estimator, the discounted call, GBM with refinement
 --   factor M end to end; tamed fourth moments; the method-2 iteration exists; rounded increments
+-- * `MlmcLean.JumpProcesses` — Giles §6: a discrete exponential-Lévy analogue of Table 6.3's Asian
+--   row (β = 2), jump-adapted grids with random jump times satisfy (2.4), the thinning likelihood ratio
+-- * `MlmcLean.EstimatorRemarks` — Giles §2.1, §3.3: the CLT counterexample for a growing number of
+--   levels, the consistency check with one and two samples, the variance of the sample variance
+-- * `MlmcLean.SDEExtensions` — drift-implicit Euler with multiplicative noise (§5.6), the time-reversed
+--   path is a Brownian motion with the same running maximum (§5.3), payoffs with several kinks (§9.1)
+-- * `MlmcLean.ContractingLevels` — Giles §10.1: contracting SDEs with level-dependent steps and
+--   horizons, the multilevel variance decays, MLMC for the limit of the discretised chains
 import MlmcLean.Allocation
 import MlmcLean.Estimator
 import MlmcLean.LevelDiff
@@ -225,3 +233,7 @@ import MlmcLean.GBMDigital
 import MlmcLean.TauLeapingExact
 import MlmcLean.InverseNormal
 import MlmcLean.EndToEndInstances
+import MlmcLean.JumpProcesses
+import MlmcLean.EstimatorRemarks
+import MlmcLean.SDEExtensions
+import MlmcLean.ContractingLevels
