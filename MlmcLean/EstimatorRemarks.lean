@@ -3,29 +3,35 @@ import MlmcLean.NestedSimulation
 import Mathlib.Analysis.SpecialFunctions.PolarCoord
 
 /-!
-# Remarks on estimators: a counterexample to "therefore so is `Y`", the consistency check with one
-or two samples, and the variance of the sample variance
+# Remarks on estimators (Giles 2015, §2.1 and §3.3)
 
 Reference: M.B. Giles, *Multilevel Monte Carlo methods*, Acta Numerica 24 (2015), §2.1 (p. 8,
-l. 346–351 of `docs/giles2015.txt`) and §3.3 (pp. 22–23, l. 1012–1045).  Three claims that the
-other modules state only in docstrings (`notes/coverage/round17_spot_check.md`, "Docstring-only
-claims").
+l. 346–351 of `docs/giles2015.txt`) and §3.3 (pp. 22–23, l. 1010–1029 and l. 1038–1056).  Three
+claims that the other modules state only in docstrings (`notes/coverage/round17_spot_check.md`,
+"Docstring-only claims").
 
 **1. With a growing number of levels, "therefore so is `Y`" needs a hypothesis** (§2.1, p. 8,
 l. 346–351: "Collier, Haji-Ali, Nobile, von Schwerin and Tempone (2014) … prefer to use the
 Central Limit Theorem to construct a confidence interval which bounds `E[P]` with a
 user-prescribed confidence. This exploits the fact that the multilevel correction `Y_ℓ` on each
 level is asymptotically Normally-distributed, and therefore so is `Y`.").  The counterexample of
-the docstring of `MlmcLean/MLMCCentralLimit.lean`: the input `u` is uniform on `[0, 1]`, the
-corrections are `ΔP_ℓ = ±a_ℓ` with probability `p_ℓ/2` each and `0` otherwise, `p_ℓ = 2^{−ℓ}`,
-`a_ℓ² p_ℓ = 1` (`cltCexDiff`, `cltCexP`), the finest level of row `k` is `L_k = k`, and
-`N_{k,k} = k + 1`, `N_{k,ℓ} = (k + 1)³` for `ℓ < k` (`cltCexN`).
-* `cltCex_moments`: `E[ΔP_ℓ] = 0`, `V_ℓ = 1`, `P(ΔP_ℓ ≠ 0) = 2^{−ℓ}`, `E[ΔP_ℓ⁴] = 2^ℓ` (the
-  kurtosis is `2^ℓ`), `min_{ℓ ≤ k} N_{k,ℓ} → ∞`, and `σ_k² = k/(k + 1)³ + 1/(k + 1)`;
-* `mlmc_clt_counterexample`: every level estimator is asymptotically normal as `k → ∞`, but the
-  normalised estimator `(Y_k − E[P_{L_k}])/σ_k` tends to `0` in probability, hence not to
-  `N(0, 1)`: the levels `ℓ < k` carry only `k/(k + (k + 1)²)` of `σ_k²`, and with probability
-  `(1 − 2^{−k})^{k+1} → 1` all `k + 1` finest samples vanish;
+the docstring of `MlmcLean/MLMCCentralLimit.lean`, rescaled so that it satisfies the assumptions
+of Theorem 1 on the means and variances: the input `u` is uniform on `[0, 1]`, the corrections are
+`ΔP_ℓ = ±1` with probability `2^{−ℓ}/2` each and `0` otherwise (`cltCexDiff`; the
+`{−1, 0, 1}`-valued corrections of §3.3, p. 23, l. 1046–1053, with `p = q = 2^{−ℓ−1}`),
+`P_ℓ = ∑_{j ≤ ℓ} ΔP_j` (`cltCexP`), the finest level of row `k` is `L_k = k`, and
+`N_{k,k} = k + 1`, `N_{k,ℓ} = (k + 1)³ 2^{k−ℓ}` for `ℓ < k` (`cltCexN`).
+* `cltCex_moments`: `E[ΔP_ℓ] = 0`, `V_ℓ = 2^{−ℓ}` (Theorem 1's variance decay with `β = 1`),
+  `P(ΔP_ℓ ≠ 0) = 2^{−ℓ}`, kurtosis `2^ℓ`, `E[P_ℓ] = 0` and `E[(P_m − P_ℓ)²] = 2^{−ℓ} − 2^{−m}`
+  (so `P_ℓ` is Cauchy in `L²`, and its limit `P` has `E[P_ℓ − P] = 0`: there is no bias),
+  `min_{ℓ ≤ k} N_{k,ℓ} → ∞`, and `σ_k² = (k/(k + 1)³ + 1/(k + 1))/2^k`;
+* `mlmc_clt_counterexample`: every **fixed** level `ℓ` is asymptotically normal as `k → ∞`, but
+  the **finest** level `ℓ = L_k = k`, which moves with `k`, is not: its standardised estimator
+  tends to `0` in probability, as all its `k + 1` samples vanish with probability
+  `(1 − 2^{−k})^{k+1} → 1` (the effect described in §3.3, p. 23, l. 1054: "we may get all
+  `X^{(n)} = 0`").  As the finest level carries the fraction `(k + 1)²/(k + (k + 1)²) → 1` of
+  `σ_k²`, the normalised estimator `(Y_k − E[P_{L_k}])/σ_k` tends to `0` in probability, hence not
+  to `N(0, 1)`;
 * `mlmc_clt_counterexample_conditions`: the hypotheses that fail.  Lindeberg's condition fails in
   the strongest way: for every `ε > 0` the Lindeberg sum of the triangular array of normalised
   samples (the hypothesis of `tendstoInDistribution_lindeberg`) tends to `1`, not `0`; Lyapunov's
@@ -36,7 +42,7 @@ corrections are `ΔP_ℓ = ±a_ℓ` with probability `p_ℓ/2` each and `0` othe
 * `exists_mlmc_clt_counterexample`: such a setting exists (independent uniform inputs on the
   infinite product space).
 
-**2. The consistency check with one or two samples per level** (§3.3, p. 22, l. 1012–1031: "If
+**2. The consistency check with one or two samples per level** (§3.3, p. 22, l. 1010–1029: "If
 `a, b, c` are estimates for `E[P^f_{ℓ−1}], E[P^f_ℓ], E[Y_ℓ]`, respectively, then it should be
 true that `a − b + c ≈ 0`. … it computes and plots the ratio `|a − b + c| / (3(√V_a + √V_b +
 √V_c))` where `V_a, V_b, V_c` are empirical estimates for the variances of `a, b, c`. The
@@ -44,11 +50,12 @@ probability of this ratio being greater than unity is less than 0.3%.").  The se
 notation are those of `MlmcLean/ConsistencyCheck.lean` (levels `ℓ, ℓ + 1` for the paper's
 `ℓ − 1, ℓ`; `V = s²/N` with the empirical variance `s² = N⁻¹ ∑ (x_n − x̄)²`, `empVar`; the event
 written without division).
-* `consistency_check_one_sample`: with one sample per level every empirical variance is `0`, so
-  the ratio is `0/0` or `+∞`: the check fails exactly when `a − b + c ≠ 0`, i.e. when the two
-  samples `P^f_ℓ(ω^{(ℓ,0)})` and `P^c_ℓ(ω^{(ℓ+1,0)})` differ, and if the law of `P^c_ℓ` has no
-  atoms it fails with probability `1`.  (The unbiased variance `S² = ∑ (x_n − x̄)²/(N − 1)` is
-  undefined for `N = 1`.)
+* `consistency_check_one_sample_iff`: with one sample per level, for any outputs, inputs and
+  outcome, every empirical variance is `0`, so the ratio is `0/0` or `+∞`: the check fails exactly
+  when `a − b + c ≠ 0`, i.e. when the two samples `P^f_ℓ(ω^{(ℓ,0)})` and `P^c_ℓ(ω^{(ℓ+1,0)})`
+  differ.  (The unbiased variance `S² = ∑ (x_n − x̄)²/(N − 1)` is undefined for `N = 1`.)
+* `consistency_check_one_sample`: if moreover the inputs are independent and the law of `P^c_ℓ`
+  has no atoms, the check fails with probability `1`.
 * `consistency_check_two_samples`: the Gaussian example of `ConsistencyCheck.lean`
   (`P^f_ℓ = P^f_{ℓ+1} = 0`, `P^c_ℓ = −Y`, `Y ∼ N(0, 1)`, so (2.4) holds) with two samples per
   level fails with probability exactly `(2/π) arctan(√2/3) ≈ 0.2804 > 1/4` with the empirical
@@ -56,36 +63,51 @@ written without division).
   ratio `(y₀ − y₁)/(y₀ + y₁)` of two independent standard normals is standard Cauchy:
   `P(|U − V| < t|U + V|) = (2/π) arctan t` (`gaussian_prod_cone`, by polar coordinates,
   `lintegral_comp_polarCoord_symm`).
+In this example the check fails iff `|T| > 3√((N − 1)/N)` for a Student `t_{N−1}` variable `T`;
+numerically (not formalised) its failure probability exceeds `0.3%` exactly for `2 ≤ N ≤ 274`
+(for `2 ≤ N ≤ 228` with the unbiased variances).
 
-**3. The standard deviation of the sample variance** (§3.3, pp. 22–23, l. 1038–1042: "When the
+**3. The standard deviation of the sample variance** (§3.3, p. 23, l. 1038–1042: "When the
 number of samples `N` is large, the standard deviation of the sample variance for a random
 variable `X` with zero mean is approximately `√((κ − 1)/N) E[X²]` where the kurtosis `κ` is
 defined as `κ = E[X⁴]/(E[X²])²`.").  `MlmcLean/ErrorAnalysis.lean` proves this exactly for the
-sample variance with known mean (`sampleVariance_sd`).  For the usual unbiased sample variance
-`S_N² = (N − 1)⁻¹ ∑_{n<N} (X_n − X̄_N)²` of `N ≥ 2` i.i.d. samples with `E[X⁴] < ∞`, `σ² = V[X]`,
-`μ₄ = E[(X − E X)⁴]` and the central kurtosis `κ = μ₄/σ⁴`:
-* `sampleVar_mean_variance`: `E[S_N²] = σ²` and `V[S_N²] = (μ₄ − (N − 3)/(N − 1) σ⁴)/N`;
-* `sampleVar_sd`: `√V[S_N²] = √((κ − 1)/N + 2/(N(N − 1))) σ²`, so if `κ > 1`,
-  `√((κ − 1)/N) σ² ≤ √V[S_N²] ≤ √((κ − 1)/N) σ² (1 + 1/((κ − 1)(N − 1)))`, the paper's
-  approximation with relative error `O(1/N)`;
-* `tendsto_sampleVar_sd_div`: `√V[S_N²]/(√((κ − 1)/N) σ²) → 1` as `N → ∞`.
+sample variance with known mean (`sampleVariance_sd`).  For `N ≥ 2` i.i.d. samples with
+`E[X⁴] < ∞`, `σ² = V[X]`, `μ₄ = E[(X − E X)⁴]` and the central kurtosis `κ = μ₄/σ⁴`:
+* `sampleVar_mean_variance`: the unbiased sample variance
+  `S_N² = (N − 1)⁻¹ ∑_{n<N} (X_n − X̄_N)²` (`sampleVar`) has `E[S_N²] = σ²` and
+  `V[S_N²] = (μ₄ − (N − 3)/(N − 1) σ⁴)/N`;
+* `sampleVar_sd`: if `σ² > 0`, then `κ ≥ 1` and `√V[S_N²] = √((κ − 1)/N + 2/(N(N − 1))) σ²`;
+  so `√((κ − 1)/N) σ² ≤ √V[S_N²]`, and if `κ > 1`,
+  `√V[S_N²] ≤ √((κ − 1)/N) σ² (1 + 1/((κ − 1)(N − 1)))`, the paper's approximation with
+  relative error `O(1/N)`;
+* `tendsto_sampleVar_sd_div`: `√V[S_N²]/(√((κ − 1)/N) σ²) → 1` as `N → ∞` if `κ > 1`;
+* `empVar_mean_variance`, `empVar_sd`, `tendsto_empVar_sd_div`: the same for the biased empirical
+  variance `s_N² = (N − 1) S_N²/N` (`empVar`) used by the consistency check and by the driver of
+  §3.4: `E[s_N²] = (N − 1)σ²/N`, `V[s_N²] = (N − 1)((N − 1)μ₄ − (N − 3)σ⁴)/N³`,
+  `√V[s_N²] = ((N − 1)/N) √((κ − 1)/N + 2/(N(N − 1))) σ²`, with relative error `O(1/N)` against
+  the paper's approximation.
 The moments behind it: `E[T⁴] = Nμ₄ + 3N(N − 1)σ⁴`, `E[QT²] = E[Q²] = Nμ₄ + N(N − 1)σ⁴` for
 `T = ∑ Y_n`, `Q = ∑ Y_n²` and centred i.i.d. `Y_n` (`moments_finsetSum_indep`,
 `integral_sumSq_mul_sq`, `integral_sumSq_sq`).
 
 **Deviations from the paper.**
 * Item 1 refutes an inference, not a theorem: the paper states no hypotheses for "therefore so is
-  `Y`" (it cites Collier et al.); the example shows that the asymptotic normality of every level
-  estimator is not enough when the number of levels grows (for a fixed number of levels it is,
-  `tendstoInDistribution_mlmcEstimator`).  It holds on every probability space carrying
+  `Y`" (it summarises Collier et al.).  The example satisfies the assumptions of Theorem 1 on the
+  means and variances (no bias, `V_ℓ = 2^{−ℓ}`, `β = 1`, any `α`, and any cost model, e.g.
+  `C_ℓ = 2^ℓ`), and every fixed level is asymptotically normal, yet `Y` is not: the finest level,
+  which moves with `k`, is not asymptotically normal, as its kurtosis `2^k` grows faster than its
+  sample size `k + 1`.  So the sentence is imprecise rather than wrong: it holds when the levels in
+  use satisfy a uniform condition such as Lyapunov's (`MlmcLean/MLMCCentralLimit.lean`), and for a
+  fixed number of levels (`tendstoInDistribution_mlmcEstimator`).  The sample sizes are not those
+  of Theorem 1: on the levels `ℓ < k` they have the shape `N_ℓ ∝ √(V_ℓ/C_ℓ)` for `C_ℓ = 2^ℓ`, but
+  the finest level has far fewer samples.  The example holds on every probability space carrying
   independent uniform inputs.
 * Item 2 makes precise "less than 0.3%" for small samples, where it fails; the paper's claim is
-  the asymptotic statement `consistency_check_empirical_lt`.
-* Item 3 uses the central kurtosis `κ = E[(X − E X)⁴]/V[X]²` (the paper's `κ` for zero-mean
-  `X`) and assumes `κ > 1`: for `κ = 1` (`X − E X = ±c`) the standard deviation is
-  `√(2/(N(N − 1))) σ²`, not approximately `√((κ − 1)/N) σ² = 0`.  For the biased estimator
-  `s_N² = (N − 1) S_N²/N` (`empVar`) the standard deviation is `(N − 1)/N` times as large, which
-  changes only the `O(1/N)` term.
+  the asymptotic statement `consistency_check_empirical_lt`.  Only `N = 1, 2` are formalised.
+* Item 3 uses the central kurtosis `κ = E[(X − E X)⁴]/V[X]²` (the paper's `κ` for zero-mean `X`)
+  and assumes `V[X] > 0` (for `V[X] = 0`, Lean's `κ` is the junk value `μ₄/0 = 0`); the relative
+  bounds and the limits assume `κ > 1`: for `κ = 1` (`X − E X = ±c`) the standard deviation of
+  `S_N²` is `√(2/(N(N − 1))) σ²`, not approximately `√((κ − 1)/N) σ² = 0`.
 -/
 
 open MeasureTheory ProbabilityTheory Finset Filter Topology Real
@@ -96,44 +118,47 @@ namespace MLMC
 
 /-- The correction `ΔP_ℓ` of the counterexample to Giles 2015, §2.1, p. 8 ("the multilevel
 correction `Y_ℓ` on each level is asymptotically Normally-distributed, and therefore so is `Y`"),
-as a function of an input `u` that is uniform on `[0, 1]`: `ΔP_ℓ(u) = 2^{ℓ/2}` for
-`u < 2^{−ℓ}/2`, `−2^{ℓ/2}` for `2^{−ℓ}/2 ≤ u < 2^{−ℓ}`, and `0` otherwise.  So `ΔP_ℓ = ±a_ℓ`
-with probability `p_ℓ/2` each, `p_ℓ = 2^{−ℓ}`, `a_ℓ = 2^{ℓ/2}`, `a_ℓ² p_ℓ = 1` (the example in
-the docstring of `MlmcLean/MLMCCentralLimit.lean`). -/
+as a function of an input `u` that is uniform on `[0, 1]`: `ΔP_ℓ(u) = 1` for `u < 2^{−ℓ}/2`,
+`−1` for `2^{−ℓ}/2 ≤ u < 2^{−ℓ}`, and `0` otherwise.  So `ΔP_ℓ = ±1` with probability
+`2^{−ℓ}/2` each and `0` otherwise: the `{−1, 0, 1}`-valued correction of §3.3, p. 23 (l. 1046–1053)
+with `p = q = 2^{−ℓ−1}`, of variance `V_ℓ = 2^{−ℓ}` and kurtosis `2^ℓ`.  (The example of the
+docstring of `MlmcLean/MLMCCentralLimit.lean` is `2^{ℓ/2} ΔP_ℓ`, with `V_ℓ = 1`; the rescaling
+gives the variance decay `V_ℓ ≤ c₂ 2^{−βℓ}` of Theorem 1 with `β = 1`.) -/
 noncomputable def cltCexDiff (ℓ : ℕ) (u : ℝ) : ℝ :=
-  if u < ((2 : ℝ) ^ ℓ)⁻¹ / 2 then √((2 : ℝ) ^ ℓ)
-  else if u < ((2 : ℝ) ^ ℓ)⁻¹ then -√((2 : ℝ) ^ ℓ) else 0
+  if u < ((2 : ℝ) ^ ℓ)⁻¹ / 2 then 1 else if u < ((2 : ℝ) ^ ℓ)⁻¹ then -1 else 0
 
 /-- The level outputs of the counterexample (Giles 2015, §2.1, p. 8): `P_ℓ = ∑_{j ≤ ℓ} ΔP_j`, so
 that the correction `P_ℓ − P_{ℓ−1}` of the estimator (2.2) is `ΔP_ℓ` (`levelDiff_cltCexP`). -/
 noncomputable def cltCexP (ℓ : ℕ) (u : ℝ) : ℝ := ∑ j ∈ range (ℓ + 1), cltCexDiff j u
 
 /-- The sample sizes of the counterexample (Giles 2015, §2.1, p. 8): row `k` uses the levels
-`ℓ ≤ L_k = k`, with `N_{k,k} = k + 1` samples on the finest level and `N_{k,ℓ} = (k + 1)³` on the
-others. -/
-def cltCexN (k ℓ : ℕ) : ℕ := if ℓ = k then k + 1 else (k + 1) ^ 3
+`ℓ ≤ L_k = k`, with `N_{k,k} = k + 1` samples on the finest level and
+`N_{k,ℓ} = (k + 1)³ 2^{k−ℓ}` on the levels `ℓ < k`.  On the levels `ℓ < k` this is proportional
+to `√(V_ℓ/C_ℓ) = 2^{−ℓ}` for the cost `C_ℓ = 2^ℓ`, the shape `N_ℓ = μ √(V_ℓ/C_ℓ)` of the
+optimal allocation (§1.3, p. 4); the finest level gets far fewer samples. -/
+def cltCexN (k ℓ : ℕ) : ℕ := if ℓ = k then k + 1 else (k + 1) ^ 3 * 2 ^ (k - ℓ)
 
-/-- The correction of the counterexample is measurable. -/
+/-- The correction of the counterexample is measurable (Giles 2015, §2.1, p. 8). -/
 lemma measurable_cltCexDiff (ℓ : ℕ) : Measurable (cltCexDiff ℓ) :=
   Measurable.ite measurableSet_Iio measurable_const
     (Measurable.ite measurableSet_Iio measurable_const measurable_const)
 
-/-- The correction of the counterexample is bounded by `a_ℓ = 2^{ℓ/2}`. -/
-lemma abs_cltCexDiff_le (ℓ : ℕ) (u : ℝ) : |cltCexDiff ℓ u| ≤ √((2 : ℝ) ^ ℓ) := by
+/-- The correction of the counterexample is bounded by `1` (Giles 2015, §2.1, p. 8). -/
+lemma abs_cltCexDiff_le (ℓ : ℕ) (u : ℝ) : |cltCexDiff ℓ u| ≤ 1 := by
   unfold cltCexDiff
-  split_ifs <;> simp [abs_of_nonneg (Real.sqrt_nonneg _)]
+  split_ifs <;> simp
 
-/-- The correction of the counterexample takes the values `0` and `±a_ℓ`. -/
-lemma cltCexDiff_eq_zero_or (ℓ : ℕ) (u : ℝ) :
-    cltCexDiff ℓ u = 0 ∨ |cltCexDiff ℓ u| = √((2 : ℝ) ^ ℓ) := by
+/-- The correction of the counterexample takes the values `0` and `±1` (Giles 2015, §2.1, p. 8;
+§3.3, p. 23). -/
+lemma cltCexDiff_eq_zero_or (ℓ : ℕ) (u : ℝ) : cltCexDiff ℓ u = 0 ∨ |cltCexDiff ℓ u| = 1 := by
   unfold cltCexDiff
-  split_ifs <;> simp [abs_of_nonneg (Real.sqrt_nonneg _)]
+  split_ifs <;> simp
 
 /-- The correction of the counterexample as a difference of two indicators,
-`a_ℓ 1_{u < p_ℓ/2} − a_ℓ 1_{p_ℓ/2 ≤ u < p_ℓ}`. -/
+`1_{u < p_ℓ/2} − 1_{p_ℓ/2 ≤ u < p_ℓ}` with `p_ℓ = 2^{−ℓ}` (Giles 2015, §2.1, p. 8). -/
 lemma cltCexDiff_eq_indicator (ℓ : ℕ) (u : ℝ) :
-    cltCexDiff ℓ u = (Set.Iio (((2 : ℝ) ^ ℓ)⁻¹ / 2)).indicator (fun _ => √((2 : ℝ) ^ ℓ)) u -
-      (Set.Ico (((2 : ℝ) ^ ℓ)⁻¹ / 2) ((2 : ℝ) ^ ℓ)⁻¹).indicator (fun _ => √((2 : ℝ) ^ ℓ)) u := by
+    cltCexDiff ℓ u = (Set.Iio (((2 : ℝ) ^ ℓ)⁻¹ / 2)).indicator (fun _ => (1 : ℝ)) u -
+      (Set.Ico (((2 : ℝ) ^ ℓ)⁻¹ / 2) ((2 : ℝ) ^ ℓ)⁻¹).indicator (fun _ => (1 : ℝ)) u := by
   unfold cltCexDiff
   split_ifs with h1 h2
   · rw [Set.indicator_of_mem (show u ∈ Set.Iio _ from h1),
@@ -146,37 +171,36 @@ lemma cltCexDiff_eq_indicator (ℓ : ℕ) (u : ℝ) :
       Set.indicator_of_notMem (show u ∉ Set.Ico _ _ from fun h => h2 h.2)]
     ring
 
-/-- The square of the correction of the counterexample is `2^ℓ 1_{u < 2^{−ℓ}}`. -/
+/-- The square of the correction of the counterexample is `1_{u < 2^{−ℓ}}` (Giles 2015, §2.1,
+p. 8). -/
 lemma cltCexDiff_sq (ℓ : ℕ) (u : ℝ) :
-    cltCexDiff ℓ u ^ 2 = (Set.Iio ((2 : ℝ) ^ ℓ)⁻¹).indicator (fun _ => (2 : ℝ) ^ ℓ) u := by
+    cltCexDiff ℓ u ^ 2 = (Set.Iio ((2 : ℝ) ^ ℓ)⁻¹).indicator (fun _ => (1 : ℝ)) u := by
   have hp : (0 : ℝ) < ((2 : ℝ) ^ ℓ)⁻¹ := by positivity
-  have hs : √((2 : ℝ) ^ ℓ) ^ 2 = (2 : ℝ) ^ ℓ := Real.sq_sqrt (by positivity)
   unfold cltCexDiff
   split_ifs with h1 h2
   · rw [Set.indicator_of_mem (show u ∈ Set.Iio _ from by
-      simp only [Set.mem_Iio]; linarith), hs]
-  · rw [Set.indicator_of_mem (show u ∈ Set.Iio _ from h2), neg_sq, hs]
+      simp only [Set.mem_Iio]; linarith), one_pow]
+  · rw [Set.indicator_of_mem (show u ∈ Set.Iio _ from h2), neg_one_sq]
   · rw [Set.indicator_of_notMem (show u ∉ Set.Iio _ from h2)]
     ring
 
-/-- The fourth power of the correction of the counterexample is `4^ℓ 1_{u < 2^{−ℓ}}`. -/
-lemma cltCexDiff_pow_four (ℓ : ℕ) (u : ℝ) :
-    cltCexDiff ℓ u ^ 4 = (Set.Iio ((2 : ℝ) ^ ℓ)⁻¹).indicator (fun _ => ((2 : ℝ) ^ ℓ) ^ 2) u := by
-  rw [show cltCexDiff ℓ u ^ 4 = (cltCexDiff ℓ u ^ 2) ^ 2 by ring, cltCexDiff_sq]
-  by_cases h : u < ((2 : ℝ) ^ ℓ)⁻¹
-  · rw [Set.indicator_of_mem (show u ∈ Set.Iio _ from h),
-      Set.indicator_of_mem (show u ∈ Set.Iio _ from h)]
-  · rw [Set.indicator_of_notMem (show u ∉ Set.Iio _ from h),
-      Set.indicator_of_notMem (show u ∉ Set.Iio _ from h)]
+/-- The fourth power of the correction of the counterexample is its square, as its values are `0`
+and `±1` (Giles 2015, §2.1, p. 8). -/
+lemma cltCexDiff_pow_four (ℓ : ℕ) (u : ℝ) : cltCexDiff ℓ u ^ 4 = cltCexDiff ℓ u ^ 2 := by
+  rcases cltCexDiff_eq_zero_or ℓ u with h | h
+  · rw [h]
     ring
+  · have h2 : cltCexDiff ℓ u ^ 2 = 1 := by rw [← sq_abs, h, one_pow]
+    rw [show cltCexDiff ℓ u ^ 4 = (cltCexDiff ℓ u ^ 2) ^ 2 by ring, h2, one_pow]
 
 /-- The uniform law on `[0, 1]`, the law of the input of the counterexample, is a probability
-measure. -/
+measure (Giles 2015, §2.1, p. 8). -/
 lemma isProbabilityMeasure_restrict_Icc_zero_one :
     IsProbabilityMeasure (volume.restrict (Set.Icc (0 : ℝ) 1)) :=
   ⟨by simp⟩
 
-/-- The uniform law on `[0, 1]` gives `(−∞, x)` the mass `x` for `0 ≤ x ≤ 1`. -/
+/-- The uniform law on `[0, 1]` gives `(−∞, x)` the mass `x` for `0 ≤ x ≤ 1` (for the
+counterexample of Giles 2015, §2.1, p. 8). -/
 lemma measureReal_unitIcc_Iio {x : ℝ} (h0 : 0 ≤ x) (h1 : x ≤ 1) :
     (volume.restrict (Set.Icc (0 : ℝ) 1)).real (Set.Iio x) = x := by
   rw [measureReal_def, Measure.restrict_apply measurableSet_Iio]
@@ -190,7 +214,8 @@ lemma measureReal_unitIcc_Iio {x : ℝ} (h0 : 0 ≤ x) (h1 : x ≤ 1) :
       exact ⟨h', h, by linarith⟩
   rw [e, Real.volume_Ico, sub_zero, ENNReal.toReal_ofReal h0]
 
-/-- The uniform law on `[0, 1]` gives `[a, b)` the mass `b − a` for `0 ≤ a ≤ b ≤ 1`. -/
+/-- The uniform law on `[0, 1]` gives `[a, b)` the mass `b − a` for `0 ≤ a ≤ b ≤ 1` (for the
+counterexample of Giles 2015, §2.1, p. 8). -/
 lemma measureReal_unitIcc_Ico {a b : ℝ} (h0 : 0 ≤ a) (hab : a ≤ b) (h1 : b ≤ 1) :
     (volume.restrict (Set.Icc (0 : ℝ) 1)).real (Set.Ico a b) = b - a := by
   rw [measureReal_def, Measure.restrict_apply measurableSet_Ico]
@@ -219,35 +244,42 @@ lemma integral_cltCexDiff (ℓ : ℕ) :
   simp only [smul_eq_mul]
   ring
 
-/-- The correction of the counterexample has second moment `a_ℓ² p_ℓ = 1` (Giles 2015, §2.1,
-p. 8). -/
+/-- The correction of the counterexample has second moment `2^{−ℓ}` (Giles 2015, §2.1, p. 8). -/
 lemma integral_cltCexDiff_sq (ℓ : ℕ) :
-    ∫ u, cltCexDiff ℓ u ^ 2 ∂(volume.restrict (Set.Icc (0 : ℝ) 1)) = 1 := by
+    ∫ u, cltCexDiff ℓ u ^ 2 ∂(volume.restrict (Set.Icc (0 : ℝ) 1)) = ((2 : ℝ) ^ ℓ)⁻¹ := by
   have hp1 : ((2 : ℝ) ^ ℓ)⁻¹ ≤ 1 := inv_le_one_of_one_le₀ (one_le_pow₀ (by norm_num))
   simp_rw [cltCexDiff_sq]
   rw [integral_indicator_const _ measurableSet_Iio, measureReal_unitIcc_Iio (by positivity) hp1,
-    smul_eq_mul, inv_mul_cancel₀ (by positivity)]
+    smul_eq_mul, mul_one]
 
-/-- The correction of the counterexample has fourth moment `a_ℓ⁴ p_ℓ = 2^ℓ`, so its kurtosis is
-`2^ℓ` (Giles 2015, §2.1, p. 8; §3.3, p. 23). -/
+/-- The correction of the counterexample has fourth moment `2^{−ℓ}` (Giles 2015, §2.1, p. 8;
+§3.3, p. 23). -/
 lemma integral_cltCexDiff_pow_four (ℓ : ℕ) :
-    ∫ u, cltCexDiff ℓ u ^ 4 ∂(volume.restrict (Set.Icc (0 : ℝ) 1)) = 2 ^ ℓ := by
-  have hp1 : ((2 : ℝ) ^ ℓ)⁻¹ ≤ 1 := inv_le_one_of_one_le₀ (one_le_pow₀ (by norm_num))
+    ∫ u, cltCexDiff ℓ u ^ 4 ∂(volume.restrict (Set.Icc (0 : ℝ) 1)) = ((2 : ℝ) ^ ℓ)⁻¹ := by
   simp_rw [cltCexDiff_pow_four]
-  rw [integral_indicator_const _ measurableSet_Iio, measureReal_unitIcc_Iio (by positivity) hp1,
-    smul_eq_mul, sq, ← mul_assoc, inv_mul_cancel₀ (by positivity), one_mul]
+  exact integral_cltCexDiff_sq ℓ
 
-/-- The correction of the counterexample has variance `1` (Giles 2015, §2.1, p. 8). -/
+/-- The correction of the counterexample has variance `V_ℓ = 2^{−ℓ}` (Giles 2015, §2.1, p. 8: the
+variance decay `V_ℓ ≤ c₂ 2^{−βℓ}` of Theorem 1 with `β = 1`). -/
 lemma variance_cltCexDiff (ℓ : ℕ) :
-    variance (cltCexDiff ℓ) (volume.restrict (Set.Icc (0 : ℝ) 1)) = 1 := by
+    variance (cltCexDiff ℓ) (volume.restrict (Set.Icc (0 : ℝ) 1)) = ((2 : ℝ) ^ ℓ)⁻¹ := by
   rw [variance_of_integral_eq_zero (measurable_cltCexDiff ℓ).aemeasurable
     (integral_cltCexDiff ℓ), integral_cltCexDiff_sq]
 
-/-- The correction of the counterexample is in every `L^p` (it is bounded). -/
+/-- The kurtosis of the correction of the counterexample is `2^ℓ` (Giles 2015, §3.3, p. 23,
+l. 1046–1053: "`κ ≈ (p + q)⁻¹ ≫ 1`", here exactly, with `p + q = 2^{−ℓ}`). -/
+lemma kurtosis_cltCexDiff (ℓ : ℕ) :
+    kurtosis (cltCexDiff ℓ) (volume.restrict (Set.Icc (0 : ℝ) 1)) = 2 ^ ℓ := by
+  rw [kurtosis, integral_cltCexDiff_pow_four, integral_cltCexDiff_sq]
+  have h : (0 : ℝ) < 2 ^ ℓ := by positivity
+  field_simp
+
+/-- The correction of the counterexample is in every `L^p`, as it is bounded (Giles 2015, §2.1,
+p. 8). -/
 lemma memLp_cltCexDiff (ℓ : ℕ) (p : ENNReal) :
     MemLp (cltCexDiff ℓ) p (volume.restrict (Set.Icc (0 : ℝ) 1)) := by
   have := isProbabilityMeasure_restrict_Icc_zero_one
-  exact MemLp.of_bound (measurable_cltCexDiff ℓ).aestronglyMeasurable _
+  exact MemLp.of_bound (measurable_cltCexDiff ℓ).aestronglyMeasurable 1
     (ae_of_all _ fun u => by rw [Real.norm_eq_abs]; exact abs_cltCexDiff_le ℓ u)
 
 /-- The correction of the counterexample vanishes except with probability `p_ℓ = 2^{−ℓ}`
@@ -261,7 +293,7 @@ lemma measureReal_cltCexDiff_ne_zero (ℓ : ℕ) :
     rw [← pow_ne_zero_iff two_ne_zero, cltCexDiff_sq]
     by_cases h : u < ((2 : ℝ) ^ ℓ)⁻¹
     · rw [Set.indicator_of_mem (show u ∈ Set.Iio _ from h)]
-      exact ⟨fun _ => h, fun _ => by positivity⟩
+      exact ⟨fun _ => h, fun _ => one_ne_zero⟩
     · rw [Set.indicator_of_notMem (show u ∉ Set.Iio _ from h)]
       exact ⟨fun h' => absurd rfl h', fun h' => absurd h' h⟩
   rw [e, measureReal_unitIcc_Iio (by positivity) hp1]
@@ -278,11 +310,11 @@ lemma levelDiff_cltCexP (ℓ : ℕ) : levelDiff cltCexP ℓ = cltCexDiff ℓ := 
     simp only [levelDiff_succ, cltCexP, Finset.sum_range_succ]
     ring
 
-/-- The level outputs of the counterexample are measurable. -/
+/-- The level outputs of the counterexample are measurable (Giles 2015, §2.1, p. 8). -/
 lemma measurable_cltCexP (k : ℕ) : Measurable (cltCexP k) :=
   Finset.measurable_sum _ fun j _ => measurable_cltCexDiff j
 
-/-- The level outputs of the counterexample are in every `L^p`. -/
+/-- The level outputs of the counterexample are in every `L^p` (Giles 2015, §2.1, p. 8). -/
 lemma memLp_cltCexP (k : ℕ) (p : ENNReal) :
     MemLp (cltCexP k) p (volume.restrict (Set.Icc (0 : ℝ) 1)) := by
   have h := memLp_finsetSum (range (k + 1)) fun j _ => memLp_cltCexDiff j p
@@ -290,64 +322,142 @@ lemma memLp_cltCexP (k : ℕ) (p : ENNReal) :
   funext u
   simp [cltCexP]
 
-/-- The level outputs of the counterexample have mean `0`, so `E[P_{L_k}] = 0`. -/
+/-- The level outputs of the counterexample have mean `0`, so `E[P_{L_k}] = 0` and the estimator
+has no bias (Giles 2015, §2.1, p. 8). -/
 lemma integral_cltCexP (k : ℕ) :
     ∫ u, cltCexP k u ∂(volume.restrict (Set.Icc (0 : ℝ) 1)) = 0 := by
   unfold cltCexP
   rw [integral_finsetSum _ fun j _ => (memLp_cltCexDiff j 1).integrable le_rfl]
   simp [integral_cltCexDiff]
 
-/-- The finest level of row `k` of the counterexample has `N_{k,k} = k + 1` samples. -/
+/-- The supports of the corrections of the counterexample are nested: for `i < j`, `ΔP_i = 1`
+wherever `ΔP_j ≠ 0`, so `ΔP_i ΔP_j = ΔP_j` (Giles 2015, §2.1, p. 8). -/
+lemma cltCexDiff_mul_of_lt {i j : ℕ} (hij : i < j) (u : ℝ) :
+    cltCexDiff i u * cltCexDiff j u = cltCexDiff j u := by
+  by_cases h : u < ((2 : ℝ) ^ j)⁻¹
+  · have hle : ((2 : ℝ) ^ j)⁻¹ ≤ ((2 : ℝ) ^ i)⁻¹ / 2 := by
+      rw [div_eq_mul_inv, ← mul_inv, ← pow_succ]
+      exact inv_anti₀ (by positivity) (pow_le_pow_right₀ (by norm_num) hij)
+    rw [cltCexDiff, if_pos (h.trans_le hle), one_mul]
+  · have hj : cltCexDiff j u = 0 := by
+      rw [cltCexDiff, if_neg (fun h' => h (h'.trans_le (half_le_self (by positivity)))),
+        if_neg h]
+    rw [hj, mul_zero]
+
+/-- `P_k ΔP_j = (k + 1) ΔP_j` for `k < j`, by `cltCexDiff_mul_of_lt` (Giles 2015, §2.1,
+p. 8). -/
+lemma cltCexP_mul_cltCexDiff {k j : ℕ} (hkj : k < j) (u : ℝ) :
+    cltCexP k u * cltCexDiff j u = ((k : ℝ) + 1) * cltCexDiff j u := by
+  rw [cltCexP, Finset.sum_mul, Finset.sum_congr rfl fun i hi =>
+      cltCexDiff_mul_of_lt ((Nat.lt_succ_iff.1 (Finset.mem_range.1 hi)).trans_lt hkj) u,
+    Finset.sum_const, card_range, nsmul_eq_mul, Nat.cast_succ]
+
+/-- **The level outputs of the counterexample converge in `L²`** (Giles 2015, §2.1, p. 8): their
+increments are orthogonal, and `E[(P_m − P_ℓ)²] = 2^{−ℓ} − 2^{−m}` for `ℓ ≤ m`, so `(P_ℓ)` is a
+Cauchy sequence in `L²`. -/
+lemma integral_cltCexP_sub_sq {ℓ m : ℕ} (h : ℓ ≤ m) :
+    ∫ u, (cltCexP m u - cltCexP ℓ u) ^ 2 ∂(volume.restrict (Set.Icc (0 : ℝ) 1)) =
+      ((2 : ℝ) ^ ℓ)⁻¹ - ((2 : ℝ) ^ m)⁻¹ := by
+  have := isProbabilityMeasure_restrict_Icc_zero_one
+  induction m, h using Nat.le_induction with
+  | base => simp
+  | succ m hm ih =>
+    have e : ∀ u, (cltCexP (m + 1) u - cltCexP ℓ u) ^ 2 = (cltCexP m u - cltCexP ℓ u) ^ 2 +
+        2 * ((m : ℝ) - ℓ) * cltCexDiff (m + 1) u + cltCexDiff (m + 1) u ^ 2 := fun u => by
+      have hP : cltCexP (m + 1) u = cltCexP m u + cltCexDiff (m + 1) u :=
+        Finset.sum_range_succ _ _
+      have h1 := cltCexP_mul_cltCexDiff (Nat.lt_succ_self m) u
+      have h2 := cltCexP_mul_cltCexDiff (Nat.lt_succ_of_le hm) u
+      rw [hP]
+      linear_combination 2 * h1 - 2 * h2
+    have i1 : Integrable (fun u => (cltCexP m u - cltCexP ℓ u) ^ 2)
+        (volume.restrict (Set.Icc (0 : ℝ) 1)) :=
+      ((memLp_cltCexP m 2).sub (memLp_cltCexP ℓ 2)).integrable_sq
+    have i2 : Integrable (fun u => 2 * ((m : ℝ) - ℓ) * cltCexDiff (m + 1) u)
+        (volume.restrict (Set.Icc (0 : ℝ) 1)) :=
+      ((memLp_cltCexDiff (m + 1) 1).integrable le_rfl).const_mul _
+    have i3 : Integrable (fun u => cltCexDiff (m + 1) u ^ 2)
+        (volume.restrict (Set.Icc (0 : ℝ) 1)) := (memLp_cltCexDiff (m + 1) 2).integrable_sq
+    have i12 : Integrable (fun u => (cltCexP m u - cltCexP ℓ u) ^ 2 +
+        2 * ((m : ℝ) - ℓ) * cltCexDiff (m + 1) u) (volume.restrict (Set.Icc (0 : ℝ) 1)) :=
+      i1.add i2
+    simp_rw [e]
+    rw [integral_add i12 i3, integral_add i1 i2, integral_const_mul, ih,
+      integral_cltCexDiff, integral_cltCexDiff_sq]
+    ring
+
+/-- The finest level of row `k` of the counterexample has `N_{k,k} = k + 1` samples (Giles 2015,
+§2.1, p. 8). -/
 lemma cltCexN_self (k : ℕ) : cltCexN k k = k + 1 := if_pos rfl
 
-/-- The other levels of row `k` of the counterexample have `N_{k,ℓ} = (k + 1)³` samples. -/
-lemma cltCexN_of_ne {k ℓ : ℕ} (h : ℓ ≠ k) : cltCexN k ℓ = (k + 1) ^ 3 := if_neg h
+/-- The other levels of row `k` of the counterexample have `N_{k,ℓ} = (k + 1)³ 2^{k−ℓ}` samples
+(Giles 2015, §2.1, p. 8). -/
+lemma cltCexN_of_ne {k ℓ : ℕ} (h : ℓ ≠ k) : cltCexN k ℓ = (k + 1) ^ 3 * 2 ^ (k - ℓ) := if_neg h
 
-/-- Every level of row `k` of the counterexample has at least `k + 1` samples. -/
+/-- Every level of row `k` of the counterexample has at least `k + 1` samples (Giles 2015, §2.1,
+p. 8). -/
 lemma le_cltCexN (k ℓ : ℕ) : k + 1 ≤ cltCexN k ℓ := by
   unfold cltCexN
   split_ifs
   · exact le_rfl
-  · exact Nat.le_self_pow (by norm_num) _
+  · exact (Nat.le_self_pow (by norm_num) _).trans (Nat.le_mul_of_pos_right _ (by positivity))
 
-/-- Every level of the counterexample has at least one sample. -/
+/-- Every level of the counterexample has at least one sample (Giles 2015, §2.1, p. 8). -/
 lemma cltCexN_pos (k ℓ : ℕ) : 0 < cltCexN k ℓ := (Nat.succ_pos k).trans_le (le_cltCexN k ℓ)
 
+/-- For `ℓ < k`, the level `ℓ` of row `k` of the counterexample contributes
+`V_ℓ/N_{k,ℓ} = 2^{−k}/(k + 1)³` to the variance (Giles 2015, (2.3)). -/
+lemma variance_div_cltCexN_of_lt {k ℓ : ℕ} (h : ℓ < k) :
+    variance (levelDiff cltCexP ℓ) (volume.restrict (Set.Icc (0 : ℝ) 1)) / (cltCexN k ℓ : ℝ) =
+      1 / (((k : ℝ) + 1) ^ 3 * 2 ^ k) := by
+  have e : (2 : ℝ) ^ k = 2 ^ ℓ * 2 ^ (k - ℓ) := by rw [← pow_add, Nat.add_sub_cancel' h.le]
+  rw [levelDiff_cltCexP, variance_cltCexDiff, cltCexN_of_ne h.ne, e]
+  push_cast
+  field_simp
+
 /-- The variance of row `k` of the counterexample:
-`σ_k² = ∑_{ℓ ≤ k} V_ℓ/N_{k,ℓ} = k/(k + 1)³ + 1/(k + 1)` (Giles 2015, (2.3)). -/
+`σ_k² = ∑_{ℓ ≤ k} V_ℓ/N_{k,ℓ} = (k/(k + 1)³ + 1/(k + 1))/2^k` (Giles 2015, (2.3)). -/
 lemma sum_variance_div_cltCexN (k : ℕ) :
     ∑ ℓ ∈ range (k + 1), variance (levelDiff cltCexP ℓ) (volume.restrict (Set.Icc (0 : ℝ) 1)) /
-      (cltCexN k ℓ : ℝ) = k / ((k : ℝ) + 1) ^ 3 + 1 / ((k : ℝ) + 1) := by
-  simp only [levelDiff_cltCexP, variance_cltCexDiff]
-  rw [Finset.sum_range_succ, cltCexN_self,
-    Finset.sum_congr rfl fun ℓ hℓ => by rw [cltCexN_of_ne (Finset.mem_range.1 hℓ).ne],
-    Finset.sum_const, card_range, nsmul_eq_mul]
+      (cltCexN k ℓ : ℝ) = (k / ((k : ℝ) + 1) ^ 3 + 1 / ((k : ℝ) + 1)) / 2 ^ k := by
+  rw [Finset.sum_range_succ, Finset.sum_congr rfl fun ℓ hℓ =>
+      variance_div_cltCexN_of_lt (Finset.mem_range.1 hℓ),
+    Finset.sum_const, card_range, nsmul_eq_mul, levelDiff_cltCexP, variance_cltCexDiff,
+    cltCexN_self]
   push_cast
-  ring
+  field_simp
 
-/-- **The counterexample: rare large corrections** (Giles 2015, §2.1, p. 8, l. 350–351: "This
-exploits the fact that the multilevel correction `Y_ℓ` on each level is asymptotically
-Normally-distributed, and therefore so is `Y`."; the example in the docstring of
-`MlmcLean/MLMCCentralLimit.lean`). With the input `u` uniform on `[0, 1]`, the corrections
-`ΔP_ℓ = P_ℓ − P_{ℓ−1}` of `cltCexP` satisfy `E[ΔP_ℓ] = 0`, `V_ℓ = 1`, `P(ΔP_ℓ ≠ 0) = 2^{−ℓ}` and
-`E[ΔP_ℓ⁴] = 2^ℓ` (so the kurtosis `2^ℓ` is unbounded); the sample sizes `N_{k,ℓ}` of `cltCexN`
-satisfy `min_{ℓ ≤ k} N_{k,ℓ} → ∞`; and the variance of the estimator of row `k` is
-`σ_k² = ∑_{ℓ ≤ k} V_ℓ/N_{k,ℓ} = k/(k + 1)³ + 1/(k + 1)`, of which the finest level carries
-`1/(k + 1)`. -/
+/-- **The counterexample: rare corrections, inside the assumptions of Theorem 1** (Giles 2015,
+§2.1, p. 8, l. 350–351: "This exploits the fact that the multilevel correction `Y_ℓ` on each level
+is asymptotically Normally-distributed, and therefore so is `Y`."; the example in the docstring
+of `MlmcLean/MLMCCentralLimit.lean`, rescaled).  With the input `u` uniform on `[0, 1]`, the
+corrections `ΔP_ℓ = P_ℓ − P_{ℓ−1}` of `cltCexP` satisfy `E[ΔP_ℓ] = 0`, `V_ℓ = 2^{−ℓ}`,
+`P(ΔP_ℓ ≠ 0) = 2^{−ℓ}` and have kurtosis `2^ℓ` (unbounded); the level outputs have
+`E[P_ℓ] = 0` and `E[(P_m − P_ℓ)²] = 2^{−ℓ} − 2^{−m}` for `ℓ ≤ m`, so `(P_ℓ)` is a Cauchy sequence
+in `L²`, and its `L²` limit `P` (which exists by completeness; not formalised here) has
+`E[P_ℓ − P] = 0`.  So the assumptions of Theorem 1 on the means and variances hold: no bias (any
+`α`) and `V_ℓ ≤ c₂ 2^{−βℓ}` with `β = 1`, `c₂ = 1`.  The sample sizes `N_{k,ℓ}` of `cltCexN`
+satisfy `min_{ℓ ≤ k} N_{k,ℓ} → ∞`, and the variance of the estimator of row `k` is
+`σ_k² = ∑_{ℓ ≤ k} V_ℓ/N_{k,ℓ} = (k/(k + 1)³ + 1/(k + 1))/2^k`, of which the finest level carries
+`2^{−k}/(k + 1)`, the fraction `(k + 1)²/(k + (k + 1)²) → 1`. -/
 theorem cltCex_moments :
     (∀ ℓ, ∫ y, levelDiff cltCexP ℓ y ∂(volume.restrict (Set.Icc 0 1)) = 0 ∧
-      variance (levelDiff cltCexP ℓ) (volume.restrict (Set.Icc 0 1)) = 1 ∧
+      variance (levelDiff cltCexP ℓ) (volume.restrict (Set.Icc 0 1)) = ((2 : ℝ) ^ ℓ)⁻¹ ∧
       (volume.restrict (Set.Icc (0 : ℝ) 1)).real {y | levelDiff cltCexP ℓ y ≠ 0} =
         ((2 : ℝ) ^ ℓ)⁻¹ ∧
-      ∫ y, levelDiff cltCexP ℓ y ^ 4 ∂(volume.restrict (Set.Icc 0 1)) = 2 ^ ℓ) ∧
+      kurtosis (levelDiff cltCexP ℓ) (volume.restrict (Set.Icc 0 1)) = 2 ^ ℓ ∧
+      ∫ y, cltCexP ℓ y ∂(volume.restrict (Set.Icc 0 1)) = 0) ∧
+    (∀ ℓ m, ℓ ≤ m → ∫ y, (cltCexP m y - cltCexP ℓ y) ^ 2 ∂(volume.restrict (Set.Icc 0 1)) =
+      ((2 : ℝ) ^ ℓ)⁻¹ - ((2 : ℝ) ^ m)⁻¹) ∧
     (∀ n₀ : ℕ, ∀ᶠ k in atTop, ∀ ℓ ≤ k, n₀ ≤ cltCexN k ℓ) ∧
     ∀ k : ℕ, ∑ ℓ ∈ range (k + 1),
         variance (levelDiff cltCexP ℓ) (volume.restrict (Set.Icc 0 1)) / cltCexN k ℓ =
-      k / ((k : ℝ) + 1) ^ 3 + 1 / ((k : ℝ) + 1) := by
-  refine ⟨fun ℓ => ?_, fun n₀ => ?_, sum_variance_div_cltCexN⟩
+      (k / ((k : ℝ) + 1) ^ 3 + 1 / ((k : ℝ) + 1)) / 2 ^ k := by
+  refine ⟨fun ℓ => ?_, fun ℓ m h => integral_cltCexP_sub_sq h, fun n₀ => ?_,
+    sum_variance_div_cltCexN⟩
   · rw [levelDiff_cltCexP]
     exact ⟨integral_cltCexDiff ℓ, variance_cltCexDiff ℓ, measureReal_cltCexDiff_ne_zero ℓ,
-      integral_cltCexDiff_pow_four ℓ⟩
+      kurtosis_cltCexDiff ℓ, integral_cltCexP ℓ⟩
   · filter_upwards [eventually_ge_atTop n₀] with k hk ℓ _
     exact hk.trans ((Nat.le_succ k).trans (le_cltCexN k ℓ))
 
@@ -357,14 +467,14 @@ variable {Ω : Type*} [MeasurableSpace Ω] {μ : Measure Ω} {ω : ℕ × ℕ �
 
 /-- The coarse levels `ℓ < k` of row `k` of the counterexample: their part
 `A_k = ∑_{ℓ<k} Y_{k,ℓ}` of the estimator (2.2) is square integrable, centred, and has variance
-`k/(k + 1)³` (Giles 2015, (2.3)). -/
+`k/((k + 1)³ 2^k)` (Giles 2015, (2.3)). -/
 lemma coarse_cltCex [IsProbabilityMeasure μ]
     (hω : ∀ p, MeasurePreserving (ω p) μ (volume.restrict (Set.Icc 0 1)))
     (hind : iIndepFun ω μ) (k : ℕ) :
     MemLp (fun x => ∑ ℓ ∈ range k, levelEstimator cltCexP ω ℓ (cltCexN k ℓ) x) 2 μ ∧
       μ[fun x => ∑ ℓ ∈ range k, levelEstimator cltCexP ω ℓ (cltCexN k ℓ) x] = 0 ∧
       variance (fun x => ∑ ℓ ∈ range k, levelEstimator cltCexP ω ℓ (cltCexN k ℓ) x) μ =
-        k / ((k : ℝ) + 1) ^ 3 := by
+        k / (((k : ℝ) + 1) ^ 3 * 2 ^ k) := by
   have hPl : ∀ ℓ, MemLp (cltCexP ℓ) 2 (volume.restrict (Set.Icc (0 : ℝ) 1)) :=
     fun ℓ => memLp_cltCexP ℓ 2
   have hfun : (fun x => ∑ ℓ ∈ range k, levelEstimator cltCexP ω ℓ (cltCexN k ℓ) x) =
@@ -382,10 +492,37 @@ lemma coarse_cltCex [IsProbabilityMeasure μ]
       (fun p => (hω p).measurable) hind measurable_cltCexP hij _ _)]
     rw [Finset.sum_congr rfl fun ℓ hℓ => by
       rw [variance_levelEstimator hω hind measurable_cltCexP hPl ℓ (cltCexN_pos k ℓ),
-        levelDiff_cltCexP, variance_cltCexDiff, cltCexN_of_ne (Finset.mem_range.1 hℓ).ne]]
-    rw [Finset.sum_const, card_range, nsmul_eq_mul]
-    push_cast
-    ring
+        variance_div_cltCexN_of_lt (Finset.mem_range.1 hℓ)]]
+    rw [Finset.sum_const, card_range, nsmul_eq_mul, mul_one_div]
+
+/-- The finest level of row `k` of the counterexample is `0` unless one of its `k + 1` samples is
+nonzero, which has probability at most `(k + 1) 2^{−k}` (union bound; Giles 2015, §2.1,
+p. 8). -/
+lemma measureReal_finest_cltCex_le
+    (hω : ∀ p, MeasurePreserving (ω p) μ (volume.restrict (Set.Icc 0 1))) (k : ℕ) :
+    μ.real (⋃ n ∈ range (k + 1), {x | cltCexDiff k (ω (k, n) x) ≠ 0}) ≤
+      ((k : ℝ) + 1) / 2 ^ k := by
+  refine (measureReal_biUnion_finset_le _ _).trans (le_of_eq ?_)
+  rw [Finset.sum_congr rfl fun n _ => by
+    rw [show {x | cltCexDiff k (ω (k, n) x) ≠ 0} =
+        ω (k, n) ⁻¹' {u | cltCexDiff k u ≠ 0} from rfl,
+      (hω (k, n)).measureReal_preimage (show MeasurableSet {u | cltCexDiff k u ≠ 0} from
+        (measurable_cltCexDiff k) (measurableSet_singleton 0).compl).nullMeasurableSet,
+      measureReal_cltCexDiff_ne_zero]]
+  rw [Finset.sum_const, card_range, nsmul_eq_mul]
+  push_cast
+  ring
+
+omit [MeasurableSpace Ω] in
+/-- The finest-level estimator of row `k` of the counterexample is `0` when all its `k + 1`
+samples vanish (Giles 2015, (2.2)). -/
+lemma levelEstimator_finest_cltCex_eq_zero {x : Ω} {k : ℕ}
+    (hall : ∀ n ∈ range (k + 1), cltCexDiff k (ω (k, n) x) = 0) :
+    levelEstimator cltCexP ω k (cltCexN k k) x = 0 := by
+  rw [levelEstimator, levelDiff_cltCexP, Finset.sum_eq_zero, mul_zero]
+  intro n hn
+  rw [cltCexN_self] at hn
+  exact hall n hn
 
 /-- The tail bound behind the counterexample (Giles 2015, §2.1, p. 8): for `ε > 0`, the
 normalised estimator `S_k = Y_k/σ_k` of row `k` satisfies
@@ -396,16 +533,17 @@ lemma measureReal_cltCex_le [IsProbabilityMeasure μ]
     (hω : ∀ p, MeasurePreserving (ω p) μ (volume.restrict (Set.Icc 0 1)))
     (hind : iIndepFun ω μ) {ε : ℝ} (hε : 0 < ε) (k : ℕ) :
     μ.real {x | ε ≤ |mlmcEstimator cltCexP ω k (cltCexN k) x /
-        √(k / ((k : ℝ) + 1) ^ 3 + 1 / ((k : ℝ) + 1))|} ≤
+        √((k / ((k : ℝ) + 1) ^ 3 + 1 / ((k : ℝ) + 1)) / 2 ^ k)|} ≤
       1 / (ε ^ 2 * ((k : ℝ) + 1)) + ((k : ℝ) + 1) / 2 ^ k := by
   obtain ⟨hAmem, hAmean, hAvar⟩ := coarse_cltCex hω hind k
   set A := fun x => ∑ ℓ ∈ range k, levelEstimator cltCexP ω ℓ (cltCexN k ℓ) x
-  set s : ℝ := k / ((k : ℝ) + 1) ^ 3 + 1 / ((k : ℝ) + 1) with hs
+  set s : ℝ := (k / ((k : ℝ) + 1) ^ 3 + 1 / ((k : ℝ) + 1)) / 2 ^ k with hs
   have hk1 : (0 : ℝ) < (k : ℝ) + 1 := by positivity
-  have hs1 : 1 / ((k : ℝ) + 1) ≤ s := by
-    rw [hs]
+  have h2k : (0 : ℝ) < 2 ^ k := by positivity
+  have hs1 : 1 / (((k : ℝ) + 1) * 2 ^ k) ≤ s := by
+    rw [hs, ← div_div]
     have : (0 : ℝ) ≤ k / ((k : ℝ) + 1) ^ 3 := by positivity
-    linarith
+    exact div_le_div_of_nonneg_right (by linarith) h2k.le
   have hspos : 0 < s := lt_of_lt_of_le (by positivity) hs1
   have hsq : 0 < √s := Real.sqrt_pos.2 hspos
   -- the event is covered by a large coarse part or a nonzero finest-level sample
@@ -416,13 +554,9 @@ lemma measureReal_cltCex_le [IsProbabilityMeasure μ]
     simp only [Set.mem_ofPred_eq] at hx
     by_cases hall : ∀ n ∈ range (k + 1), cltCexDiff k (ω (k, n) x) = 0
     · left
-      have hB : levelEstimator cltCexP ω k (cltCexN k k) x = 0 := by
-        rw [levelEstimator, levelDiff_cltCexP, Finset.sum_eq_zero, mul_zero]
-        intro n hn
-        rw [cltCexN_self] at hn
-        exact hall n hn
       have hY : mlmcEstimator cltCexP ω k (cltCexN k) x = A x := by
-        rw [mlmcEstimator, Finset.sum_range_succ, hB, add_zero]
+        rw [mlmcEstimator, Finset.sum_range_succ, levelEstimator_finest_cltCex_eq_zero hall,
+          add_zero]
       rw [hY, abs_div, abs_of_pos hsq, le_div_iff₀ hsq] at hx
       simp only [Set.mem_ofPred_eq, hAmean, sub_zero]
       exact hx
@@ -430,31 +564,25 @@ lemma measureReal_cltCex_le [IsProbabilityMeasure μ]
       push Not at hall
       obtain ⟨n, hn, hne⟩ := hall
       exact Set.mem_biUnion hn hne
-  have hcheb : μ.real {x | ε * √s ≤ |A x - μ[A]|} ≤ k / ((k : ℝ) + 1) ^ 3 / (ε * √s) ^ 2 := by
+  have hcheb : μ.real {x | ε * √s ≤ |A x - μ[A]|} ≤
+      k / (((k : ℝ) + 1) ^ 3 * 2 ^ k) / (ε * √s) ^ 2 := by
     rw [measureReal_def]
     refine ENNReal.toReal_le_of_le_ofReal (by positivity) ?_
     have h := meas_ge_le_variance_div_sq hAmem (c := ε * √s) (by positivity)
     rwa [hAvar] at h
-  have hunion : μ.real (⋃ n ∈ range (k + 1), {x | cltCexDiff k (ω (k, n) x) ≠ 0}) ≤
-      ((k : ℝ) + 1) / 2 ^ k := by
-    refine (measureReal_biUnion_finset_le _ _).trans (le_of_eq ?_)
-    rw [Finset.sum_congr rfl fun n _ => by
-      rw [show {x | cltCexDiff k (ω (k, n) x) ≠ 0} =
-          ω (k, n) ⁻¹' {u | cltCexDiff k u ≠ 0} from rfl,
-        (hω (k, n)).measureReal_preimage (show MeasurableSet {u | cltCexDiff k u ≠ 0} from
-          (measurable_cltCexDiff k) (measurableSet_singleton 0).compl).nullMeasurableSet,
-        measureReal_cltCexDiff_ne_zero]]
-    rw [Finset.sum_const, card_range, nsmul_eq_mul]
-    push_cast
-    ring
-  have hfrac : k / ((k : ℝ) + 1) ^ 3 / (ε * √s) ^ 2 ≤ 1 / (ε ^ 2 * ((k : ℝ) + 1)) := by
+  have hfrac : k / (((k : ℝ) + 1) ^ 3 * 2 ^ k) / (ε * √s) ^ 2 ≤ 1 / (ε ^ 2 * ((k : ℝ) + 1)) := by
     rw [mul_pow, Real.sq_sqrt hspos.le, div_le_div_iff₀ (by positivity) (by positivity)]
-    have hk : (k : ℝ) / ((k : ℝ) + 1) ^ 3 * ((k : ℝ) + 1) ≤ s := by
+    have hk : (k : ℝ) / (((k : ℝ) + 1) ^ 3 * 2 ^ k) * ((k : ℝ) + 1) ≤ s := by
       refine le_trans ?_ hs1
-      rw [div_mul_eq_mul_div, div_le_div_iff₀ (by positivity) hk1]
-      nlinarith
-    calc (k : ℝ) / ((k : ℝ) + 1) ^ 3 * (ε ^ 2 * ((k : ℝ) + 1))
-        = ε ^ 2 * ((k : ℝ) / ((k : ℝ) + 1) ^ 3 * ((k : ℝ) + 1)) := by ring
+      rw [div_mul_eq_mul_div, div_le_div_iff₀ (by positivity) (by positivity)]
+      have e1 : (k : ℝ) * ((k : ℝ) + 1) * (((k : ℝ) + 1) * 2 ^ k) =
+          (((k : ℝ) + 1) ^ 2 * 2 ^ k) * k := by ring
+      have e2 : 1 * (((k : ℝ) + 1) ^ 3 * 2 ^ k) = (((k : ℝ) + 1) ^ 2 * 2 ^ k) * ((k : ℝ) + 1) := by
+        ring
+      rw [e1, e2]
+      exact mul_le_mul_of_nonneg_left (by linarith) (by positivity)
+    calc (k : ℝ) / (((k : ℝ) + 1) ^ 3 * 2 ^ k) * (ε ^ 2 * ((k : ℝ) + 1))
+        = ε ^ 2 * ((k : ℝ) / (((k : ℝ) + 1) ^ 3 * 2 ^ k) * ((k : ℝ) + 1)) := by ring
       _ ≤ ε ^ 2 * s := by gcongr
       _ = 1 * (ε ^ 2 * s) := by ring
   calc μ.real {x | ε ≤ |mlmcEstimator cltCexP ω k (cltCexN k) x / √s|}
@@ -463,7 +591,8 @@ lemma measureReal_cltCex_le [IsProbabilityMeasure μ]
     _ ≤ μ.real {x | ε * √s ≤ |A x - μ[A]|} +
         μ.real (⋃ n ∈ range (k + 1), {x | cltCexDiff k (ω (k, n) x) ≠ 0}) :=
         measureReal_union_le _ _
-    _ ≤ 1 / (ε ^ 2 * ((k : ℝ) + 1)) + ((k : ℝ) + 1) / 2 ^ k := by linarith
+    _ ≤ 1 / (ε ^ 2 * ((k : ℝ) + 1)) + ((k : ℝ) + 1) / 2 ^ k := by
+        linarith [measureReal_finest_cltCex_le hω k]
 
 /-- `(k + 1)/2^k → 0`: the probability bound for a nonzero finest-level sample in the
 counterexample (Giles 2015, §2.1, p. 8). -/
@@ -503,27 +632,57 @@ lemma tendstoInMeasure_cltCex [IsProbabilityMeasure μ]
   exact squeeze_zero (fun k => measureReal_nonneg) (fun k => measureReal_cltCex_le hω hind hε k)
     hlim
 
-/-- **Every level estimator is asymptotically normal, but the multilevel estimator is not**
-(Giles 2015, §2.1, p. 8, l. 347–351: "Instead of bounding the Mean Square Error, they prefer to use
-the Central Limit Theorem to construct a confidence interval which bounds `E[P]` with a
+/-- The standardised finest-level estimator of the counterexample tends to `0` in probability, so
+it is not asymptotically normal (Giles 2015, §2.1, p. 8):
+`(Y_{k,k} − E[ΔP_k])/√(V_k/N_{k,k})` vanishes unless one of the `k + 1` samples of `ΔP_k` is
+nonzero, which has probability at most `(k + 1) 2^{−k} → 0`. -/
+lemma tendstoInMeasure_finest_cltCex [IsProbabilityMeasure μ]
+    (hω : ∀ p, MeasurePreserving (ω p) μ (volume.restrict (Set.Icc 0 1))) :
+    TendstoInMeasure μ (fun k x => (levelEstimator cltCexP ω k (cltCexN k k) x -
+        ∫ y, levelDiff cltCexP k y ∂(volume.restrict (Set.Icc 0 1))) /
+        √(variance (levelDiff cltCexP k) (volume.restrict (Set.Icc 0 1)) / cltCexN k k))
+      atTop (fun _ => 0) := by
+  rw [tendstoInMeasure_iff_measureReal_norm]
+  intro ε hε
+  refine squeeze_zero (fun k => measureReal_nonneg) (fun k => ?_) tendsto_succ_div_two_pow
+  refine (measureReal_mono (fun x hx => ?_) (measure_ne_top _ _)).trans
+    (measureReal_finest_cltCex_le hω k)
+  simp only [Set.mem_ofPred_eq, sub_zero, Real.norm_eq_abs] at hx
+  by_cases hall : ∀ n ∈ range (k + 1), cltCexDiff k (ω (k, n) x) = 0
+  · rw [levelEstimator_finest_cltCex_eq_zero hall, levelDiff_cltCexP, integral_cltCexDiff,
+      sub_zero, zero_div, abs_zero] at hx
+    exact absurd hx (not_le.2 hε)
+  · push Not at hall
+    obtain ⟨n, hn, hne⟩ := hall
+    exact Set.mem_biUnion hn hne
+
+/-- **Every fixed level estimator is asymptotically normal, but the multilevel estimator is
+not** (Giles 2015, §2.1, p. 8, l. 347–351: "Instead of bounding the Mean Square Error, they prefer
+to use the Central Limit Theorem to construct a confidence interval which bounds `E[P]` with a
 user-prescribed confidence. This exploits the fact that the multilevel correction `Y_ℓ` on each
 level is asymptotically Normally-distributed, and therefore so is `Y`.").  Let the inputs
 `ω^{(ℓ,n)}` be independent and uniform on `[0, 1]`, and take the level outputs `cltCexP`, the
 finest level `L_k = k` and the sample sizes `N_{k,ℓ}` of `cltCexN` (`cltCex_moments`:
-`E[ΔP_ℓ] = 0`, `V_ℓ = 1`, `min_{ℓ ≤ k} N_{k,ℓ} → ∞`).  Then
-* for every level `ℓ`, the standardised level estimator `(Y_{k,ℓ} − E[ΔP_ℓ])/√(V_ℓ/N_{k,ℓ})`
-  tends to `N(0, 1)` in distribution as `k → ∞` (Mathlib's central limit theorem, via
-  `tendstoInDistribution_levelEstimator`);
+`E[ΔP_ℓ] = 0`, `V_ℓ = 2^{−ℓ}`, `(P_ℓ)` Cauchy in `L²` with no bias, kurtosis `2^ℓ`,
+`min_{ℓ ≤ k} N_{k,ℓ} → ∞`).  Then
+* for every **fixed** level `ℓ`, the standardised level estimator
+  `(Y_{k,ℓ} − E[ΔP_ℓ])/√(V_ℓ/N_{k,ℓ})` tends to `N(0, 1)` in distribution as `k → ∞` (Mathlib's
+  central limit theorem, via `tendstoInDistribution_levelEstimator`);
+* the standardised estimator of the **finest** level `ℓ = L_k = k` tends to `0` in probability,
+  so it is not asymptotically normal: its `k + 1` samples all vanish with probability
+  `(1 − 2^{−k})^{k+1} → 1` (`tendstoInMeasure_finest_cltCex`);
 * the normalised multilevel estimator `S_k = (Y_k − E[P_{L_k}])/σ_k`,
-  `σ_k² = ∑_{ℓ ≤ k} V_ℓ/N_{k,ℓ} = V[Y_k]`, tends to `0` in probability
-  (`measureReal_cltCex_le`);
+  `σ_k² = ∑_{ℓ ≤ k} V_ℓ/N_{k,ℓ} = V[Y_k]`, tends to `0` in probability, as the finest level carries
+  the fraction `(k + 1)²/(k + (k + 1)²) → 1` of `σ_k²` (`measureReal_cltCex_le`);
 * hence `S_k` does not tend to `N(0, 1)` in distribution: its limit law is the point mass at
   `0` (`tendstoInDistribution_unique`).
-So the paper's "therefore" needs a hypothesis when the number of levels grows; Lyapunov's
-condition, or a uniform bound on the standardised moments, is such a hypothesis
+So "every `Y_ℓ` is asymptotically normal, therefore so is `Y`" needs a hypothesis when the number
+of levels grows, even when the means and variances satisfy the assumptions of Theorem 1 (here
+`β = 1`): the finest levels must be asymptotically normal uniformly.  Lyapunov's condition, or a
+uniform bound on the standardised moments, is such a hypothesis
 (`tendstoInDistribution_mlmcEstimator_lyapunov`, `tendstoInDistribution_mlmcEstimator_of_moment_le`;
-the conditions this example violates: `mlmc_clt_counterexample_conditions`).  For a fixed
-number of levels the inference is valid (`tendstoInDistribution_mlmcEstimator`). -/
+the conditions this example violates: `mlmc_clt_counterexample_conditions`).  For a fixed number of
+levels the inference is valid (`tendstoInDistribution_mlmcEstimator`). -/
 theorem mlmc_clt_counterexample {Ω Ω' : Type*} [MeasurableSpace Ω]
     {mΩ' : MeasurableSpace Ω'} {μ : Measure Ω} [IsProbabilityMeasure μ] {P' : Measure Ω'}
     [IsProbabilityMeasure P'] {ω : ℕ × ℕ → Ω → ℝ}
@@ -534,6 +693,10 @@ theorem mlmc_clt_counterexample {Ω Ω' : Type*} [MeasurableSpace Ω]
           ∫ y, levelDiff cltCexP ℓ y ∂(volume.restrict (Set.Icc 0 1))) /
         √(variance (levelDiff cltCexP ℓ) (volume.restrict (Set.Icc 0 1)) / cltCexN k ℓ))
       atTop Z (fun _ => μ) P') ∧
+    TendstoInMeasure μ (fun k x => (levelEstimator cltCexP ω k (cltCexN k k) x -
+        ∫ y, levelDiff cltCexP k y ∂(volume.restrict (Set.Icc 0 1))) /
+        √(variance (levelDiff cltCexP k) (volume.restrict (Set.Icc 0 1)) / cltCexN k k))
+      atTop (fun _ => 0) ∧
     TendstoInMeasure μ (fun k x => (mlmcEstimator cltCexP ω k (cltCexN k) x -
         ∫ y, cltCexP k y ∂(volume.restrict (Set.Icc 0 1))) /
         √(∑ ℓ ∈ range (k + 1),
@@ -545,27 +708,40 @@ theorem mlmc_clt_counterexample {Ω Ω' : Type*} [MeasurableSpace Ω]
           variance (levelDiff cltCexP ℓ) (volume.restrict (Set.Icc 0 1)) / cltCexN k ℓ))
       atTop Z (fun _ => μ) P' := by
   have hm := tendstoInMeasure_cltCex hω hind
-  refine ⟨fun ℓ => ?_, hm, fun hd => ?_⟩
-  · -- the level CLT along `N = N_{k,ℓ} → ∞`
+  refine ⟨fun ℓ => ?_, tendstoInMeasure_finest_cltCex hω, hm, fun hd => ?_⟩
+  · -- the level CLT along `N = N_{k,ℓ} → ∞`, for the limit `c Z ∼ N(0, V_ℓ)`, `c = √V_ℓ`
     have hD := levelDiff_cltCexP ℓ
+    set c : ℝ := √(((2 : ℝ) ^ ℓ)⁻¹) with hc
+    have hc0 : 0 < c := Real.sqrt_pos.2 (by positivity)
+    have hcZ : HasLaw (fun z => c * Z z) (gaussianReal 0
+        (variance (levelDiff cltCexP ℓ) (volume.restrict (Set.Icc 0 1))).toNNReal) P' := by
+      have h := gaussianReal_const_mul hZ c
+      rw [mul_zero] at h
+      convert h using 2
+      rw [hD, variance_cltCexDiff]
+      ext
+      simp only [NNReal.coe_mk, mul_one]
+      rw [Real.coe_toNNReal _ (by positivity), hc, Real.sq_sqrt (by positivity)]
     have h := tendstoInDistribution_levelEstimator (Pl := cltCexP) hω hind (ℓ := ℓ)
-      (by rw [hD]; exact memLp_cltCexDiff ℓ 2) (Z := Z)
-      (by rw [hD, variance_cltCexDiff, Real.toNNReal_one]; exact hZ)
+      (by rw [hD]; exact memLp_cltCexDiff ℓ 2) hcZ
     have hN : Tendsto (fun k => cltCexN k ℓ) atTop atTop :=
       tendsto_atTop_mono (fun k => (Nat.le_succ k).trans (le_cltCexN k ℓ)) tendsto_id
     have h' : TendstoInDistribution (fun k x => √(cltCexN k ℓ : ℝ) *
         (levelEstimator cltCexP ω ℓ (cltCexN k ℓ) x -
-          ∫ y, levelDiff cltCexP ℓ y ∂(volume.restrict (Set.Icc 0 1)))) atTop Z (fun _ => μ) P' :=
+          ∫ y, levelDiff cltCexP ℓ y ∂(volume.restrict (Set.Icc 0 1)))) atTop
+        (fun z => c * Z z) (fun _ => μ) P' :=
       ⟨fun k => h.forall_aemeasurable _, h.aemeasurable_limit, h.tendsto.comp hN⟩
-    have e : (fun k x => (levelEstimator cltCexP ω ℓ (cltCexN k ℓ) x -
-          ∫ y, levelDiff cltCexP ℓ y ∂(volume.restrict (Set.Icc 0 1))) /
-        √(variance (levelDiff cltCexP ℓ) (volume.restrict (Set.Icc 0 1)) / cltCexN k ℓ)) =
-        fun k x => √(cltCexN k ℓ : ℝ) * (levelEstimator cltCexP ω ℓ (cltCexN k ℓ) x -
-          ∫ y, levelDiff cltCexP ℓ y ∂(volume.restrict (Set.Icc 0 1))) := by
-      funext k x
-      rw [hD, variance_cltCexDiff, one_div, Real.sqrt_inv, div_inv_eq_mul, mul_comm]
-    rw [e]
-    exact h'
+    -- divide by `c`
+    refine TendstoInDistribution.congr (fun k => ae_of_all _ fun x => ?_)
+      (ae_of_all _ fun z => ?_) (h'.continuous_comp (g := fun y => y / c)
+        (continuous_id.div_const c))
+    · have hNpos : (0 : ℝ) < √(cltCexN k ℓ : ℝ) :=
+        Real.sqrt_pos.2 (by exact_mod_cast cltCexN_pos k ℓ)
+      simp only [Function.comp_apply]
+      rw [hD, variance_cltCexDiff, Real.sqrt_div' _ (Nat.cast_nonneg _), ← hc]
+      field_simp
+    · simp only [Function.comp_apply]
+      field_simp
   · -- the limit law would be both `δ₀` and `N(0, 1)`
     have h0 := hm.tendstoInDistribution_of_aemeasurable
       (fun k => aemeasurable_mlmcEstimator_sub_div hω (fun ℓ _ => memLp_cltCexP ℓ 2) _ _ _)
@@ -578,7 +754,8 @@ theorem mlmc_clt_counterexample {Ω Ω' : Type*} [MeasurableSpace Ω]
     rw [huniq, h2] at h1
     exact zero_ne_one h1
 
-/-- The Lindeberg integrand is at most the square: `x² 𝟙{|x| > ε} ≤ x²`. -/
+/-- The Lindeberg integrand is at most the square, `x² 𝟙{|x| > ε} ≤ x²` (for the counterexample
+of Giles 2015, §2.1, p. 8). -/
 lemma lindebergIntegrand_le_sq (ε x : ℝ) :
     {y : ℝ | ε < |y|}.indicator (fun y => y ^ 2) x ≤ x ^ 2 := by
   by_cases h : ε < |x|
@@ -586,11 +763,11 @@ lemma lindebergIntegrand_le_sq (ε x : ℝ) :
   · rw [Set.indicator_of_notMem (show x ∉ {y : ℝ | ε < |y|} from h)]
     positivity
 
-/-- A Lindeberg term of the counterexample is at most the variance:
-`E[(cΔP_ℓ)²; |cΔP_ℓ| > ε] ≤ c² V_ℓ = c²`. -/
+/-- A Lindeberg term of the counterexample is at most the variance,
+`E[(cΔP_ℓ)²; |cΔP_ℓ| > ε] ≤ c² V_ℓ = c² 2^{−ℓ}` (Giles 2015, §2.1, p. 8). -/
 lemma integral_lindeberg_cltCex_le (ℓ : ℕ) (c ε : ℝ) :
     ∫ y, {z : ℝ | ε < |z|}.indicator (fun z => z ^ 2) (c * cltCexDiff ℓ y)
-      ∂(volume.restrict (Set.Icc (0 : ℝ) 1)) ≤ c ^ 2 := by
+      ∂(volume.restrict (Set.Icc (0 : ℝ) 1)) ≤ c ^ 2 * ((2 : ℝ) ^ ℓ)⁻¹ := by
   have := isProbabilityMeasure_restrict_Icc_zero_one
   have hint : Integrable (fun y => (c * cltCexDiff ℓ y) ^ 2)
       (volume.restrict (Set.Icc (0 : ℝ) 1)) :=
@@ -601,16 +778,17 @@ lemma integral_lindeberg_cltCex_le (ℓ : ℕ) (c ε : ℝ) :
         integral_mono_of_nonneg (ae_of_all _ fun y =>
           Set.indicator_nonneg (fun z _ => sq_nonneg z) _) hint
           (ae_of_all _ fun y => lindebergIntegrand_le_sq ε _)
-    _ = c ^ 2 := by
+    _ = c ^ 2 * ((2 : ℝ) ^ ℓ)⁻¹ := by
         simp_rw [mul_pow]
-        rw [integral_const_mul, integral_cltCexDiff_sq, mul_one]
+        rw [integral_const_mul, integral_cltCexDiff_sq]
 
-/-- A Lindeberg term of the counterexample when the jumps are large: if `ε c < a_ℓ = 2^{ℓ/2}`,
-every nonzero value of `c⁻¹ΔP_ℓ` exceeds `ε`, so `E[(c⁻¹ΔP_ℓ)²; |c⁻¹ΔP_ℓ| > ε] = c⁻²`. -/
+/-- A Lindeberg term of the counterexample when the jumps are large: if `ε c < 1`, every nonzero
+value of `c⁻¹ΔP_ℓ` exceeds `ε`, so `E[(c⁻¹ΔP_ℓ)²; |c⁻¹ΔP_ℓ| > ε] = c⁻² 2^{−ℓ}` (Giles 2015, §2.1,
+p. 8). -/
 lemma integral_lindeberg_cltCex_eq (ℓ : ℕ) {c ε : ℝ} (hc : 0 < c) (hε : 0 < ε)
-    (hεc : ε * c < √((2 : ℝ) ^ ℓ)) :
+    (hεc : ε * c < 1) :
     ∫ y, {z : ℝ | ε < |z|}.indicator (fun z => z ^ 2) (c⁻¹ * cltCexDiff ℓ y)
-      ∂(volume.restrict (Set.Icc (0 : ℝ) 1)) = c⁻¹ ^ 2 := by
+      ∂(volume.restrict (Set.Icc (0 : ℝ) 1)) = c⁻¹ ^ 2 * ((2 : ℝ) ^ ℓ)⁻¹ := by
   have hpt : ∀ y, {z : ℝ | ε < |z|}.indicator (fun z => z ^ 2) (c⁻¹ * cltCexDiff ℓ y) =
       (c⁻¹ * cltCexDiff ℓ y) ^ 2 := by
     intro y
@@ -623,9 +801,10 @@ lemma integral_lindeberg_cltCex_eq (ℓ : ℕ) {c ε : ℝ} (hc : 0 < c) (hε : 
       rw [abs_mul, abs_inv, abs_of_pos hc, h, ← div_eq_inv_mul, lt_div_iff₀ hc]
       exact hεc
   simp_rw [hpt, mul_pow]
-  rw [integral_const_mul, integral_cltCexDiff_sq, mul_one]
+  rw [integral_const_mul, integral_cltCexDiff_sq]
 
-/-- The centred `(2 + δ)`-th moments of the corrections of the counterexample are finite. -/
+/-- The centred `(2 + δ)`-th moments of the corrections of the counterexample are finite, as the
+corrections are bounded (Giles 2015, §2.1, p. 8). -/
 lemma integrable_cltCex_rpow (ℓ : ℕ) {δ : ℝ} (hδ : 0 ≤ δ) :
     Integrable (fun y => |levelDiff cltCexP ℓ y -
       ∫ z, levelDiff cltCexP ℓ z ∂(volume.restrict (Set.Icc (0 : ℝ) 1))| ^ (2 + δ))
@@ -634,12 +813,13 @@ lemma integrable_cltCex_rpow (ℓ : ℕ) {δ : ℝ} (hδ : 0 ≤ δ) :
   rw [levelDiff_cltCexP, integral_cltCexDiff]
   simp only [sub_zero]
   refine Integrable.of_bound (((measurable_cltCexDiff ℓ).abs).pow_const _).aestronglyMeasurable
-    (√((2 : ℝ) ^ ℓ) ^ (2 + δ)) (ae_of_all _ fun y => ?_)
+    1 (ae_of_all _ fun y => ?_)
   rw [Real.norm_eq_abs, abs_of_nonneg (Real.rpow_nonneg (abs_nonneg _) _)]
-  exact Real.rpow_le_rpow (abs_nonneg _) (abs_cltCexDiff_le ℓ y) (by linarith)
+  exact Real.rpow_le_one (abs_nonneg _) (abs_cltCexDiff_le ℓ y) (by linarith)
 
 /-- A Lindeberg term of the triangular array of the counterexample, transported to the input
-law: `E[(cΔP_ℓ(ω^{(ℓ,n)}))²; |cΔP_ℓ(ω^{(ℓ,n)})| > ε] = E_ν[(cΔP_ℓ)²; |cΔP_ℓ| > ε]`. -/
+law, `E[(cΔP_ℓ(ω^{(ℓ,n)}))²; |cΔP_ℓ(ω^{(ℓ,n)})| > ε] = E_ν[(cΔP_ℓ)²; |cΔP_ℓ| > ε]` (Giles 2015,
+§2.1, p. 8). -/
 lemma setIntegral_lindeberg_cltCex
     (hω : ∀ p, MeasurePreserving (ω p) μ (volume.restrict (Set.Icc 0 1))) (ℓ n : ℕ) (c ε : ℝ) :
     ∫ x in {x | ε < |c * cltCexDiff ℓ (ω (ℓ, n) x)|}, (c * cltCexDiff ℓ (ω (ℓ, n) x)) ^ 2 ∂μ =
@@ -653,17 +833,17 @@ lemma setIntegral_lindeberg_cltCex
       ((measurable_cltCexDiff ℓ).const_mul c)).aestronglyMeasurable
 
 /-- **The conditions of the triangular-array central limit theorems fail in the counterexample**
-(Giles 2015, §2.1, p. 8, l. 350–351: "This exploits the fact that the multilevel correction `Y_ℓ` on
-each level is asymptotically Normally-distributed, and therefore so is `Y`.").  In the setting of
-`mlmc_clt_counterexample` (independent uniform inputs, `cltCexP`, `L_k = k`, `cltCexN`), write
+(Giles 2015, §2.1, p. 8, l. 350–351: "This exploits the fact that the multilevel correction `Y_ℓ`
+on each level is asymptotically Normally-distributed, and therefore so is `Y`.").  In the setting
+of `mlmc_clt_counterexample` (independent uniform inputs, `cltCexP`, `L_k = k`, `cltCexN`), write
 `X_{k,(ℓ,n)} = (ΔP_ℓ(ω^{(ℓ,n)}) − E[ΔP_ℓ])/(N_{k,ℓ} σ_k)`, `ℓ ≤ k`, `n < N_{k,ℓ}`, for the
 triangular array whose row sums are the normalised estimators `(Y_k − E[P_{L_k}])/σ_k`
 (`mlmcEstimator_sub_div_eq_sum`), and `M_ℓ = E|ΔP_ℓ − E[ΔP_ℓ]|^{2+δ}`.  Then
 * **Lindeberg's condition fails**: for every `ε > 0`,
   `∑_{ℓ ≤ k} ∑_{n < N_{k,ℓ}} E[X_{k,(ℓ,n)}²; |X_{k,(ℓ,n)}| > ε] → 1`, whereas
-  `tendstoInDistribution_lindeberg` needs the limit `0`: once `ε (k + 1) σ_k < 2^{k/2}`, every
-  nonzero finest-level sample is large, and the finest level carries the fraction
-  `1/((k + 1)σ_k²) → 1` of the variance;
+  `tendstoInDistribution_lindeberg` needs the limit `0`: once `ε (k + 1) σ_k < 1`, every nonzero
+  finest-level sample is large, and the finest level carries the fraction
+  `2^{−k}/((k + 1)σ_k²) → 1` of the variance;
 * **Lyapunov's condition fails**: for every `δ ≥ 0` the ratio
   `∑_{ℓ ≤ k} M_ℓ N_{k,ℓ}^{−1−δ}/σ_k^{2+δ}` of `tendstoInDistribution_mlmcEstimator_lyapunov`
   does not tend to `0` (it is `1` for `δ = 0`; for `δ > 0` the finest level alone gives at least
@@ -671,10 +851,10 @@ triangular array whose row sums are the normalised estimators `(Y_k − E[P_{L_k
 * **the standardised moments are unbounded**: for every `δ > 0` there is no `K` with
   `M_ℓ ≤ K V_ℓ^{1+δ/2}` for all `ℓ` (the hypothesis of
   `tendstoInDistribution_mlmcEstimator_of_moment_le`; by a direct computation, not formalised
-  here, `M_ℓ = 2^{ℓδ/2}` and `V_ℓ = 1`).
+  here, `M_ℓ = 2^{−ℓ}` and `V_ℓ^{1+δ/2} = 2^{−ℓ(1+δ/2)}`).
 The last two follow from `mlmc_clt_counterexample`, as these conditions would give the central
 limit theorem; the first is computed directly.  Feller's condition
-`max V[X_{k,(ℓ,n)}] = 1/((k + 1)²σ_k²) → 0` holds as well (not formalised), so by Feller's
+`max V[X_{k,(ℓ,n)}] = 2^{−k}/((k + 1)²σ_k²) → 0` holds as well (not formalised), so by Feller's
 converse Lindeberg's condition is exactly the one that breaks. -/
 theorem mlmc_clt_counterexample_conditions {Ω : Type*} [MeasurableSpace Ω] {μ : Measure Ω}
     [IsProbabilityMeasure μ] {ω : ℕ × ℕ → Ω → ℝ}
@@ -707,26 +887,30 @@ theorem mlmc_clt_counterexample_conditions {Ω : Type*} [MeasurableSpace Ω] {μ
   have hNtop : ∀ n₀ : ℕ, ∀ᶠ k in atTop, ∀ ℓ ≤ k, n₀ ≤ cltCexN k ℓ := fun n₀ => by
     filter_upwards [eventually_ge_atTop n₀] with k hk ℓ _
     exact hk.trans ((Nat.le_succ k).trans (le_cltCexN k ℓ))
-  have hnot := (mlmc_clt_counterexample (P' := gaussianReal 0 1) hω hind HasLaw.id).2.2
+  have hnot := (mlmc_clt_counterexample (P' := gaussianReal 0 1) hω hind HasLaw.id).2.2.2
   refine ⟨fun ε hε => ?_, fun δ hδ hlyap => ?_, fun δ hδ ⟨K, hK⟩ => ?_⟩
-  · have hs : ∀ k : ℕ, 0 < (k : ℝ) / ((k : ℝ) + 1) ^ 3 + 1 / ((k : ℝ) + 1) := fun k => by
+  · have hs : ∀ k : ℕ,
+        0 < ((k : ℝ) / ((k : ℝ) + 1) ^ 3 + 1 / ((k : ℝ) + 1)) / 2 ^ k := fun k => by
       positivity
-    have hsum : ∀ k : ℕ, ∑ ℓ ∈ range (k + 1), (1 : ℝ) / (cltCexN k ℓ : ℝ) =
-        (k : ℝ) / ((k : ℝ) + 1) ^ 3 + 1 / ((k : ℝ) + 1) := fun k => by
+    have hsum : ∀ k : ℕ, ∑ ℓ ∈ range (k + 1), ((2 : ℝ) ^ ℓ)⁻¹ / (cltCexN k ℓ : ℝ) =
+        ((k : ℝ) / ((k : ℝ) + 1) ^ 3 + 1 / ((k : ℝ) + 1)) / 2 ^ k := fun k => by
       have h := sum_variance_div_cltCexN k
       simp only [levelDiff_cltCexP, variance_cltCexDiff] at h
       exact h
-    simp only [levelDiff_cltCexP, integral_cltCexDiff, sub_zero, variance_cltCexDiff, hsum]
+    simp only [sum_variance_div_cltCexN]
+    simp only [levelDiff_cltCexP, integral_cltCexDiff, sub_zero]
     -- the Lindeberg sum of row `k` is `∑_ℓ N_{k,ℓ} E_ν[g_{k,ℓ}²; |g_{k,ℓ}| > ε]`
     have hrow : ∀ k : ℕ, ∑ q ∈ (range (k + 1)).sigma (fun ℓ => range (cltCexN k ℓ)),
         ∫ x in {x | ε < |((cltCexN k q.1 : ℝ) *
-          √((k : ℝ) / ((k : ℝ) + 1) ^ 3 + 1 / ((k : ℝ) + 1)))⁻¹ *
+          √(((k : ℝ) / ((k : ℝ) + 1) ^ 3 + 1 / ((k : ℝ) + 1)) / 2 ^ k))⁻¹ *
             cltCexDiff q.1 (ω (q.1, q.2) x)|},
-          (((cltCexN k q.1 : ℝ) * √((k : ℝ) / ((k : ℝ) + 1) ^ 3 + 1 / ((k : ℝ) + 1)))⁻¹ *
+          (((cltCexN k q.1 : ℝ) *
+            √(((k : ℝ) / ((k : ℝ) + 1) ^ 3 + 1 / ((k : ℝ) + 1)) / 2 ^ k))⁻¹ *
             cltCexDiff q.1 (ω (q.1, q.2) x)) ^ 2 ∂μ =
         ∑ ℓ ∈ range (k + 1), (cltCexN k ℓ : ℝ) *
           ∫ y, {z : ℝ | ε < |z|}.indicator (fun z => z ^ 2)
-            (((cltCexN k ℓ : ℝ) * √((k : ℝ) / ((k : ℝ) + 1) ^ 3 + 1 / ((k : ℝ) + 1)))⁻¹ *
+            (((cltCexN k ℓ : ℝ) *
+              √(((k : ℝ) / ((k : ℝ) + 1) ^ 3 + 1 / ((k : ℝ) + 1)) / 2 ^ k))⁻¹ *
               cltCexDiff ℓ y) ∂(volume.restrict (Set.Icc 0 1)) := by
       intro k
       rw [Finset.sum_sigma]
@@ -736,55 +920,60 @@ theorem mlmc_clt_counterexample_conditions {Ω : Type*} [MeasurableSpace Ω] {μ
     -- upper bound: the Lindeberg sum is at most the total variance `1`
     have hup : ∀ k : ℕ, ∑ ℓ ∈ range (k + 1), (cltCexN k ℓ : ℝ) *
           ∫ y, {z : ℝ | ε < |z|}.indicator (fun z => z ^ 2)
-            (((cltCexN k ℓ : ℝ) * √((k : ℝ) / ((k : ℝ) + 1) ^ 3 + 1 / ((k : ℝ) + 1)))⁻¹ *
+            (((cltCexN k ℓ : ℝ) *
+              √(((k : ℝ) / ((k : ℝ) + 1) ^ 3 + 1 / ((k : ℝ) + 1)) / 2 ^ k))⁻¹ *
               cltCexDiff ℓ y) ∂(volume.restrict (Set.Icc 0 1)) ≤ 1 := by
       intro k
       have hsk := hs k
+      set s := ((k : ℝ) / ((k : ℝ) + 1) ^ 3 + 1 / ((k : ℝ) + 1)) / 2 ^ k with hsdef
       calc _ ≤ ∑ ℓ ∈ range (k + 1), (cltCexN k ℓ : ℝ) *
-            (((cltCexN k ℓ : ℝ) *
-              √((k : ℝ) / ((k : ℝ) + 1) ^ 3 + 1 / ((k : ℝ) + 1)))⁻¹) ^ 2 :=
+            ((((cltCexN k ℓ : ℝ) * √s))⁻¹ ^ 2 * ((2 : ℝ) ^ ℓ)⁻¹) :=
             Finset.sum_le_sum fun ℓ _ => mul_le_mul_of_nonneg_left
               (integral_lindeberg_cltCex_le ℓ _ ε) (Nat.cast_nonneg _)
-        _ = (∑ ℓ ∈ range (k + 1), (1 : ℝ) / (cltCexN k ℓ : ℝ)) /
-            ((k : ℝ) / ((k : ℝ) + 1) ^ 3 + 1 / ((k : ℝ) + 1)) := by
+        _ = (∑ ℓ ∈ range (k + 1), ((2 : ℝ) ^ ℓ)⁻¹ / (cltCexN k ℓ : ℝ)) / s := by
             rw [Finset.sum_div]
             refine Finset.sum_congr rfl fun ℓ _ => ?_
+            have hN0 : (cltCexN k ℓ : ℝ) ≠ 0 := by exact_mod_cast (cltCexN_pos k ℓ).ne'
             rw [inv_pow, mul_pow, Real.sq_sqrt hsk.le]
             field_simp
         _ = 1 := by rw [hsum k, div_self hsk.ne']
-    -- lower bound: eventually the finest level alone contributes `1/((k + 1) σ_k²)`
+    -- lower bound: eventually the finest level alone contributes `1/((k + 1) 2^k σ_k²)`
     have hev : ∀ᶠ k : ℕ in atTop, ((k : ℝ) + 1) / 2 ^ k < 1 / (2 * ε ^ 2) :=
       tendsto_succ_div_two_pow.eventually_lt_const (by positivity)
     have hlow : ∀ᶠ k : ℕ in atTop, 1 / (((k : ℝ) + 1) *
         ((k : ℝ) / ((k : ℝ) + 1) ^ 3 + 1 / ((k : ℝ) + 1))) ≤
         ∑ ℓ ∈ range (k + 1), (cltCexN k ℓ : ℝ) *
           ∫ y, {z : ℝ | ε < |z|}.indicator (fun z => z ^ 2)
-            (((cltCexN k ℓ : ℝ) * √((k : ℝ) / ((k : ℝ) + 1) ^ 3 + 1 / ((k : ℝ) + 1)))⁻¹ *
+            (((cltCexN k ℓ : ℝ) *
+              √(((k : ℝ) / ((k : ℝ) + 1) ^ 3 + 1 / ((k : ℝ) + 1)) / 2 ^ k))⁻¹ *
               cltCexDiff ℓ y) ∂(volume.restrict (Set.Icc 0 1)) := by
       filter_upwards [hev] with k hk
       have hsk := hs k
       have hk1 : (0 : ℝ) < (k : ℝ) + 1 := by positivity
       have h2k : (0 : ℝ) < 2 ^ k := by positivity
-      set s := (k : ℝ) / ((k : ℝ) + 1) ^ 3 + 1 / ((k : ℝ) + 1) with hsdef
+      have hε0 : ε ≠ 0 := hε.ne'
+      set s := ((k : ℝ) / ((k : ℝ) + 1) ^ 3 + 1 / ((k : ℝ) + 1)) / 2 ^ k with hsdef
       have hcpos : 0 < ((k : ℝ) + 1) * √s := mul_pos hk1 (Real.sqrt_pos.2 hsk)
-      -- `ε (k + 1) σ_k < 2^{k/2}`
-      have hcond : ε * (((k : ℝ) + 1) * √s) < √((2 : ℝ) ^ k) := by
-        refine Real.lt_sqrt_of_sq_lt ?_
-        have hks : ((k : ℝ) + 1) ^ 2 * s ≤ 2 * ((k : ℝ) + 1) := by
+      -- `ε (k + 1) σ_k < 1`
+      have hks : ((k : ℝ) + 1) ^ 2 * s ≤ 2 * ((k : ℝ) + 1) / 2 ^ k := by
+        have e : ((k : ℝ) + 1) ^ 2 * s = ((k : ℝ) / ((k : ℝ) + 1) + ((k : ℝ) + 1)) / 2 ^ k := by
           rw [hsdef]
-          have e : ((k : ℝ) + 1) ^ 2 * ((k : ℝ) / ((k : ℝ) + 1) ^ 3 + 1 / ((k : ℝ) + 1)) =
-              (k : ℝ) / ((k : ℝ) + 1) + ((k : ℝ) + 1) := by
-            field_simp
-          rw [e]
-          have : (k : ℝ) / ((k : ℝ) + 1) ≤ 1 := by
-            rw [div_le_one hk1]
-            linarith
+          field_simp
+        rw [e]
+        have : (k : ℝ) / ((k : ℝ) + 1) ≤ 1 := by
+          rw [div_le_one hk1]
           linarith
-        rw [div_lt_iff₀ h2k, one_div, inv_mul_eq_div, lt_div_iff₀ (by positivity)] at hk
+        exact div_le_div_of_nonneg_right (by linarith) h2k.le
+      have hsq : (ε * (((k : ℝ) + 1) * √s)) ^ 2 < 1 :=
         calc (ε * (((k : ℝ) + 1) * √s)) ^ 2 = ε ^ 2 * (((k : ℝ) + 1) ^ 2 * s) := by
               rw [mul_pow, mul_pow, Real.sq_sqrt hsk.le]
-          _ ≤ ε ^ 2 * (2 * ((k : ℝ) + 1)) := by gcongr
-          _ < 2 ^ k := by linarith
+          _ ≤ ε ^ 2 * (2 * ((k : ℝ) + 1) / 2 ^ k) := by gcongr
+          _ = 2 * ε ^ 2 * (((k : ℝ) + 1) / 2 ^ k) := by ring
+          _ < 2 * ε ^ 2 * (1 / (2 * ε ^ 2)) := by gcongr
+          _ = 1 := by field_simp
+      have hcond : ε * (((k : ℝ) + 1) * √s) < 1 := by
+        have h := Real.lt_sqrt_of_sq_lt hsq
+        rwa [Real.sqrt_one] at h
       have hterm := integral_lindeberg_cltCex_eq k hcpos hε hcond
       have hle := Finset.single_le_sum (f := fun ℓ => (cltCexN k ℓ : ℝ) *
           ∫ y, {z : ℝ | ε < |z|}.indicator (fun z => z ^ 2)
@@ -795,9 +984,9 @@ theorem mlmc_clt_counterexample_conditions {Ω : Type*} [MeasurableSpace Ω] {μ
       push_cast at hle
       rw [hterm] at hle
       refine le_trans (le_of_eq ?_) hle
-      rw [inv_pow, mul_pow, Real.sq_sqrt hsk.le]
+      rw [inv_pow, mul_pow, Real.sq_sqrt hsk.le, hsdef]
       field_simp
-    -- `1/((k + 1) σ_k²) → 1`
+    -- `1/((k + 1)(k/(k + 1)³ + 1/(k + 1))) → 1`
     have hlim : Tendsto (fun k : ℕ => 1 / (((k : ℝ) + 1) *
         ((k : ℝ) / ((k : ℝ) + 1) ^ 3 + 1 / ((k : ℝ) + 1)))) atTop (𝓝 1) := by
       have h0 : Tendsto (fun k : ℕ => (k : ℝ) / ((k : ℝ) + 1) ^ 2) atTop (𝓝 0) := by
@@ -826,10 +1015,12 @@ end Cex
 /-- **The counterexample exists** (Giles 2015, §2.1, p. 8, l. 350–351: "the multilevel correction
 `Y_ℓ` on each level is asymptotically Normally-distributed, and therefore so is `Y`").  There are a
 probability space and independent inputs `ω^{(ℓ,n)}`, uniform on `[0, 1]`, such that, with the
-level outputs `cltCexP`, the finest levels `L_k = k` and the sample sizes `cltCexN`, every
-standardised level estimator tends to `N(0, 1)` in distribution while the normalised multilevel
-estimator `(Y_k − E[P_{L_k}])/σ_k` does not.  The space is the infinite product
-`[0, 1]^{ℕ×ℕ}` with the coordinates as inputs (`exists_iid_inputs`), and the rest is
+level outputs `cltCexP` (`V_ℓ = 2^{−ℓ}`, no bias, `(P_ℓ)` Cauchy in `L²`: `cltCex_moments`),
+the finest levels `L_k = k` and the sample sizes `cltCexN`, every standardised fixed-level
+estimator tends to `N(0, 1)` in distribution, the standardised finest-level estimator tends to `0`
+in probability, and the normalised multilevel estimator `(Y_k − E[P_{L_k}])/σ_k` tends to `0` in
+probability and not to `N(0, 1)` in distribution.  The space is `ℝ^{ℕ×ℕ}` with the product of
+copies of the uniform law and the coordinates as inputs (`exists_iid_inputs`), and the rest is
 `mlmc_clt_counterexample`. -/
 theorem exists_mlmc_clt_counterexample :
     ∃ (Ω : Type) (_ : MeasurableSpace Ω) (μ : Measure Ω) (_ : IsProbabilityMeasure μ)
@@ -840,6 +1031,15 @@ theorem exists_mlmc_clt_counterexample :
             ∫ y, levelDiff cltCexP ℓ y ∂(volume.restrict (Set.Icc 0 1))) /
           √(variance (levelDiff cltCexP ℓ) (volume.restrict (Set.Icc 0 1)) / cltCexN k ℓ))
         atTop id (fun _ => μ) (gaussianReal 0 1)) ∧
+      TendstoInMeasure μ (fun k x => (levelEstimator cltCexP ω k (cltCexN k k) x -
+          ∫ y, levelDiff cltCexP k y ∂(volume.restrict (Set.Icc 0 1))) /
+          √(variance (levelDiff cltCexP k) (volume.restrict (Set.Icc 0 1)) / cltCexN k k))
+        atTop (fun _ => 0) ∧
+      TendstoInMeasure μ (fun k x => (mlmcEstimator cltCexP ω k (cltCexN k) x -
+          ∫ y, cltCexP k y ∂(volume.restrict (Set.Icc 0 1))) /
+          √(∑ ℓ ∈ range (k + 1),
+            variance (levelDiff cltCexP ℓ) (volume.restrict (Set.Icc 0 1)) / cltCexN k ℓ))
+        atTop (fun _ => 0) ∧
       ¬ TendstoInDistribution (fun k x => (mlmcEstimator cltCexP ω k (cltCexN k) x -
           ∫ y, cltCexP k y ∂(volume.restrict (Set.Icc 0 1))) /
           √(∑ ℓ ∈ range (k + 1),
@@ -847,8 +1047,9 @@ theorem exists_mlmc_clt_counterexample :
         atTop id (fun _ => μ) (gaussianReal 0 1) := by
   have := isProbabilityMeasure_restrict_Icc_zero_one
   obtain ⟨hP, hind, hω⟩ := exists_iid_inputs (volume.restrict (Set.Icc (0 : ℝ) 1))
-  obtain ⟨hlev, -, hnot⟩ := mlmc_clt_counterexample (P' := gaussianReal 0 1) hω hind HasLaw.id
-  exact ⟨ℕ × ℕ → ℝ, inferInstance, _, hP, _, hind, hω, hlev, hnot⟩
+  obtain ⟨hlev, hfin, hm, hnot⟩ :=
+    mlmc_clt_counterexample (P' := gaussianReal 0 1) hω hind HasLaw.id
+  exact ⟨ℕ × ℕ → ℝ, inferInstance, _, hP, _, hind, hω, hlev, hfin, hm, hnot⟩
 
 /-! ### §3.3: the consistency check with one or two samples per level -/
 
@@ -883,30 +1084,23 @@ lemma sampleVar_two (x : ℕ → ℝ) : sampleVar x 2 = (x 0 - x 1) ^ 2 / 2 := b
   push_cast
   ring
 
-section CheckOne
-
-variable {Ω₀ Ω : Type*} [MeasurableSpace Ω₀] [MeasurableSpace Ω] {ν : Measure Ω₀}
-  {μ : Measure Ω} {ω : ℕ × ℕ → Ω → Ω₀}
-
-/-- **The consistency check with one sample per level** (Giles 2015, §3.3, p. 22, l. 1024–1029: "it
-computes and plots the ratio `|a − b + c| / (3(√V_a + √V_b + √V_c))` where `V_a, V_b, V_c` are
-empirical estimates for the variances of `a, b, c`. The probability of this ratio being greater than
-unity is less than 0.3%.").  In the setting of `consistency_check_empirical` (levels `ℓ, ℓ + 1` for
-the paper's `ℓ − 1, ℓ`; independent inputs `ω^{(p)}` of law `ν`; `a`, `b`, `c` the means of
-`P^f_ℓ(ω^{(ℓ,n)})`, `P^f_{ℓ+1}(ω^{(ℓ+1,n)})` and `P^f_{ℓ+1} − P^c_ℓ` at the same inputs;
-`V = s²/N` with the empirical variances `s²` of `empVar`), take `N_a = N_b = 1`.  Then
-* every empirical variance is `0`, so the ratio is `0/0` or `+∞`, and the check fails (the event
-  `3(√V_a + √V_b + √V_c) < |a − b + c|`) exactly when the two samples
-  `P^f_ℓ(ω^{(ℓ,0)})` and `P^c_ℓ(ω^{(ℓ+1,0)})` differ (`P^f_{ℓ+1}` cancels);
-* if `P^f_ℓ`, `P^c_ℓ` are measurable and the law of `P^c_ℓ` under `ν` has no atoms
-  (`ν{P^c_ℓ = t} = 0` for every `t`), the check fails with probability `1`.
-No other hypothesis is needed: not even (2.4).  The unbiased variance estimate
-`S² = ∑ (x_n − x̄)²/(N − 1)` is undefined (`0/0`) for `N = 1`. -/
-theorem consistency_check_one_sample [IsProbabilityMeasure μ]
-    (hω : ∀ p, MeasurePreserving (ω p) μ ν) (hind : iIndepFun ω μ) {Pf Pc : ℕ → Ω₀ → ℝ}
-    {ℓ : ℕ} (hPf : Measurable (Pf ℓ)) (hPc : Measurable (Pc ℓ))
-    (hatom : ∀ t, ν {y | Pc ℓ y = t} = 0) :
-    (∀ x, empVar (fun n => Pf ℓ (ω (ℓ, n) x)) 1 = 0 ∧
+/-- **The consistency check with one sample per level: the pointwise characterisation** (Giles
+2015, §3.3, p. 22, l. 1010–1029: "If `a, b, c` are estimates for `E[P^f_{ℓ−1}], E[P^f_ℓ], E[Y_ℓ]`,
+respectively, then it should be true that `a − b + c ≈ 0`. … it computes and plots the ratio
+`|a − b + c| / (3(√V_a + √V_b + √V_c))` where `V_a, V_b, V_c` are empirical estimates for the
+variances of `a, b, c`. The probability of this ratio being greater than unity is less than
+0.3%.").  In the notation of `consistency_check_empirical` (levels `ℓ, ℓ + 1` for the paper's
+`ℓ − 1, ℓ`; `a`, `b`, `c` the means of `P^f_ℓ(ω^{(ℓ,n)})`, `P^f_{ℓ+1}(ω^{(ℓ+1,n)})` and
+`P^f_{ℓ+1} − P^c_ℓ` at the same inputs; `V = s²/N` with the empirical variances `s²` of `empVar`),
+take `N_a = N_b = 1`.  For all level outputs `P^f, P^c`, all inputs `ω` and every outcome `x`,
+every empirical variance is `0`, so the ratio is `0/0` or `+∞`, and the check fails (the event
+`3(√V_a + √V_b + √V_c) < |a − b + c|`) exactly when the two samples `P^f_ℓ(ω^{(ℓ,0)})` and
+`P^c_ℓ(ω^{(ℓ+1,0)})` differ (`P^f_{ℓ+1}` cancels).  No hypothesis is needed: no measurability, no
+independence, not even (2.4).  The unbiased variance estimate `S² = ∑ (x_n − x̄)²/(N − 1)` is
+undefined (`0/0`) for `N = 1`. -/
+theorem consistency_check_one_sample_iff {Ω₀ Ω : Type*} (Pf Pc : ℕ → Ω₀ → ℝ)
+    (ω : ℕ × ℕ → Ω → Ω₀) (ℓ : ℕ) (x : Ω) :
+    empVar (fun n => Pf ℓ (ω (ℓ, n) x)) 1 = 0 ∧
       empVar (fun n => Pf (ℓ + 1) (ω (ℓ + 1, n) x)) 1 = 0 ∧
       empVar (fun n => Pf (ℓ + 1) (ω (ℓ + 1, n) x) - Pc ℓ (ω (ℓ + 1, n) x)) 1 = 0 ∧
       (3 * (√(empVar (fun n => Pf ℓ (ω (ℓ, n) x)) 1 / 1) +
@@ -915,32 +1109,44 @@ theorem consistency_check_one_sample [IsProbabilityMeasure μ]
         |empMean (fun n => Pf ℓ (ω (ℓ, n) x)) 1 -
           empMean (fun n => Pf (ℓ + 1) (ω (ℓ + 1, n) x)) 1 +
           empMean (fun n => Pf (ℓ + 1) (ω (ℓ + 1, n) x) - Pc ℓ (ω (ℓ + 1, n) x)) 1| ↔
-        Pf ℓ (ω (ℓ, 0) x) ≠ Pc ℓ (ω (ℓ + 1, 0) x))) ∧
+        Pf ℓ (ω (ℓ, 0) x) ≠ Pc ℓ (ω (ℓ + 1, 0) x)) := by
+  refine ⟨empVar_one _, empVar_one _, empVar_one _, ?_⟩
+  simp only [empVar_one, empMean_one, zero_div, Real.sqrt_zero, add_zero, mul_zero, abs_pos]
+  constructor
+  · intro h he
+    apply h
+    rw [he]
+    ring
+  · intro h he
+    apply h
+    linarith
+
+section CheckOne
+
+variable {Ω₀ Ω : Type*} [MeasurableSpace Ω₀] [MeasurableSpace Ω] {ν : Measure Ω₀}
+  {μ : Measure Ω} {ω : ℕ × ℕ → Ω → Ω₀}
+
+/-- **With one sample per level the consistency check fails with probability `1`** (Giles 2015,
+§3.3, p. 22, l. 1025–1029: "it computes and plots the ratio `|a − b + c| / (3(√V_a + √V_b + √V_c))`
+where `V_a, V_b, V_c` are empirical estimates for the variances of `a, b, c`. The probability of
+this ratio being greater than unity is less than 0.3%.").  In the setting of
+`consistency_check_empirical` (levels `ℓ, ℓ + 1` for the paper's `ℓ − 1, ℓ`; independent inputs
+`ω^{(p)}` of law `ν`; `V = s²/N` with the empirical variances `s²` of `empVar`), take
+`N_a = N_b = 1`.  If `P^f_ℓ`, `P^c_ℓ` are measurable and the law of `P^c_ℓ` under `ν` has no atoms
+(`ν{P^c_ℓ = t} = 0` for every `t`), the check (the event `3(√V_a + √V_b + √V_c) < |a − b + c|`)
+fails with probability `1`: by `consistency_check_one_sample_iff` it fails exactly when the
+independent samples `P^f_ℓ(ω^{(ℓ,0)})` and `P^c_ℓ(ω^{(ℓ+1,0)})` differ, and they coincide with
+probability `0`.  No other hypothesis is needed: not even (2.4), and `P^f_{ℓ+1}` is arbitrary. -/
+theorem consistency_check_one_sample [IsProbabilityMeasure μ]
+    (hω : ∀ p, MeasurePreserving (ω p) μ ν) (hind : iIndepFun ω μ) {Pf Pc : ℕ → Ω₀ → ℝ}
+    {ℓ : ℕ} (hPf : Measurable (Pf ℓ)) (hPc : Measurable (Pc ℓ))
+    (hatom : ∀ t, ν {y | Pc ℓ y = t} = 0) :
     μ.real {x | 3 * (√(empVar (fun n => Pf ℓ (ω (ℓ, n) x)) 1 / 1) +
         √(empVar (fun n => Pf (ℓ + 1) (ω (ℓ + 1, n) x)) 1 / 1) +
         √(empVar (fun n => Pf (ℓ + 1) (ω (ℓ + 1, n) x) - Pc ℓ (ω (ℓ + 1, n) x)) 1 / 1)) <
       |empMean (fun n => Pf ℓ (ω (ℓ, n) x)) 1 -
         empMean (fun n => Pf (ℓ + 1) (ω (ℓ + 1, n) x)) 1 +
         empMean (fun n => Pf (ℓ + 1) (ω (ℓ + 1, n) x) - Pc ℓ (ω (ℓ + 1, n) x)) 1|} = 1 := by
-  have hpt : ∀ x, (3 * (√(empVar (fun n => Pf ℓ (ω (ℓ, n) x)) 1 / 1) +
-          √(empVar (fun n => Pf (ℓ + 1) (ω (ℓ + 1, n) x)) 1 / 1) +
-          √(empVar (fun n => Pf (ℓ + 1) (ω (ℓ + 1, n) x) - Pc ℓ (ω (ℓ + 1, n) x)) 1 / 1)) <
-        |empMean (fun n => Pf ℓ (ω (ℓ, n) x)) 1 -
-          empMean (fun n => Pf (ℓ + 1) (ω (ℓ + 1, n) x)) 1 +
-          empMean (fun n => Pf (ℓ + 1) (ω (ℓ + 1, n) x) - Pc ℓ (ω (ℓ + 1, n) x)) 1| ↔
-        Pf ℓ (ω (ℓ, 0) x) ≠ Pc ℓ (ω (ℓ + 1, 0) x)) := by
-    intro x
-    simp only [empVar_one, empMean_one, zero_div, Real.sqrt_zero, add_zero, mul_zero,
-      abs_pos]
-    constructor
-    · intro h he
-      apply h
-      rw [he]
-      ring
-    · intro h he
-      apply h
-      linarith
-  refine ⟨fun x => ⟨empVar_one _, empVar_one _, empVar_one _, hpt x⟩, ?_⟩
   have : IsProbabilityMeasure ν := by
     rw [← (hω (0, 0)).map_eq]
     exact Measure.isProbabilityMeasure_map (hω (0, 0)).measurable.aemeasurable
@@ -972,7 +1178,7 @@ theorem consistency_check_one_sample [IsProbabilityMeasure μ]
         empMean (fun n => Pf (ℓ + 1) (ω (ℓ + 1, n) x) - Pc ℓ (ω (ℓ + 1, n) x)) 1|} =
       (fun x => (ω (ℓ, 0) x, ω (ℓ + 1, 0) x)) ⁻¹' Sᶜ := by
     ext x
-    rw [Set.mem_ofPred_eq, hpt x]
+    rw [Set.mem_ofPred_eq, (consistency_check_one_sample_iff Pf Pc ω ℓ x).2.2.2]
     simp [hSdef]
   rw [hset, measureReal_def, ← Measure.map_apply hg hS.compl, hlaw, prob_compl_eq_one_sub hS,
     hS0, tsub_zero, ENNReal.toReal_one]
@@ -994,20 +1200,23 @@ lemma abs_sin_lt_mul_abs_cos_iff {ψ : ℝ} (t : ℝ) (hψ : |ψ| < π / 2) :
     rw [← arctan_strictMono.lt_iff_lt, htan]
   rw [h1, abs_lt, abs_lt, e1, e2]
 
-/-- `cos(ψ + π/4) − sin(ψ + π/4) = −√2 sin ψ`. -/
+/-- `cos(ψ + π/4) − sin(ψ + π/4) = −√2 sin ψ` (for the consistency check of Giles 2015, §3.3,
+p. 22). -/
 lemma cos_add_pi_div_four_sub_sin (ψ : ℝ) :
     cos (ψ + π / 4) - sin (ψ + π / 4) = -(√2 * sin ψ) := by
   rw [cos_add, sin_add, cos_pi_div_four, sin_pi_div_four]
   ring
 
-/-- `cos(ψ + π/4) + sin(ψ + π/4) = √2 cos ψ`. -/
+/-- `cos(ψ + π/4) + sin(ψ + π/4) = √2 cos ψ` (for the consistency check of Giles 2015, §3.3,
+p. 22). -/
 lemma cos_add_pi_div_four_add_sin (ψ : ℝ) :
     cos (ψ + π / 4) + sin (ψ + π / 4) = √2 * cos ψ := by
   rw [cos_add, sin_add, cos_pi_div_four, sin_pi_div_four]
   ring
 
 /-- The cone `|u − v| < t |u + v|` in polar coordinates, rotated by `π/4`:
-`|cos θ − sin θ| < t |cos θ + sin θ| ↔ |sin ψ| < t |cos ψ|` for `θ = ψ + π/4`. -/
+`|cos θ − sin θ| < t |cos θ + sin θ| ↔ |sin ψ| < t |cos ψ|` for `θ = ψ + π/4` (for the consistency
+check of Giles 2015, §3.3, p. 22). -/
 lemma cone_angle_iff (t ψ : ℝ) :
     |cos (ψ + π / 4) - sin (ψ + π / 4)| < t * |cos (ψ + π / 4) + sin (ψ + π / 4)| ↔
       |sin ψ| < t * |cos ψ| := by
@@ -1081,7 +1290,19 @@ lemma cone_angle_set {t : ℝ} (ht1 : t < 1) :
       rw [abs_lt]
       constructor <;> linarith
 
-/-- `∫_0^∞ r e^{−r²/2} dr = 1`, the radial integral of the standard normal density in the plane. -/
+/-- `r ↦ r e^{−r²/2}` is integrable on `(0, ∞)` (the radial density of the standard normal law
+of the plane, for the consistency check of Giles 2015, §3.3, p. 22). -/
+lemma integrableOn_Ioi_mul_exp_neg_sq_div_two :
+    IntegrableOn (fun r : ℝ => r * exp (-r ^ 2 / 2)) (Set.Ioi 0) := by
+  have h := integrable_mul_exp_neg_mul_sq (by norm_num : (0 : ℝ) < 1 / 2)
+  have e : (fun x : ℝ => x * exp (-(1 / 2) * x ^ 2)) = fun x => x * exp (-x ^ 2 / 2) := by
+    funext x
+    rw [show -(1 / 2 : ℝ) * x ^ 2 = -x ^ 2 / 2 by ring]
+  rw [e] at h
+  exact h.integrableOn
+
+/-- `∫_0^∞ r e^{−r²/2} dr = 1`, the radial integral of the standard normal density in the plane
+(for the consistency check of Giles 2015, §3.3, p. 22). -/
 lemma integral_Ioi_mul_exp_neg_sq_div_two :
     ∫ r in Set.Ioi (0 : ℝ), r * exp (-r ^ 2 / 2) = 1 := by
   have hderiv : ∀ x ∈ Set.Ici (0 : ℝ), HasDerivAt (fun x : ℝ => -exp (-x ^ 2 / 2))
@@ -1090,13 +1311,6 @@ lemma integral_Ioi_mul_exp_neg_sq_div_two :
     have h1 : HasDerivAt (fun x : ℝ => x ^ 2) (2 * x) x := by
       simpa using hasDerivAt_pow 2 x
     exact ((h1.neg.div_const 2).exp.neg).congr_deriv (by simp only [Pi.neg_apply]; ring)
-  have hint : IntegrableOn (fun x : ℝ => x * exp (-x ^ 2 / 2)) (Set.Ioi 0) := by
-    have h := integrable_mul_exp_neg_mul_sq (by norm_num : (0 : ℝ) < 1 / 2)
-    have e : (fun x : ℝ => x * exp (-(1 / 2) * x ^ 2)) = fun x => x * exp (-x ^ 2 / 2) := by
-      funext x
-      rw [show -(1 / 2 : ℝ) * x ^ 2 = -x ^ 2 / 2 by ring]
-    rw [e] at h
-    exact h.integrableOn
   have hlim : Tendsto (fun x : ℝ => -exp (-x ^ 2 / 2)) atTop (𝓝 0) := by
     have h1 : Tendsto (fun x : ℝ => x ^ 2 / 2) atTop atTop :=
       (tendsto_pow_atTop two_ne_zero).atTop_div_const (by norm_num)
@@ -1105,11 +1319,12 @@ lemma integral_Ioi_mul_exp_neg_sq_div_two :
     have h3 := h2.neg
     rw [neg_zero] at h3
     exact h3.congr fun x => by rw [neg_div]
-  rw [integral_Ioi_of_hasDerivAt_of_tendsto' hderiv hint hlim]
+  rw [integral_Ioi_of_hasDerivAt_of_tendsto' hderiv integrableOn_Ioi_mul_exp_neg_sq_div_two hlim]
   simp
 
 /-- The product of two standard normal densities in polar coordinates:
-`φ(r cos θ) φ(r sin θ) = (2π)⁻¹ e^{−r²/2}`. -/
+`φ(r cos θ) φ(r sin θ) = (2π)⁻¹ e^{−r²/2}` (for the consistency check of Giles 2015, §3.3,
+p. 22). -/
 lemma gaussianPDF_mul_polar (r θ : ℝ) :
     gaussianPDF 0 1 (r * cos θ) * gaussianPDF 0 1 (r * sin θ) =
       ENNReal.ofReal ((2 * π)⁻¹ * exp (-r ^ 2 / 2)) := by
@@ -1172,13 +1387,6 @@ lemma gaussian_prod_cone {t : ℝ} (ht0 : 0 < t) (ht1 : t < 1) :
   -- the radial integral
   have hrad : ∫⁻ r in Set.Ioi (0 : ℝ), ENNReal.ofReal (r * ((2 * π)⁻¹ * exp (-r ^ 2 / 2))) =
       ENNReal.ofReal ((2 * π)⁻¹) := by
-    have hint : IntegrableOn (fun r : ℝ => r * exp (-r ^ 2 / 2)) (Set.Ioi 0) := by
-      have h := integrable_mul_exp_neg_mul_sq (by norm_num : (0 : ℝ) < 1 / 2)
-      have e : (fun x : ℝ => x * exp (-(1 / 2) * x ^ 2)) = fun x => x * exp (-x ^ 2 / 2) := by
-        funext x
-        rw [show -(1 / 2 : ℝ) * x ^ 2 = -x ^ 2 / 2 by ring]
-      rw [e] at h
-      exact h.integrableOn
     have e2 : (fun r : ℝ => r * ((2 * π)⁻¹ * exp (-r ^ 2 / 2))) =
         fun r => (2 * π)⁻¹ * (r * exp (-r ^ 2 / 2)) := by
       funext r
@@ -1186,7 +1394,7 @@ lemma gaussian_prod_cone {t : ℝ} (ht0 : 0 < t) (ht1 : t < 1) :
     rw [← ofReal_integral_eq_lintegral_ofReal, e2, integral_const_mul,
       integral_Ioi_mul_exp_neg_sq_div_two, mul_one]
     · rw [e2]
-      exact hint.const_mul _
+      exact integrableOn_Ioi_mul_exp_neg_sq_div_two.const_mul _
     · refine ae_restrict_of_forall_mem measurableSet_Ioi fun r hr => ?_
       have hr' : 0 < r := hr
       positivity
@@ -1210,7 +1418,8 @@ lemma gaussian_prod_cone {t : ℝ} (ht0 : 0 < t) (ht1 : t < 1) :
   field_simp
   ring
 
-/-- `(2/π) arctan(√2/3) > 1/4`, as `2 arctan(√2/3) = arctan(6√2/7) > arctan 1 = π/4`. -/
+/-- `(2/π) arctan(√2/3) > 1/4`, as `2 arctan(√2/3) = arctan(6√2/7) > arctan 1 = π/4` (the
+failure probability of the consistency check of Giles 2015, §3.3, p. 22, with two samples). -/
 lemma quarter_lt_two_div_pi_mul_arctan : 1 / 4 < 2 / π * arctan (√2 / 3) := by
   have hs : √2 * √2 = 2 := Real.mul_self_sqrt (by norm_num)
   have hs0 : 0 < √2 := Real.sqrt_pos.2 two_pos
@@ -1225,7 +1434,9 @@ lemma quarter_lt_two_div_pi_mul_arctan : 1 / 4 < 2 / π * arctan (√2 / 3) := b
   rw [div_mul_eq_mul_div, lt_div_iff₀ hπ]
   linarith
 
-/-- `(2/π) arctan(1/3) > 1/8`, as `4 arctan(1/3) = arctan(24/7) > arctan 1 = π/4`. -/
+/-- `(2/π) arctan(1/3) > 1/8`, as `4 arctan(1/3) = arctan(24/7) > arctan 1 = π/4` (the failure
+probability of the consistency check of Giles 2015, §3.3, p. 22, with two samples and unbiased
+variances). -/
 lemma eighth_lt_two_div_pi_mul_arctan : 1 / 8 < 2 / π * arctan (1 / 3) := by
   have h1 := arctan_add (x := 1 / 3) (y := 1 / 3) (by norm_num)
   have h2 := arctan_add (x := 3 / 4) (y := 3 / 4) (by norm_num)
@@ -1266,7 +1477,7 @@ lemma measureReal_cone_inputs [IsProbabilityMeasure μ]
     ENNReal.toReal_ofReal (by positivity)]
 
 /-- **The consistency check with two samples per level fails with probability about 28%**
-(Giles 2015, §3.3, p. 22, l. 1024–1029: "it computes and plots the ratio
+(Giles 2015, §3.3, p. 22, l. 1025–1029: "it computes and plots the ratio
 `|a − b + c| / (3(√V_a + √V_b + √V_c))` where `V_a, V_b, V_c` are empirical estimates for the
 variances of `a, b, c`. The probability of this ratio being greater than unity is less than 0.3%.").
 The example of `MlmcLean/ConsistencyCheck.lean`: the inputs `ω^{(p)}` are independent standard
@@ -1546,12 +1757,65 @@ lemma sum_sub_empMean_sq (x : ℕ → ℝ) (c : ℝ) {N : ℕ} (hN : 0 < N) :
   field_simp at h ⊢
   linarith
 
+/-- The biased empirical variance is `(N − 1)/N` times the unbiased sample variance,
+`s_N² = (N − 1) S_N²/N` for `N ≥ 2` (Giles 2015, §3.3, p. 23; `s_N²` is the estimate of the
+consistency check, p. 22, and of the driver of §3.4). -/
+lemma empVar_eq_mul_sampleVar (x : ℕ → ℝ) {N : ℕ} (hN : 2 ≤ N) :
+    empVar x N = ((N : ℝ) - 1) / N * sampleVar x N := by
+  have hNr : (2 : ℝ) ≤ N := by exact_mod_cast hN
+  have hN1 : (N : ℝ) - 1 ≠ 0 := by linarith
+  have hN0 : (N : ℝ) ≠ 0 := by linarith
+  rw [empVar, sampleVar]
+  field_simp
+
 section SampleVarMoments
 
 variable {Ω₀ Ω : Type*} [MeasurableSpace Ω₀] [MeasurableSpace Ω] {ν : Measure Ω₀}
   {μ : Measure Ω}
 
-/-- **The variance of the sample variance** (Giles 2015, §3.3, pp. 22–23, l. 1038–1042: "When the
+/-- `E[(X − m)⁴] < ∞` when `E[X⁴] < ∞`, as `(x − m)⁴ ≤ 8(x⁴ + m⁴)` (behind Giles 2015, §3.3,
+p. 23). -/
+lemma integrable_sub_const_pow_four [IsFiniteMeasure ν] {X : Ω₀ → ℝ} (hXm : Measurable X)
+    (hX4 : Integrable (fun y => X y ^ 4) ν) (m : ℝ) : Integrable (fun y => (X y - m) ^ 4) ν := by
+  refine Integrable.mono' ((hX4.add (integrable_const (m ^ 4))).const_mul 8)
+    ((hXm.sub_const m).pow_const 4).aestronglyMeasurable (ae_of_all _ fun y => ?_)
+  rw [Real.norm_eq_abs, abs_of_nonneg (by positivity)]
+  show (X y - m) ^ 4 ≤ 8 * (X y ^ 4 + m ^ 4)
+  nlinarith [sq_nonneg ((X y + m) ^ 2), sq_nonneg (X y ^ 2 - m ^ 2)]
+
+/-- The squared variance is at most the central fourth moment, `V[X]² ≤ E[(X − E X)⁴]`, as
+`V[(X − E X)²] ≥ 0`; so the central kurtosis is at least `1` when `V[X] > 0` (Giles 2015, §3.3,
+p. 23). -/
+lemma variance_sq_le_central_moment_four [IsProbabilityMeasure ν] {X : Ω₀ → ℝ}
+    (hXm : Measurable X) (hX4 : Integrable (fun y => X y ^ 4) ν) :
+    variance X ν ^ 2 ≤ ∫ y, (X y - ∫ z, X z ∂ν) ^ 4 ∂ν := by
+  have hc4 := integrable_sub_const_pow_four hXm hX4 (∫ z, X z ∂ν)
+  have hY2m : Measurable fun y => (X y - ∫ z, X z ∂ν) ^ 2 := (hXm.sub_const _).pow_const 2
+  have hY2 : MemLp (fun y => (X y - ∫ z, X z ∂ν) ^ 2) 2 ν :=
+    (memLp_two_iff_integrable_sq hY2m.aestronglyMeasurable).2 (hc4.congr (ae_of_all _ fun y =>
+      show (X y - ∫ z, X z ∂ν) ^ 4 = ((X y - ∫ z, X z ∂ν) ^ 2) ^ 2 by ring))
+  have h := variance_nonneg (fun y => (X y - ∫ z, X z ∂ν) ^ 2) ν
+  rw [variance_eq_sub hY2] at h
+  have e1 : ∫ y, ((fun y => (X y - ∫ z, X z ∂ν) ^ 2) ^ 2) y ∂ν =
+      ∫ y, (X y - ∫ z, X z ∂ν) ^ 4 ∂ν :=
+    integral_congr_ae (ae_of_all _ fun y => by simp only [Pi.pow_apply]; ring)
+  rw [e1, ← variance_eq_integral hXm.aemeasurable] at h
+  linarith
+
+/-- A central kurtosis above `1` forces a positive variance: if `V[X] = 0`, Lean's `κ` is
+`μ₄/0 = 0` (Giles 2015, §3.3, p. 23). -/
+lemma variance_pos_of_one_lt_kurtosis {X : Ω₀ → ℝ} (hXm : Measurable X)
+    (hκ : 1 < kurtosis (fun y => X y - ∫ z, X z ∂ν) ν) : 0 < variance X ν := by
+  rcases (variance_nonneg X ν).lt_or_eq with hv | hv
+  · exact hv
+  · exfalso
+    have hκq : kurtosis (fun y => X y - ∫ z, X z ∂ν) ν =
+        (∫ y, (X y - ∫ z, X z ∂ν) ^ 4 ∂ν) / variance X ν ^ 2 := by
+      rw [kurtosis, variance_eq_integral hXm.aemeasurable]
+    rw [hκq, ← hv] at hκ
+    norm_num at hκ
+
+/-- **The variance of the sample variance** (Giles 2015, §3.3, p. 23, l. 1038–1042: "When the
 number of samples `N` is large, the standard deviation of the sample variance for a random variable
 `X` with zero mean is approximately `√((κ − 1)/N) E[X²]` where the kurtosis `κ` is defined as
 `κ = E[X⁴]/(E[X²])²`.").  Let the inputs `ω⁽ⁿ⁾` be independent with law `ν` and let `X` be
@@ -1578,12 +1842,7 @@ theorem sampleVar_mean_variance [IsProbabilityMeasure μ] (ω : ℕ → Ω → �
   set v := variance X ν with hv
   -- the centred samples
   set Y : ℕ → Ω → ℝ := fun n x => X (ω n x) - m with hY
-  have hXc4 : Integrable (fun y => (X y - m) ^ 4) ν := by
-    refine Integrable.mono' ((hX4.add (integrable_const (m ^ 4))).const_mul 8)
-      ((hXm.sub_const m).pow_const 4).aestronglyMeasurable (ae_of_all _ fun y => ?_)
-    rw [Real.norm_eq_abs, abs_of_nonneg (by positivity)]
-    show (X y - m) ^ 4 ≤ 8 * (X y ^ 4 + m ^ 4)
-    nlinarith [sq_nonneg ((X y + m) ^ 2), sq_nonneg (X y ^ 2 - m ^ 2)]
+  have hXc4 : Integrable (fun y => (X y - m) ^ 4) ν := integrable_sub_const_pow_four hXm hX4 m
   have hX1 : Integrable X ν := by
     simpa using integrable_pow_of_pow_four hXm hX4 (k := 1) (by norm_num)
   have hYind : iIndepFun Y μ := hind.comp (fun _ y => X y - m) (fun _ => hXm.sub_const m)
@@ -1663,61 +1922,68 @@ theorem sampleVar_mean_variance [IsProbabilityMeasure μ] (ω : ℕ → Ω → �
   ring
 
 /-- **The standard deviation of the sample variance is `√((κ − 1)/N) σ² (1 + O(1/N))`** (Giles
-2015, §3.3, pp. 22–23, l. 1038–1042: "When the number of samples `N` is large, the standard
-deviation of the sample variance for a random variable `X` with zero mean is approximately
+2015, §3.3, p. 23, l. 1038–1042: "When the number of samples `N` is large, the standard deviation
+of the sample variance for a random variable `X` with zero mean is approximately
 `√((κ − 1)/N) E[X²]` where the kurtosis `κ` is defined as `κ = E[X⁴]/(E[X²])²`.").  In the setting
 of `sampleVar_mean_variance` (`N ≥ 2` independent samples of a measurable `X` with `E[X⁴] < ∞`, the
 unbiased sample variance `S_N²`), let `κ = E[(X − E X)⁴]/V[X]²` be the central kurtosis
 (`kurtosis` of `X − E X`; the paper's `κ` when `E[X] = 0`, and then `V[X] = E[X²]`), and assume
-`κ > 1` (which forces `V[X] > 0`).  Then
-`√V[S_N²] = √((κ − 1)/N + 2/(N(N − 1))) V[X]`, hence
-`√((κ − 1)/N) V[X] ≤ √V[S_N²] ≤ √((κ − 1)/N) V[X] (1 + 1/((κ − 1)(N − 1)))`: the paper's
-approximation with relative error at most `1/((κ − 1)(N − 1)) = O(1/N)`.  For `κ = 1`
-(`X − E X = ±c`) the paper's approximation `0` is wrong in relative terms: the standard
-deviation is `√(2/(N(N − 1))) V[X]`. -/
+`V[X] > 0`.  Then `κ ≥ 1` and, exactly,
+`√V[S_N²] = √((κ − 1)/N + 2/(N(N − 1))) V[X]`; hence `√((κ − 1)/N) V[X] ≤ √V[S_N²]`, and, if
+`κ > 1`, `√V[S_N²] ≤ √((κ − 1)/N) V[X] (1 + 1/((κ − 1)(N − 1)))`: the paper's approximation with
+relative error at most `1/((κ − 1)(N − 1)) = O(1/N)`.  For `κ = 1` (`X − E X = ±c`) the identity
+gives `√V[S_N²] = √(2/(N(N − 1))) V[X]`, so the paper's approximation `0` is then wrong in relative
+terms. -/
 theorem sampleVar_sd [IsProbabilityMeasure μ] (ω : ℕ → Ω → Ω₀)
     (hω : ∀ n, MeasurePreserving (ω n) μ ν) (hind : iIndepFun ω μ) {X : Ω₀ → ℝ}
-    (hXm : Measurable X) (hX4 : Integrable (fun y => X y ^ 4) ν) {N : ℕ} (hN : 2 ≤ N)
-    (hκ : 1 < kurtosis (fun y => X y - ∫ z, X z ∂ν) ν) :
-    √(variance (fun x => sampleVar (fun n => X (ω n x)) N) μ) =
+    (hXm : Measurable X) (hX4 : Integrable (fun y => X y ^ 4) ν) (hv : 0 < variance X ν)
+    {N : ℕ} (hN : 2 ≤ N) :
+    1 ≤ kurtosis (fun y => X y - ∫ z, X z ∂ν) ν ∧
+      √(variance (fun x => sampleVar (fun n => X (ω n x)) N) μ) =
         √((kurtosis (fun y => X y - ∫ z, X z ∂ν) ν - 1) / N + 2 / (N * ((N : ℝ) - 1))) *
           variance X ν ∧
       √((kurtosis (fun y => X y - ∫ z, X z ∂ν) ν - 1) / N) * variance X ν ≤
         √(variance (fun x => sampleVar (fun n => X (ω n x)) N) μ) ∧
-      √(variance (fun x => sampleVar (fun n => X (ω n x)) N) μ) ≤
-        √((kurtosis (fun y => X y - ∫ z, X z ∂ν) ν - 1) / N) * variance X ν *
-          (1 + 1 / ((kurtosis (fun y => X y - ∫ z, X z ∂ν) ν - 1) * ((N : ℝ) - 1))) := by
+      (1 < kurtosis (fun y => X y - ∫ z, X z ∂ν) ν →
+        √(variance (fun x => sampleVar (fun n => X (ω n x)) N) μ) ≤
+          √((kurtosis (fun y => X y - ∫ z, X z ∂ν) ν - 1) / N) * variance X ν *
+            (1 + 1 / ((kurtosis (fun y => X y - ∫ z, X z ∂ν) ν - 1) * ((N : ℝ) - 1)))) := by
+  have : IsProbabilityMeasure ν := by
+    rw [← (hω 0).map_eq]
+    exact Measure.isProbabilityMeasure_map (hω 0).measurable.aemeasurable
   have hvar := (sampleVar_mean_variance ω hω hind hXm hX4 hN).2
+  have hle := variance_sq_le_central_moment_four hXm hX4 (ν := ν)
   have hNr : (2 : ℝ) ≤ N := by exact_mod_cast hN
   set κ := kurtosis (fun y => X y - ∫ z, X z ∂ν) ν with hκdef
-  set v := variance X ν with hv
+  set v := variance X ν with hvdef
   set q := ∫ y, (X y - ∫ z, X z ∂ν) ^ 4 ∂ν
   have hκq : κ = q / v ^ 2 := by
-    rw [hκdef, kurtosis, hv, variance_eq_integral hXm.aemeasurable]
-  have hv0 : v ≠ 0 := by
-    intro h
-    rw [hκq, h] at hκ
-    norm_num at hκ
-  have hvpos : 0 < v := lt_of_le_of_ne (variance_nonneg X ν) (Ne.symm hv0)
+    rw [hκdef, kurtosis, hvdef, variance_eq_integral hXm.aemeasurable]
   have hqκ : q = κ * v ^ 2 := by
     rw [hκq]
     field_simp
+  have hκ1 : 1 ≤ κ := by
+    rw [hκq, le_div_iff₀ (by positivity)]
+    linarith
   have hN1 : 0 < (N : ℝ) - 1 := by linarith
   have hVe : variance (fun x => sampleVar (fun n => X (ω n x)) N) μ =
       ((κ - 1) / N + 2 / (N * ((N : ℝ) - 1))) * v ^ 2 := by
     rw [hvar, hqκ]
     field_simp
     ring
-  have hκ1 : 0 < κ - 1 := by linarith
+  have h2 : 0 ≤ 2 / ((N : ℝ) * ((N : ℝ) - 1)) :=
+    div_nonneg zero_le_two (mul_nonneg (by positivity) hN1.le)
+  have hr : 0 ≤ (κ - 1) / N + 2 / (N * ((N : ℝ) - 1)) :=
+    add_nonneg (div_nonneg (by linarith) (by positivity)) h2
   have hexact : √(variance (fun x => sampleVar (fun n => X (ω n x)) N) μ) =
       √((κ - 1) / N + 2 / (N * ((N : ℝ) - 1))) * v := by
-    rw [hVe, Real.sqrt_mul (by positivity), Real.sqrt_sq hvpos.le]
-  refine ⟨hexact, ?_, ?_⟩
+    rw [hVe, Real.sqrt_mul hr, Real.sqrt_sq hv.le]
+  refine ⟨hκ1, hexact, ?_, fun hκ => ?_⟩
   · rw [hexact]
     gcongr
-    have : 0 ≤ 2 / ((N : ℝ) * ((N : ℝ) - 1)) := by positivity
     linarith
-  · rw [hexact, mul_right_comm]
+  · have hκ1' : 0 < κ - 1 := by linarith
+    rw [hexact, mul_right_comm]
     gcongr
     rw [← Real.sqrt_sq (by positivity : (0 : ℝ) ≤ 1 + 1 / ((κ - 1) * ((N : ℝ) - 1))),
       ← Real.sqrt_mul (by positivity)]
@@ -1730,12 +1996,12 @@ theorem sampleVar_sd [IsProbabilityMeasure μ] (ω : ℕ → Ω → Ω₀)
     have : 0 ≤ 1 / ((N : ℝ) * (κ - 1) * ((N : ℝ) - 1) ^ 2) := by positivity
     linarith
 
-/-- **"Approximately `√((κ − 1)/N) E[X²]`" as a limit** (Giles 2015, §3.3, pp. 22–23, l. 1038–1042:
+/-- **"Approximately `√((κ − 1)/N) E[X²]`" as a limit** (Giles 2015, §3.3, p. 23, l. 1038–1042:
 "When the number of samples `N` is large, the standard deviation of the sample variance for a random
 variable `X` with zero mean is approximately `√((κ − 1)/N) E[X²]`").  In the setting of
 `sampleVar_sd` (independent samples of a measurable `X` with `E[X⁴] < ∞`, central kurtosis
-`κ > 1`), the ratio of the standard deviation of the unbiased sample variance `S_N²` to
-`√((κ − 1)/N) V[X]` tends to `1` as `N → ∞` (it lies between `1` and
+`κ > 1`, which forces `V[X] > 0`), the ratio of the standard deviation of the unbiased sample
+variance `S_N²` to `√((κ − 1)/N) V[X]` tends to `1` as `N → ∞` (it lies between `1` and
 `1 + 1/((κ − 1)(N − 1))` for `N ≥ 2`). -/
 theorem tendsto_sampleVar_sd_div [IsProbabilityMeasure μ] (ω : ℕ → Ω → Ω₀)
     (hω : ∀ n, MeasurePreserving (ω n) μ ν) (hind : iIndepFun ω μ) {X : Ω₀ → ℝ}
@@ -1743,16 +2009,9 @@ theorem tendsto_sampleVar_sd_div [IsProbabilityMeasure μ] (ω : ℕ → Ω → 
     (hκ : 1 < kurtosis (fun y => X y - ∫ z, X z ∂ν) ν) :
     Tendsto (fun N : ℕ => √(variance (fun x => sampleVar (fun n => X (ω n x)) N) μ) /
       (√((kurtosis (fun y => X y - ∫ z, X z ∂ν) ν - 1) / N) * variance X ν)) atTop (𝓝 1) := by
+  have hvpos := variance_pos_of_one_lt_kurtosis hXm hκ
   set κ := kurtosis (fun y => X y - ∫ z, X z ∂ν) ν with hκdef
   have hκ1 : 0 < κ - 1 := by linarith
-  have hvpos : 0 < variance X ν := by
-    rcases (variance_nonneg X ν).lt_or_eq with hv | hv
-    · exact hv
-    · exfalso
-      have hκq : κ = (∫ y, (X y - ∫ z, X z ∂ν) ^ 4 ∂ν) / variance X ν ^ 2 := by
-        rw [hκdef, kurtosis, variance_eq_integral hXm.aemeasurable]
-      rw [hκq, ← hv] at hκ
-      norm_num at hκ
   have hlim : Tendsto (fun N : ℕ => 1 + 1 / ((κ - 1) * ((N : ℝ) - 1))) atTop (𝓝 1) := by
     have h1 : Tendsto (fun N : ℕ => (κ - 1) * ((N : ℝ) - 1)) atTop atTop :=
       Tendsto.const_mul_atTop hκ1 (tendsto_atTop_add_const_right _ (-1)
@@ -1763,19 +2022,135 @@ theorem tendsto_sampleVar_sd_div [IsProbabilityMeasure μ] (ω : ℕ → Ω → 
     simp only [Function.comp_apply, one_div]
   refine tendsto_of_tendsto_of_tendsto_of_le_of_le' tendsto_const_nhds hlim ?_ ?_
   · filter_upwards [eventually_ge_atTop 2] with N hN
-    obtain ⟨-, hlow, -⟩ := sampleVar_sd ω hω hind hXm hX4 hN hκ
+    obtain ⟨-, -, hlow, -⟩ := sampleVar_sd ω hω hind hXm hX4 hvpos hN
     have hNr : (2 : ℝ) ≤ N := by exact_mod_cast hN
     have hd : 0 < √((κ - 1) / N) * variance X ν :=
       mul_pos (Real.sqrt_pos.2 (div_pos hκ1 (by linarith))) hvpos
     rw [le_div_iff₀ hd, one_mul]
     exact hlow
   · filter_upwards [eventually_ge_atTop 2] with N hN
-    obtain ⟨-, -, hup⟩ := sampleVar_sd ω hω hind hXm hX4 hN hκ
+    obtain ⟨-, -, -, hup⟩ := sampleVar_sd ω hω hind hXm hX4 hvpos hN
     have hNr : (2 : ℝ) ≤ N := by exact_mod_cast hN
     have hd : 0 < √((κ - 1) / N) * variance X ν :=
       mul_pos (Real.sqrt_pos.2 (div_pos hκ1 (by linarith))) hvpos
     rw [div_le_iff₀ hd, mul_comm]
-    exact hup
+    exact hup hκ
+
+/-- **The mean and variance of the biased empirical variance** (Giles 2015, §3.3, p. 23,
+l. 1038–1042: "When the number of samples `N` is large, the standard deviation of the sample
+variance for a random variable `X` with zero mean is approximately `√((κ − 1)/N) E[X²]`"; the
+biased form `s_N²` is the "empirical estimate" of the consistency check, p. 22, `empVar`, and the
+estimate `Vl = suml(2,:)./Nl − ml.^2` of the driver of §3.4).  In the setting of
+`sampleVar_mean_variance` (`N ≥ 2` independent samples of a measurable `X` with `E[X⁴] < ∞`,
+`σ² = V[X]`, `μ₄ = E[(X − E X)⁴]`), the biased empirical variance
+`s_N² = N⁻¹ ∑_{n<N} (X(ω⁽ⁿ⁾) − X̄_N)² = (N − 1) S_N²/N` satisfies `E[s_N²] = (N − 1)σ²/N` and
+`V[s_N²] = (N − 1)((N − 1)μ₄ − (N − 3)σ⁴)/N³` (`empVar_eq_mul_sampleVar`). -/
+theorem empVar_mean_variance [IsProbabilityMeasure μ] (ω : ℕ → Ω → Ω₀)
+    (hω : ∀ n, MeasurePreserving (ω n) μ ν) (hind : iIndepFun ω μ) {X : Ω₀ → ℝ}
+    (hXm : Measurable X) (hX4 : Integrable (fun y => X y ^ 4) ν) {N : ℕ} (hN : 2 ≤ N) :
+    μ[fun x => empVar (fun n => X (ω n x)) N] = ((N : ℝ) - 1) / N * variance X ν ∧
+      variance (fun x => empVar (fun n => X (ω n x)) N) μ =
+        ((N : ℝ) - 1) * (((N : ℝ) - 1) * ∫ y, (X y - ∫ z, X z ∂ν) ^ 4 ∂ν -
+          ((N : ℝ) - 3) * variance X ν ^ 2) / (N : ℝ) ^ 3 := by
+  obtain ⟨hmean, hvar⟩ := sampleVar_mean_variance ω hω hind hXm hX4 hN
+  have hfun : (fun x => empVar (fun n => X (ω n x)) N) =
+      fun x => ((N : ℝ) - 1) / N * sampleVar (fun n => X (ω n x)) N := by
+    funext x
+    exact empVar_eq_mul_sampleVar _ hN
+  have hNr : (2 : ℝ) ≤ N := by exact_mod_cast hN
+  have hN1 : (N : ℝ) - 1 ≠ 0 := by linarith
+  have hN0 : (N : ℝ) ≠ 0 := by linarith
+  rw [hfun, integral_const_mul, hmean, variance_const_mul, hvar]
+  refine ⟨rfl, ?_⟩
+  field_simp
+
+/-- **The standard deviation of the biased empirical variance** (Giles 2015, §3.3, p. 23,
+l. 1038–1042: "the standard deviation of the sample variance for a random variable `X` with zero
+mean is approximately `√((κ − 1)/N) E[X²]`").  In the setting of `sampleVar_sd` (`N ≥ 2`
+independent samples of a measurable `X` with `E[X⁴] < ∞`, `V[X] > 0`, central kurtosis `κ`), the
+biased empirical variance `s_N² = (N − 1) S_N²/N` (`empVar`) satisfies, exactly,
+`√V[s_N²] = ((N − 1)/N) √((κ − 1)/N + 2/(N(N − 1))) V[X]`; hence
+`(1 − 1/N) √((κ − 1)/N) V[X] ≤ √V[s_N²]`, and, if `κ > 1`,
+`√V[s_N²] ≤ √((κ − 1)/N) V[X] (1 + 1/((κ − 1)(N − 1)))`: the paper's approximation holds for the
+biased estimate too, with relative error `O(1/N)`. -/
+theorem empVar_sd [IsProbabilityMeasure μ] (ω : ℕ → Ω → Ω₀)
+    (hω : ∀ n, MeasurePreserving (ω n) μ ν) (hind : iIndepFun ω μ) {X : Ω₀ → ℝ}
+    (hXm : Measurable X) (hX4 : Integrable (fun y => X y ^ 4) ν) (hv : 0 < variance X ν)
+    {N : ℕ} (hN : 2 ≤ N) :
+    √(variance (fun x => empVar (fun n => X (ω n x)) N) μ) =
+        ((N : ℝ) - 1) / N *
+          √((kurtosis (fun y => X y - ∫ z, X z ∂ν) ν - 1) / N + 2 / (N * ((N : ℝ) - 1))) *
+          variance X ν ∧
+      (1 - 1 / (N : ℝ)) *
+          (√((kurtosis (fun y => X y - ∫ z, X z ∂ν) ν - 1) / N) * variance X ν) ≤
+        √(variance (fun x => empVar (fun n => X (ω n x)) N) μ) ∧
+      (1 < kurtosis (fun y => X y - ∫ z, X z ∂ν) ν →
+        √(variance (fun x => empVar (fun n => X (ω n x)) N) μ) ≤
+          √((kurtosis (fun y => X y - ∫ z, X z ∂ν) ν - 1) / N) * variance X ν *
+            (1 + 1 / ((kurtosis (fun y => X y - ∫ z, X z ∂ν) ν - 1) * ((N : ℝ) - 1)))) := by
+  obtain ⟨-, hexact, hlow, hup⟩ := sampleVar_sd ω hω hind hXm hX4 hv hN
+  have hNr : (2 : ℝ) ≤ N := by exact_mod_cast hN
+  have hN0 : (N : ℝ) ≠ 0 := by linarith
+  have hc : 0 ≤ ((N : ℝ) - 1) / N := div_nonneg (by linarith) (by positivity)
+  have hc1 : ((N : ℝ) - 1) / N ≤ 1 := by
+    rw [div_le_one (by positivity)]
+    linarith
+  have hfun : (fun x => empVar (fun n => X (ω n x)) N) =
+      fun x => ((N : ℝ) - 1) / N * sampleVar (fun n => X (ω n x)) N := by
+    funext x
+    exact empVar_eq_mul_sampleVar _ hN
+  have hsd : √(variance (fun x => empVar (fun n => X (ω n x)) N) μ) =
+      ((N : ℝ) - 1) / N * √(variance (fun x => sampleVar (fun n => X (ω n x)) N) μ) := by
+    rw [hfun, variance_const_mul, Real.sqrt_mul (sq_nonneg _), Real.sqrt_sq hc]
+  have hS0 : 0 ≤ √(variance (fun x => sampleVar (fun n => X (ω n x)) N) μ) := Real.sqrt_nonneg _
+  refine ⟨by rw [hsd, hexact]; ring, ?_, fun hκ => ?_⟩
+  · rw [hsd, show 1 - 1 / (N : ℝ) = ((N : ℝ) - 1) / N by field_simp]
+    exact mul_le_mul_of_nonneg_left hlow hc
+  · rw [hsd]
+    exact (mul_le_of_le_one_left hS0 hc1).trans (hup hκ)
+
+/-- **"Approximately `√((κ − 1)/N) E[X²]`" for the biased empirical variance** (Giles 2015, §3.3,
+p. 23, l. 1038–1042: "When the number of samples `N` is large, the standard deviation of the
+sample variance for a random variable `X` with zero mean is approximately `√((κ − 1)/N) E[X²]`").
+In the setting of `empVar_sd` (independent samples of a measurable `X` with `E[X⁴] < ∞`) with
+central kurtosis `κ > 1`, the ratio of the standard deviation of the biased empirical variance
+`s_N²` (`empVar`) to `√((κ − 1)/N) V[X]` tends to `1` as `N → ∞` (it lies between `1 − 1/N` and
+`1 + 1/((κ − 1)(N − 1))` for `N ≥ 2`). -/
+theorem tendsto_empVar_sd_div [IsProbabilityMeasure μ] (ω : ℕ → Ω → Ω₀)
+    (hω : ∀ n, MeasurePreserving (ω n) μ ν) (hind : iIndepFun ω μ) {X : Ω₀ → ℝ}
+    (hXm : Measurable X) (hX4 : Integrable (fun y => X y ^ 4) ν)
+    (hκ : 1 < kurtosis (fun y => X y - ∫ z, X z ∂ν) ν) :
+    Tendsto (fun N : ℕ => √(variance (fun x => empVar (fun n => X (ω n x)) N) μ) /
+      (√((kurtosis (fun y => X y - ∫ z, X z ∂ν) ν - 1) / N) * variance X ν)) atTop (𝓝 1) := by
+  have hvpos := variance_pos_of_one_lt_kurtosis hXm hκ
+  set κ := kurtosis (fun y => X y - ∫ z, X z ∂ν) ν with hκdef
+  have hκ1 : 0 < κ - 1 := by linarith
+  have hlim : Tendsto (fun N : ℕ => 1 + 1 / ((κ - 1) * ((N : ℝ) - 1))) atTop (𝓝 1) := by
+    have h1 : Tendsto (fun N : ℕ => (κ - 1) * ((N : ℝ) - 1)) atTop atTop :=
+      Tendsto.const_mul_atTop hκ1 (tendsto_atTop_add_const_right _ (-1)
+        tendsto_natCast_atTop_atTop)
+    have h2 := (tendsto_inv_atTop_zero.comp h1).const_add 1
+    rw [add_zero] at h2
+    refine h2.congr fun N => ?_
+    simp only [Function.comp_apply, one_div]
+  have hlim' : Tendsto (fun N : ℕ => 1 - 1 / (N : ℝ)) atTop (𝓝 1) := by
+    have h := (tendsto_const_nhds (x := (1 : ℝ))).sub tendsto_one_div_atTop_nhds_zero_nat
+    rwa [sub_zero] at h
+  refine tendsto_of_tendsto_of_tendsto_of_le_of_le' hlim' hlim ?_ ?_
+  · filter_upwards [eventually_ge_atTop 2] with N hN
+    obtain ⟨-, hlow, -⟩ := empVar_sd ω hω hind hXm hX4 hvpos hN
+    have hNr : (2 : ℝ) ≤ N := by exact_mod_cast hN
+    have hd : 0 < √((κ - 1) / N) * variance X ν :=
+      mul_pos (Real.sqrt_pos.2 (div_pos hκ1 (by linarith))) hvpos
+    rw [le_div_iff₀ hd]
+    exact hlow
+  · filter_upwards [eventually_ge_atTop 2] with N hN
+    obtain ⟨-, -, hup⟩ := empVar_sd ω hω hind hXm hX4 hvpos hN
+    have hNr : (2 : ℝ) ≤ N := by exact_mod_cast hN
+    have hd : 0 < √((κ - 1) / N) * variance X ν :=
+      mul_pos (Real.sqrt_pos.2 (div_pos hκ1 (by linarith))) hvpos
+    rw [div_le_iff₀ hd, mul_comm]
+    exact hup hκ
 
 end SampleVarMoments
 
