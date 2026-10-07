@@ -417,3 +417,30 @@ Findings and what was done:
   `Bool` (`(PMF.uniformOfFintype Bool).toMeasure`, the same measure `½(δ_true + δ_false)`, with
   Mathlib's probability-measure instance), and the fact that `kinkOuter` is a probability measure
   is the lemma `isProbabilityMeasure_kinkOuter`.  The statements are unchanged.
+
+**Fourteenth round (2026-10-07).** Blind read-backs of the 35 theorems added in round 14:
+`mlmc_confidence_estimated.md` (R5: `MLMCConfidenceEstimated`; 15 theorems),
+`nested_mimc_kink.md` (R6: `NestedMimcKink`; 6) and `lut_asymptotics.md` (R7: `LUTAsymptotics`; 14,
+with the 12 definitions of the module).  All 35 read back as true; none is vacuous and none holds
+only because of a junk value.  The R5 auditor checked the `L¹` bound for the empirical variance by
+exact enumeration (sharp: attained at every `N` by symmetric two-point laws) and simulated the
+coverage of `Y ± 1.96σ̂` (`0.74 → 0.95` as `N` grows).  The R6 auditor proved every hypothesis of
+the rate theorems in Lean for the example and enumerated its MIMC corrections exactly
+(`2^{ℓ₁+ℓ₂} V ≤ 1.1·10⁻⁴` against the stated `19`).  The R7 auditor verified the exact formulas with
+sympy and checked numerically that `Φ⁻¹` satisfies the block hypotheses of the method-1 order
+theorems (the ratio stays in `[0.72, 3.18]`, `2^d d MSE ≈ 1.55`).
+Findings and what was done:
+
+- **`∫ P` without integrability** in the `E[P]` statements: they hold for any constant in its
+  place, as in round 12.  Kept.
+- **`nested_mimc_kink_mean_rate` assumes first-order strong convergence**, stronger than the
+  variance rate's order `½`; the complexity theorem therefore uses the mean bound `|E Y| ≤ √V`
+  (`α = (½, ½)`), as its docstring says.  Kept.
+- **The `(D₃ − 3)⁺` term of Theorem 2's logarithmic exponent** is `ℕ` subtraction, i.e. the
+  positive part, which is what the boundary exponents of `giles_theorem2_boundary` mean.  Kept.
+- **Method 3 merges the cells `{0, 1}`** into one group, and for `d ≤ 1` its values are
+  degenerate; only finitely many terms of the limit are affected.  Kept (documented).
+- **Convergence is slow** (`log(MSE)/d ≈ −log 2 − log d/d`), which the docstrings mention.  Kept.
+- **CI.** The new MIMC proof made the old helper `crossDiff_one` reachable for the prove2.me
+  generator, whose solution file then lacked the `rfl` lemma `crossDiff_zero` used through `simp`;
+  `crossDiff_zero` is now `@[simp]`, like `levelDiff_zero`, so the generator keeps it.
