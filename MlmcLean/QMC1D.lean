@@ -1372,13 +1372,13 @@ Giles' Theorem 1 assumes `γ > 0`, which is not needed here).  There is `K > 0` 
 `mlqmc_complexity_core_of_lt` with `b = a`, exponent `max(1 + (g − a)/a, g/a) = g/a`.  In the
 remaining regimes: for `b < g` and `b < a` the same method gives the exponent
 `max(1 + (g − b)/a, g/a) > g/a` (`mlqmc_complexity_core_of_lt`); for `b = g ≤ a` the optimal
-allocation gives `O(ε⁻¹ |log ε|^{3/2})`, which is not formalised (`mlqmc_complexity_core_of_lt`
-with any `b' < b` gives `O(ε^{−1−(g−b')/a})`).  For comparison, Monte Carlo sampling of the same
-corrections has variances `Var[f_ℓ(U)] ≤ V_ℓ² = O(2^{−2bℓ})`, so Giles' Theorem 1
+allocation gives `O(ε⁻¹ |log ε|^{3/2})`, which is sharp (`mlqmc_boundary_complexity_core`,
+`mlqmc_boundary_cost_lower` in `MlmcLean/MLQMCBoundary.lean`). For comparison, Monte Carlo sampling
+of the same corrections has variances `Var[f_ℓ(U)] ≤ V_ℓ² = O(2^{−2bℓ})`, so Giles' Theorem 1
 (`mlmc_complexity_core`) applies with `β = 2b` and `γ = g` when `b, g > 0` and `a ≥ ½ min(2b, g)`
 (its conditions `β, γ > 0` and `α ≥ ½ min(β, γ)`) and gives cost `O(ε⁻²)` when `2b > g` (in
 particular for `b > g`); the gain `p < 2` over `p = 2` is real exactly when `g < 2a` (for `g = 2a`
-both exponents are `2`).  The paper states no conditions; this is the one-dimensional case with
+both exponents are `2`). The paper states no conditions; this is the one-dimensional case with
 geometric decay of the total variations. -/
 theorem mlqmc_complexity_core {a b g c₁ c₂ c₃ : ℝ} (ha : 0 < a) (hgb : g < b ∨ (a ≤ b ∧ a < g))
     (hc₁ : 0 < c₁) (hc₂ : 0 < c₂) (hc₃ : 0 < c₃) :
@@ -1577,8 +1577,8 @@ such that for every `0 < ε < 1` there are `L` and `N_ℓ ≥ 1` for which the M
 (`mlqmc_complexity`); `max(1 + (g − b)/a, g/a)` when `b < g` (`mlqmc_complexity_of_lt`).  If the
 level errors and costs were exactly `V_ℓ/N_ℓ` and `c₃ 2^{gℓ}`, the two conditions would also be
 necessary: `g ≥ 2a` makes the cost of one point per level `≍ ε^{−g/a}`, and `g ≥ a + b` (so
-`b < g`) makes the optimally allocated main cost `≍ ε^{−1−(g−b)/a}`, with `1 + (g − b)/a ≥ 2`; this
-is not formalised.) -/
+`b < g`) makes the optimally allocated main cost `≍ ε^{−1−(g−b)/a}`, with `1 + (g − b)/a ≥ 2`; the
+first is `mlqmc_finest_level_exponent_optimal` in `MlmcLean/MLQMCBoundary.lean`.) -/
 theorem mlqmc_complexity_lt_two {Ω : Type*} [MeasurableSpace Ω] {μ : Measure Ω} {U : ℕ → Ω → ℝ}
     (hU : ∀ ℓ, MeasurePreserving (U ℓ) μ (volume.restrict (Set.Icc 0 1)))
     (hUind : Pairwise fun i j => IndepFun (U i) (U j) μ) {f : ℕ → ℝ → ℝ}

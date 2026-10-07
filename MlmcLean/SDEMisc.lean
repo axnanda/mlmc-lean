@@ -657,7 +657,8 @@ volatility.  This again leads to numerical instability if a uniform timestep is 
 drift `−S³` and `hS² ≥ 2`, the `n`-th explicit Euler iterate is at least `(hS² − 1)ⁿ|S|` in
 absolute value (at least `2ⁿ|S|` when `hS² ≥ 3`), whereas the solutions of `S′ = −S³` decay
 monotonically to `0`.  The noise-free (drift) part of the scheme only: that the moments of the
-Euler–Maruyama approximations diverge (Hutzenthaler, Jentzen and Kloeden) is not formalised. -/
+Euler–Maruyama approximations diverge (Hutzenthaler, Jentzen and Kloeden) is
+`emCubic_moment_tendsto_atTop` in `MlmcLean/EulerSuperlinear.lean`. -/
 theorem eulerCubic_growth {h S : ℝ} (hS : 2 ≤ h * S ^ 2) (n : ℕ) :
     (h * S ^ 2 - 1) ^ n * |S| ≤ |(eulerDriftStep (fun S => -S ^ 3) h)^[n] S| := by
   have key : ∀ n : ℕ, h * S ^ 2 ≤ h * ((eulerDriftStep (fun S => -S ^ 3) h)^[n] S) ^ 2 ∧
@@ -781,8 +782,9 @@ lemma abs_tamedDriftStep_le {b : ℝ → ℝ} (hb : ∀ S, S * b S ≤ 0) {h : �
 the drift term on each level of approximation when `S_t` is large, to avoid this instability").
 For any drift pointing towards `0`, `S b(S) ≤ 0` (as `b(S) = −S³` of the paper's example), and
 every timestep `h ≥ 0`, the tamed Euler iterates of `S` stay within `max(|S|, 1)`.  Deterministic
-analogue only: the uniform moment bounds of the tamed Euler–Maruyama scheme (Hutzenthaler, Jentzen
-and Kloeden) are not formalised. -/
+analogue only: for the cubic drift the second moment of the tamed Euler–Maruyama scheme is bounded
+uniformly in the timestep (`tamedCubic_second_moment_le` in `MlmcLean/EulerSuperlinear.lean`); the
+general uniform moment bounds of Hutzenthaler, Jentzen and Kloeden are not formalised. -/
 theorem tamedDriftStep_iterate_bounded {b : ℝ → ℝ} (hb : ∀ S, S * b S ≤ 0) {h : ℝ}
     (hh : 0 ≤ h) (S : ℝ) (n : ℕ) : |(tamedDriftStep b h)^[n] S| ≤ max |S| 1 := by
   induction n with
