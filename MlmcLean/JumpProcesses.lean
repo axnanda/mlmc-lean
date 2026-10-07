@@ -1,6 +1,7 @@
 import MlmcLean.GBMPathDependent
 import MlmcLean.ApplicationExtras
 import MlmcLean.BrownianPaths
+import Mathlib.Data.Fin.Tuple.Sort
 
 /-!
 # Jump processes: exponential Lévy Asian options, jump-adapted grids, thinning (Giles 2015, §6)
@@ -31,26 +32,34 @@ coarse steps of the same path, whose increments are the pair sums `Y_{2j} + Y_{2
   (`u = e^{hκ₁}`, `v = e^{hκ₂}`), where `d₁ = −(u − 1)²/2` and `c = −(u − v)²/2` are `O(h²)` and
   `d₂ = O(h)`: the steps have small means and orthogonal fluctuations.
 * `levy_asian_avg_sq_le`, `levy_asian_payoff_sq_le`: **`E[(g(A^f) − g(A^c))²] ≤ K² s₀² C h²`** for a
-  `K`-Lipschitz `g`, with an explicit `C = levyAsianConst κ₁ κ₂ T`, `T = 2nh`: `V_ℓ = O(h_ℓ²)`,
-  `β = 2`.  This is the multilevel correction of the trapezoidal Asian payoff with exact increments.
-* `levy_asian_theorem1`: **Theorem 1 end to end** for level laws `ν_ℓ` of the increments over
-  `h_ℓ = T 2^{−ℓ}` with `ν_{ℓ+1} ∗ ν_{ℓ+1} = ν_ℓ` (a Lévy process; this gives (2.4)): the level
-  expectations converge at the rate `O(2^{−ℓ})` (`α = 1`, from `β = 2`), and the MLMC estimator of
-  their limit has mean square error `< ε²` at cost `O(ε⁻²)` (`β = 2 > γ = 1`).
-* `jumpDiffusion_asian_theorem1`: the same for the exponential jump-diffusion
-  `X_t = bt + σW_t + aN_t` (`N` Poisson, constant jump size `a`), all of whose hypotheses are proved
-  (`jumpDiffLaw_conv`, `integral_exp_mul_jumpDiffLaw`): a model with jumps where Theorem 1 holds
-  with no assumption at all.
+  `K`-Lipschitz `g` (the correction is in `L²`), with an explicit `C = levyAsianConst κ₁ κ₂ T`,
+  `T = 2nh`: `V_ℓ = O(h_ℓ²)`, `β = 2`.  This is the multilevel correction of the trapezoidal Asian
+  payoff with exact increments.
+* `levy_asian_theorem1`: **Theorem 1 end to end** for level laws `ν_ℓ` with
+  `ν_{ℓ+1} ∗ ν_{ℓ+1} = ν_ℓ` (the laws of the increments of a Lévy process over `h_ℓ = T 2^{−ℓ}`, for
+  any horizon `T > 0`; this gives (2.4)) and `∫ e^{2x} dν_0 < ∞`: the level expectations converge to
+  some `P` at the rate `|E[P_ℓ] − P| ≤ c 2^{−ℓ}` (`α = 1`, from `β = 2`), and the MLMC estimator of
+  `P` has mean square error `< ε²` at cost `O(ε⁻²)` (`β = 2 > γ = 1`).
+* `jumpDiffLaw_conv`, `jumpDiffusion_asian_theorem1`: the same for the exponential jump-diffusion
+  `X_t = bt + σW_t + aN_t` (`N` Poisson, constant jump size `a`) with its increments over uniform
+  steps simulated exactly (the §6.2 approach, not the jump-adapted discretisation of §6.1); all
+  hypotheses of `levy_asian_theorem1` are proved (`jumpDiffLaw_conv`,
+  `integral_exp_mul_jumpDiffLaw`): a model with jumps where Theorem 1 holds with no assumption at
+  all.
 
 The discrete-time aspect: the paper's Asian option averages `S` continuously over `[0, T]`, which
 involves the Lévy process between the grid points.  With the trapezoidal approximation of the
 average used here (the paper does not say which quadrature its references use), the correction
 `P_ℓ − P_{ℓ−1}` only involves grid values; the target of Theorem 1 is the limit of the level
 expectations (for a càdlàg Lévy process it is `E[g(T⁻¹ ∫₀ᵀ S_t dt)]`, which is not proved here).  A
-numerical check (Gaussian, Poisson and Merton-type increments, Monte Carlo and the exact moment
-recursion) gives `E[(A^f − A^c)²]/h²` constant in `h`, so the order `h²` is sharp; the constant `C`
-is far from sharp (between 20 and 2·10⁴ times the exact value of `E[(A^f − A^c)²]/(s₀² h²)` in these
-examples, `T = 1`).
+numerical check (Gaussian, Poisson and Merton-type increments; the exact value of `E[(A^f − A^c)²]`
+from a moment recursion and from a double sum, and Monte Carlo) gives `E[(A^f − A^c)²]/h²` constant
+in `h`, so the order `h²` is sharp.  The constant `C` is not: it grows like
+`e^{6T(|κ₁| + |κ₂|)}` and can exceed the exact value of `E[(A^f − A^c)²]/(s₀² h²)` by many orders
+of magnitude.  For illustration, the factor is between 20 and 2·10⁴ for the three models above with
+small `κ` and `T = 1`, but about 2·10⁸ for `σ = 1`, `b = 0` (`κ₁ = 1/2`, `κ₂ = 2`) with `T = 1`,
+2·10²¹ for the same model with `T = 3`, and 3·10¹⁷ for jumps of size `−1/2` at rate `5` with
+`T = 1`.
 
 **§6.1, constant jump rate** (l. 2020–2025: "If the jump activity rate is constant, then for each
 stochastic sample ω the jumps on the coarse and fine paths will occur at the same time, and
@@ -58,19 +67,26 @@ therefore the extension of the multilevel method is straightforward with the coa
 using the same underlying Brownian paths, and the same random variables to determine the jump times
 and strengths").  In the jump-adapted discretisation (l. 2014–2019) the grid of a level is the
 uniform grid with the jump times added (`jumpGrid`).
-* `jumpGrid_coupling`: the jump times lie on both grids and the coarse grid is part of the fine one,
-  so the coarse path's Brownian increments are sums of the fine ones.
+* `jumpGrid_coupling` (a lemma; it holds by construction, both levels using the same jump times):
+  the jump times lie on both grids and the coarse grid is part of the fine one, so the coarse path's
+  Brownian increments are sums of the fine ones.
 * `jumpAdapted_coarse_map_eq`: **conditionally on the jump times** (a fixed finite set merged into
   both grids), the coarse path's increments have exactly the law of independent `N(0, Δt)`
   increments on its own jump-adapted grid (by `unionGridBM_map_eq` of `BrownianPaths.lean`); with
   the same jump strengths for both paths, (2.4) holds.
-* `unionGridBM_map_eq_nat`, `jumpAdapted_map_eq`, `jumpAdapted_2_4`: **random jump times**.  For
-  jump data `R` (times and strengths) independent of the normal variates, and grids that are
-  measurable functions of `R`, (jump data, coarse Brownian increments) has the joint law of (jump
-  data, increments simulated on the coarse grid alone), so every payoff of the jumps and of the
-  coarse path has the expectation of the single-level simulation: (2.4).  The measurability of the
-  jump-adapted grid (the sorted union of the uniform grid and the jump times) as a function of the
-  jump times is assumed, not proved.
+* `unionGridBM_map_eq_nat`, `jumpAdapted_map_eq`, `jumpAdapted_2_4`: **random grids**.  For jump
+  data `R` (times and strengths) independent of the normal variates and any grids that are
+  measurable functions of `R` with monotone values, (jump data, coarse Brownian increments) has the
+  joint law of (jump data, increments simulated on the coarse grid alone), so every payoff of the
+  jumps and of the coarse path has the expectation of the single-level simulation: (2.4).
+* `jumpAdapted_random_map_eq`, `jumpAdapted_random_2_4`: **random jump times**, the instance for the
+  jump-adapted grids.  For a random number `M(R)` of jump times `S(R)_0, S(R)_1, …` (e.g. the jumps
+  of a Poisson process in `[0, T]`), the fine grid `jaGrid h (2n)` is the sorted tuple
+  (`Tuple.sort`) of the uniform times `kh` and the jump times, whose set of values is `jumpGrid`
+  (`image_jaGrid`), the coarse grid `jaGrid (2h) n` is that of the times `k·2h` and the same jump
+  times, and `jaPos` locates the coarse times in the fine grid.  Their measurability in the jump
+  data and their monotonicity are proved, so (2.4) holds with random jump times independent of the
+  Brownian path.
 
 **§6.1, path-dependent jump rate** (l. 2026–2036: the thinning approach, "in which a set of
 candidate jump times is simulated based on the constant upper bound, and then a subset of these are
@@ -125,7 +141,7 @@ lemma levyPath_add_two (y : ℕ → ℝ) (k : ℕ) :
   rw [Finset.sum_range_succ', Finset.sum_range_succ']
   ring
 
-/-- **The fine minus the coarse Asian average** (Giles 2015, §6.2, p. 48, l. 2078–2079: "the
+/-- The fine minus the coarse Asian average (Giles 2015, §6.2, p. 48, l. 2078–2079: "the
 increments of the driving Lévy process for the coarse path can be obtained trivially by summing the
 increments for the fine path").  For `2n` fine steps and the `n` coarse steps of the same path
 (increments `levyPairSum y`), `A_{2n}(y) − A_n(levyPairSum y) = s₀/(2n) G_n(y)` (`levyPairDiffSum`).
@@ -338,7 +354,7 @@ lemma trapPair_moments [IsProbabilityMeasure μ] {X Z : Ω → ℝ} (hX : Measur
     rw [e11, e21, e22]
     ring
 
-/-- **The moment recursion for the difference of the Asian averages** (Giles 2015, §6.2, Table 6.3,
+/-- The moment recursion for the difference of the Asian averages (Giles 2015, §6.2, Table 6.3,
 l. 2057).  Let `Y_0, Y_1, …` be independent with `E e^{Y_i} = u` and `E e^{2Y_i} = v` for every `i`,
 and `A ≥ max(1, v²)`, `B ≥ max(1, u²)`.  Then `G_n ∈ L²`, `|E[G_n]| ≤ n |d₁| Bⁿ` and
 `E[G_n²] ≤ n Aⁿ (d₂ + 2|c| n |d₁| Bⁿ)`, with `d₁ = u − ½ − u²/2`,
@@ -608,7 +624,10 @@ lemma levyAsian_scalar_bound {s₀ h T k E p q : ℝ} {n : ℕ} (hn : 0 < n) (hh
     _ = _ := e3
 
 /-- The constant of the `O(h²)` bound for the exponential-Lévy Asian option (Giles 2015, §6.2,
-Table 6.3, l. 2057): `C(κ₁, κ₂, T) = e^{6Tk} (k/T + k² + T²k⁴)` with `k = |κ₁| + |κ₂|`. -/
+Table 6.3, l. 2057): `C(κ₁, κ₂, T) = e^{6Tk} (k/T + k² + T²k⁴)` with `k = |κ₁| + |κ₂|`.  Only the
+order `h²` of the bound is sharp: `C` is exponential in `Tk` and can exceed the exact value of
+`E[(A^f − A^c)²]/(s₀² h²)` by many orders of magnitude (by a factor 20 to 2·10⁴ for small `κ` and
+`T = 1`, but about 2·10⁸ for `κ₁ = 1/2`, `κ₂ = 2`, `T = 1`, and 2·10²¹ for `T = 3`). -/
 noncomputable def levyAsianConst (κ₁ κ₂ T : ℝ) : ℝ :=
   Real.exp (6 * T * (|κ₁| + |κ₂|)) *
     ((|κ₁| + |κ₂|) / T + (|κ₁| + |κ₂|) ^ 2 + T ^ 2 * (|κ₁| + |κ₂|) ^ 4)
@@ -617,21 +636,23 @@ section Main
 
 variable {Ω : Type*} [MeasurableSpace Ω] {μ : Measure Ω}
 
-/-- `(e^x)² = e^{2x}`. -/
+/-- `(e^x)² = e^{2x}` (Giles 2015, §6.2: the second exponential moment `E e^{2Y} = E[(e^Y)²]` of
+an increment). -/
 lemma exp_sq_eq_exp_two_mul (x : ℝ) : Real.exp x ^ 2 = Real.exp (2 * x) := by
   rw [sq, ← Real.exp_add, two_mul]
 
-/-- **The fine and the coarse Asian averages differ by `O(h)` in mean square** (Giles 2015, §6.2,
-p. 48, Table 6.3, l. 2057: "Asian O(h²) O(h²) O(h²)", for the variance `V_ℓ ≡ V[P_ℓ − P_{ℓ−1}]`
-(l. 2060) of exponential Lévy models whose increments over uniform timesteps are simulated exactly
-(l. 2063–2064) and summed in pairs for the coarse path (l. 2078–2079)).  Let `Y_0, Y_1, …` be
-independent with `E e^{Y_i} = e^{hκ₁}` and `E e^{2Y_i} = e^{hκ₂}` for every `i` (the increments of a
-Lévy process over one fine step `h > 0`; they need not be identically distributed), `n ≥ 1` and
-`T = 2nh`.  The trapezoidal averages of `S = s₀ e^X` over the `2n` fine steps and over the `n`
-coarse steps (built from the pair sums of the same increments) satisfy `E[(A^f − A^c)²] ≤ s₀² C h²`,
-`C = levyAsianConst κ₁ κ₂ T`, which only depends on `κ₁`, `κ₂`, `T`.  Discrete-time analogue: only
-grid values enter (see the module docstring). -/
-theorem levy_asian_avg_sq_le [IsProbabilityMeasure μ] {Y : ℕ → Ω → ℝ}
+/-- **The fine and the coarse Asian averages differ by `O(h)` in root mean square:
+`E[(A^f − A^c)²] = O(h²)`** (Giles 2015, §6.2, p. 48, Table 6.3, l. 2057: "Asian O(h²) O(h²) O(h²)",
+for the variance `V_ℓ ≡ V[P_ℓ − P_{ℓ−1}]` (l. 2060) of exponential Lévy models whose increments over
+uniform timesteps are simulated exactly (l. 2063–2064) and summed in pairs for the coarse path
+(l. 2078–2079)).  Let `Y_0, Y_1, …` be independent with `E e^{Y_i} = e^{hκ₁}` and
+`E e^{2Y_i} = e^{hκ₂}` for every `i` (the increments of a Lévy process over one fine step `h > 0`;
+they need not be identically distributed), `n ≥ 1` and `T = 2nh`.  The trapezoidal averages of
+`S = s₀ e^X` over the `2n` fine steps and over the `n` coarse steps (built from the pair sums of the
+same increments) satisfy `E[(A^f − A^c)²] ≤ s₀² C h²`, `C = levyAsianConst κ₁ κ₂ T`, which only
+depends on `κ₁`, `κ₂`, `T` (the independence of the `Y_i` makes `μ` a probability measure).
+Discrete-time analogue: only grid values enter (see the module docstring). -/
+theorem levy_asian_avg_sq_le {Y : ℕ → Ω → ℝ}
     (hY : ∀ i, Measurable (Y i)) (hind : iIndepFun Y μ) {h κ₁ κ₂ T : ℝ} (hh : 0 < h)
     (h1 : ∀ i, ∫ ω, Real.exp (Y i ω) ∂μ = Real.exp (h * κ₁))
     (h2 : ∀ i, ∫ ω, Real.exp (2 * Y i ω) ∂μ = Real.exp (h * κ₂)) (s₀ : ℝ) {n : ℕ}
@@ -640,6 +661,7 @@ theorem levy_asian_avg_sq_le [IsProbabilityMeasure μ] {Y : ℕ → Ω → ℝ}
       levyAsianTrap s₀ n (levyPairSum (Y · ω))) ^ 2) μ ∧
     ∫ ω, (levyAsianTrap s₀ (2 * n) (Y · ω) - levyAsianTrap s₀ n (levyPairSum (Y · ω))) ^ 2 ∂μ ≤
       s₀ ^ 2 * levyAsianConst κ₁ κ₂ T * h ^ 2 := by
+  have := hind.isProbabilityMeasure
   set k := |κ₁| + |κ₂| with hk
   have hk0 : 0 ≤ k := by positivity
   have h2' : ∀ i, ∫ ω, Real.exp (Y i ω) ^ 2 ∂μ = Real.exp (h * κ₂) := fun i => by
@@ -708,24 +730,27 @@ theorem levy_asian_avg_sq_le [IsProbabilityMeasure μ] {Y : ℕ → Ω → ℝ}
 p. 48, Table 6.3, l. 2057–2060: "Asian O(h²) O(h²) O(h²)", "Numerical analysis convergence rates for
 the multilevel variance `V_ℓ ≡ V[P_ℓ − P_{ℓ−1}]`").  In the setting of `levy_asian_avg_sq_le`, for a
 `K`-Lipschitz payoff `g` of the trapezoidal average (e.g. the Asian call `e^{−rT} max(A − K', 0)`),
-the multilevel correction satisfies `E[(g(A^f) − g(A^c))²] ≤ K² s₀² C h²` and
-`V[g(A^f) − g(A^c)] ≤ K² s₀² C h²`: `β = 2` for every exponential Lévy model with `E e^{2X_t} < ∞`
-(Variance-Gamma, NIG and spectrally negative `α`-stable processes alike, the three columns of the
-table, whenever this exponential moment is finite; without it the Asian call itself need not have a
-finite variance).  The continuously monitored average of the paper is replaced by the trapezoidal
-average of the grid values. -/
-theorem levy_asian_payoff_sq_le [IsProbabilityMeasure μ] {Y : ℕ → Ω → ℝ}
+the multilevel correction `g(A^f) − g(A^c)` is in `L²` and satisfies
+`E[(g(A^f) − g(A^c))²] ≤ K² s₀² C h²` and `V[g(A^f) − g(A^c)] ≤ K² s₀² C h²`: `β = 2` for every
+exponential Lévy model with `E e^{2X_t} < ∞` (Variance-Gamma, NIG and spectrally negative
+`α`-stable processes alike, the three columns of the table, whenever this exponential moment is
+finite; without it the Asian call itself need not have a finite variance).  The continuously
+monitored average of the paper is replaced by the trapezoidal average of the grid values. -/
+theorem levy_asian_payoff_sq_le {Y : ℕ → Ω → ℝ}
     (hY : ∀ i, Measurable (Y i)) (hind : iIndepFun Y μ) {h κ₁ κ₂ T : ℝ} (hh : 0 < h)
     (h1 : ∀ i, ∫ ω, Real.exp (Y i ω) ∂μ = Real.exp (h * κ₁))
     (h2 : ∀ i, ∫ ω, Real.exp (2 * Y i ω) ∂μ = Real.exp (h * κ₂)) {g : ℝ → ℝ} {K : ℝ}
     (hg : ∀ x y, |g x - g y| ≤ K * |x - y|) (s₀ : ℝ) {n : ℕ} (hn : 0 < n)
     (hT : 2 * n * h = T) :
+    MemLp (fun ω => g (levyAsianTrap s₀ (2 * n) (Y · ω)) -
+      g (levyAsianTrap s₀ n (levyPairSum (Y · ω)))) 2 μ ∧
     ∫ ω, (g (levyAsianTrap s₀ (2 * n) (Y · ω)) -
       g (levyAsianTrap s₀ n (levyPairSum (Y · ω)))) ^ 2 ∂μ ≤
       K ^ 2 * s₀ ^ 2 * levyAsianConst κ₁ κ₂ T * h ^ 2 ∧
     variance (fun ω => g (levyAsianTrap s₀ (2 * n) (Y · ω)) -
       g (levyAsianTrap s₀ n (levyPairSum (Y · ω)))) μ ≤
       K ^ 2 * s₀ ^ 2 * levyAsianConst κ₁ κ₂ T * h ^ 2 := by
+  have := hind.isProbabilityMeasure
   obtain ⟨hi, hb⟩ := levy_asian_avg_sq_le hY hind hh h1 h2 s₀ hn hT
   have hpt : ∀ ω, (g (levyAsianTrap s₀ (2 * n) (Y · ω)) -
       g (levyAsianTrap s₀ n (levyPairSum (Y · ω)))) ^ 2 ≤
@@ -743,14 +768,21 @@ theorem levy_asian_payoff_sq_le [IsProbabilityMeasure μ] {Y : ℕ → Ω → �
       _ ≤ K ^ 2 * (s₀ ^ 2 * levyAsianConst κ₁ κ₂ T * h ^ 2) :=
           mul_le_mul_of_nonneg_left hb (sq_nonneg K)
       _ = _ := by ring
-  refine ⟨hsq, ?_⟩
   obtain ⟨-, hgc⟩ := continuous_of_abs_sub_le hg
   have hYm : Measurable fun ω => (Y · ω) := measurable_pi_lambda _ hY
-  have hm : AEStronglyMeasurable (fun ω => g (levyAsianTrap s₀ (2 * n) (Y · ω)) -
-      g (levyAsianTrap s₀ n (levyPairSum (Y · ω)))) μ :=
-    ((hgc.measurable.comp ((measurable_levyAsianTrap s₀ (2 * n)).comp hYm)).sub
+  have hmeas : Measurable (fun ω => g (levyAsianTrap s₀ (2 * n) (Y · ω)) -
+      g (levyAsianTrap s₀ n (levyPairSum (Y · ω)))) :=
+    (hgc.measurable.comp ((measurable_levyAsianTrap s₀ (2 * n)).comp hYm)).sub
       (hgc.measurable.comp (((measurable_levyAsianTrap s₀ n).comp
-        measurable_levyPairSum).comp hYm))).aestronglyMeasurable
+        measurable_levyPairSum).comp hYm))
+  have hm := hmeas.aestronglyMeasurable (μ := μ)
+  have hint : Integrable (fun ω => (g (levyAsianTrap s₀ (2 * n) (Y · ω)) -
+      g (levyAsianTrap s₀ n (levyPairSum (Y · ω)))) ^ 2) μ := by
+    refine (hi.const_mul (K ^ 2)).mono' (hmeas.pow_const 2).aestronglyMeasurable
+      (Filter.Eventually.of_forall fun ω => ?_)
+    rw [Real.norm_eq_abs, abs_of_nonneg (sq_nonneg _)]
+    exact hpt ω
+  refine ⟨(memLp_two_iff_integrable_sq hm).2 hint, hsq, ?_⟩
   refine (variance_le_expectation_sq hm).trans ?_
   simp only [Pi.pow_apply]
   exact hsq
@@ -829,27 +861,30 @@ lemma integral_exp_levels (ν : ℕ → Measure ℝ) [∀ ℓ, IsProbabilityMeas
 process over a set of uniform timesteps … multilevel is still very useful for path-dependent
 financial options such as Asian, lookback and barrier options"; "the increments of the driving Lévy
 process for the coarse path can be obtained trivially by summing the increments for the fine path";
-Table 6.3, l. 2057; Theorem 1 and (2.4), §2.1).  Let `T > 0` and `ν_ℓ` be the law of the increment
-over `h_ℓ = T 2^{−ℓ}` of a Lévy process: `ν_{ℓ+1} ∗ ν_{ℓ+1} = ν_ℓ`, with `∫ e^x dν_0 = e^{Tκ₁}` and
-`∫ e^{2x} dν_0 = e^{Tκ₂}` (the exponential moments on the other levels follow,
-`integral_exp_levels`).  Level `ℓ` uses `2^ℓ` independent increments of law `ν_ℓ` and the payoff
-`P_ℓ = g(A_{2^ℓ})` of the trapezoidal average (`levyAsianTrap`), `g` `K`-Lipschitz; the coarse
-payoff of a level-`(ℓ + 1)` sample uses the pair sums of its increments (`levyPairSum`).  A sample
-is `w = (w_ℓ)_ℓ`, one increment sequence per level (law `⊗_ℓ ν_ℓ^{⊗ℕ}`; level `ℓ` only reads `w_ℓ`),
-the samples are independent, and a level-`ℓ` sample costs `2^ℓ`.  Then `E[P_ℓ]` converges to some
-`P`, and there is `c₄ > 0` such that for every `0 < ε < e⁻¹` there are `L` and `N_ℓ ≥ 1` for which
-the MLMC estimator of `P` has mean square error `< ε²` and cost `∑_{ℓ≤L} N_ℓ 2^ℓ ≤ c₄ ε⁻²`.  No rate
-is assumed: `β = 2` (`levy_asian_payoff_sq_le`), (2.4) (`integral_levyCoarse`) and
-`|E[P_ℓ] − P| = O(2^{−ℓ})` (`α = 1`, from `β = 2` and the telescoping sum) are proved.
-Discrete-time analogue: `P` is the limit of the level expectations; that it equals
-`E[g(T⁻¹ ∫₀ᵀ S_t dt)]` for the continuous-time model is not proved here. -/
+Table 6.3, l. 2057; Theorem 1 and (2.4), §2.1).  Let `ν_ℓ` be probability laws on `ℝ` with
+`ν_{ℓ+1} ∗ ν_{ℓ+1} = ν_ℓ` and `∫ e^{2x} dν_0 < ∞`: the laws of the increments of a Lévy process `X`
+over `h_ℓ = T 2^{−ℓ}`, for a horizon `T > 0`, with `E e^{2X_T} < ∞` (the statement does not involve
+`T`: every horizon gives the same class of level laws; the exponential moments `∫ e^x dν_ℓ` and
+`∫ e^{2x} dν_ℓ` on all levels follow, `integral_exp_levels`).  Level `ℓ` uses `2^ℓ` independent
+increments of law `ν_ℓ` and the payoff `P_ℓ = g(A_{2^ℓ})` of the trapezoidal average
+(`levyAsianTrap`), `g` `K`-Lipschitz; the coarse payoff of a level-`(ℓ + 1)` sample uses the pair
+sums of its increments (`levyPairSum`).  A sample is `w = (w_ℓ)_ℓ`, one increment sequence per level
+(law `⊗_ℓ ν_ℓ^{⊗ℕ}`; level `ℓ` only reads `w_ℓ`), the samples are independent, and a level-`ℓ`
+sample costs `2^ℓ`.  Then `E[P_ℓ]` converges to some `P`, with `|E[P_ℓ] − P| ≤ c 2^{−ℓ}` (`α = 1`,
+from `β = 2` and the telescoping sum), and there is `c₄ > 0` such that for every `0 < ε < e⁻¹`
+there are `L` and `N_ℓ ≥ 1` for which the MLMC estimator of `P` has mean square error `< ε²` and
+cost `∑_{ℓ≤L} N_ℓ 2^ℓ ≤ c₄ ε⁻²`.  No rate is assumed: `β = 2` (`levy_asian_payoff_sq_le`), (2.4)
+(`integral_levyCoarse`) and `α = 1` are proved.  Discrete-time analogue: `P` is the limit of the
+level expectations; that it equals `E[g(T⁻¹ ∫₀ᵀ S_t dt)]` for the continuous-time model is not
+proved here. -/
 theorem levy_asian_theorem1 (ν : ℕ → Measure ℝ) [∀ ℓ, IsProbabilityMeasure (ν ℓ)]
-    (hconv : ∀ ℓ, ν (ℓ + 1) ∗ ν (ℓ + 1) = ν ℓ) {T κ₁ κ₂ : ℝ} (hT : 0 < T)
-    (h1 : ∫ x, Real.exp x ∂ν 0 = Real.exp (T * κ₁))
-    (h2 : ∫ x, Real.exp (2 * x) ∂ν 0 = Real.exp (T * κ₂))
+    (hconv : ∀ ℓ, ν (ℓ + 1) ∗ ν (ℓ + 1) = ν ℓ)
+    (hexp : Integrable (fun x => Real.exp (2 * x)) (ν 0))
     {g : ℝ → ℝ} {K : ℝ} (hg : ∀ x y, |g x - g y| ≤ K * |x - y|) (s₀ : ℝ) :
     ∃ P : ℝ, Filter.Tendsto (fun ℓ => ∫ y, g (levyAsianTrap s₀ (2 ^ ℓ) y)
         ∂(Measure.infinitePi fun _ : ℕ => ν ℓ)) Filter.atTop (nhds P) ∧
+      (∃ c : ℝ, ∀ ℓ : ℕ, |∫ y, g (levyAsianTrap s₀ (2 ^ ℓ) y)
+        ∂(Measure.infinitePi fun _ : ℕ => ν ℓ) - P| ≤ c / 2 ^ ℓ) ∧
       ∃ c₄ : ℝ, 0 < c₄ ∧ ∀ ε : ℝ, 0 < ε → ε < Real.exp (-1) →
         ∃ (L : ℕ) (N : ℕ → ℕ), (∀ ℓ, 0 < N ℓ) ∧
           ∫ x, (∑ ℓ ∈ range (L + 1), blockMean (fineCoarseDiff
@@ -858,7 +893,20 @@ theorem levy_asian_theorem1 (ν : ℕ → Measure ℝ) [∀ ℓ, IsProbabilityMe
               (fun p x => x p) ℓ (N ℓ) x - P) ^ 2
             ∂(Measure.infinitePi fun _ : ℕ × ℕ =>
               Measure.infinitePi fun ℓ => Measure.infinitePi fun _ : ℕ => ν ℓ) < ε ^ 2 ∧
-          ∑ ℓ ∈ range (L + 1), (N ℓ : ℝ) * 2 ^ ℓ ≤ c₄ * ε ^ (-2 : ℝ) := by
+    ∑ ℓ ∈ range (L + 1), (N ℓ : ℝ) * 2 ^ ℓ ≤ c₄ * ε ^ (-2 : ℝ) := by
+  -- the exponential moments of level `0`, written as `e^{Tκ₁}` and `e^{Tκ₂}` with `T = 1`
+  obtain ⟨T, κ₁, κ₂, hT, h1, h2⟩ : ∃ T κ₁ κ₂ : ℝ, 0 < T ∧
+      ∫ x, Real.exp x ∂ν 0 = Real.exp (T * κ₁) ∧
+      ∫ x, Real.exp (2 * x) ∂ν 0 = Real.exp (T * κ₂) := by
+    have hexp1 : Integrable (fun x : ℝ => Real.exp x) (ν 0) := by
+      refine ((memLp_two_iff_integrable_sq
+        Real.continuous_exp.aestronglyMeasurable).2 ?_).integrable one_le_two
+      simp_rw [exp_sq_eq_exp_two_mul]
+      exact hexp
+    refine ⟨1, Real.log (∫ x, Real.exp x ∂ν 0), Real.log (∫ x, Real.exp (2 * x) ∂ν 0), one_pos,
+      ?_, ?_⟩
+    · rw [one_mul, Real.exp_log (integral_exp_pos hexp1)]
+    · rw [one_mul, Real.exp_log (integral_exp_pos hexp)]
   obtain ⟨hK, hgc⟩ := continuous_of_abs_sub_le hg
   -- the level laws `μ ℓ = ν_ℓ^{⊗ℕ}` and the coordinates
   have hev : ∀ ℓ i, MeasurePreserving (fun y : ℕ → ℝ => y i)
@@ -914,7 +962,7 @@ theorem levy_asian_theorem1 (ν : ℕ → Measure ℝ) [∀ ℓ, IsProbabilityMe
       field_simp
       ring
     have h := (levy_asian_payoff_sq_le hYm (hYind (ℓ + 1)) (h := T / 2 ^ (ℓ + 1))
-      (by positivity) (hm1 (ℓ + 1)) (hm2 (ℓ + 1)) hg s₀ (n := 2 ^ ℓ) (by positivity) hTn).1
+      (by positivity) (hm1 (ℓ + 1)) (hm2 (ℓ + 1)) hg s₀ (n := 2 ^ ℓ) (by positivity) hTn).2.1
     rw [pow_succ' 2 ℓ]
     refine h.trans (le_of_eq ?_)
     have e4 : ((2 : ℝ) ^ (ℓ + 1)) ^ 2 = 4 ^ (ℓ + 1) := by
@@ -954,7 +1002,7 @@ theorem levy_asian_theorem1 (ν : ℕ → Measure ℝ) [∀ ℓ, IsProbabilityMe
   have hbias : ∀ ℓ, |a ℓ - P| ≤ M / 2 ^ ℓ := fun ℓ => by
     rw [← Real.dist_eq]
     exact dist_le_of_le_geometric_two_of_tendsto hstep hP ℓ
-  refine ⟨P, hP, ?_⟩
+  refine ⟨P, hP, ⟨M, hbias⟩, ?_⟩
   -- the input space: one sequence of increments for each level
   have hWev : ∀ ℓ, MeasurePreserving (fun w : ℕ → ℕ → ℝ => w ℓ)
       (Measure.infinitePi fun ℓ => Measure.infinitePi fun _ : ℕ => ν ℓ)
@@ -1113,7 +1161,8 @@ lemma integral_exp_mul_jumpDiffLaw (b σ a lam : ℝ) (hlam : 0 ≤ lam) {h : �
     ← Real.exp_add, Real.coe_toNNReal _ (by positivity), Real.coe_toNNReal _ (by positivity)]
   ring_nf
 
-/-- `(A ∗ B) ∗ (C ∗ D) = (A ∗ C) ∗ (B ∗ D)` for s-finite measures on `ℝ`. -/
+/-- `(A ∗ B) ∗ (C ∗ D) = (A ∗ C) ∗ (B ∗ D)` for s-finite measures on `ℝ` (Giles 2015, §6.2:
+regrouping the Gaussian and the Poisson factors of two jump-diffusion increments). -/
 lemma measure_conv_conv_comm (A B C D : Measure ℝ) [SFinite A] [SFinite B] [SFinite C] [SFinite D] :
     (A ∗ B) ∗ (C ∗ D) = (A ∗ C) ∗ (B ∗ D) := by
   rw [Measure.conv_assoc, ← Measure.conv_assoc B, Measure.conv_comm B C, Measure.conv_assoc C,
@@ -1132,9 +1181,12 @@ lemma poissonScaled_conv (a : ℝ) (r₁ r₂ : ℝ≥0) :
 
 /-- **The jump-diffusion increments form a convolution semigroup** (Giles 2015, §6.2, p. 48,
 l. 2078–2079: "the increments of the driving Lévy process for the coarse path can be obtained
-trivially by summing the increments for the fine path"): for `h₁, h₂ ≥ 0` the increment over
-`h₁ + h₂` has the law of the sum of independent increments over `h₁` and `h₂`. -/
-lemma jumpDiffLaw_conv (b σ a lam : ℝ) (hlam : 0 ≤ lam) {h₁ h₂ : ℝ} (hh₁ : 0 ≤ h₁)
+trivially by summing the increments for the fine path").  For the jump-diffusion
+`X_t = bt + σW_t + aN_t` with a Poisson rate `λ ≥ 0` and `h₁, h₂ ≥ 0`, the increment over `h₁ + h₂`
+has the law of the sum of independent increments over `h₁` and `h₂`:
+`jumpDiffLaw b σ a λ h₁ ∗ jumpDiffLaw b σ a λ h₂ = jumpDiffLaw b σ a λ (h₁ + h₂)`, so the pair sums
+of the fine increments are exact coarse increments ((2.4) for `jumpDiffusion_asian_theorem1`). -/
+theorem jumpDiffLaw_conv (b σ a lam : ℝ) (hlam : 0 ≤ lam) {h₁ h₂ : ℝ} (hh₁ : 0 ≤ h₁)
     (hh₂ : 0 ≤ h₂) :
     jumpDiffLaw b σ a lam h₁ ∗ jumpDiffLaw b σ a lam h₂ = jumpDiffLaw b σ a lam (h₁ + h₂) := by
   have := isProbabilityMeasure_poissonScaled a (lam * h₁).toNNReal
@@ -1145,21 +1197,30 @@ lemma jumpDiffLaw_conv (b σ a lam : ℝ) (hlam : 0 ≤ lam) {h₁ h₂ : ℝ} (
     ← Real.toNNReal_add (by positivity) (by positivity), ← mul_add, ← mul_add, ← mul_add]
 
 /-- **Theorem 1 end to end for the Asian option of an exponential jump-diffusion** (Giles 2015,
-§6.1, p. 47, l. 2013–2019, and §6.2, p. 48, l. 2057–2079, Table 6.3; Theorem 1, §2.1).  For the
+§6.1, p. 47, l. 2013–2015: "finite activity jump-diffusion processes, such as in the Merton model",
+here with a constant jump size; §6.2, p. 48, l. 2063–2064: "directly simulate the increments of the
+Lévy process over a set of uniform timesteps (Schoutens 2003), in exactly the same way as one
+simulates Brownian increments", and l. 2078–2079; Table 6.3, l. 2057; Theorem 1, §2.1).  For the
 jump-diffusion `X_t = bt + σW_t + aN_t` (jumps of size `a` at the times of a Poisson process of rate
-`λ ≥ 0`), the price `S = s₀ e^X`, exact increments over the level-`ℓ` steps `h_ℓ = T 2^{−ℓ}`,
-`T > 0` (law `jumpDiffLaw b σ a λ h_ℓ`), and a `K`-Lipschitz payoff `g` of the trapezoidal average,
-the conclusion of `levy_asian_theorem1` holds: the level expectations converge to some `P`, and the
-MLMC estimator of `P` reaches mean square error `< ε²` at cost `O(ε⁻²)`.  Every hypothesis of
-`levy_asian_theorem1` is proved: the convolution property (`jumpDiffLaw_conv`) and the exponential
-moments with `κ₁ = b + σ²/2 + λ(e^a − 1)` and `κ₂ = 2b + 2σ² + λ(e^{2a} − 1)`
+`λ ≥ 0`), the price `S = s₀ e^X`, a horizon `T ≥ 0`, and a `K`-Lipschitz payoff `g` of the
+trapezoidal average, level `ℓ` simulates the exact increments of `X` over the uniform steps
+`h_ℓ = T 2^{−ℓ}` (law `jumpDiffLaw b σ a λ h_ℓ`).  This is the §6.2 approach applied to a
+jump-diffusion, not the jump-adapted Euler–Maruyama or Milstein discretisation of §6.1
+(l. 2014–2019; for its coupling see `jumpAdapted_random_2_4`): the steps do not depend on the jump
+times, and there is no discretisation error between the grid points.  The conclusion of
+`levy_asian_theorem1` holds: the level expectations converge to some `P` at the rate
+`|E[P_ℓ] − P| ≤ c 2^{−ℓ}`, and the MLMC estimator of `P` reaches mean square error `< ε²` at cost
+`O(ε⁻²)`.  Every hypothesis of `levy_asian_theorem1` is proved: the convolution property
+(`jumpDiffLaw_conv`) and `E e^{2X_T} = e^{T(2b + 2σ² + λ(e^{2a} − 1))} < ∞`
 (`integral_exp_mul_jumpDiffLaw`).  As in `levy_asian_theorem1`, `P` is the limit of the level
 expectations (the continuous-time average is not formalised). -/
-theorem jumpDiffusion_asian_theorem1 (b σ a lam : ℝ) (hlam : 0 ≤ lam) {T : ℝ} (hT : 0 < T)
+theorem jumpDiffusion_asian_theorem1 (b σ a lam : ℝ) (hlam : 0 ≤ lam) {T : ℝ} (hT : 0 ≤ T)
     {g : ℝ → ℝ} {K : ℝ} (hg : ∀ x y, |g x - g y| ≤ K * |x - y|) (s₀ : ℝ) :
     ∃ P : ℝ, Filter.Tendsto (fun ℓ => ∫ y, g (levyAsianTrap s₀ (2 ^ ℓ) y)
         ∂(Measure.infinitePi fun _ : ℕ => jumpDiffLaw b σ a lam (T / 2 ^ ℓ))) Filter.atTop
         (nhds P) ∧
+      (∃ c : ℝ, ∀ ℓ : ℕ, |∫ y, g (levyAsianTrap s₀ (2 ^ ℓ) y)
+        ∂(Measure.infinitePi fun _ : ℕ => jumpDiffLaw b σ a lam (T / 2 ^ ℓ)) - P| ≤ c / 2 ^ ℓ) ∧
       ∃ c₄ : ℝ, 0 < c₄ ∧ ∀ ε : ℝ, 0 < ε → ε < Real.exp (-1) →
         ∃ (L : ℕ) (N : ℕ → ℕ), (∀ ℓ, 0 < N ℓ) ∧
           ∫ x, (∑ ℓ ∈ range (L + 1), blockMean (fineCoarseDiff
@@ -1179,16 +1240,11 @@ theorem jumpDiffusion_asian_theorem1 (b σ a lam : ℝ) (hlam : 0 ≤ lam) {T : 
     rw [pow_succ]
     field_simp
     ring
-  have h1 : ∫ x, Real.exp x ∂jumpDiffLaw b σ a lam (T / 2 ^ 0) =
-      Real.exp (T * (b + σ ^ 2 / 2 + lam * (Real.exp a - 1))) := by
-    have h := integral_exp_mul_jumpDiffLaw b σ a lam hlam (h := T / 2 ^ 0) (by positivity) 1
-    simp only [one_mul, one_pow, mul_one, pow_zero, div_one] at h ⊢
-    exact h
-  have h2 : ∫ x, Real.exp (2 * x) ∂jumpDiffLaw b σ a lam (T / 2 ^ 0) =
-      Real.exp (T * (2 * b + 2 * σ ^ 2 + lam * (Real.exp (2 * a) - 1))) := by
-    rw [integral_exp_mul_jumpDiffLaw b σ a lam hlam (by positivity), pow_zero, div_one]
-    ring_nf
-  exact levy_asian_theorem1 (fun ℓ => jumpDiffLaw b σ a lam (T / 2 ^ ℓ)) hconv hT h1 h2 hg s₀
+  have h2 : Integrable (fun x => Real.exp (2 * x)) (jumpDiffLaw b σ a lam (T / 2 ^ 0)) := by
+    refine Integrable.of_integral_ne_zero ?_
+    rw [integral_exp_mul_jumpDiffLaw b σ a lam hlam (by positivity)]
+    exact (Real.exp_pos _).ne'
+  exact levy_asian_theorem1 (fun ℓ => jumpDiffLaw b σ a lam (T / 2 ^ ℓ)) hconv h2 hg s₀
 
 /-! ### §6.1: the Brownian path on grids of any length -/
 
@@ -1216,13 +1272,16 @@ lemma map_prodMk_eq_of_map_eq {α β γ : Type*} [MeasurableSpace α] [Measurabl
   rw [e1, e2, ← Measure.map_apply hΦa hsa, ← Measure.map_apply hΨa hsa, h a]
 
 /-- **The Brownian increments of a path on a union grid have the single-level law, for grids of any
-length** (Giles 2015, §5.6, p. 44, l. 1926–1929, and §6.1, p. 47, l. 2020–2025, conditionally on the
-jump times).  With `Z ~ N(0,1)^{⊗ℕ}` (`stdNormalSeq`), a monotone union grid `u` and monotone
-indices `τ` of the times `t_j = u_{τ(j)}` of one path, the increments `W(t_{j+1}) − W(t_j)`, `j ∈ ℕ`
-(`unionGridBM`), have the law of the increments `√(t_{j+1} − t_j) Z_j` simulated on the path's own
-grid.  Unlike in `unionGridBM_map_eq` the number of steps is not part of the type (a finite grid is
-extended by constant times, which give zero increments), so the grids may depend on random jump
-times (`jumpAdapted_map_eq`). -/
+length** (Giles 2015, §5.6, p. 44, l. 1926–1929: "The underlying Brownian path needs to be sampled
+at a set of times which are the union of the simulation times used by the coarse and fine path. The
+independent Brownian increments can be simulated for each time interval, and summed to give `W(t)`
+at the required times"; in §6.1, p. 47, l. 2020–2025, the grids also contain the jump times).  With
+`Z ~ N(0,1)^{⊗ℕ}` (`stdNormalSeq`), a monotone union grid `u` and monotone indices `τ` of the times
+`t_j = u_{τ(j)}` of one path, the increments `W(t_{j+1}) − W(t_j)`, `j ∈ ℕ` (`unionGridBM`), have
+the law of the increments `√(t_{j+1} − t_j) Z_j` simulated on the path's own grid.  Unlike in
+`unionGridBM_map_eq` the number of steps is not part of the type (a finite grid is extended by
+constant times, which give zero increments), so the grids may depend on random jump times
+(`jumpAdapted_map_eq`). -/
 theorem unionGridBM_map_eq_nat {u : ℕ → ℝ} (hu : Monotone u) {τ : ℕ → ℕ} (hτ : Monotone τ) :
     stdNormalSeq.map (fun z (j : ℕ) => unionGridBM u z (τ (j + 1)) - unionGridBM u z (τ j)) =
       stdNormalSeq.map (fun z j => Real.sqrt (u (τ (j + 1)) - u (τ j)) * z j) := by
@@ -1295,12 +1354,15 @@ lemma jumpGrid_coarse_subset (h : ℝ) (n : ℕ) (J : Finset ℝ) :
 lemma subset_jumpGrid (h : ℝ) (N : ℕ) (J : Finset ℝ) : J ⊆ jumpGrid h N J :=
   Finset.subset_union_right
 
-/-- **The jumps occur at the same times on the coarse and the fine path** (Giles 2015, §6.1, p. 47,
+/-- The jumps occur at the same times on the coarse and the fine path (Giles 2015, §6.1, p. 47,
 l. 2020–2022: "for each stochastic sample ω the jumps on the coarse and fine paths will occur at the
 same time").  The jump times `J` lie on the fine grid (step `h`, `2n` steps) and on the coarse grid
 (step `2h`, `n` steps), and the coarse grid is part of the fine one, so the Brownian increments of
-the coarse path are sums of those of the fine path. -/
-theorem jumpGrid_coupling (h : ℝ) (n : ℕ) (J : Finset ℝ) :
+the coarse path are sums of those of the fine path.  This holds by construction: both levels use
+the same jump times `J` (`subset_jumpGrid`), and `k · 2h = (2k) · h` (`jumpGrid_coarse_subset`).
+The paper's point, that with a constant rate the jump times do not depend on the path (unlike with
+thinning), is built into the model, not proved. -/
+lemma jumpGrid_coupling (h : ℝ) (n : ℕ) (J : Finset ℝ) :
     J ⊆ jumpGrid h (2 * n) J ∧ J ⊆ jumpGrid (2 * h) n J ∧
       jumpGrid (2 * h) n J ⊆ jumpGrid h (2 * n) J :=
   ⟨subset_jumpGrid h (2 * n) J, subset_jumpGrid (2 * h) n J, jumpGrid_coarse_subset h n J⟩
@@ -1324,7 +1386,8 @@ lemma gridSeq_mono (F : Finset ℝ) {K : ℕ} (hF : F.card = K + 1) : Monotone (
     simp only [Fin.mk_le_mk]
     exact min_le_min_right _ hij)
 
-/-- For `C ⊆ F`, `gridIdx` is the inverse of the enumeration of `F` at the times of `C`. -/
+/-- For `C ⊆ F`, `gridIdx` is the inverse of the enumeration of `F` at the times of `C` (Giles 2015,
+§6.1). -/
 lemma gridIdx_eq {C F : Finset ℝ} (hCF : C ⊆ F) {Kc Kf : ℕ} (hC : C.card = Kc + 1)
     (hF : F.card = Kf + 1) (c : Fin (Kc + 1)) :
     gridIdx C F hC c = ((F.orderIsoOfFin hF).symm
@@ -1364,7 +1427,7 @@ fine grid (`unionGridBM` with the enumeration `gridSeq` of the fine grid), and t
 their sums over its own steps.  Then the coarse increments have the law of the increments
 `√Δt^c Z_j` simulated on the coarse jump-adapted grid alone, which is the level below: with the same
 jump times and strengths for both paths, (2.4) `E[P^f_ℓ] = E[P^c_ℓ]` holds conditionally on the jump
-times. -/
+times.  For random jump times see `jumpAdapted_random_2_4`. -/
 theorem jumpAdapted_coarse_map_eq {Ω : Type*} [MeasurableSpace Ω] {μ : Measure Ω}
     {Z : ℕ → Ω → ℝ} (hZ : iIndepFun Z μ) (hZ1 : ∀ i, HasLaw (Z i) (gaussianReal 0 1) μ)
     (h : ℝ) (n : ℕ) (J : Finset ℝ) {Kc Kf : ℕ} (hC : (jumpGrid (2 * h) n J).card = Kc + 1)
@@ -1408,28 +1471,46 @@ lemma measurable_grid_data {u : E → ℕ → ℝ} (hum : Measurable u) {κ : E 
     measurable_from_prod_countable_left fun k => (measurable_pi_apply k).comp hum
   exact hG.comp (measurable_id.prodMk hκ)
 
-/-- **Jump-adapted grids with random jump times: the coarse path has the single-level law**
+/-- A law equal to `stdNormalSeq` is the image of a probability measure under an a.e.-measurable
+map (Giles 2015, §6.1: the normal variates driving the Brownian path): if `μ.map Z = stdNormalSeq`,
+then `Z` is a.e.-measurable (otherwise the image would be `0`) and `μ` is a probability measure. -/
+lemma aemeasurable_of_map_eq_stdNormalSeq {Ω : Type*} [MeasurableSpace Ω] {μ : Measure Ω}
+    {Z : Ω → ℕ → ℝ} (hZlaw : μ.map Z = stdNormalSeq) :
+    AEMeasurable Z μ ∧ IsProbabilityMeasure μ := by
+  have hZ : AEMeasurable Z μ := by
+    by_contra hZ
+    have h1 : stdNormalSeq (Set.univ : Set (ℕ → ℝ)) = 1 := measure_univ
+    rw [← hZlaw, Measure.map_of_not_aemeasurable hZ] at h1
+    simp at h1
+  refine ⟨hZ, ⟨?_⟩⟩
+  have h1 : μ.map Z Set.univ = 1 := by
+    rw [hZlaw]
+    exact measure_univ
+  rwa [Measure.map_apply_of_aemeasurable hZ MeasurableSet.univ, Set.preimage_univ] at h1
+
+/-- **Random grids independent of the Brownian path: the coarse path has the single-level law**
 (Giles 2015, §6.1, p. 47, l. 2020–2025: "If the jump activity rate is constant, then for each
 stochastic sample ω the jumps on the coarse and fine paths will occur at the same time, and
 therefore the extension of the multilevel method is straightforward with the coarse and fine paths
 using the same underlying Brownian paths, and the same random variables to determine the jump times
 and strengths").  The jump data `R` (jump times and strengths of a constant-rate jump process, with
 values in a measurable space `E`) is independent of the standard normal variates `Z`
-(`μ.map Z = stdNormalSeq`) that drive the Brownian path.  The union grid `u(R)` (for jump-adapted
-grids: the fine grid, which contains the coarse one) and the indices `τ(R)` of the coarse times in
-it are measurable functions of `R`, with monotone values.  Then (jump data, coarse Brownian
-increments obtained by summing the union-grid increments) has the joint law of (jump data,
-increments `√Δt Z_j` simulated on the coarse grid alone).  The measurability of the jump-adapted
-grid as a function of the jump times is a hypothesis here. -/
+(`μ.map Z = stdNormalSeq`, which makes `μ` a probability measure and `Z` a.e.-measurable) that
+drive the Brownian path.  The union grid `u(R)` (for jump-adapted grids: the fine grid, which
+contains the coarse one) and the indices `τ(R)` of the coarse times in it are measurable functions
+of `R`, with monotone values.  Then (jump data, coarse Brownian increments obtained by summing the
+union-grid increments) has the joint law of (jump data, increments `√Δt Z_j` simulated on the
+coarse grid alone).  For the jump-adapted grids these hypotheses are proved in
+`jumpAdapted_random_map_eq`. -/
 theorem jumpAdapted_map_eq {Ω : Type*} [MeasurableSpace Ω] {μ : Measure Ω}
-    [IsProbabilityMeasure μ] {R : Ω → E} {Z : Ω → ℕ → ℝ} (hR : Measurable R) (hZ : Measurable Z)
-    (hZlaw : μ.map Z = stdNormalSeq) (hRZ : IndepFun R Z μ) {u : E → ℕ → ℝ} {τ : E → ℕ → ℕ}
-    (hum : Measurable u) (hτm : Measurable τ) (hu : ∀ r, Monotone (u r))
-    (hτ : ∀ r, Monotone (τ r)) :
+    {R : Ω → E} {Z : Ω → ℕ → ℝ} (hR : Measurable R) (hZlaw : μ.map Z = stdNormalSeq)
+    (hRZ : IndepFun R Z μ) {u : E → ℕ → ℝ} {τ : E → ℕ → ℕ} (hum : Measurable u)
+    (hτm : Measurable τ) (hu : ∀ r, Monotone (u r)) (hτ : ∀ r, Monotone (τ r)) :
     μ.map (fun ω => (R ω, fun j => unionGridBM (u (R ω)) (Z ω) (τ (R ω) (j + 1)) -
         unionGridBM (u (R ω)) (Z ω) (τ (R ω) j))) =
       μ.map (fun ω => (R ω, fun j =>
         Real.sqrt (u (R ω) (τ (R ω) (j + 1)) - u (R ω) (τ (R ω) j)) * Z ω j)) := by
+  obtain ⟨hZ, hμ⟩ := aemeasurable_of_map_eq_stdNormalSeq hZlaw
   have hΦ : Measurable (Function.uncurry fun (r : E) (z : ℕ → ℝ) (j : ℕ) =>
       unionGridBM (u r) z (τ r (j + 1)) - unionGridBM (u r) z (τ r j)) :=
     measurable_pi_lambda _ fun j =>
@@ -1445,8 +1526,8 @@ theorem jumpAdapted_map_eq {Ω : Type*} [MeasurableSpace Ω] {μ : Measure Ω}
     exact (h1.sub h2).sqrt.mul ((measurable_pi_apply j).comp measurable_snd)
   have hjoint : μ.map (fun ω => (R ω, Z ω)) = (μ.map R).prod stdNormalSeq := by
     rw [← hZlaw]
-    exact (indepFun_iff_map_prod_eq_prod_map_map hR.aemeasurable hZ.aemeasurable).1 hRZ
-  have hRZm : Measurable fun ω => (R ω, Z ω) := hR.prodMk hZ
+    exact (indepFun_iff_map_prod_eq_prod_map_map hR.aemeasurable hZ).1 hRZ
+  have hRZm : AEMeasurable (fun ω => (R ω, Z ω)) μ := hR.aemeasurable.prodMk hZ
   have hΦ' : Measurable fun p : E × (ℕ → ℝ) => (p.1, fun j =>
       unionGridBM (u p.1) p.2 (τ p.1 (j + 1)) - unionGridBM (u p.1) p.2 (τ p.1 j)) :=
     measurable_fst.prodMk hΦ
@@ -1457,54 +1538,385 @@ theorem jumpAdapted_map_eq {Ω : Type*} [MeasurableSpace Ω] {μ : Measure Ω}
         unionGridBM (u (R ω)) (Z ω) (τ (R ω) j)))
       = (μ.map (fun ω => (R ω, Z ω))).map (fun p => (p.1, fun j =>
           unionGridBM (u p.1) p.2 (τ p.1 (j + 1)) - unionGridBM (u p.1) p.2 (τ p.1 j))) := by
-        rw [Measure.map_map hΦ' hRZm]
+        rw [AEMeasurable.map_map_of_aemeasurable hΦ'.aemeasurable hRZm]
         rfl
     _ = (μ.map (fun ω => (R ω, Z ω))).map (fun p => (p.1, fun j =>
           Real.sqrt (u p.1 (τ p.1 (j + 1)) - u p.1 (τ p.1 j)) * p.2 j)) := by
         rw [hjoint]
         exact map_prodMk_eq_of_map_eq _ _ hΦ hΨ fun r => unionGridBM_map_eq_nat (hu r) (hτ r)
     _ = _ := by
-        rw [Measure.map_map hΨ' hRZm]
+        rw [AEMeasurable.map_map_of_aemeasurable hΨ'.aemeasurable hRZm]
         rfl
 
-/-- **(2.4) for jump-adapted discretisations with a constant jump rate** (Giles 2015, §6.1, p. 47,
-l. 2020–2025, with (2.4), §2.1: "`E[P^f_ℓ] = E[P^c_ℓ]`").  In the setting of `jumpAdapted_map_eq`,
-for every measurable payoff `F(r, ΔW)` of the jump data and of the Brownian increments of the coarse
-path (for instance an Euler–Maruyama or Milstein path between the jumps, the jumps simulated exactly
-from `r`), the coarse approximation of a level-`(ℓ + 1)` sample has the expectation of the level-`ℓ`
-approximation simulated on its own grid: `E[F(R, ΔW^c)] = E[F(R, √Δt Z)]`.  The two laws agree, so
-`F` is integrable in one simulation iff in the other. -/
+/-- **(2.4) for random grids independent of the Brownian path** (Giles 2015, §6.1, p. 47,
+l. 2020–2025, with (2.4), §2.1, p. 8, l. 378–382: "Provided we maintain the identity
+`E[P^f_ℓ] = E[P^c_ℓ]` so that the expectation on level `ℓ` is the same for the two
+approximations").  In the setting of `jumpAdapted_map_eq`, for every measurable payoff `F(r, ΔW)` of
+the jump data and of the Brownian increments of the coarse path (for instance an Euler–Maruyama or
+Milstein path between the jumps, the jumps simulated exactly from `r`), the coarse approximation of
+a level-`(ℓ + 1)` sample is integrable iff the level-`ℓ` approximation simulated on its own grid is,
+and they have the same expectation: `E[F(R, ΔW^c)] = E[F(R, √Δt Z)]`.  For the jump-adapted grids
+see `jumpAdapted_random_2_4`. -/
 theorem jumpAdapted_2_4 {Ω : Type*} [MeasurableSpace Ω] {μ : Measure Ω}
-    [IsProbabilityMeasure μ] {R : Ω → E} {Z : Ω → ℕ → ℝ} (hR : Measurable R) (hZ : Measurable Z)
-    (hZlaw : μ.map Z = stdNormalSeq) (hRZ : IndepFun R Z μ) {u : E → ℕ → ℝ} {τ : E → ℕ → ℕ}
-    (hum : Measurable u) (hτm : Measurable τ) (hu : ∀ r, Monotone (u r))
-    (hτ : ∀ r, Monotone (τ r)) {F : E → (ℕ → ℝ) → ℝ} (hF : Measurable (Function.uncurry F)) :
+    {R : Ω → E} {Z : Ω → ℕ → ℝ} (hR : Measurable R) (hZlaw : μ.map Z = stdNormalSeq)
+    (hRZ : IndepFun R Z μ) {u : E → ℕ → ℝ} {τ : E → ℕ → ℕ} (hum : Measurable u)
+    (hτm : Measurable τ) (hu : ∀ r, Monotone (u r)) (hτ : ∀ r, Monotone (τ r))
+    {F : E → (ℕ → ℝ) → ℝ} (hF : Measurable (Function.uncurry F)) :
+    (Integrable (fun ω => F (R ω) (fun j => unionGridBM (u (R ω)) (Z ω) (τ (R ω) (j + 1)) -
+        unionGridBM (u (R ω)) (Z ω) (τ (R ω) j))) μ ↔
+      Integrable (fun ω => F (R ω) (fun j =>
+        Real.sqrt (u (R ω) (τ (R ω) (j + 1)) - u (R ω) (τ (R ω) j)) * Z ω j)) μ) ∧
     ∫ ω, F (R ω) (fun j => unionGridBM (u (R ω)) (Z ω) (τ (R ω) (j + 1)) -
         unionGridBM (u (R ω)) (Z ω) (τ (R ω) j)) ∂μ =
       ∫ ω, F (R ω) (fun j =>
         Real.sqrt (u (R ω) (τ (R ω) (j + 1)) - u (R ω) (τ (R ω) j)) * Z ω j) ∂μ := by
-  have h := jumpAdapted_map_eq hR hZ hZlaw hRZ hum hτm hu hτ
-  have hm1 : Measurable fun ω => (R ω, fun j => unionGridBM (u (R ω)) (Z ω) (τ (R ω) (j + 1)) -
-      unionGridBM (u (R ω)) (Z ω) (τ (R ω) j)) := by
-    refine hR.prodMk (measurable_pi_lambda _ fun j => ?_)
-    exact ((measurable_unionGridBM_data hum ((measurable_pi_apply (j + 1)).comp hτm)).comp
-      (hR.prodMk hZ)).sub ((measurable_unionGridBM_data hum
-        ((measurable_pi_apply j).comp hτm)).comp (hR.prodMk hZ))
-  have hm2 : Measurable fun ω => (R ω, fun j =>
-      Real.sqrt (u (R ω) (τ (R ω) (j + 1)) - u (R ω) (τ (R ω) j)) * Z ω j) := by
-    refine hR.prodMk (measurable_pi_lambda _ fun j => ?_)
-    have h1 := (measurable_grid_data hum ((measurable_pi_apply (j + 1)).comp hτm)).comp hR
-    have h2 := (measurable_grid_data hum ((measurable_pi_apply j).comp hτm)).comp hR
-    exact (h1.sub h2).sqrt.mul ((measurable_pi_apply j).comp hZ)
+  have h := jumpAdapted_map_eq hR hZlaw hRZ hum hτm hu hτ
+  have hRZm : AEMeasurable (fun ω => (R ω, Z ω)) μ :=
+    hR.aemeasurable.prodMk (aemeasurable_of_map_eq_stdNormalSeq hZlaw).1
+  have hm1 : AEMeasurable (fun ω => (R ω, fun j =>
+      unionGridBM (u (R ω)) (Z ω) (τ (R ω) (j + 1)) -
+        unionGridBM (u (R ω)) (Z ω) (τ (R ω) j))) μ := by
+    refine Measurable.comp_aemeasurable (f := fun ω => (R ω, Z ω))
+      (g := fun p : E × (ℕ → ℝ) => (p.1, fun j =>
+        unionGridBM (u p.1) p.2 (τ p.1 (j + 1)) - unionGridBM (u p.1) p.2 (τ p.1 j))) ?_ hRZm
+    exact measurable_fst.prodMk (measurable_pi_lambda _ fun j =>
+      (measurable_unionGridBM_data hum ((measurable_pi_apply (j + 1)).comp hτm)).sub
+        (measurable_unionGridBM_data hum ((measurable_pi_apply j).comp hτm)))
+  have hm2 : AEMeasurable (fun ω => (R ω, fun j =>
+      Real.sqrt (u (R ω) (τ (R ω) (j + 1)) - u (R ω) (τ (R ω) j)) * Z ω j)) μ := by
+    refine Measurable.comp_aemeasurable (f := fun ω => (R ω, Z ω))
+      (g := fun p : E × (ℕ → ℝ) => (p.1, fun j =>
+        Real.sqrt (u p.1 (τ p.1 (j + 1)) - u p.1 (τ p.1 j)) * p.2 j)) ?_ hRZm
+    refine measurable_fst.prodMk (measurable_pi_lambda _ fun j => ?_)
+    have h1 : Measurable fun p : E × (ℕ → ℝ) => u p.1 (τ p.1 (j + 1)) :=
+      (measurable_grid_data hum ((measurable_pi_apply (j + 1)).comp hτm)).comp measurable_fst
+    have h2 : Measurable fun p : E × (ℕ → ℝ) => u p.1 (τ p.1 j) :=
+      (measurable_grid_data hum ((measurable_pi_apply j).comp hτm)).comp measurable_fst
+    exact (h1.sub h2).sqrt.mul ((measurable_pi_apply j).comp measurable_snd)
+  have i1 := integrable_map_measure (g := Function.uncurry F) hF.aestronglyMeasurable hm1
+  have i2 := integrable_map_measure (g := Function.uncurry F) hF.aestronglyMeasurable hm2
+  rw [h] at i1
+  refine ⟨i1.symm.trans i2, ?_⟩
   calc _ = ∫ p, Function.uncurry F p ∂(μ.map fun ω => (R ω, fun j =>
           unionGridBM (u (R ω)) (Z ω) (τ (R ω) (j + 1)) -
             unionGridBM (u (R ω)) (Z ω) (τ (R ω) j))) :=
-        (integral_map hm1.aemeasurable hF.aestronglyMeasurable).symm
+        (integral_map hm1 hF.aestronglyMeasurable).symm
     _ = ∫ p, Function.uncurry F p ∂(μ.map fun ω => (R ω, fun j =>
           Real.sqrt (u (R ω) (τ (R ω) (j + 1)) - u (R ω) (τ (R ω) j)) * Z ω j)) := by rw [h]
-    _ = _ := integral_map hm2.aemeasurable hF.aestronglyMeasurable
+    _ = _ := integral_map hm2 hF.aestronglyMeasurable
 
 end JumpAdapted
+
+/-! ### §6.1: jump-adapted grids with random jump times -/
+
+/-- The times of a jump-adapted grid before sorting (Giles 2015, §6.1, p. 47, l. 2014–2019: "a
+jump-adapted discretisation … in which the Brownian diffusion between each jump is approximated
+using an Euler-Maruyama or Milstein approximation"): the `N + 1` uniform times `k h`, `k ≤ N`,
+followed by the `m` jump times `s_0, …, s_{m−1}`. -/
+noncomputable def jaTimes (h : ℝ) (N m : ℕ) (s : ℕ → ℝ) (i : Fin (N + 1 + m)) : ℝ :=
+  if (i : ℕ) ≤ N then (i : ℝ) * h else s (i - (N + 1))
+
+/-- The jump-adapted grid with `m` jump times (Giles 2015, §6.1, p. 47, l. 2014–2019): the
+`N + 1 + m` times `jaTimes h N m s` in increasing order (`Tuple.sort`), `t_0 ≤ ⋯ ≤ t_{N+m}`,
+extended by `t_i = t_{N+m}` for `i > N + m`, as `unionGridBM` takes a grid.  Its set of values is
+`jumpGrid h N {s_0, …, s_{m−1}}` (`image_jaGrid`).  A jump at a uniform time, or two equal jump
+times, give a repeated time: a step of length `0`, whose Brownian increment is `0`. -/
+noncomputable def jaGrid (h : ℝ) (N m : ℕ) (s : ℕ → ℝ) (i : ℕ) : ℝ :=
+  jaTimes h N m s (Tuple.sort (jaTimes h N m s) ⟨min i (N + m), by omega⟩)
+
+/-- Where the unsorted coarse times lie among the unsorted fine times (Giles 2015, §6.1,
+l. 2020–2022: the coarse grid is part of the fine one): the coarse uniform time `k · 2h` is the
+fine uniform time `(2k) h`, and the `t`-th jump time is the `t`-th jump time of the fine grid. -/
+def jaCoarseIdx (n m : ℕ) (i : Fin (n + 1 + m)) : Fin (2 * n + 1 + m) :=
+  ⟨if (i : ℕ) ≤ n then 2 * i else i + n, by split_ifs <;> omega⟩
+
+/-- The position of the `j`-th time of the coarse jump-adapted grid (step `2h`, `n` uniform steps)
+in the fine jump-adapted grid (step `h`, `2n` uniform steps) with the same `m` jump times `s`
+(Giles 2015, §6.1, l. 2020–2025: the coarse path's Brownian increments are sums of the fine ones),
+constant for `j ≥ n + m`; `jaGrid h (2n) m s (jaPos h n m s j) = jaGrid (2h) n m s j`
+(`jaGrid_jaPos`). -/
+noncomputable def jaPos (h : ℝ) (n m : ℕ) (s : ℕ → ℝ) (j : ℕ) : ℕ :=
+  ((Tuple.sort (jaTimes h (2 * n) m s)).symm
+    (jaCoarseIdx n m (Tuple.sort (jaTimes (2 * h) n m s) ⟨min j (n + m), by omega⟩)) : ℕ)
+
+/-- The coarse times are fine times (Giles 2015, §6.1, l. 2020–2022): `(2k) h = k (2h)`, and the
+jump times are the same. -/
+lemma jaTimes_coarseIdx (h : ℝ) (n m : ℕ) (s : ℕ → ℝ) (i : Fin (n + 1 + m)) :
+    jaTimes h (2 * n) m s (jaCoarseIdx n m i) = jaTimes (2 * h) n m s i := by
+  have hv : ((jaCoarseIdx n m i : Fin (2 * n + 1 + m)) : ℕ) =
+      if (i : ℕ) ≤ n then 2 * (i : ℕ) else (i : ℕ) + n := rfl
+  unfold jaTimes
+  rw [hv]
+  by_cases hi : (i : ℕ) ≤ n
+  · rw [if_pos hi, if_pos hi, if_pos (by omega)]
+    push_cast
+    ring
+  · rw [if_neg hi, if_neg hi, if_neg (by omega)]
+    congr 1
+    omega
+
+/-- The embedding of the coarse times into the fine ones preserves their order (Giles 2015, §6.1).
+-/
+lemma jaCoarseIdx_strictMono (n m : ℕ) : StrictMono (jaCoarseIdx n m) := by
+  intro i j hij
+  have h' : (i : ℕ) < j := hij
+  show (jaCoarseIdx n m i : ℕ) < jaCoarseIdx n m j
+  simp only [jaCoarseIdx]
+  split_ifs <;> omega
+
+/-- The jump-adapted grid is increasing (Giles 2015, §6.1). -/
+lemma jaGrid_mono (h : ℝ) (N m : ℕ) (s : ℕ → ℝ) : Monotone (jaGrid h N m s) := fun _ _ hij =>
+  Tuple.monotone_sort (jaTimes h N m s) (Fin.mk_le_mk.2 (min_le_min_right _ hij))
+
+/-- The positions of the coarse times in the fine grid increase strictly (Giles 2015, §6.1): two
+coarse times in the wrong order would be equal, and the order of equal times in `Tuple.sort`
+follows their indices, which `jaCoarseIdx` preserves. -/
+lemma jaPos_aux_strictMono (h : ℝ) (n m : ℕ) (s : ℕ → ℝ) :
+    StrictMono fun j : Fin (n + 1 + m) => (Tuple.sort (jaTimes h (2 * n) m s)).symm
+      (jaCoarseIdx n m (Tuple.sort (jaTimes (2 * h) n m s) j)) := by
+  set F := jaTimes h (2 * n) m s with hF
+  set C := jaTimes (2 * h) n m s with hC
+  set σf := Tuple.sort F with hσf
+  set σc := Tuple.sort C with hσc
+  have hFC : ∀ i, F (jaCoarseIdx n m i) = C i := jaTimes_coarseIdx h n m s
+  obtain ⟨hFm, hFt⟩ := Tuple.eq_sort_iff.1 hσf
+  obtain ⟨hCm, hCt⟩ := Tuple.eq_sort_iff.1 hσc
+  intro j j' hjj'
+  by_contra hle'
+  have hle : σf.symm (jaCoarseIdx n m (σc j')) ≤ σf.symm (jaCoarseIdx n m (σc j)) :=
+    not_lt.1 hle'
+  have hp : σf (σf.symm (jaCoarseIdx n m (σc j))) = jaCoarseIdx n m (σc j) :=
+    σf.apply_symm_apply _
+  have hp' : σf (σf.symm (jaCoarseIdx n m (σc j'))) = jaCoarseIdx n m (σc j') :=
+    σf.apply_symm_apply _
+  have v1 : C (σc j) ≤ C (σc j') := hCm hjj'.le
+  have v2 := hFm hle
+  simp only [Function.comp_apply, hp, hp', hFC] at v2
+  have veq : C (σc j) = C (σc j') := le_antisymm v1 v2
+  have hι : jaCoarseIdx n m (σc j) < jaCoarseIdx n m (σc j') :=
+    jaCoarseIdx_strictMono n m (hCt j j' hjj' veq)
+  rcases hle.lt_or_eq with hlt | heq
+  · have := hFt _ _ hlt (by rw [hp, hp', hFC, hFC]; exact veq.symm)
+    rw [hp, hp'] at this
+    exact absurd hι (not_lt.2 this.le)
+  · exact absurd (σf.symm.injective heq) hι.ne'
+
+/-- The positions of the coarse times in the fine grid increase (Giles 2015, §6.1). -/
+lemma jaPos_mono (h : ℝ) (n m : ℕ) (s : ℕ → ℝ) : Monotone (jaPos h n m s) := fun _ _ hij =>
+  (jaPos_aux_strictMono h n m s).monotone (Fin.mk_le_mk.2 (min_le_min_right _ hij))
+
+/-- The `jaPos h n m s j`-th fine time is the `j`-th coarse time (Giles 2015, §6.1,
+l. 2020–2022). -/
+lemma jaGrid_jaPos (h : ℝ) (n m : ℕ) (s : ℕ → ℝ) (j : ℕ) :
+    jaGrid h (2 * n) m s (jaPos h n m s j) = jaGrid (2 * h) n m s j := by
+  unfold jaGrid jaPos
+  set x := (Tuple.sort (jaTimes h (2 * n) m s)).symm
+    (jaCoarseIdx n m (Tuple.sort (jaTimes (2 * h) n m s) ⟨min j (n + m), by omega⟩)) with hx
+  have e : (⟨min (x : ℕ) (2 * n + m), by omega⟩ : Fin (2 * n + 1 + m)) = x :=
+    Fin.ext (min_eq_left (by have := x.2; omega))
+  rw [e, hx, Equiv.apply_symm_apply, jaTimes_coarseIdx]
+
+/-- The time of the jump-adapted grid at the sorted position of an unsorted time is that time
+(Giles 2015, §6.1). -/
+lemma jaGrid_symm (h : ℝ) (N m : ℕ) (s : ℕ → ℝ) (i : Fin (N + 1 + m)) :
+    jaGrid h N m s ((Tuple.sort (jaTimes h N m s)).symm i) = jaTimes h N m s i := by
+  unfold jaGrid
+  set x := (Tuple.sort (jaTimes h N m s)).symm i with hx
+  have e : (⟨min (x : ℕ) (N + m), by omega⟩ : Fin (N + 1 + m)) = x :=
+    Fin.ext (min_eq_left (by have := x.2; omega))
+  rw [e, hx, Equiv.apply_symm_apply]
+
+/-- The sorted tuple `jaGrid h N m s` enumerates the jump-adapted grid `jumpGrid h N J` of the jump
+times `J = {s_0, …, s_{m−1}}` (Giles 2015, §6.1, l. 2014–2019): its values at `0, …, N + m` are
+exactly the uniform times `k h`, `k ≤ N`, and the jump times. -/
+lemma image_jaGrid (h : ℝ) (N m : ℕ) (s : ℕ → ℝ) :
+    (range (N + m + 1)).image (jaGrid h N m s) = jumpGrid h N ((range m).image s) := by
+  ext x
+  simp only [Finset.mem_image, Finset.mem_range, jumpGrid, Finset.mem_union]
+  constructor
+  · rintro ⟨i, -, rfl⟩
+    unfold jaGrid
+    set k := Tuple.sort (jaTimes h N m s) ⟨min i (N + m), by omega⟩
+    unfold jaTimes
+    by_cases hk : (k : ℕ) ≤ N
+    · rw [if_pos hk]
+      exact Or.inl ⟨k, by omega, rfl⟩
+    · rw [if_neg hk]
+      exact Or.inr ⟨k - (N + 1), by omega, rfl⟩
+  · rintro (⟨k, hk, rfl⟩ | ⟨t, ht, rfl⟩)
+    · refine ⟨(Tuple.sort (jaTimes h N m s)).symm ⟨k, by omega⟩, by omega, ?_⟩
+      rw [jaGrid_symm]
+      unfold jaTimes
+      rw [if_pos (by simp only; omega)]
+    · refine ⟨(Tuple.sort (jaTimes h N m s)).symm ⟨N + 1 + t, by omega⟩, by omega, ?_⟩
+      rw [jaGrid_symm]
+      unfold jaTimes
+      rw [if_neg (by simp only; omega)]
+      congr 1
+      simp only
+      omega
+
+/-- The set of data for which `Tuple.sort` returns a given permutation is measurable (Giles 2015,
+§6.1: the jump-adapted grid depends measurably on the jump times).  By `Tuple.eq_sort_iff` it is
+cut out by finitely many comparisons of the coordinates. -/
+lemma measurableSet_sort_eq {E : Type*} [MeasurableSpace E] {N : ℕ} {F : E → Fin N → ℝ}
+    (hF : ∀ i, Measurable fun r => F r i) (π : Equiv.Perm (Fin N)) :
+    MeasurableSet {r | Tuple.sort (F r) = π} := by
+  have e : {r | Tuple.sort (F r) = π} =
+      (⋂ a, ⋂ b, {r | a ≤ b → F r (π a) ≤ F r (π b)}) ∩
+        ⋂ a, ⋂ b, {r | a < b → F r (π a) = F r (π b) → π a < π b} := by
+    ext r
+    simp only [Set.mem_ofPred_eq, Set.mem_inter_iff, Set.mem_iInter]
+    rw [eq_comm, Tuple.eq_sort_iff]
+    rfl
+  rw [e]
+  refine (MeasurableSet.iInter fun a => MeasurableSet.iInter fun b => ?_).inter
+    (MeasurableSet.iInter fun a => MeasurableSet.iInter fun b => ?_)
+  · by_cases hab : a ≤ b
+    · simpa only [hab, true_implies] using measurableSet_le (hF (π a)) (hF (π b))
+    · simp only [hab, false_implies, Set.ofPred_true, MeasurableSet.univ]
+  · by_cases hab : a < b
+    · by_cases hπ : π a < π b
+      · simp only [hπ, implies_true, Set.ofPred_true, MeasurableSet.univ]
+      · have := (measurableSet_eq_fun (hF (π a)) (hF (π b))).compl
+        simpa only [hab, hπ, true_implies, imp_false, Set.compl_ofPred] using this
+    · simp only [hab, false_implies, Set.ofPred_true, MeasurableSet.univ]
+
+/-- A function of measurable data and of the permutation that sorts them is measurable (Giles 2015,
+§6.1): it is measurable on each of the finitely many measurable pieces where the permutation is
+constant (`measurableSet_sort_eq`). -/
+lemma measurable_comp_sort {E β : Type*} [MeasurableSpace E] [MeasurableSpace β] {N : ℕ}
+    {F : E → Fin N → ℝ} (hF : ∀ i, Measurable fun r => F r i)
+    {G : Equiv.Perm (Fin N) → E → β} (hG : ∀ π, Measurable (G π)) :
+    Measurable fun r => G (Tuple.sort (F r)) r := by
+  intro B hB
+  have e : (fun r => G (Tuple.sort (F r)) r) ⁻¹' B =
+      ⋃ π : Equiv.Perm (Fin N), {r | Tuple.sort (F r) = π} ∩ G π ⁻¹' B := by
+    ext r
+    simp only [Set.mem_preimage, Set.mem_iUnion, Set.mem_inter_iff, Set.mem_ofPred_eq]
+    exact ⟨fun h => ⟨_, rfl, h⟩, fun ⟨π, hπ, h⟩ => hπ ▸ h⟩
+  rw [e]
+  exact MeasurableSet.iUnion fun π => (measurableSet_sort_eq hF π).inter (hG π hB)
+
+/-- Each unsorted time is a measurable function of the jump times (Giles 2015, §6.1). -/
+lemma measurable_jaTimes (h : ℝ) (N m : ℕ) (i : Fin (N + 1 + m)) :
+    Measurable fun s : ℕ → ℝ => jaTimes h N m s i := by
+  unfold jaTimes
+  split_ifs
+  · exact measurable_const
+  · exact measurable_pi_apply _
+
+/-- The jump-adapted grid is a measurable function of the number and the times of the jumps (Giles
+2015, §6.1). -/
+lemma measurable_jaGrid (h : ℝ) (N : ℕ) : Measurable fun p : ℕ × (ℕ → ℝ) =>
+    fun i => jaGrid h N p.1 p.2 i := by
+  refine measurable_pi_lambda _ fun i => ?_
+  refine measurable_from_prod_countable_right fun m => ?_
+  exact measurable_comp_sort (measurable_jaTimes h N m)
+    (G := fun π s => jaTimes h N m s (π ⟨min i (N + m), by omega⟩))
+    fun π => measurable_jaTimes h N m _
+
+/-- The positions of the coarse times in the fine grid are measurable functions of the number and
+the times of the jumps (Giles 2015, §6.1). -/
+lemma measurable_jaPos (h : ℝ) (n : ℕ) : Measurable fun p : ℕ × (ℕ → ℝ) =>
+    fun j => jaPos h n p.1 p.2 j := by
+  refine measurable_pi_lambda _ fun j => ?_
+  refine measurable_from_prod_countable_right fun m => ?_
+  refine measurable_comp_sort (measurable_jaTimes h (2 * n) m)
+    (G := fun π s => ((π.symm (jaCoarseIdx n m (Tuple.sort (jaTimes (2 * h) n m s)
+      ⟨min j (n + m), by omega⟩))) : ℕ)) fun π => ?_
+  exact measurable_comp_sort (measurable_jaTimes (2 * h) n m)
+    (G := fun π' _ => ((π.symm (jaCoarseIdx n m (π' ⟨min j (n + m), by omega⟩))) : ℕ))
+    fun _ => measurable_const
+
+/-- The jump-adapted grid of random jump data is measurable (Giles 2015, §6.1). -/
+lemma measurable_jaGrid_of {E : Type*} [MeasurableSpace E] {M : E → ℕ} {S : E → ℕ → ℝ}
+    (hM : Measurable M) (hS : Measurable S) (h : ℝ) (N : ℕ) :
+    Measurable fun r => jaGrid h N (M r) (S r) := by
+  have h1 := (measurable_jaGrid h N).comp (hM.prodMk hS)
+  exact h1
+
+/-- The positions of the coarse times of random jump data are measurable (Giles 2015, §6.1). -/
+lemma measurable_jaPos_of {E : Type*} [MeasurableSpace E] {M : E → ℕ} {S : E → ℕ → ℝ}
+    (hM : Measurable M) (hS : Measurable S) (h : ℝ) (n : ℕ) :
+    Measurable fun r => jaPos h n (M r) (S r) := by
+  have h1 := (measurable_jaPos h n).comp (hM.prodMk hS)
+  exact h1
+
+/-- The Brownian increments of the coarse path over its jump-adapted grid, obtained by summing those
+of the fine path (Giles 2015, §6.1, l. 2020–2025, and §5.6, l. 1926–1929):
+`W(t^c_{j+1}) − W(t^c_j)`, where `W` is the union-grid path (`unionGridBM`) on the fine grid
+`jaGrid h (2n) m s` driven by the normal variates `z`, and `t^c_j = jaGrid (2h) n m s j` is its
+`jaPos h n m s j`-th time. -/
+noncomputable def jaCoarseInc (h : ℝ) (n m : ℕ) (s z : ℕ → ℝ) (j : ℕ) : ℝ :=
+  unionGridBM (jaGrid h (2 * n) m s) z (jaPos h n m s (j + 1)) -
+    unionGridBM (jaGrid h (2 * n) m s) z (jaPos h n m s j)
+
+/-- The Brownian increments `√(t_{j+1} − t_j) z_j` simulated directly on the jump-adapted grid
+`t = jaGrid h N m s` (Giles 2015, §6.1, l. 2014–2019: the increments that the Euler–Maruyama or
+Milstein approximation between the jumps uses). -/
+noncomputable def jaOwnInc (h : ℝ) (N m : ℕ) (s z : ℕ → ℝ) (j : ℕ) : ℝ :=
+  Real.sqrt (jaGrid h N m s (j + 1) - jaGrid h N m s j) * z j
+
+/-- **Jump-adapted MLMC with a constant jump rate and random jump times: the coarse path has the
+single-level law** (Giles 2015, §6.1, p. 47, l. 2020–2025: "If the jump activity rate is constant,
+then for each stochastic sample ω the jumps on the coarse and fine paths will occur at the same
+time, and therefore the extension of the multilevel method is straightforward with the coarse and
+fine paths using the same underlying Brownian paths, and the same random variables to determine the
+jump times and strengths").  The jump data `R` (values in a measurable space `E`, e.g. the arrival
+times and strengths of the jumps of a Poisson process) is independent of the standard normal
+variates `Z` (`μ.map Z = stdNormalSeq`); `M(R)` is the number of jumps and
+`S(R)_0, …, S(R)_{M(R)−1}` their times (`M`, `S` measurable).  A level-`(ℓ + 1)` sample uses the
+fine jump-adapted grid `jaGrid h (2n) M(R) S(R)` (step `h`, `2n` uniform steps and the jump times;
+as a set, `jumpGrid h (2n) J`, `image_jaGrid`) with its Brownian increments `√Δt Z_i`, and the
+coarse path on `jaGrid (2h) n M(R) S(R)`, the jump-adapted grid of level `ℓ`, with the summed
+increments `jaCoarseInc`.  Then (jump data, coarse Brownian increments) has the joint law of
+(jump data, increments `jaOwnInc (2h) n` simulated on the level-`ℓ` grid alone).  This is
+`jumpAdapted_map_eq` for the jump-adapted grids, whose measurability in the jump data
+(`measurable_jaGrid_of`, `measurable_jaPos_of`, through `Tuple.sort`) and monotonicity
+(`jaGrid_mono`, `jaPos_mono`) are proved; the jump times need not lie in `[0, T]` or be distinct.
+-/
+theorem jumpAdapted_random_map_eq {E : Type*} [MeasurableSpace E] {Ω : Type*}
+    [MeasurableSpace Ω] {μ : Measure Ω} {R : Ω → E} {Z : Ω → ℕ → ℝ} (hR : Measurable R)
+    (hZlaw : μ.map Z = stdNormalSeq) (hRZ : IndepFun R Z μ) {M : E → ℕ} {S : E → ℕ → ℝ}
+    (hM : Measurable M) (hS : Measurable S) (h : ℝ) (n : ℕ) :
+    μ.map (fun ω => (R ω, jaCoarseInc h n (M (R ω)) (S (R ω)) (Z ω))) =
+      μ.map (fun ω => (R ω, jaOwnInc (2 * h) n (M (R ω)) (S (R ω)) (Z ω))) := by
+  have h1 := jumpAdapted_map_eq hR hZlaw hRZ (measurable_jaGrid_of hM hS h (2 * n))
+    (measurable_jaPos_of hM hS h n) (fun _ => jaGrid_mono _ _ _ _) (fun _ => jaPos_mono _ _ _ _)
+  have e : ∀ r j, jaGrid h (2 * n) (M r) (S r) (jaPos h n (M r) (S r) j) =
+      jaGrid (2 * h) n (M r) (S r) j := fun r j => jaGrid_jaPos h n _ _ j
+  simp only [e] at h1
+  unfold jaCoarseInc jaOwnInc
+  exact h1
+
+/-- **(2.4) for jump-adapted MLMC with a constant jump rate and random jump times** (Giles 2015,
+§6.1, p. 47, l. 2020–2025, with (2.4), §2.1, p. 8, l. 378–382: "Provided we maintain the identity
+`E[P^f_ℓ] = E[P^c_ℓ]` so that the expectation on level `ℓ` is the same for the two
+approximations").  In the setting of `jumpAdapted_random_map_eq`, let `F(r, ΔW)` be a measurable
+payoff of the jump data and of the Brownian increments of a path on the coarse grid (e.g. an
+Euler–Maruyama or Milstein path between the jumps, the jumps simulated exactly from `r`).  The
+coarse payoff `F(R, jaCoarseInc …)` of a level-`(ℓ + 1)` sample is integrable iff the level-`ℓ`
+payoff `F(R, jaOwnInc (2h) n …)`, simulated on its own grid, is, and they have the same
+expectation: `E[P^c_{ℓ+1}] = E[P^f_ℓ]`, with random jump times independent of the Brownian path.
+-/
+theorem jumpAdapted_random_2_4 {E : Type*} [MeasurableSpace E] {Ω : Type*}
+    [MeasurableSpace Ω] {μ : Measure Ω} {R : Ω → E} {Z : Ω → ℕ → ℝ} (hR : Measurable R)
+    (hZlaw : μ.map Z = stdNormalSeq) (hRZ : IndepFun R Z μ) {M : E → ℕ} {S : E → ℕ → ℝ}
+    (hM : Measurable M) (hS : Measurable S) (h : ℝ) (n : ℕ) {F : E → (ℕ → ℝ) → ℝ}
+    (hF : Measurable (Function.uncurry F)) :
+    (Integrable (fun ω => F (R ω) (jaCoarseInc h n (M (R ω)) (S (R ω)) (Z ω))) μ ↔
+      Integrable (fun ω => F (R ω) (jaOwnInc (2 * h) n (M (R ω)) (S (R ω)) (Z ω))) μ) ∧
+    ∫ ω, F (R ω) (jaCoarseInc h n (M (R ω)) (S (R ω)) (Z ω)) ∂μ =
+      ∫ ω, F (R ω) (jaOwnInc (2 * h) n (M (R ω)) (S (R ω)) (Z ω)) ∂μ := by
+  have h1 := jumpAdapted_2_4 hR hZlaw hRZ (measurable_jaGrid_of hM hS h (2 * n))
+    (measurable_jaPos_of hM hS h n) (fun _ => jaGrid_mono _ _ _ _) (fun _ => jaPos_mono _ _ _ _)
+    hF
+  have e : ∀ r j, jaGrid h (2 * n) (M r) (S r) (jaPos h n (M r) (S r) j) =
+      jaGrid (2 * h) n (M r) (S r) j := fun r j => jaGrid_jaPos h n _ _ j
+  simp only [e] at h1
+  unfold jaCoarseInc jaOwnInc
+  exact h1
 
 /-! ### §6.1: thinning with a path-dependent jump rate and the change of measure -/
 
@@ -1580,8 +1992,11 @@ lemma thinLaw_sum_eq_one (m : ℕ) : ∀ p : Fin m → (Fin m → Bool) → ℝ,
     simp_rw [key, h0, ← Finset.mul_sum, hsum]
     simp
 
-/-- **The thinning law is a probability law** (Giles 2015, §6.1, p. 47, l. 2026–2030).  If every
-acceptance probability `p_i(a) ∈ [0, 1]` only depends on the earlier decisions `a_j`, `j < i`, then
+/-- **The thinning law is a probability law** (Giles 2015, §6.1, p. 47, l. 2026–2030: "If there is
+a known upper bound to the jump rate, then one can use the 'thinning' approach of Glasserman and
+Merener (2004) in which a set of candidate jump times is simulated based on the constant upper
+bound, and then a subset of these are selected to be real jumps").  If every acceptance probability
+`p_i(a) ∈ [0, 1]` only depends on the earlier decisions `a_j`, `j < i` (a path-dependent rate), then
 `P_p(a) ≥ 0` and `∑_a P_p(a) = 1`: `thinLaw p` is the law of the sequentially sampled decisions, and
 the sums in `thinning_lr_unbiased` are expectations. -/
 theorem thinLaw_isProb {m : ℕ} {p : Fin m → (Fin m → Bool) → ℝ}
