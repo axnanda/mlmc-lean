@@ -30,12 +30,10 @@ Reference: M.B. Giles, *Multilevel Monte Carlo methods*, Acta Numerica 24 (2015)
   steps `N_ℓ` is `O(2^{γ'ℓ})` for every `γ' > 0` (condition (iv)).  The paper attributes the decay
   to `N_ℓ − N_{ℓ−1}`; it is in fact exponential in `N_{ℓ−1}` (see the docstring).
 
-**Not formalised.**  The remark of §5.2, p. 36, that with the conditional expectation "there is
-zero variance on the coarsest level … because there is only one timestep on the coarsest level,
-and therefore the conditional expectation is taken immediately and every sample gives the same
-payoff", is not stated: the payoff on level `0` is then a function of the deterministic initial
-value, a constant, whose variance is `0` (Mathlib's `condExp_bot'` for the conditional expectation
-given the trivial σ-algebra); there is nothing specific to MLMC to prove.
+**Elsewhere.**  The remark of §5.2, p. 36, that with the conditional expectation "there is zero
+variance on the coarsest level … because there is only one timestep on the coarsest level, and
+therefore the conditional expectation is taken immediately and every sample gives the same
+payoff", is `digital_smoothing_level_zero` in `MlmcLean.SDEDigital`.
 -/
 
 open MeasureTheory ProbabilityTheory Finset Filter Topology

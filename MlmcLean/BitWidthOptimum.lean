@@ -44,9 +44,9 @@ solutions of (35) minimise the Lagrangian; this file studies the level cost (34)
   (`strictConvexOn_bitLevelCost`), and its minimiser on a closed convex set is unique
   (`existsUnique_isMinOn_bitLevelCost`).  With additions (34) need not be convex
   (`not_convexOn_bitLevelCost`).  Numerically (not proved here), the function of `λ` of Figure 3
-  is not convex in general, which contradicts the paper's remark, and with additions the
-  minimiser need not be unique (see the docstrings of `not_convexOn_bitLevelCost` and
-  `existsUnique_isMinOn_bitLevelCost`).
+  need not be convex for other parameters than the paper's, so convexity cannot be taken for
+  granted, and with additions the minimiser need not be unique (see the docstrings of
+  `not_convexOn_bitLevelCost` and `existsUnique_isMinOn_bitLevelCost`).
 -/
 
 open Finset Filter Topology
@@ -799,10 +799,11 @@ For one variable with `E[x̄²] = 12`, `e = 0`, `M = M' = 1` and `V_ℓ = C_ℓ 
 does not claim convexity in the bit-widths: its remark "Although we do not prove it formally we
 can see that the resulting function is convex which ensures the existence of an optimum" (p. 12)
 concerns the function of `λ` plotted in Figure 3, (34) at the solution of (35), on a logarithmic
-`λ` axis.  That function is not convex in general either, which does contradict the remark
-(numerically, not proved here): on the `log λ` axis of Figure 3, for two variables with variance
-factors `E[x̄_i²] 4^{e_i}/12 = 0.0250113` and `173.236`, `M = (2, 1)`, `M' = (20, 10)`,
-`V_ℓ = 1`, `C_ℓ = 252.344`, it is concave for `2.2·10⁻⁹ ≤ λ ≤ 2.6·10⁻⁷`, where the bit-widths
+`λ` axis.  That function need not be convex either for other parameters than the paper's (the
+remark concerns the plotted example), as numerical examples show (not proved here): on the
+`log λ` axis of Figure 3, for two variables with variance factors
+`E[x̄_i²] 4^{e_i}/12 = 0.0250113` and `173.236`, `M = (2, 1)`, `M' = (20, 10)`, `V_ℓ = 1`,
+`C_ℓ = 252.344`, it is concave for `2.2·10⁻⁹ ≤ λ ≤ 2.6·10⁻⁷`, where the bit-widths
 lie between 6 and 16; on a linear `λ` axis it fails to be convex even without additions (one
 variable, `E[x̄²] 4^e/12 = 1895.1`, `M = 2`, `M' = 0`, `V_ℓ = 1`, `C_ℓ = 4.87055`: concave near
 `λ = 0.29`, `d = 4.9`).  The existence of an optimum does not need convexity

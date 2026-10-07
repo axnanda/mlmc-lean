@@ -383,8 +383,8 @@ Lean statement or to the reason it is not formalised. The deviations of the new 
 * **Optimal bit-widths (HG25 §6.1, p. 12; `BitWidthOptimum.lean`, round 16).** The paper says
   "we can see that the resulting function is convex which ensures the existence of an optimum",
   the function being the λ-function of Figure 3. Existence holds without convexity (continuity and
-  coercivity of (34) in relaxed bit-widths). The λ-function is not convex in general (numerical
-  examples in the module docstring, not formalised); (34) itself is strictly convex in the
+  coercivity of (34) in relaxed bit-widths). For other parameters than the paper's the λ-function
+  need not be convex (numerical examples in the module docstring, not formalised); (34) itself is strictly convex in the
   bit-widths without additions, but not in general. Bit-widths are real, not integers.
 * **The elliptic example (G15 §7.1; `EllipticFD.lean`, round 16).** The paper leaves the scheme and
   the computation of `P_ℓ` unspecified; the Lean reading is the standard flux-form central
@@ -408,6 +408,21 @@ Lean statement or to the reason it is not formalised. The deviations of the new 
 * **Brownian paths (`BrownianPaths.lean`, round 17).** Union grids are deterministic (the adaptive
   grids of §5.6 depend on the path); time reversal is proved for the finite-dimensional laws
   (`IsPreBrownianReal`), not for path continuity.
+* **The digital option for GBM (`GBMDigital.lean`, round 18).** The rates proved are those the
+  mean-square strong error gives (`h^{1/3}` for Euler–Maruyama, `h^{2/3}` for Milstein), not the
+  paper's `O(h^{1/2})` and `O(h)`, which need `L^p` strong errors; the exponent is the best mean
+  square gives (`digital_mismatch_exponent_sharp`).  The kurtosis bounds use the raw fourth moment
+  (the paper's definition is for zero-mean `X`).  The law equality for the smoothed coarse payoff is
+  for autonomous coefficients `a(S)`, `b(S)`.
+* **Tau-leaping against the exact chain (`TauLeapingExact.lean`, round 18).** The exact chain is
+  built by uniformisation for bounded propensities `λ ≤ Λ` and identified by its master equation;
+  the weak rate is for bounded payoffs.  The pathwise SSA coupling of §8 is not formalised.
+* **`Φ⁻¹` (`InverseNormal.lean`, round 18).** `normCDFInv` is defined on all of `ℝ` with a junk value
+  outside `(0, 1)`; every statement about it restricts to `(0, 1)` or to a uniform variable.  The
+  dyadic lower bound is proved for the cells `k ≥ 2` (the paper's claims need one such cell).
+* **End-to-end instances (`EndToEndInstances.lean`, round 18).** GBM with refinement factor `M`
+  uses `α = ½ log₂ M` from the strong error, not the paper's weak order `log₂ M`; §10.2's rounding
+  is Mathlib's `round` (ties up) or truncation to a grid.
 
 ### Corrections to the papers recorded elsewhere, collected
 
@@ -430,7 +445,7 @@ Lean statement or to the reason it is not formalised. The deviations of the new 
 | G15 | §7.3, p. 54 | `√h Z_n` | `√k Z_n` | `ApplicationExtras.lean`, `spdeStep_eq_milstein` |
 | G15 | §9.1, p. 58; §9.2, p. 60 | `−1/(4N_ℓ)` | `−1/(8N_ℓ)` | `antithetic_quadratic`, `NestedRates.lean` |
 | G15 | §9.2, p. 59 | `O(ε⁻²(log ε)⁻²)` | `O(ε⁻²(log ε)²)` | `nested_complexity` |
-| G15 | §9.2, p. 60 | MIMC with a kink: `β₁ = β₂ = 1.5`, cost `O(ε⁻²)` | false: no `β₁, β₂` with `2β₁ + β₂ > 3` (counterexample); the true rates are `β₁ = β₂ = 1` | `nested_mimc_kink_rates_false`, `nested_mimc_kink_variance_rate` |
+| G15 | §9.2, p. 60 | MIMC with a kink: `β₁ = β₂ = 1.5`, cost `O(ε⁻²)` | false: no `β₁, β₂` with `2β₁ + β₂ > 3` (counterexample); the isotropic rates `β₁ = β₂ = 1` hold and are sharp along `ℓ₁ = 2ℓ₂` | `nested_mimc_kink_rates_false`, `nested_mimc_kink_variance_rate` |
 | G15 | §10.1, p. 61 | decay exponential in `N_ℓ − N_{ℓ−1}` | in `N_{ℓ−1}` | `variance_levels_le`, `markov_linear_levels` |
 | G15 | §10.2, p. 62 | `U_n = (I_n + ½)/I_max` | `(I_n + ½)/(I_max + 1)` (the printed `U_n` exceeds `1` for `I_n = I_max`) | — |
 | HG25 | (21) | `E[δx²] = 4^{e−d−1}` | `≤` | `integral_sq_roundError_le` |
@@ -438,10 +453,11 @@ Lean statement or to the reason it is not formalised. The deviations of the new 
 | HG25 | (27) | derived under perfect correlation | holds for every joint law | `variance_linearised_corr` |
 | HG25 | (28) | factor `1/12` on the MSE term | no factor `1/12` | `variance_extended_indep` |
 | HG25 | Fig. 3, 5 captions | `√(Ṽ/V)` | `√(V^Δ/V)` | `HaasGilesRemarks.lean` |
+| HG25 | §3, p. 4 | "the inverse normal CDF `Φ`" | `Φ⁻¹` (`Φ` is the CDF, as in §3.1) | `normCDF`, `normCDFInv` |
 | HG25 | §3, p. 4 | "The first and the third methods … PWC on uniform intervals … The second … PWL on dyadic intervals" | the numbering does not match §3.1–§3.4, where method 3 is the dyadic one | `LUTLimits.lean`, `LUTAsymptotics.lean` (follow §3.1–§3.4) |
 | HG25 | §3.4, p. 7 | dyadic tables: "the MSE is reduced only in the interval closest to 0" | only asymptotically; the error on every dyadic interval decreases with `d` | `dyadic_groupMSE_eq`, `groupMSE_odd_quadratic` |
 | HG25 | §6.1, p. 12 | cost factor `< 1` ⇒ nested framework cheaper | true for (34); for (32) e.g. `ρ²(1 + ρ²) < 1` | `nestedCost_lt_of_costFactor_le`, `exists_costFactor_lt_one_nestedCost_gt` |
-| HG25 | §6.1, p. 12 | "the resulting function is convex which ensures the existence of an optimum" | the λ-function is not convex in general (numerically); the optimum exists anyway | `exists_isMinOn_bitLevelCost_of_nonneg` |
+| HG25 | §6.1, p. 12 | "the resulting function is convex which ensures the existence of an optimum" | the λ-function need not be convex for other parameters (numerically); the optimum exists anyway | `exists_isMinOn_bitLevelCost_of_nonneg` |
 | HG25 | §6.2, p. 13 | "first round down the solution to `d*_{i,ℓ} = d_{i,ℓ}`" | `d*_{i,ℓ} = ⌊d_{i,ℓ}⌋` | `greedy_rounding_feasible` |
 | HG25 | §6.3, p. 14 | fixed-precision rounding error `O(h⁻¹2^{e−d})` | worst case; root mean square `Θ(h^{−1/2}2^{e−d})` under (22) | `integral_sq_perturbed_path_sub_bounds` |
 

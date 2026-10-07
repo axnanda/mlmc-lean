@@ -196,24 +196,32 @@ items listed under "Not formalised" below.
   behind `k_ℓ = k_{ℓ−1}/4` in §7.3 (`SPDEStability.lean`); drift-implicit Euler and the integrating
   factor of §5.6 (`DriftImplicit.lean`); Brownian paths on union grids (Algorithm 3), the
   Brownian-bridge midpoint law and time reversal within coarse steps (`BrownianPaths.lean`).
+- ✅ Round 18 (after a second completeness spot-check, `notes/coverage/round17_spot_check.md`): the
+  digital option's fourth moments, the Milstein variance and `E[Pc] = E[Pf]` for the smoothed coarse
+  payoff (`GBMDigital.lean`); tau-leaping against the exact chain, built by uniformisation, with
+  weak order 1 for bounded payoffs and MLMC with the exact target (`TauLeapingExact.lean`); `Φ⁻¹` in
+  Lean and the lookup-table results for it with no hypothesis on `f` (`InverseNormal.lean`); the
+  elliptic estimator, the call, refinement factor `M` end to end, and small results
+  (`EndToEndInstances.lean`).
 - Not formalised (each with its reason in `notes/coverage/README.md`): the convergence orders of the
   discretisations of general SDEs, SPDEs and PDEs (Itô calculus and PDE regularity are not in
   Mathlib; proved for geometric Brownian motion from its exact solution) and of QMC in `d`
   dimensions (discrepancy theory; the one-dimensional case and the MLQMC complexity it gives are
   proved); the optimality of the simplex among all MIMC index sets; the kurtosis rates of the
-  digital option; continuously monitored path-dependent payoffs (Brownian-bridge extremes; fixed
-  monitoring dates are proved for GBM); path-dependent (adaptive) grids for Brownian and Poisson
-  noise (a martingale argument; deterministic union grids are proved); tau-leaping's weak rate
-  against the exact chain and the exact (SSA) coupling; the general moment results for super-linear
-  drifts (the paper's example `dS = −S³dt + dW` is proved); the jump-diffusion and Lévy-process
-  theory of §6 beyond the coarse-increment identity; the Karhunen–Loève expansion and the
-  finite-element analysis of §7.2; contracting SDEs with level-dependent steps (§10.1; the
+  digital option (and its rates `O(h^{1/2})`, `O(h)`: they need `L^p` strong errors); continuously
+  monitored path-dependent payoffs (Brownian-bridge extremes; fixed monitoring dates are proved for
+  GBM); path-dependent (adaptive) grids for Brownian and Poisson noise (a martingale argument;
+  deterministic union grids are proved); tau-leaping's weak rate for unbounded payoffs and the
+  pathwise exact (SSA) coupling (bounded payoffs are proved); the general moment results for
+  super-linear drifts (the paper's example `dS = −S³dt + dW` is proved); the jump-diffusion and
+  Lévy-process theory of §6 beyond the coarse-increment identity; the Karhunen–Loève expansion and
+  the finite-element analysis of §7.2; contracting SDEs with level-dependent steps (§10.1; the
   fixed-step case is proved); the value of the dyadic limit `C` and the exact halving ratio of the
-  MSE per bit (Haas–Giles §3.4; the existence of `C > 0` and the order `2^{−d}/d` are proved, the
-  exact ratio needs finer asymptotics of `Φ⁻¹`); whether MIMC reaches `O(ε⁻²)` for a piecewise
-  linear `f` (the paper's rates are refuted and the corrected rates give `O(ε⁻²|log ε|⁴)`); the
-  remaining claims are numerical or empirical (measured rates, figures, run times) or hardware
-  facts.
+  MSE per bit (Haas–Giles §3.4; the existence of `C > 0` and the order `2^{−d}/d` are proved for
+  `Φ⁻¹`, the exact ratio needs finer asymptotics of `Φ⁻¹`); whether MIMC reaches `O(ε⁻²)` for a
+  piecewise linear `f` (the paper's rates are refuted and the corrected rates give
+  `O(ε⁻²|log ε|⁴)`); the remaining claims are numerical or empirical (measured rates, figures, run
+  times) or hardware facts.
 
 **M4: Research, needs Alex's sign-off before formalising: nested MLMC with level-dependent
 precision.**
