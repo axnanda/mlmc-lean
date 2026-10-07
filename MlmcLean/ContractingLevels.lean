@@ -13,9 +13,14 @@ with level."  `contracting_sde_mlmc` (`MlmcLean/GilesCorollaries.lean`) treats a
 here the step halves from level to level.
 
 **Setting.**  `dX = a(X) dt + b(X) dW` in one dimension, with a `K_a`-Lipschitz dissipative drift,
-`(x − y)(a(x) − a(y)) ≤ −κ (x − y)²`, a `K_b`-Lipschitz volatility (`K_b = 0`: additive noise),
-and steps `h ≤ H` with the margin `K_b² + 2K_a²H + δ ≤ 2κ`, `δ > 0`.  The Euler–Maruyama step is
-`emStep a b h x ΔW = x + a(x) h + b(x) ΔW`.
+`(x − y)(a(x) − a(y)) ≤ −κ (x − y)²`, and a `K_b`-Lipschitz volatility (`K_b = 0`: additive
+noise).  The Euler–Maruyama step is `emStep a b h x ΔW = x + a(x) h + b(x) ΔW`; for
+`ΔW ~ N(0, h)` it contracts in mean square with the factor `ρ(h) = 1 − 2κh + K_a² h² + K_b² h`,
+and `ρ(h) ≤ 1 − hδ` for all steps `0 < h ≤ S` iff `K_b² + K_a² S + δ ≤ 2κ` (contraction with
+margin `δ > 0` up to the step `S`).  The coupling theorem takes fine steps `h ≤ H` and this
+margin for the coarse step `S = 2H`, `K_b² + 2K_a² H + δ ≤ 2κ`; the level results take it for the
+largest step used, `S = h₀` (the step of level `0` and the coarse step of a level-`1` sample),
+`K_b² + K_a² h₀ + δ ≤ 2κ`.
 
 **The coupling.**  The `ξ_k ~ N(0, h)` are independent, `ξ_k` being the Brownian increment over
 `[−(k + 1)h, −kh]`.  The fine path starts at `x₀` at time `−T_f = −N_f h` and its step ending at
@@ -24,36 +29,46 @@ time `−kh` uses `ξ_k`; the coarse path, with step `2h`, starts at `x₀` at t
 the Brownian path on `[−T_c, 0]`; the fine path's initial segment `[−T_f, −T_c]` uses the
 increments `ξ_{2N_c}, …, ξ_{N_f − 1}`, which the coarse path does not see.
 
-**Results** (all constants explicit: `contractM`, `contractL`, `contractC₁`, `contractC₂`).
+**Results** (all constants explicit: `contractM`, `contractL`, `contractC1`, `contractC2`).
 * `lintegral_sq_backIter_sub_le`: the chain is bounded in mean square, `E[(X − x₀)²] ≤ M`,
-  uniformly in the number of steps and in `h ≤ H`.
-* `lintegral_sq_fine_sub_coarse_le`, `integral_sq_fine_sub_coarse_le`:
-  `E[(X^f_0 − X^c_0)²] ≤ C₁ h + C₂ (1 − hδ/4)^{N_c} ≤ C₁ h + C₂ e^{−δ T_c/8}`.  Proof: sampled
-  every coarse step, the pair is a Markov chain driven by the pairs `(ξ_{2k+1}, ξ_{2k})`
-  (`pairEM`, `backIter_two_mul`), and `W = (x − y)² + λ (x − x₀)²` satisfies
-  `E[W'] ≤ (1 − hδ/4) W + O(h²)` (`lintegral_pairEM_drift`): one coarse step contracts `(x − y)²`
-  by `1 − 2hδ` (`coarse_contraction_sq`), two fine steps differ from one coarse step by an `O(h²)`
-  mean-square local error whose cross term with the contraction part is small because the second
-  increment has mean zero (`pair_step_sq`, `pair_integrated_le`), and the drift bound for chains
-  started in the past (`lintegral_backIter_drift`) iterates it.
+  uniformly in the number of steps and in the step `h ≤ S`.
+* `integral_sq_fine_sub_coarse_le`: `(X^f_0 − X^c_0)²` is integrable and
+  `E[(X^f_0 − X^c_0)²] ≤ C₁ h + C₂ (1 − hδ/4)^{N_c} ≤ C₁ h + C₂ e^{−δ T_c/8}`.  Proof
+  (`lintegral_sq_fine_sub_coarse_le`): sampled every coarse step, the pair is a Markov chain
+  driven by the pairs `(ξ_{2k+1}, ξ_{2k})` (`pairEM`, `backIter_two_mul`), and
+  `W = (x − y)² + λ (x − x₀)²` satisfies `E[W'] ≤ (1 − hδ/4) W + O(h²)`
+  (`lintegral_pairEM_drift`): one coarse step contracts `(x − y)²` by `1 − 2hδ`
+  (`coarse_contraction_sq`), two fine steps differ from one coarse step by an `O(h²)` mean-square
+  local error whose cross term with the contraction part is small because the second increment
+  has mean zero (`pair_step_sq`, `pair_integrated_le`), and the drift bound for chains started in
+  the past (`lintegral_backIter_drift`) iterates it.
 * `variance_contractLevels_le`: with `h_ℓ = h₀ 2^{−ℓ}`, `N_ℓ` steps on level `ℓ`,
   `T_ℓ = N_ℓ h_ℓ`, `2N_ℓ ≤ N_{ℓ+1}`, and the level paths driven by standard normals
   (`contractPath`; the coarse path of a level-`(ℓ + 1)` sample is `contractPath ℓ (pairAvg z)`),
-  `V_{ℓ+1} ≤ K_f² (C₁ h_{ℓ+1} + C₂ e^{−δ T_ℓ/8})` for `K_f`-Lipschitz payoffs.
+  the correction is square integrable and `V_{ℓ+1} ≤ K_f² (C₁ h_{ℓ+1} + C₂ e^{−δ T_ℓ/8})` for
+  `K_f`-Lipschitz payoffs, the constants taken at `H = h₀/2`, the largest fine step.
 * `variance_contractLevels_le_two_pow`: `β = 1` when `T_ℓ ≥ c ℓ` with `c δ ≥ 8 log 2`.
-* `contracting_levels_mlmc`: Theorem 1 end to end.  The level means converge to some `P`, which
-  is also the limit of the means under the stationary laws of the Euler–Maruyama chains with the
-  steps `h_ℓ` (`contractLimit`, `tendsto_integral_contractPath_sub_limit`), and the multilevel
-  estimator reaches mean square error `ε²` at cost `O(ε^{−2−2η})` for every `η > 0`.
+* `contracting_levels_mlmc`: Theorem 1 end to end.  For every level the chain started further and
+  further in the past converges almost surely to the stationary chain `contractLimit ℓ`, and the
+  payoffs are integrable; the level means converge to some `P`, which is also the limit of the
+  means under the stationary laws of the Euler–Maruyama chains with the steps `h_ℓ`
+  (`tendsto_integral_contractPath_sub_limit`); the multilevel estimator has a square-integrable
+  error with mean square `< ε²` at cost `O(ε^{−2−2η})` for every `η > 0`.
 
 **Deviations from the paper.**  One dimension.  The paper's "contracting SDEs" are made precise
-by the Lipschitz, dissipativity and margin hypotheses.  The constants are explicit but not
-optimised.  The cost of a sample is counted as its `N_ℓ` fine steps (the coarse path adds at most
-half as many); since `T_ℓ` grows linearly, `N_ℓ` grows like `ℓ 2^ℓ`, so Theorem 1 is applied with
-`γ = 1 + η`.  The target `P` is the limit along `h_ℓ → 0` of the means under the limiting
-distributions of the discretised chains; that `P` is the mean under the invariant law of the SDE
-is not proved: it needs SDE theory (the convergence of the invariant laws of the scheme as
-`h → 0`) that the library does not have.
+by the Lipschitz, dissipativity and margin hypotheses.  The payoffs are Lipschitz: the paper's
+§10.1 allows `γ`-Hölder payoffs for Markov chains (and `contracting_sde_mlmc` does too); the
+Hölder case would follow by Jensen, `E[(f(X^f) − f(X^c))²] ≤ K_f² (E[(X^f − X^c)²])^γ`, with
+`β = γ`, but is not formalised.  The constants are explicit but not optimised, and the rate
+`β = 1` is not sharp for additive noise: for `K_b = 0` and a smooth drift Euler–Maruyama has
+strong order `1`, and the coupling has `E[(X^f − X^c)²] = O(h²)`, i.e. `β = 2` (for `a(x) = −x`,
+`b ≡ 1` its stationary value is `3h²/16 + O(h³)`); that is not proved here.  The cost of a
+sample is counted as its `N_ℓ` fine steps (the coarse path adds at most half as many); since
+`T_ℓ` grows linearly, `N_ℓ` grows like `ℓ 2^ℓ`, so Theorem 1 is applied with `γ = 1 + η`.  The
+target `P` is the limit along `h_ℓ → 0` of the means under the limiting distributions of the
+discretised chains; that `P` is the mean under the invariant law of the SDE is not proved: it
+needs SDE theory (the convergence of the invariant laws of the scheme as `h → 0`) that the
+library does not have.
 -/
 
 open MeasureTheory ProbabilityTheory Filter Topology Finset
@@ -65,9 +80,9 @@ namespace MLMC
 
 /-- **The uniform mean-square bound of the Euler–Maruyama chain of a dissipative SDE** (Giles 2015,
 §10.1, p. 61: "contracting SDEs which converge to a limiting distribution"):
-`M = (2/δ)(2G²/δ + a(x₀)² H + b(x₀)²)` with `G = |a(x₀)|(1 + H K_a) + |b(x₀)| K_b`.  It bounds
-`E[(X − x₀)²]` for the chain started at `x₀`, whatever the number of steps and the step `h ≤ H`
-(`lintegral_sq_backIter_sub_le`). -/
+`M = (2/δ)(2G²/δ + a(x₀)² H + b(x₀)²)` with `G = |a(x₀)|(1 + H K_a) + |b(x₀)| K_b`.  Under the
+margin `K_b² + K_a² H + δ ≤ 2κ` it bounds `E[(X − x₀)²]` for the chain started at `x₀`, whatever
+the number of steps and the step `h ≤ H` (`lintegral_sq_backIter_sub_le`). -/
 noncomputable def contractM (a b : ℝ → ℝ) (Ka Kb : ℝ≥0) (δ H x₀ : ℝ) : ℝ :=
   2 / δ * (2 * (|a x₀| * (1 + H * Ka) + |b x₀| * Kb) ^ 2 / δ + (a x₀ ^ 2 * H + b x₀ ^ 2))
 
@@ -78,17 +93,17 @@ in mean square over the two Brownian increments (`pair_step_sq`, `pair_integrate
 noncomputable def contractL (Ka Kb : ℝ≥0) (δ H : ℝ) : ℝ :=
   ((1 + (Kb : ℝ) ^ 2) / δ + H) * (Ka : ℝ) ^ 2 + (1 + (1 + (Kb : ℝ) ^ 2) / δ) * (Kb : ℝ) ^ 2
 
-/-- **The constant `C₁`** of the bound `E[(X^f − X^c)²] ≤ C₁ h + C₂ (1 − hδ/4)^{N_c}` (Giles 2015,
-§10.1, p. 61; `lintegral_sq_fine_sub_coarse_le`):
+/-- **The constant `C₁`** of the bound `E[(X^f − X^c)²] ≤ C₁ h + C₂ (1 − hδ/4)^{N_c}` for fine
+steps `h ≤ H` (Giles 2015, §10.1, p. 61; `integral_sq_fine_sub_coarse_le`):
 `C₁ = (8/δ) L (a(x₀)² H + b(x₀)² + 4 (K_a² H + K_b²) M)`, `L = contractL`, `M = contractM`. -/
-noncomputable def contractC₁ (a b : ℝ → ℝ) (Ka Kb : ℝ≥0) (δ H x₀ : ℝ) : ℝ :=
+noncomputable def contractC1 (a b : ℝ → ℝ) (Ka Kb : ℝ≥0) (δ H x₀ : ℝ) : ℝ :=
   8 / δ * contractL Ka Kb δ H * (a x₀ ^ 2 * H + b x₀ ^ 2 +
     4 * ((Ka : ℝ) ^ 2 * H + (Kb : ℝ) ^ 2) * contractM a b Ka Kb δ H x₀)
 
-/-- **The constant `C₂`** of the bound `E[(X^f − X^c)²] ≤ C₁ h + C₂ (1 − hδ/4)^{N_c}` (Giles 2015,
-§10.1, p. 61; `lintegral_sq_fine_sub_coarse_le`): `C₂ = (1 + 8 H L (K_a² H + K_b²)/δ) M`,
-`L = contractL`, `M = contractM`. -/
-noncomputable def contractC₂ (a b : ℝ → ℝ) (Ka Kb : ℝ≥0) (δ H x₀ : ℝ) : ℝ :=
+/-- **The constant `C₂`** of the bound `E[(X^f − X^c)²] ≤ C₁ h + C₂ (1 − hδ/4)^{N_c}` for fine
+steps `h ≤ H` (Giles 2015, §10.1, p. 61; `integral_sq_fine_sub_coarse_le`):
+`C₂ = (1 + 8 H L (K_a² H + K_b²)/δ) M`, `L = contractL`, `M = contractM`. -/
+noncomputable def contractC2 (a b : ℝ → ℝ) (Ka Kb : ℝ≥0) (δ H x₀ : ℝ) : ℝ :=
   (1 + 8 * H * contractL Ka Kb δ H * ((Ka : ℝ) ^ 2 * H + (Kb : ℝ) ^ 2) / δ) *
     contractM a b Ka Kb δ H x₀
 
@@ -104,20 +119,20 @@ lemma contractL_nonneg (Ka Kb : ℝ≥0) {δ H : ℝ} (hδ : 0 < δ) (hH : 0 ≤
   unfold contractL
   positivity
 
-/-- `contractC₁ ≥ 0` for `δ > 0` and `H ≥ 0`. -/
-lemma contractC₁_nonneg (a b : ℝ → ℝ) (Ka Kb : ℝ≥0) {δ H : ℝ} (hδ : 0 < δ) (hH : 0 ≤ H)
-    (x₀ : ℝ) : 0 ≤ contractC₁ a b Ka Kb δ H x₀ := by
+/-- `contractC1 ≥ 0` for `δ > 0` and `H ≥ 0`. -/
+lemma contractC1_nonneg (a b : ℝ → ℝ) (Ka Kb : ℝ≥0) {δ H : ℝ} (hδ : 0 < δ) (hH : 0 ≤ H)
+    (x₀ : ℝ) : 0 ≤ contractC1 a b Ka Kb δ H x₀ := by
   have := contractL_nonneg Ka Kb hδ hH
   have := contractM_nonneg a b Ka Kb hδ hH x₀
-  unfold contractC₁
+  unfold contractC1
   positivity
 
-/-- `contractC₂ ≥ 0` for `δ > 0` and `H ≥ 0`. -/
-lemma contractC₂_nonneg (a b : ℝ → ℝ) (Ka Kb : ℝ≥0) {δ H : ℝ} (hδ : 0 < δ) (hH : 0 ≤ H)
-    (x₀ : ℝ) : 0 ≤ contractC₂ a b Ka Kb δ H x₀ := by
+/-- `contractC2 ≥ 0` for `δ > 0` and `H ≥ 0`. -/
+lemma contractC2_nonneg (a b : ℝ → ℝ) (Ka Kb : ℝ≥0) {δ H : ℝ} (hδ : 0 < δ) (hH : 0 ≤ H)
+    (x₀ : ℝ) : 0 ≤ contractC2 a b Ka Kb δ H x₀ := by
   have := contractL_nonneg Ka Kb hδ hH
   have := contractM_nonneg a b Ka Kb hδ hH x₀
-  unfold contractC₂
+  unfold contractC2
   positivity
 
 /-! ### Gaussian moments -/
@@ -299,26 +314,33 @@ lemma le_of_dissipative (ha : LipschitzWith Ka a)
   norm_num at h1 h2
   linarith [neg_abs_le (a 1 - a 0)]
 
-/-- With the margin `K_b² + 2K_a²H + δ ≤ 2κ`, a dissipative `K_a`-Lipschitz drift and
-`0 ≤ h ≤ H`: `hδ ≤ 1/2`. -/
-lemma mul_le_half_of_margin (ha : LipschitzWith Ka a)
+/-- The margin for the step `2H` gives the margin for the step `H` (Giles 2015, §10.1): from
+`K_b² + 2K_a²H + δ ≤ 2κ` and `H ≥ 0`, `K_b² + K_a²H + δ ≤ 2κ`. -/
+lemma margin_of_margin_two_mul (hH : 0 ≤ H)
+    (hmargin : (Kb : ℝ) ^ 2 + 2 * (Ka : ℝ) ^ 2 * H + δ ≤ 2 * κ) :
+    (Kb : ℝ) ^ 2 + (Ka : ℝ) ^ 2 * H + δ ≤ 2 * κ := by
+  nlinarith [mul_nonneg (sq_nonneg (Ka : ℝ)) hH]
+
+/-- With the margin `K_b² + K_a²H + δ ≤ 2κ`, a dissipative `K_a`-Lipschitz drift and
+`0 ≤ h ≤ H`: `hδ ≤ 1` (as `hδ ≤ 2κh − K_a²h² ≤ 2K_a h − K_a²h² ≤ 1`). -/
+lemma mul_le_one_of_margin (ha : LipschitzWith Ka a)
     (hdiss : ∀ x y, (x - y) * (a x - a y) ≤ -(κ * (x - y) ^ 2)) {h : ℝ} (hh : 0 ≤ h)
-    (hhH : h ≤ H) (hmargin : (Kb : ℝ) ^ 2 + 2 * (Ka : ℝ) ^ 2 * H + δ ≤ 2 * κ) :
-    h * δ ≤ 1 / 2 := by
-  have s1 : δ ≤ 2 * κ - 2 * (Ka : ℝ) ^ 2 * H := by nlinarith [sq_nonneg (Kb : ℝ)]
+    (hhH : h ≤ H) (hmargin : (Kb : ℝ) ^ 2 + (Ka : ℝ) ^ 2 * H + δ ≤ 2 * κ) :
+    h * δ ≤ 1 := by
+  have s1 : δ ≤ 2 * κ - (Ka : ℝ) ^ 2 * H := by nlinarith [sq_nonneg (Kb : ℝ)]
   have s2 := mul_le_mul_of_nonneg_left s1 hh
   have s3 := mul_le_mul_of_nonneg_left (le_of_dissipative ha hdiss) hh
   have s4 : h * h * (Ka : ℝ) ^ 2 ≤ h * H * (Ka : ℝ) ^ 2 :=
     mul_le_mul_of_nonneg_right (mul_le_mul_of_nonneg_left hhH hh) (sq_nonneg _)
-  nlinarith [sq_nonneg (h * Ka - 1 / 2)]
+  nlinarith [sq_nonneg (h * Ka - 1)]
 
 /-- **One Euler–Maruyama step of a dissipative SDE drifts towards the start** (Giles 2015, §10.1,
-p. 61): for `ΔW ~ N(0, h)`, `0 ≤ h ≤ H` and the margin `K_b² + 2K_a²H + δ ≤ 2κ`,
+p. 61): for `ΔW ~ N(0, h)`, `0 ≤ h ≤ H` and the margin `K_b² + K_a²H + δ ≤ 2κ`,
 `E[(x + a(x)h + b(x)ΔW − x₀)²] = (x − x₀ + a(x) h)² + b(x)² h ≤ (1 − hδ/2)(x − x₀)² + hδM/2`,
 `M = contractM`. -/
 lemma emStep_drift_sq (ha : LipschitzWith Ka a) (hb : LipschitzWith Kb b)
     (hdiss : ∀ x y, (x - y) * (a x - a y) ≤ -(κ * (x - y) ^ 2)) (hδ : 0 < δ) {h : ℝ}
-    (hh : 0 ≤ h) (hhH : h ≤ H) (hmargin : (Kb : ℝ) ^ 2 + 2 * (Ka : ℝ) ^ 2 * H + δ ≤ 2 * κ)
+    (hh : 0 ≤ h) (hhH : h ≤ H) (hmargin : (Kb : ℝ) ^ 2 + (Ka : ℝ) ^ 2 * H + δ ≤ 2 * κ)
     (x₀ x : ℝ) :
     (x - x₀ + a x * h) ^ 2 + b x ^ 2 * h ≤
       (1 - h * δ / 2) * (x - x₀) ^ 2 + h * δ * contractM a b Ka Kb δ H x₀ / 2 := by
@@ -352,11 +374,11 @@ lemma emStep_drift_sq (ha : LipschitzWith Ka a) (hb : LipschitzWith Kb b)
   have hAu : A * u ≤ |A| * |u| := by rw [← abs_mul]; exact le_abs_self _
   -- the contraction factor
   have hρ : 1 - 2 * h * κ + h ^ 2 * (Ka : ℝ) ^ 2 + h * (Kb : ℝ) ^ 2 ≤ 1 - h * δ := by
-    have : h * ((Kb : ℝ) ^ 2 + 2 * (Ka : ℝ) ^ 2 * H + δ) ≤ h * (2 * κ) :=
+    have : h * ((Kb : ℝ) ^ 2 + (Ka : ℝ) ^ 2 * H + δ) ≤ h * (2 * κ) :=
       mul_le_mul_of_nonneg_left hmargin hh
     have : h * (h * (Ka : ℝ) ^ 2) ≤ h * (H * (Ka : ℝ) ^ 2) :=
       mul_le_mul_of_nonneg_left (mul_le_mul_of_nonneg_right hhH (sq_nonneg _)) hh
-    nlinarith [mul_nonneg (mul_nonneg hh hh) (sq_nonneg (Ka : ℝ))]
+    nlinarith
   -- the linear term
   have hlin : |A| + h * |A| * Ka + |B| * Kb ≤ G := by
     rw [hG]
@@ -496,6 +518,7 @@ lemma pair_integrated_le (ha : LipschitzWith Ka a) (hb : LipschitzWith Kb b)
         2 * h ^ 2 * contractL Ka Kb δ H * (a x₀ ^ 2 * H + b x₀ ^ 2 +
           4 * ((Ka : ℝ) ^ 2 * H + (Kb : ℝ) ^ 2) * contractM a b Ka Kb δ H x₀) := by
   have hH : 0 ≤ H := hh.trans hhH
+  have hmargin' := margin_of_margin_two_mul hH hmargin
   obtain ⟨L, hL⟩ : ∃ L, L = contractL Ka Kb δ H := ⟨_, rfl⟩
   obtain ⟨M, hM⟩ : ∃ M, M = contractM a b Ka Kb δ H x₀ := ⟨_, rfl⟩
   obtain ⟨K₂, hK₂⟩ : ∃ K₂, K₂ = (Ka : ℝ) ^ 2 * H + (Kb : ℝ) ^ 2 := ⟨_, rfl⟩
@@ -510,7 +533,7 @@ lemma pair_integrated_le (ha : LipschitzWith Ka a) (hb : LipschitzWith Kb b)
   have F2 : β ^ 2 ≤ (Kb : ℝ) ^ 2 * D ^ 2 := by
     rw [hβ, hD]; exact sq_sub_le_of_lipschitzWith hb x y
   have F3 : (u + a x * h) ^ 2 + b x ^ 2 * h ≤ (1 - h * δ / 2) * u ^ 2 + h * δ * M / 2 := by
-    rw [hu, hM]; exact emStep_drift_sq ha hb hdiss hδ hh hhH hmargin x₀ x
+    rw [hu, hM]; exact emStep_drift_sq ha hb hdiss hδ hh hhH hmargin' x₀ x
   have F4 : a x ^ 2 ≤ 2 * a x₀ ^ 2 + 2 * (Ka : ℝ) ^ 2 * u ^ 2 := by
     have := sq_sub_le_of_lipschitzWith ha x x₀
     rw [← hu] at this
@@ -519,14 +542,8 @@ lemma pair_integrated_le (ha : LipschitzWith Ka a) (hb : LipschitzWith Kb b)
     have := sq_sub_le_of_lipschitzWith hb x x₀
     rw [← hu] at this
     linarith [sq_nonneg (2 * b x₀ - b x)]
-  -- `hδ ≤ 1/2`, so `r₁ = 1 − hδ/2 ∈ [0, 1]`
-  have hhδ : h * δ ≤ 2 := by
-    have s1 : δ ≤ 2 * κ - 2 * (Ka : ℝ) ^ 2 * H := by nlinarith [sq_nonneg (Kb : ℝ)]
-    have s2 := mul_le_mul_of_nonneg_left s1 hh
-    have s3 := mul_le_mul_of_nonneg_left (le_of_dissipative ha hdiss) hh
-    have s4 : h * h * (Ka : ℝ) ^ 2 ≤ h * H * (Ka : ℝ) ^ 2 :=
-      mul_le_mul_of_nonneg_right (mul_le_mul_of_nonneg_left hhH hh) (sq_nonneg _)
-    nlinarith [sq_nonneg (h * Ka - 1 / 2)]
+  -- `hδ ≤ 1`, so `r₁ = 1 − hδ/2 ∈ [0, 1]`
+  have hhδ := mul_le_one_of_margin ha hdiss hh hhH hmargin'
   have hr0 : 0 ≤ 1 - h * δ / 2 := by linarith
   have hr1 : 1 - h * δ / 2 ≤ 1 := by
     have := mul_nonneg hh hδ.le
@@ -642,11 +659,12 @@ lemma indep_noiseFrom_pair (hξ : iIndepFun ξ μ) (hξm : ∀ i, Measurable (ξ
       MeasurableSpace.comap (ξ j) inferInstance) i hi) le_rfl
   exact (h1 _ (by simp)).prodMk (h1 _ (by simp))
 
-/-- **The fine Euler–Maruyama step drifts towards the start** (Giles 2015, §10.1), in `ℝ≥0∞`:
+/-- **The Euler–Maruyama step drifts towards the start** (Giles 2015, §10.1), in `ℝ≥0∞`: for
+`h ≤ H` and the margin `K_b² + K_a²H + δ ≤ 2κ`,
 `E[(φ_h(x, ΔW) − x₀)²] ≤ (1 − hδ/2)(x − x₀)² + hδM/2` for `ΔW ~ N(0, h)`, `M = contractM`. -/
 lemma lintegral_emStep_drift (ha : LipschitzWith Ka a) (hb : LipschitzWith Kb b)
     (hdiss : ∀ x y, (x - y) * (a x - a y) ≤ -(κ * (x - y) ^ 2)) (hδ : 0 < δ) {h : ℝ≥0}
-    (hhH : (h : ℝ) ≤ H) (hmargin : (Kb : ℝ) ^ 2 + 2 * (Ka : ℝ) ^ 2 * H + δ ≤ 2 * κ)
+    (hhH : (h : ℝ) ≤ H) (hmargin : (Kb : ℝ) ^ 2 + (Ka : ℝ) ^ 2 * H + δ ≤ 2 * κ)
     (x₀ x : ℝ) :
     ∫⁻ w, ENNReal.ofReal ((emStep a b h x w - x₀) ^ 2) ∂gaussianReal 0 h ≤
       ENNReal.ofReal (1 - h * δ / 2) * ENNReal.ofReal ((x - x₀) ^ 2) +
@@ -662,12 +680,12 @@ lemma lintegral_emStep_drift (ha : LipschitzWith Ka a) (hb : LipschitzWith Kb b)
 /-- **The Euler–Maruyama chain of a dissipative SDE is bounded in mean square uniformly in the
 number of steps and in the step** (Giles 2015, §10.1, p. 61: "contracting SDEs which converge to
 a limiting distribution").  With independent increments `ξ_k ~ N(0, h)`, `0 < h ≤ H` and the
-margin `K_b² + 2K_a²H + δ ≤ 2κ`, the chain started `n` steps before time `−m` at `x₀` satisfies
-`E[(X − x₀)²] ≤ M = contractM`, whatever `n`, `m` and `h`
-(`lintegral_backIter_drift` with `emStep_drift_sq`). -/
+margin `K_b² + K_a²H + δ ≤ 2κ` (mean-square contraction with margin `δ` of every step `≤ H`), the
+chain started `n` steps before time `−m` at `x₀` satisfies `E[(X − x₀)²] ≤ M = contractM`,
+whatever `n`, `m` and `h` (`lintegral_backIter_drift` with `emStep_drift_sq`). -/
 lemma lintegral_sq_backIter_sub_le (ha : LipschitzWith Ka a) (hb : LipschitzWith Kb b)
     (hdiss : ∀ x y, (x - y) * (a x - a y) ≤ -(κ * (x - y) ^ 2)) (hδ : 0 < δ) {h : ℝ≥0}
-    (hh : 0 < h) (hhH : (h : ℝ) ≤ H) (hmargin : (Kb : ℝ) ^ 2 + 2 * (Ka : ℝ) ^ 2 * H + δ ≤ 2 * κ)
+    (hh : 0 < h) (hhH : (h : ℝ) ≤ H) (hmargin : (Kb : ℝ) ^ 2 + (Ka : ℝ) ^ 2 * H + δ ≤ 2 * κ)
     (hξ : iIndepFun ξ μ) (hξm : ∀ i, Measurable (ξ i))
     (hlaw : ∀ i, μ.map (ξ i) = gaussianReal 0 h) (x₀ : ℝ) (n m : ℕ) :
     ∫⁻ ω, ENNReal.ofReal ((backIter (emStep a b h) n (fun k => ξ (k + m) ω) x₀ - x₀) ^ 2) ∂μ ≤
@@ -686,7 +704,7 @@ lemma lintegral_sq_backIter_sub_le (ha : LipschitzWith Ka a) (hb : LipschitzWith
   have h0 : ∫⁻ _ : Ω, ENNReal.ofReal ((x₀ - x₀) ^ 2) ∂μ = 0 := by simp
   rw [h0, mul_zero, zero_add] at hd
   have hh' : (0 : ℝ) < h := hh
-  have hhδ := mul_le_half_of_margin ha hdiss h.coe_nonneg hhH hmargin
+  have hhδ := mul_le_one_of_margin ha hdiss h.coe_nonneg hhH hmargin
   have hHδ : 0 < (h : ℝ) * δ := mul_pos hh' hδ
   have hM0 := contractM_nonneg a b Ka Kb hδ (h.coe_nonneg.trans hhH) x₀
   refine hd.trans ((ofReal_mul_geom_le (by positivity) (by linarith) (by linarith) n).trans
@@ -717,6 +735,7 @@ lemma lintegral_pairEM_drift (ha : LipschitzWith Ka a) (hb : LipschitzWith Kb b)
   have hmb : Measurable b := hb.continuous.measurable
   have hh : (0 : ℝ) ≤ h := h.coe_nonneg
   have hH : 0 ≤ H := hh.trans hhH
+  have hmargin' := margin_of_margin_two_mul hH hmargin
   obtain ⟨θ, hθdef⟩ : ∃ θ : ℝ, θ = δ / (1 + (Kb : ℝ) ^ 2) := ⟨_, rfl⟩
   obtain ⟨ι, hιdef⟩ : ∃ ι : ℝ, ι = (1 + (Kb : ℝ) ^ 2) / δ := ⟨_, rfl⟩
   have hθ0 : 0 < θ := by rw [hθdef]; positivity
@@ -764,7 +783,7 @@ lemma lintegral_pairEM_drift (ha : LipschitzWith Ka a) (hb : LipschitzWith Kb b)
         ((1 + θ) * h * (b x - b y) ^ 2 + lam * (h * δ * contractM a b Ka Kb δ H x₀ / 2)) := by
     intro u
     have h1 := pair_step_sq ha hb hθ0 hθι hh hhH x y u
-    have h2 := emStep_drift_sq ha hb hdiss hδ hh hhH hmargin x₀ (emStep a b h x u)
+    have h2 := emStep_drift_sq ha hb hdiss hδ hh hhH hmargin' x₀ (emStep a b h x u)
     have e : emStep a b h x u - x₀ = (x - x₀ + a x * h) + b x * u := by
       unfold emStep
       ring
@@ -776,7 +795,7 @@ lemma lintegral_pairEM_drift (ha : LipschitzWith Ka a) (hb : LipschitzWith Kb b)
     rw [hL] at h1
     have h3 := mul_le_mul_of_nonneg_left h2' hlam0
     linarith
-  have hr1 := mul_le_half_of_margin ha hdiss hh hhH hmargin
+  have hr1 := mul_le_one_of_margin ha hdiss hh hhH hmargin'
   have hM0 := contractM_nonneg a b Ka Kb hδ hH x₀
   have hL0 := contractL_nonneg Ka Kb hδ hH
   refine (lintegral_mono fun u => ENNReal.ofReal_le_ofReal (hpt u)).trans ?_
@@ -786,46 +805,31 @@ lemma lintegral_pairEM_drift (ha : LipschitzWith Ka a) (hb : LipschitzWith Kb b)
   exact (ENNReal.ofReal_le_ofReal (pair_integrated_le ha hb hdiss hδ hh hhH hmargin hθ0.le hθ
     hlam0 hlam x₀ x y)).trans ENNReal.ofReal_add_le
 
-/-- **Contracting SDEs with level-dependent time steps: the fine and the coarse path are
-`O(h)`-close in mean square** (Giles 2015, §10.1, p. 61: "A very similar approach can also be
-used for contracting SDEs which converge to a limiting distribution.  For these, the level `ℓ`
-path will perform a simulation for the time interval `[−T_ℓ, 0]`, using timestep `h_ℓ`.  The
-coarse and fine paths will share the same driving Brownian path for the overlapping time interval
-`[−T_{ℓ−1}, 0]`, and the contraction property will ensure that the multilevel variance decays
-with level").  Let `dX = a(X) dt + b(X) dW` have a `K_a`-Lipschitz dissipative drift,
-`(x − y)(a(x) − a(y)) ≤ −κ (x − y)²`, and a `K_b`-Lipschitz volatility (`K_b = 0`: additive
-noise), and let `0 < h ≤ H` with the margin `K_b² + 2 K_a² H + δ ≤ 2κ`, `δ > 0` (so that the
-coarse step `2h` contracts).  Let the `ξ_k ~ N(0, h)` be independent: `ξ_k` is the Brownian
-increment over `[−(k + 1)h, −kh]`.  The fine path is the Euler–Maruyama chain with step `h`
-started at `x₀` at time `−T_f = −N_f h`, whose step ending at time `−kh` uses `ξ_k`; the coarse
-path is the chain with step `2h` started at `x₀` at time `−T_c = −2N_c h`, `2N_c ≤ N_f`, whose
-step ending at time `−2kh` uses `ξ_{2k} + ξ_{2k+1}`, the Brownian increment over
-`[−(2k + 2)h, −2kh]`.  So the two paths share the Brownian path on `[−T_c, 0]`, i.e. the
-increments `ξ_0, …, ξ_{2N_c − 1}`; the fine path's initial segment `[−T_f, −T_c]` uses
-`ξ_{2N_c}, …, ξ_{N_f − 1}`, which the coarse path does not see.  Then
-`E[(X^f_0 − X^c_0)²] ≤ C₁ h + C₂ (1 − hδ/4)^{N_c}` with the explicit constants `contractC₁`,
-`contractC₂`, which depend only on `a(x₀), b(x₀), K_a, K_b, δ, H`.  The first term is the local
-error of two fine steps against one coarse step (`O(h²)` per coarse step in mean square, damped by
-the contraction over `O(1/h)` steps); the second is the contracted effect of the fine path's
-initial segment (its distance from `x₀` at time `−T_c` is bounded in mean square,
-`lintegral_sq_backIter_sub_le`).  Deviations: one dimension; the Lipschitz, dissipativity and
-margin conditions are explicit hypotheses for the paper's "contracting SDEs"; the constants and
-the rate `1 − hδ/4` per coarse step are not optimised. -/
-theorem lintegral_sq_fine_sub_coarse_le (ha : LipschitzWith Ka a) (hb : LipschitzWith Kb b)
+/-- **The fine and the coarse path are `O(h)`-close in mean square, as a lower Lebesgue
+integral** (Giles 2015, §10.1, p. 61; the estimate behind `integral_sq_fine_sub_coarse_le`, which
+adds integrability, the Bochner integral and the exponential form).  With the hypotheses and the
+coupling of `integral_sq_fine_sub_coarse_le`:
+`∫⁻ (X^f_0 − X^c_0)² ≤ C₁ h + C₂ (1 − hδ/4)^{N_c}`, `C₁ = contractC1`, `C₂ = contractC2`.
+Sampled every coarse step, the pair is the chain of `pairEM` driven by the pairs
+`(ξ_{2k+1}, ξ_{2k})`, started at `(U, x₀)` with `U` the fine path at time `−T_c`;
+`lintegral_pairEM_drift` and `lintegral_backIter_drift` bound `W = (x − y)² + λ (x − x₀)²` along
+it, and `lintegral_sq_backIter_sub_le` bounds `W(U, x₀)`. -/
+lemma lintegral_sq_fine_sub_coarse_le (ha : LipschitzWith Ka a) (hb : LipschitzWith Kb b)
     (hdiss : ∀ x y, (x - y) * (a x - a y) ≤ -(κ * (x - y) ^ 2)) (hδ : 0 < δ) {h : ℝ≥0}
     (hh : 0 < h) (hhH : (h : ℝ) ≤ H) (hmargin : (Kb : ℝ) ^ 2 + 2 * (Ka : ℝ) ^ 2 * H + δ ≤ 2 * κ)
     (hξ : iIndepFun ξ μ) (hξm : ∀ i, Measurable (ξ i))
     (hlaw : ∀ i, μ.map (ξ i) = gaussianReal 0 h) (x₀ : ℝ) {Nf Nc : ℕ} (hN : 2 * Nc ≤ Nf) :
     ∫⁻ ω, ENNReal.ofReal ((backIter (emStep a b h) Nf (fun k => ξ k ω) x₀ -
         backIter (emStep a b (2 * h)) Nc (fun k => ξ (2 * k) ω + ξ (2 * k + 1) ω) x₀) ^ 2) ∂μ ≤
-      ENNReal.ofReal (contractC₁ a b Ka Kb δ H x₀ * h +
-        contractC₂ a b Ka Kb δ H x₀ * (1 - h * δ / 4) ^ Nc) := by
+      ENNReal.ofReal (contractC1 a b Ka Kb δ H x₀ * h +
+        contractC2 a b Ka Kb δ H x₀ * (1 - h * δ / 4) ^ Nc) := by
   have hma : Measurable a := ha.continuous.measurable
   have hmb : Measurable b := hb.continuous.measurable
   have hh0 : (0 : ℝ) ≤ h := h.coe_nonneg
   have hhpos : (0 : ℝ) < h := hh
   have hH : 0 ≤ H := hh0.trans hhH
-  have hhδ := mul_le_half_of_margin ha hdiss hh0 hhH hmargin
+  have hmargin' := margin_of_margin_two_mul hH hmargin
+  have hhδ := mul_le_one_of_margin ha hdiss hh0 hhH hmargin'
   have hhδpos : 0 < (h : ℝ) * δ := mul_pos hhpos hδ
   obtain ⟨L, hL⟩ : ∃ L, L = contractL Ka Kb δ H := ⟨_, rfl⟩
   obtain ⟨M, hM⟩ : ∃ M, M = contractM a b Ka Kb δ H x₀ := ⟨_, rfl⟩
@@ -907,7 +911,7 @@ theorem lintegral_sq_fine_sub_coarse_le (ha : LipschitzWith Ka a) (hb : Lipschit
     rw [lintegral_congr e2, lintegral_const_mul _ ((hUm.sub_const x₀).pow_const 2).ennreal_ofReal]
     gcongr
     rw [hM, hUdef]
-    exact lintegral_sq_backIter_sub_le ha hb hdiss hδ hh hhH hmargin hξ hξm hlaw x₀ _ _
+    exact lintegral_sq_backIter_sub_le ha hb hdiss hδ hh hhH hmargin' hξ hξm hlaw x₀ _ _
   have hr0 : 0 ≤ 1 - (h : ℝ) * δ / 4 := by linarith
   have hr1 : 1 - (h : ℝ) * δ / 4 < 1 := by linarith
   have hKW0 : 0 ≤ 2 * (h : ℝ) ^ 2 * contractL Ka Kb δ H * (a x₀ ^ 2 * H + b x₀ ^ 2 +
@@ -927,10 +931,10 @@ theorem lintegral_sq_fine_sub_coarse_le (ha : LipschitzWith Ka a) (hb : Lipschit
   rw [← ENNReal.ofReal_add (by positivity) (div_nonneg hKW0 (by linarith))]
   apply ENNReal.ofReal_le_ofReal
   rw [← hL, ← hM, ← hK₂]
-  have hC₁ : contractC₁ a b Ka Kb δ H x₀ = 8 / δ * L * (a x₀ ^ 2 * H + b x₀ ^ 2 + 4 * K₂ * M) := by
-    rw [contractC₁, hL, hM, hK₂]
-  have hC₂ : contractC₂ a b Ka Kb δ H x₀ = (1 + 8 * H * L * K₂ / δ) * M := by
-    rw [contractC₂, hL, hM, hK₂]
+  have hC₁ : contractC1 a b Ka Kb δ H x₀ = 8 / δ * L * (a x₀ ^ 2 * H + b x₀ ^ 2 + 4 * K₂ * M) := by
+    rw [contractC1, hL, hM, hK₂]
+  have hC₂ : contractC2 a b Ka Kb δ H x₀ = (1 + 8 * H * L * K₂ / δ) * M := by
+    rw [contractC2, hL, hM, hK₂]
   have hlamH : lam ≤ 8 * H * L * K₂ / δ := by
     rw [hlamdef]
     apply div_le_div_of_nonneg_right _ hδ.le
@@ -948,13 +952,37 @@ theorem lintegral_sq_fine_sub_coarse_le (ha : LipschitzWith Ka a) (hb : Lipschit
       (pow_nonneg hr0 _)
   linarith
 
-/-- **Contracting SDEs with level-dependent time steps, in terms of the shared time** (Giles 2015,
-§10.1, p. 61: "the contraction property will ensure that the multilevel variance decays with
-level").  With the hypotheses and the coupling of `lintegral_sq_fine_sub_coarse_le`,
-`(X^f_0 − X^c_0)²` is integrable and
-`E[(X^f_0 − X^c_0)²] ≤ C₁ h + C₂ (1 − hδ/4)^{N_c} ≤ C₁ h + C₂ e^{−δ T_c/8}`, where `T_c = 2h N_c`
-is the length of the shared interval `[−T_c, 0]`: an `O(h)` term plus a term that is
-exponentially small in `T_c`, uniformly in `h`. -/
+/-- **Contracting SDEs with level-dependent time steps: the fine and the coarse path are
+`O(h)`-close in mean square** (Giles 2015, §10.1, p. 61: "A very similar approach can also be
+used for contracting SDEs which converge to a limiting distribution.  For these, the level `ℓ`
+path will perform a simulation for the time interval `[−T_ℓ, 0]`, using timestep `h_ℓ`.  The
+coarse and fine paths will share the same driving Brownian path for the overlapping time interval
+`[−T_{ℓ−1}, 0]`, and the contraction property will ensure that the multilevel variance decays
+with level").  Let `dX = a(X) dt + b(X) dW` have a `K_a`-Lipschitz dissipative drift,
+`(x − y)(a(x) − a(y)) ≤ −κ (x − y)²`, and a `K_b`-Lipschitz volatility (`K_b = 0`: additive
+noise), and let `0 < h ≤ H` with the margin `K_b² + 2 K_a² H + δ ≤ 2κ`, `δ > 0` (the
+Euler–Maruyama step contracts in mean square with margin `δ` for every step `≤ 2H`, in particular
+for the coarse step `2h`).  Let the `ξ_k ~ N(0, h)` be independent: `ξ_k` is the Brownian
+increment over `[−(k + 1)h, −kh]`.  The fine path is the Euler–Maruyama chain with step `h`
+started at `x₀` at time `−T_f = −N_f h`, whose step ending at time `−kh` uses `ξ_k`; the coarse
+path is the chain with step `2h` started at `x₀` at time `−T_c = −2N_c h`, `2N_c ≤ N_f`, whose
+step ending at time `−2kh` uses `ξ_{2k} + ξ_{2k+1}`, the Brownian increment over
+`[−(2k + 2)h, −2kh]`.  So the two paths share the Brownian path on `[−T_c, 0]`, i.e. the
+increments `ξ_0, …, ξ_{2N_c − 1}`; the fine path's initial segment `[−T_f, −T_c]` uses
+`ξ_{2N_c}, …, ξ_{N_f − 1}`, which the coarse path does not see.  Then `(X^f_0 − X^c_0)²` is
+integrable and `E[(X^f_0 − X^c_0)²] ≤ C₁ h + C₂ (1 − hδ/4)^{N_c} ≤ C₁ h + C₂ e^{−δ T_c/8}` with
+the explicit constants `C₁ = contractC1`, `C₂ = contractC2`, which depend only on
+`a(x₀), b(x₀), K_a, K_b, δ, H`: an `O(h)` term plus a term exponentially small in the length
+`T_c = 2h N_c` of the shared interval, uniformly in `h`.  The first term is the local error of two
+fine steps against one coarse step (`O(h²)` per coarse step in mean square, damped by the
+contraction over `O(1/h)` steps); the second is the contracted effect of the fine path's initial
+segment (its distance from `x₀` at time `−T_c` is bounded in mean square,
+`lintegral_sq_backIter_sub_le`).  The main estimate is `lintegral_sq_fine_sub_coarse_le`.
+Deviations: one dimension; the Lipschitz, dissipativity and margin conditions are explicit
+hypotheses for the paper's "contracting SDEs"; the constants and the rate `1 − hδ/4` per coarse
+step are not optimised; the order `O(h)` holds for every Lipschitz `b` but is not sharp for
+additive noise: for `K_b = 0` and a smooth drift the coupling is `O(h²)` in mean square (`β = 2`;
+`3h²/16 + O(h³)` in the stationary regime of `a(x) = −x`, `b ≡ 1`), which is not proved here. -/
 theorem integral_sq_fine_sub_coarse_le (ha : LipschitzWith Ka a) (hb : LipschitzWith Kb b)
     (hdiss : ∀ x y, (x - y) * (a x - a y) ≤ -(κ * (x - y) ^ 2)) (hδ : 0 < δ) {h : ℝ≥0}
     (hh : 0 < h) (hhH : (h : ℝ) ≤ H) (hmargin : (Kb : ℝ) ^ 2 + 2 * (Ka : ℝ) ^ 2 * H + δ ≤ 2 * κ)
@@ -964,19 +992,19 @@ theorem integral_sq_fine_sub_coarse_le (ha : LipschitzWith Ka a) (hb : Lipschitz
         backIter (emStep a b (2 * h)) Nc (fun k => ξ (2 * k) ω + ξ (2 * k + 1) ω) x₀) ^ 2) μ ∧
       ∫ ω, (backIter (emStep a b h) Nf (fun k => ξ k ω) x₀ -
           backIter (emStep a b (2 * h)) Nc (fun k => ξ (2 * k) ω + ξ (2 * k + 1) ω) x₀) ^ 2 ∂μ ≤
-        contractC₁ a b Ka Kb δ H x₀ * h + contractC₂ a b Ka Kb δ H x₀ * (1 - h * δ / 4) ^ Nc ∧
+        contractC1 a b Ka Kb δ H x₀ * h + contractC2 a b Ka Kb δ H x₀ * (1 - h * δ / 4) ^ Nc ∧
       ∫ ω, (backIter (emStep a b h) Nf (fun k => ξ k ω) x₀ -
           backIter (emStep a b (2 * h)) Nc (fun k => ξ (2 * k) ω + ξ (2 * k + 1) ω) x₀) ^ 2 ∂μ ≤
-        contractC₁ a b Ka Kb δ H x₀ * h +
-          contractC₂ a b Ka Kb δ H x₀ * Real.exp (-(δ * (2 * h * Nc)) / 8) := by
+        contractC1 a b Ka Kb δ H x₀ * h +
+          contractC2 a b Ka Kb δ H x₀ * Real.exp (-(δ * (2 * h * Nc)) / 8) := by
   have hma : Measurable a := ha.continuous.measurable
   have hmb : Measurable b := hb.continuous.measurable
   have hh0 : (0 : ℝ) ≤ h := h.coe_nonneg
   have hH : 0 ≤ H := hh0.trans hhH
-  have hhδ := mul_le_half_of_margin ha hdiss hh0 hhH hmargin
+  have hhδ := mul_le_one_of_margin ha hdiss hh0 hhH (margin_of_margin_two_mul hH hmargin)
   have hl := lintegral_sq_fine_sub_coarse_le ha hb hdiss hδ hh hhH hmargin hξ hξm hlaw x₀ hN
-  have hC₁ := contractC₁_nonneg a b Ka Kb hδ hH x₀
-  have hC₂ := contractC₂_nonneg a b Ka Kb hδ hH x₀
+  have hC₁ := contractC1_nonneg a b Ka Kb hδ hH x₀
+  have hC₂ := contractC2_nonneg a b Ka Kb hδ hH x₀
   have hr0 : 0 ≤ 1 - (h : ℝ) * δ / 4 := by linarith
   have hm : Measurable fun ω => (backIter (emStep a b h) Nf (fun k => ξ k ω) x₀ -
       backIter (emStep a b (2 * h)) Nc (fun k => ξ (2 * k) ω + ξ (2 * k + 1) ω) x₀) ^ 2 := by
@@ -992,7 +1020,7 @@ theorem integral_sq_fine_sub_coarse_le (ha : LipschitzWith Ka a) (hb : Lipschitz
     exact (hf.sub hc).pow_const 2
   have hI : ∫ ω, (backIter (emStep a b h) Nf (fun k => ξ k ω) x₀ -
       backIter (emStep a b (2 * h)) Nc (fun k => ξ (2 * k) ω + ξ (2 * k + 1) ω) x₀) ^ 2 ∂μ ≤
-      contractC₁ a b Ka Kb δ H x₀ * h + contractC₂ a b Ka Kb δ H x₀ * (1 - h * δ / 4) ^ Nc := by
+      contractC1 a b Ka Kb δ H x₀ * h + contractC2 a b Ka Kb δ H x₀ * (1 - h * δ / 4) ^ Nc := by
     rw [integral_eq_lintegral_of_nonneg_ae (ae_of_all _ fun ω => sq_nonneg _)
       hm.aestronglyMeasurable]
     exact ENNReal.toReal_le_of_le_ofReal (by positivity) hl
@@ -1067,23 +1095,28 @@ lemma scaled_stdNormal (v : ℝ≥0) :
   simp [Real.sq_sqrt v.coe_nonneg]
 
 /-- **The fine and the coarse path of a level-`(ℓ + 1)` sample** (Giles 2015, §10.1), on the
-canonical space: with the hypotheses of `integral_sq_fine_sub_coarse_le` for `H = h₀` and
-`2N_ℓ ≤ N_{ℓ+1}`, `E[(X^f_{ℓ+1} − X^c_ℓ)²] ≤ C₁ h_{ℓ+1} + C₂ e^{−δ T_ℓ/8}`, `T_ℓ = N_ℓ h_ℓ`. -/
+canonical space: with `h_ℓ = h₀ 2^{−ℓ}`, the margin `K_b² + K_a² h₀ + δ ≤ 2κ` and
+`2N_ℓ ≤ N_{ℓ+1}`, `integral_sq_fine_sub_coarse_le` for the fine step `h_{ℓ+1} ≤ H = h₀/2` (whose
+margin `K_b² + 2K_a²(h₀/2) + δ ≤ 2κ` is the given one) gives
+`E[(X^f_{ℓ+1} − X^c_ℓ)²] ≤ C₁ h_{ℓ+1} + C₂ e^{−δ T_ℓ/8}`, `T_ℓ = N_ℓ h_ℓ`, with the constants
+`C₁ = contractC1 … (h₀/2) …`, `C₂ = contractC2 … (h₀/2) …`. -/
 lemma contractPath_sq_le (ha : LipschitzWith Ka a) (hb : LipschitzWith Kb b)
     (hdiss : ∀ x y, (x - y) * (a x - a y) ≤ -(κ * (x - y) ^ 2)) (hδ : 0 < δ) {h₀ : ℝ}
-    (hh₀ : 0 < h₀) (hmargin : (Kb : ℝ) ^ 2 + 2 * (Ka : ℝ) ^ 2 * h₀ + δ ≤ 2 * κ) (x₀ : ℝ)
-    {N : ℕ → ℕ} (hN : ∀ ℓ, 2 * N ℓ ≤ N (ℓ + 1)) (ℓ : ℕ) :
+    (hh₀ : 0 < h₀) (hmargin : (Kb : ℝ) ^ 2 + (Ka : ℝ) ^ 2 * h₀ + δ ≤ 2 * κ) (x₀ : ℝ)
+    {N : ℕ → ℕ} (ℓ : ℕ) (hN : 2 * N ℓ ≤ N (ℓ + 1)) :
     Integrable (fun z => (contractPath a b h₀ x₀ N (ℓ + 1) z -
         contractPath a b h₀ x₀ N ℓ (pairAvg z)) ^ 2) stdNormalSeq ∧
       ∫ z, (contractPath a b h₀ x₀ N (ℓ + 1) z - contractPath a b h₀ x₀ N ℓ (pairAvg z)) ^ 2
           ∂stdNormalSeq ≤
-        contractC₁ a b Ka Kb δ h₀ x₀ * (h₀ / 2 ^ (ℓ + 1)) +
-          contractC₂ a b Ka Kb δ h₀ x₀ * Real.exp (-(δ * (N ℓ * (h₀ / 2 ^ ℓ))) / 8) := by
+        contractC1 a b Ka Kb δ (h₀ / 2) x₀ * (h₀ / 2 ^ (ℓ + 1)) +
+          contractC2 a b Ka Kb δ (h₀ / 2) x₀ * Real.exp (-(δ * (N ℓ * (h₀ / 2 ^ ℓ))) / 8) := by
   have hpos : 0 < h₀ / 2 ^ (ℓ + 1) := by positivity
   obtain ⟨hξ, hξm, hlaw⟩ := scaled_stdNormal ⟨h₀ / 2 ^ (ℓ + 1), hpos.le⟩
-  have hle : h₀ / 2 ^ (ℓ + 1) ≤ h₀ := div_le_self hh₀.le (one_le_pow₀ (by norm_num))
+  have hle : h₀ / 2 ^ (ℓ + 1) ≤ h₀ / 2 :=
+    div_le_div_of_nonneg_left hh₀.le two_pos (le_self_pow₀ one_le_two (Nat.succ_ne_zero ℓ))
+  have hmargin2 : (Kb : ℝ) ^ 2 + 2 * (Ka : ℝ) ^ 2 * (h₀ / 2) + δ ≤ 2 * κ := by linarith
   obtain ⟨hint, -, hI⟩ := integral_sq_fine_sub_coarse_le (μ := stdNormalSeq)
-    (h := ⟨h₀ / 2 ^ (ℓ + 1), hpos.le⟩) ha hb hdiss hδ hpos hle hmargin hξ hξm hlaw x₀ (hN ℓ)
+    (h := ⟨h₀ / 2 ^ (ℓ + 1), hpos.le⟩) ha hb hdiss hδ hpos hle hmargin2 hξ hξm hlaw x₀ hN
   have e : ∀ z, contractPath a b h₀ x₀ N ℓ (pairAvg z) =
       backIter (emStep a b (2 * (h₀ / 2 ^ (ℓ + 1)))) (N ℓ)
         (fun k => Real.sqrt (h₀ / 2 ^ (ℓ + 1)) * z (2 * k) +
@@ -1094,8 +1127,8 @@ lemma contractPath_sq_le (ha : LipschitzWith Ka a) (hb : LipschitzWith Kb b)
     field_simp
   simp_rw [e]
   refine ⟨hint, hI.trans (le_of_eq ?_)⟩
-  show contractC₁ a b Ka Kb δ h₀ x₀ * (h₀ / 2 ^ (ℓ + 1)) + contractC₂ a b Ka Kb δ h₀ x₀ *
-    Real.exp (-(δ * (2 * (h₀ / 2 ^ (ℓ + 1)) * N ℓ)) / 8) = _
+  show contractC1 a b Ka Kb δ (h₀ / 2) x₀ * (h₀ / 2 ^ (ℓ + 1)) +
+    contractC2 a b Ka Kb δ (h₀ / 2) x₀ * Real.exp (-(δ * (2 * (h₀ / 2 ^ (ℓ + 1)) * N ℓ)) / 8) = _
   rw [eT]
 
 /-- The level-`ℓ` path is a measurable function of the normal increments. -/
@@ -1109,11 +1142,12 @@ lemma measurable_contractPath (ha : LipschitzWith Ka a) (hb : LipschitzWith Kb b
   exact (measurable_backIter_pi hφ (N ℓ) x₀).comp
     (measurable_pi_lambda _ fun k => (measurable_pi_apply k).const_mul _)
 
-/-- The level paths are bounded in mean square uniformly in the level (Giles 2015, §10.1):
-`E[(X^{(ℓ)} − x₀)²] ≤ M` (`lintegral_sq_backIter_sub_le` with `h = h_ℓ ≤ h₀`). -/
+/-- The level paths are bounded in mean square uniformly in the level (Giles 2015, §10.1): under
+the margin `K_b² + K_a² h₀ + δ ≤ 2κ`, `E[(X^{(ℓ)} − x₀)²] ≤ M = contractM … h₀ …`
+(`lintegral_sq_backIter_sub_le` with `h = h_ℓ ≤ H = h₀`). -/
 lemma lintegral_sq_contractPath_sub_le (ha : LipschitzWith Ka a) (hb : LipschitzWith Kb b)
     (hdiss : ∀ x y, (x - y) * (a x - a y) ≤ -(κ * (x - y) ^ 2)) (hδ : 0 < δ) {h₀ : ℝ}
-    (hh₀ : 0 < h₀) (hmargin : (Kb : ℝ) ^ 2 + 2 * (Ka : ℝ) ^ 2 * h₀ + δ ≤ 2 * κ) (x₀ : ℝ)
+    (hh₀ : 0 < h₀) (hmargin : (Kb : ℝ) ^ 2 + (Ka : ℝ) ^ 2 * h₀ + δ ≤ 2 * κ) (x₀ : ℝ)
     (N : ℕ → ℕ) (ℓ : ℕ) :
     ∫⁻ z, ENNReal.ofReal ((contractPath a b h₀ x₀ N ℓ z - x₀) ^ 2) ∂stdNormalSeq ≤
       ENNReal.ofReal (contractM a b Ka Kb δ h₀ x₀) := by
@@ -1124,10 +1158,10 @@ lemma lintegral_sq_contractPath_sub_le (ha : LipschitzWith Ka a) (hb : Lipschitz
     hδ hpos hle hmargin hξ hξm hlaw x₀ (N ℓ) 0
 
 /-- A Lipschitz payoff of a level path is square integrable, with
-`E[(f(X^{(ℓ)}) − f(x₀))²] ≤ K_f² M` (Giles 2015, §10.1). -/
+`E[(f(X^{(ℓ)}) − f(x₀))²] ≤ K_f² M`, `M = contractM … h₀ …` (Giles 2015, §10.1). -/
 lemma memLp_contractPath (ha : LipschitzWith Ka a) (hb : LipschitzWith Kb b)
     (hdiss : ∀ x y, (x - y) * (a x - a y) ≤ -(κ * (x - y) ^ 2)) (hδ : 0 < δ) {h₀ : ℝ}
-    (hh₀ : 0 < h₀) (hmargin : (Kb : ℝ) ^ 2 + 2 * (Ka : ℝ) ^ 2 * h₀ + δ ≤ 2 * κ) (x₀ : ℝ)
+    (hh₀ : 0 < h₀) (hmargin : (Kb : ℝ) ^ 2 + (Ka : ℝ) ^ 2 * h₀ + δ ≤ 2 * κ) (x₀ : ℝ)
     (N : ℕ → ℕ) {f : ℝ → ℝ} {Kf : ℝ≥0} (hf : LipschitzWith Kf f) (ℓ : ℕ) :
     MemLp (fun z => f (contractPath a b h₀ x₀ N ℓ z)) 2 stdNormalSeq ∧
       ∫ z, (f (contractPath a b h₀ x₀ N ℓ z) - f x₀) ^ 2 ∂stdNormalSeq ≤
@@ -1166,17 +1200,17 @@ lemma memLp_contractPath (ha : LipschitzWith Ka a) (hb : LipschitzWith Kb b)
 
 /-- The second moment of the level correction `f(X^f_{ℓ+1}) − f(X^c_ℓ)` for a `K_f`-Lipschitz
 payoff (Giles 2015, §10.1): `E[(f(X^f) − f(X^c))²] ≤ K_f² (C₁ h_{ℓ+1} + C₂ e^{−δ T_ℓ/8})`,
-`T_ℓ = N_ℓ h_ℓ`. -/
+`T_ℓ = N_ℓ h_ℓ`, the constants taken at `H = h₀/2` (`contractPath_sq_le`). -/
 lemma integral_sq_contractDiff_le (ha : LipschitzWith Ka a) (hb : LipschitzWith Kb b)
     (hdiss : ∀ x y, (x - y) * (a x - a y) ≤ -(κ * (x - y) ^ 2)) (hδ : 0 < δ) {h₀ : ℝ}
-    (hh₀ : 0 < h₀) (hmargin : (Kb : ℝ) ^ 2 + 2 * (Ka : ℝ) ^ 2 * h₀ + δ ≤ 2 * κ) (x₀ : ℝ)
-    {N : ℕ → ℕ} (hN : ∀ ℓ, 2 * N ℓ ≤ N (ℓ + 1)) {f : ℝ → ℝ} {Kf : ℝ≥0}
-    (hf : LipschitzWith Kf f) (ℓ : ℕ) :
+    (hh₀ : 0 < h₀) (hmargin : (Kb : ℝ) ^ 2 + (Ka : ℝ) ^ 2 * h₀ + δ ≤ 2 * κ) (x₀ : ℝ)
+    {N : ℕ → ℕ} {f : ℝ → ℝ} {Kf : ℝ≥0} (hf : LipschitzWith Kf f) (ℓ : ℕ)
+    (hN : 2 * N ℓ ≤ N (ℓ + 1)) :
     ∫ z, (f (contractPath a b h₀ x₀ N (ℓ + 1) z) -
         f (contractPath a b h₀ x₀ N ℓ (pairAvg z))) ^ 2 ∂stdNormalSeq ≤
-      (Kf : ℝ) ^ 2 * (contractC₁ a b Ka Kb δ h₀ x₀ * (h₀ / 2 ^ (ℓ + 1)) +
-        contractC₂ a b Ka Kb δ h₀ x₀ * Real.exp (-(δ * (N ℓ * (h₀ / 2 ^ ℓ))) / 8)) := by
-  obtain ⟨hint, hI⟩ := contractPath_sq_le ha hb hdiss hδ hh₀ hmargin x₀ hN ℓ
+      (Kf : ℝ) ^ 2 * (contractC1 a b Ka Kb δ (h₀ / 2) x₀ * (h₀ / 2 ^ (ℓ + 1)) +
+        contractC2 a b Ka Kb δ (h₀ / 2) x₀ * Real.exp (-(δ * (N ℓ * (h₀ / 2 ^ ℓ))) / 8)) := by
+  obtain ⟨hint, hI⟩ := contractPath_sq_le ha hb hdiss hδ hh₀ hmargin x₀ ℓ hN
   calc ∫ z, (f (contractPath a b h₀ x₀ N (ℓ + 1) z) -
         f (contractPath a b h₀ x₀ N ℓ (pairAvg z))) ^ 2 ∂stdNormalSeq
       ≤ ∫ z, (Kf : ℝ) ^ 2 * (contractPath a b h₀ x₀ N (ℓ + 1) z -
@@ -1191,25 +1225,36 @@ lemma integral_sq_contractDiff_le (ha : LipschitzWith Ka a) (hb : LipschitzWith 
 §10.1, p. 61: "the level `ℓ` path will perform a simulation for the time interval `[−T_ℓ, 0]`,
 using timestep `h_ℓ`.  The coarse and fine paths will share the same driving Brownian path for
 the overlapping time interval `[−T_{ℓ−1}, 0]`, and the contraction property will ensure that the
-multilevel variance decays with level").  Let the steps be `h_ℓ = h₀ 2^{−ℓ}` and let level `ℓ`
-take `N_ℓ` steps, `T_ℓ = N_ℓ h_ℓ`, with `2N_ℓ ≤ N_{ℓ+1}` (so `T_ℓ ≤ T_{ℓ+1}`), all driven by
-one sequence `z` of standard normals: the fine path of a level-`(ℓ + 1)` sample uses the
-increments `√h_{ℓ+1} z_k` (`contractPath (ℓ + 1) z`), and its coarse path is the level-`ℓ` path
-driven by `(z_{2k} + z_{2k+1})/√2` (`contractPath ℓ (pairAvg z)`), i.e. by the sums of pairs of
-the fine Brownian increments (`contractPath_pairAvg`), which have the law of the level-`ℓ`
-increments (`measurePreserving_pairAvg`).  With the hypotheses of
-`lintegral_sq_fine_sub_coarse_le` for `H = h₀` and a `K_f`-Lipschitz payoff `f`:
-`V_{ℓ+1} = V[f(X^f_{ℓ+1}) − f(X^c_ℓ)] ≤ K_f² (C₁ h_{ℓ+1} + C₂ e^{−δ T_ℓ/8})`.  Deviations as in
-`lintegral_sq_fine_sub_coarse_le`; the payoff is Lipschitz. -/
+multilevel variance decays with level").  Let `a` be `K_a`-Lipschitz and dissipative,
+`(x − y)(a(x) − a(y)) ≤ −κ (x − y)²`, and `b` be `K_b`-Lipschitz; let the steps be
+`h_ℓ = h₀ 2^{−ℓ}` with the margin `K_b² + K_a² h₀ + δ ≤ 2κ`, `δ > 0` (the Euler–Maruyama step
+contracts in mean square with margin `δ` for every step `≤ h₀`, the largest step used), and let
+level `ℓ` take `N_ℓ` steps, `T_ℓ = N_ℓ h_ℓ`, all driven by one sequence `z` of standard normals:
+the fine path of a level-`(ℓ + 1)` sample uses the increments `√h_{ℓ+1} z_k`
+(`contractPath (ℓ + 1) z`), and its coarse path is the level-`ℓ` path driven by
+`(z_{2k} + z_{2k+1})/√2` (`contractPath ℓ (pairAvg z)`), i.e. by the sums of pairs of the fine
+Brownian increments (`contractPath_pairAvg`), which have the law of the level-`ℓ` increments
+(`measurePreserving_pairAvg`).  If `2N_ℓ ≤ N_{ℓ+1}` (so `T_ℓ ≤ T_{ℓ+1}`: the fine path starts
+earlier) and `f` is a `K_f`-Lipschitz payoff, the correction `f(X^f_{ℓ+1}) − f(X^c_ℓ)` is square
+integrable and `V_{ℓ+1} ≤ K_f² (C₁ h_{ℓ+1} + C₂ e^{−δ T_ℓ/8})`, with the constants
+`C₁ = contractC1`, `C₂ = contractC2` of `integral_sq_fine_sub_coarse_le` taken at `H = h₀/2`,
+the largest fine step.  Deviations as in `integral_sq_fine_sub_coarse_le` (one dimension,
+explicit hypotheses, constants not optimised, the order `h` not sharp for additive noise); the
+payoff is Lipschitz. -/
 theorem variance_contractLevels_le (ha : LipschitzWith Ka a) (hb : LipschitzWith Kb b)
     (hdiss : ∀ x y, (x - y) * (a x - a y) ≤ -(κ * (x - y) ^ 2)) (hδ : 0 < δ) {h₀ : ℝ}
-    (hh₀ : 0 < h₀) (hmargin : (Kb : ℝ) ^ 2 + 2 * (Ka : ℝ) ^ 2 * h₀ + δ ≤ 2 * κ) (x₀ : ℝ)
-    {N : ℕ → ℕ} (hN : ∀ ℓ, 2 * N ℓ ≤ N (ℓ + 1)) {f : ℝ → ℝ} {Kf : ℝ≥0}
-    (hf : LipschitzWith Kf f) (ℓ : ℕ) :
-    variance (fun z => f (contractPath a b h₀ x₀ N (ℓ + 1) z) -
-        f (contractPath a b h₀ x₀ N ℓ (pairAvg z))) stdNormalSeq ≤
-      (Kf : ℝ) ^ 2 * (contractC₁ a b Ka Kb δ h₀ x₀ * (h₀ / 2 ^ (ℓ + 1)) +
-        contractC₂ a b Ka Kb δ h₀ x₀ * Real.exp (-(δ * (N ℓ * (h₀ / 2 ^ ℓ))) / 8)) := by
+    (hh₀ : 0 < h₀) (hmargin : (Kb : ℝ) ^ 2 + (Ka : ℝ) ^ 2 * h₀ + δ ≤ 2 * κ) (x₀ : ℝ)
+    {N : ℕ → ℕ} {f : ℝ → ℝ} {Kf : ℝ≥0} (hf : LipschitzWith Kf f) (ℓ : ℕ)
+    (hN : 2 * N ℓ ≤ N (ℓ + 1)) :
+    MemLp (fun z => f (contractPath a b h₀ x₀ N (ℓ + 1) z) -
+        f (contractPath a b h₀ x₀ N ℓ (pairAvg z))) 2 stdNormalSeq ∧
+      variance (fun z => f (contractPath a b h₀ x₀ N (ℓ + 1) z) -
+          f (contractPath a b h₀ x₀ N ℓ (pairAvg z))) stdNormalSeq ≤
+        (Kf : ℝ) ^ 2 * (contractC1 a b Ka Kb δ (h₀ / 2) x₀ * (h₀ / 2 ^ (ℓ + 1)) +
+          contractC2 a b Ka Kb δ (h₀ / 2) x₀ * Real.exp (-(δ * (N ℓ * (h₀ / 2 ^ ℓ))) / 8)) := by
+  refine ⟨(memLp_contractPath ha hb hdiss hδ hh₀ hmargin x₀ N hf (ℓ + 1)).1.sub
+    ((memLp_contractPath ha hb hdiss hδ hh₀ hmargin x₀ N hf ℓ).1.comp_measurePreserving
+      measurePreserving_pairAvg), ?_⟩
   have hfm : Measurable f := hf.continuous.measurable
   have hm : Measurable fun z => f (contractPath a b h₀ x₀ N (ℓ + 1) z) -
       f (contractPath a b h₀ x₀ N ℓ (pairAvg z)) :=
@@ -1218,13 +1263,12 @@ theorem variance_contractLevels_le (ha : LipschitzWith Ka a) (hb : LipschitzWith
         measurePreserving_pairAvg.measurable))
   have hv := variance_le_expectation_sq (μ := stdNormalSeq) hm.aestronglyMeasurable
   simp only [Pi.pow_apply] at hv
-  exact hv.trans (integral_sq_contractDiff_le ha hb hdiss hδ hh₀ hmargin x₀ hN hf ℓ)
+  exact hv.trans (integral_sq_contractDiff_le ha hb hdiss hδ hh₀ hmargin x₀ hf ℓ hN)
 
 /-- With `T_ℓ = N_ℓ h_ℓ ≥ c ℓ` and `c δ ≥ 8 log 2`:
 `C₁ h_{ℓ+1} + C₂ e^{−δ T_ℓ/8} ≤ (C₁ h₀ + 2 C₂) 2^{−(ℓ+1)}` (Giles 2015, §10.1). -/
 lemma contract_bound_le_two_pow {C₁ C₂ h₀ δ c : ℝ} (hC₂ : 0 ≤ C₂) (hδ : 0 < δ)
-    {N : ℕ → ℕ} (hc : 8 * Real.log 2 ≤ c * δ) (hT : ∀ ℓ : ℕ, c * ℓ ≤ N ℓ * (h₀ / 2 ^ ℓ))
-    (ℓ : ℕ) :
+    {N : ℕ → ℕ} (hc : 8 * Real.log 2 ≤ c * δ) (ℓ : ℕ) (hT : c * ℓ ≤ N ℓ * (h₀ / 2 ^ ℓ)) :
     C₁ * (h₀ / 2 ^ (ℓ + 1)) + C₂ * Real.exp (-(δ * (N ℓ * (h₀ / 2 ^ ℓ))) / 8) ≤
       (C₁ * h₀ + 2 * C₂) * (2 : ℝ) ^ (-((ℓ + 1 : ℕ) : ℝ)) := by
   have h2 : (2 : ℝ) ^ (-((ℓ + 1 : ℕ) : ℝ)) = (2 ^ (ℓ + 1))⁻¹ := by
@@ -1238,7 +1282,7 @@ lemma contract_bound_le_two_pow {C₁ C₂ h₀ δ c : ℝ} (hC₂ : 0 ≤ C₂)
       ring
     rw [e1, Real.exp_le_exp]
     have h3 : 8 * Real.log 2 * ℓ ≤ c * δ * ℓ := mul_le_mul_of_nonneg_right hc (Nat.cast_nonneg ℓ)
-    have h4 := mul_le_mul_of_nonneg_left (hT ℓ) hδ.le
+    have h4 := mul_le_mul_of_nonneg_left hT hδ.le
     linarith
   have hh : h₀ / 2 ^ (ℓ + 1) = h₀ * (2 : ℝ) ^ (-((ℓ + 1 : ℕ) : ℝ)) := by
     rw [h2, div_eq_mul_inv]
@@ -1247,26 +1291,32 @@ lemma contract_bound_le_two_pow {C₁ C₂ h₀ δ c : ℝ} (hC₂ : 0 ≤ C₂)
 
 /-- **`β = 1` for a linearly growing simulation interval** (Giles 2015, §10.1, p. 61: "it is
 appropriate to choose `N_ℓ` to increase linearly with level", said for Markov chains; for the SDE
-the analogue is `T_ℓ` linear in `ℓ`).  With the hypotheses of `variance_contractLevels_le`, if
-`T_ℓ = N_ℓ h_ℓ ≥ c ℓ` with `c δ ≥ 8 log 2`, then
-`V_{ℓ+1} ≤ K_f² (C₁ h₀ + 2 C₂) 2^{−(ℓ+1)}`: the variance rate is `β = 1`, that of the `O(h)`
-mean-square difference of the Euler–Maruyama coupling, and the effect of the fine path's initial
-segment decays at least as fast.  For example `N_ℓ = m (ℓ + 1) 2^ℓ` (`T_ℓ = m h₀ (ℓ + 1)`) with
-`m h₀ δ ≥ 8 log 2`. -/
+the analogue is `T_ℓ` linear in `ℓ`).  With the hypotheses of `variance_contractLevels_le`
+(drift, volatility and margin `K_b² + K_a² h₀ + δ ≤ 2κ`, `2N_ℓ ≤ N_{ℓ+1}`, `K_f`-Lipschitz `f`),
+if `T_ℓ = N_ℓ h_ℓ ≥ c ℓ` with `c δ ≥ 8 log 2`, then the correction is square integrable and
+`V_{ℓ+1} ≤ K_f² (C₁ h₀ + 2 C₂) 2^{−(ℓ+1)}` (`C₁ = contractC1`, `C₂ = contractC2` at
+`H = h₀/2`): the variance rate is `β = 1`, that of the `O(h)` mean-square difference of the
+Euler–Maruyama coupling, and the effect of the fine path's initial segment decays at least as
+fast.  Only the level `ℓ` enters the hypotheses `2N_ℓ ≤ N_{ℓ+1}` and `T_ℓ ≥ c ℓ`; for example
+`N_ℓ = m (ℓ + 1) 2^ℓ` (`T_ℓ = m h₀ (ℓ + 1)`) with `m h₀ δ ≥ 8 log 2` satisfies them for every
+`ℓ` (`linear_levels`).  Deviations as in `variance_contractLevels_le`. -/
 theorem variance_contractLevels_le_two_pow (ha : LipschitzWith Ka a) (hb : LipschitzWith Kb b)
     (hdiss : ∀ x y, (x - y) * (a x - a y) ≤ -(κ * (x - y) ^ 2)) (hδ : 0 < δ) {h₀ : ℝ}
-    (hh₀ : 0 < h₀) (hmargin : (Kb : ℝ) ^ 2 + 2 * (Ka : ℝ) ^ 2 * h₀ + δ ≤ 2 * κ) (x₀ : ℝ)
-    {N : ℕ → ℕ} (hN : ∀ ℓ, 2 * N ℓ ≤ N (ℓ + 1)) {c : ℝ} (hc : 8 * Real.log 2 ≤ c * δ)
-    (hT : ∀ ℓ : ℕ, c * ℓ ≤ N ℓ * (h₀ / 2 ^ ℓ)) {f : ℝ → ℝ} {Kf : ℝ≥0}
-    (hf : LipschitzWith Kf f) (ℓ : ℕ) :
-    variance (fun z => f (contractPath a b h₀ x₀ N (ℓ + 1) z) -
-        f (contractPath a b h₀ x₀ N ℓ (pairAvg z))) stdNormalSeq ≤
-      (Kf : ℝ) ^ 2 * (contractC₁ a b Ka Kb δ h₀ x₀ * h₀ + 2 * contractC₂ a b Ka Kb δ h₀ x₀) *
-        (2 : ℝ) ^ (-((ℓ + 1 : ℕ) : ℝ)) := by
-  refine (variance_contractLevels_le ha hb hdiss hδ hh₀ hmargin x₀ hN hf ℓ).trans ?_
+    (hh₀ : 0 < h₀) (hmargin : (Kb : ℝ) ^ 2 + (Ka : ℝ) ^ 2 * h₀ + δ ≤ 2 * κ) (x₀ : ℝ)
+    {N : ℕ → ℕ} {c : ℝ} (hc : 8 * Real.log 2 ≤ c * δ) {f : ℝ → ℝ} {Kf : ℝ≥0}
+    (hf : LipschitzWith Kf f) (ℓ : ℕ) (hN : 2 * N ℓ ≤ N (ℓ + 1))
+    (hT : c * ℓ ≤ N ℓ * (h₀ / 2 ^ ℓ)) :
+    MemLp (fun z => f (contractPath a b h₀ x₀ N (ℓ + 1) z) -
+        f (contractPath a b h₀ x₀ N ℓ (pairAvg z))) 2 stdNormalSeq ∧
+      variance (fun z => f (contractPath a b h₀ x₀ N (ℓ + 1) z) -
+          f (contractPath a b h₀ x₀ N ℓ (pairAvg z))) stdNormalSeq ≤
+        (Kf : ℝ) ^ 2 * (contractC1 a b Ka Kb δ (h₀ / 2) x₀ * h₀ +
+          2 * contractC2 a b Ka Kb δ (h₀ / 2) x₀) * (2 : ℝ) ^ (-((ℓ + 1 : ℕ) : ℝ)) := by
+  obtain ⟨hL2, hv⟩ := variance_contractLevels_le ha hb hdiss hδ hh₀ hmargin x₀ hf ℓ hN
+  refine ⟨hL2, hv.trans ?_⟩
   rw [mul_assoc]
   exact mul_le_mul_of_nonneg_left (contract_bound_le_two_pow
-    (contractC₂_nonneg a b Ka Kb hδ hh₀.le x₀) hδ hc hT ℓ) (sq_nonneg _)
+    (contractC2_nonneg a b Ka Kb hδ (by positivity) x₀) hδ hc ℓ hT) (sq_nonneg _)
 
 /-- **Linearly growing simulation intervals satisfy the hypotheses** (Giles 2015, §10.1, p. 61: "it
 is appropriate to choose `N_ℓ` to increase linearly with level"): the levels `N_ℓ = m (ℓ + 1) 2^ℓ`,
@@ -1291,27 +1341,31 @@ lemma linear_levels (m : ℕ) {h₀ : ℝ} (hh₀ : 0 ≤ h₀) :
 /-- **The stationary Euler–Maruyama chain of level `ℓ`** (Giles 2015, §10.1, p. 61: "contracting
 SDEs which converge to a limiting distribution"): the limit, as the starting time recedes to
 `−∞`, of the Euler–Maruyama chain with step `h_ℓ = h₀ 2^{−ℓ}` started at `x₀`, whose step ending
-at time `−k h_ℓ` uses the Brownian increment `√h_ℓ z_k` (`limUnder`; the limit exists almost
-surely, `sq_integral_backIter_sub_limit_le`).  Its law is the limiting (invariant) distribution of
-the discretised chain (`MlmcLean/MarkovLimitLaw.lean`). -/
+at time `−k h_ℓ` uses the Brownian increment `√h_ℓ z_k`.  It is defined by `limUnder`, which
+returns an arbitrary point where the limit does not exist; under the hypotheses of
+`contracting_levels_mlmc` the limit exists almost surely, as that theorem states.  Its law is the
+limiting (invariant) distribution of the discretised chain (`MlmcLean/MarkovLimitLaw.lean`). -/
 noncomputable def contractLimit (a b : ℝ → ℝ) (h₀ x₀ : ℝ) (ℓ : ℕ) (z : ℕ → ℝ) : ℝ :=
   limUnder atTop fun n =>
     backIter (emStep a b (h₀ / 2 ^ ℓ)) n (fun k => Real.sqrt (h₀ / 2 ^ ℓ) * z k) x₀
 
 /-- **The chain started in the past is close to the stationary chain of the same step** (Giles 2015,
-§10.1, p. 61).  For the Euler–Maruyama chain with step `0 < v ≤ h₀` driven by `√v z_k`, the
-chains started `n` steps in the past converge almost surely as `n → ∞`, and for a
-`K_f`-Lipschitz payoff, with `K = max(K_f, 1)`:
+§10.1, p. 61).  Under the margin `K_b² + K_a² h₀ + δ ≤ 2κ`, for the Euler–Maruyama chain with
+step `0 < v ≤ h₀` driven by `√v z_k`, the chains started `n` steps in the past converge almost
+surely as `n → ∞` (`ae_tendsto_backIter`), and for a `K_f`-Lipschitz payoff `f` the payoff
+`f(X^v_∞)` of the limit is integrable (`memLp_limit`) and, with `K = max(K_f, 1)`,
 `(E[f(X^v_n)] − E[f(X^v_∞)])² ≤ 4K² (a(x₀)² h₀ + b(x₀)²)/(δ² v) · e^{−δ n v}`
 (`sq_integral_sub_limit_le` with the mean-square contraction `emStep_meanSquare_contraction`). -/
 lemma sq_integral_backIter_sub_limit_le (ha : LipschitzWith Ka a) (hb : LipschitzWith Kb b)
     (hdiss : ∀ x y, (x - y) * (a x - a y) ≤ -(κ * (x - y) ^ 2)) (hδ : 0 < δ) {h₀ : ℝ}
-    (hmargin : (Kb : ℝ) ^ 2 + 2 * (Ka : ℝ) ^ 2 * h₀ + δ ≤ 2 * κ) (x₀ : ℝ) {v : ℝ≥0}
+    (hmargin : (Kb : ℝ) ^ 2 + (Ka : ℝ) ^ 2 * h₀ + δ ≤ 2 * κ) (x₀ : ℝ) {v : ℝ≥0}
     (hv0 : 0 < v) (hvle : (v : ℝ) ≤ h₀) (n : ℕ) {f : ℝ → ℝ} {Kf : ℝ≥0}
     (hf : LipschitzWith Kf f) :
     (∀ᵐ z ∂stdNormalSeq, Tendsto (fun n => backIter (emStep a b v) n
         (fun k => Real.sqrt v * z k) x₀) atTop (𝓝 (limUnder atTop fun n =>
           backIter (emStep a b v) n (fun k => Real.sqrt v * z k) x₀))) ∧
+      Integrable (fun z => f (limUnder atTop fun n =>
+        backIter (emStep a b v) n (fun k => Real.sqrt v * z k) x₀)) stdNormalSeq ∧
       (∫ z, f (backIter (emStep a b v) n (fun k => Real.sqrt v * z k) x₀) ∂stdNormalSeq -
           ∫ z, f (limUnder atTop fun n =>
             backIter (emStep a b v) n (fun k => Real.sqrt v * z k) x₀) ∂stdNormalSeq) ^ 2 ≤
@@ -1321,7 +1375,6 @@ lemma sq_integral_backIter_sub_limit_le (ha : LipschitzWith Ka a) (hb : Lipschit
   obtain ⟨hξ, hξm, hlaw⟩ := scaled_stdNormal v
   have hstep : (Kb : ℝ) ^ 2 + (Ka : ℝ) ^ 2 * v < 2 * κ := by
     have h1 := mul_le_mul_of_nonneg_left hvle (sq_nonneg (Ka : ℝ))
-    have h2 : (0 : ℝ) ≤ (Ka : ℝ) ^ 2 * h₀ := by nlinarith [sq_nonneg (Ka : ℝ)]
     linarith
   obtain ⟨hρ0, hρ1, hcon⟩ := emStep_meanSquare_contraction ha hb hdiss hv0 hstep
   have hma : Measurable a := ha.continuous.measurable
@@ -1355,7 +1408,6 @@ lemma sq_integral_backIter_sub_limit_le (ha : LipschitzWith Ka a) (hb : Lipschit
         backIter (emStep a b v) n (fun k => Real.sqrt v * z k) x₀)) :=
     (ae_tendsto_backIter hφm (by norm_num) hρ'0 hρ'1 hφ hξ hξm hlaw x₀ hcfin).mono
       fun z hz => tendsto_nhds_limUnder hz
-  refine ⟨hX, ?_⟩
   -- the payoff normalised to a `1`-Lipschitz function
   obtain ⟨K, hK⟩ : ∃ K : ℝ, K = max (Kf : ℝ) 1 := ⟨_, rfl⟩
   have hK1 : 1 ≤ K := hK ▸ le_max_right _ _
@@ -1367,6 +1419,10 @@ lemma sq_integral_backIter_sub_limit_le (ha : LipschitzWith Ka a) (hb : Lipschit
       _ ≤ |x - y| * K := by
         rw [mul_comm, hK]
         exact mul_le_mul_of_nonneg_left (le_max_left _ _) (abs_nonneg _)
+  -- `f(X^v_∞)` is integrable
+  have hLX := memLp_limit hφm hφ hξ hξm hlaw one_pos le_rfl hρ'0 hρ'1 x₀ hcfin hgm hg hX
+  refine ⟨hX, ((hLX.const_mul K).integrable one_le_two).congr
+    (ae_of_all _ fun z => mul_div_cancel₀ _ hK0.ne'), ?_⟩
   have key := sq_integral_sub_limit_le hφm hφ hξ hξm hlaw one_pos le_rfl hρ'0 hρ'1 x₀ hcfin hgm hg
     hX n
   rw [hc, integral_div, integral_div, ← sub_div, div_pow, div_le_iff₀ (by positivity),
@@ -1382,7 +1438,7 @@ lemma sq_integral_backIter_sub_limit_le (ha : LipschitzWith Ka a) (hb : Lipschit
     have h1 := mul_le_mul_of_nonneg_left hmargin hpos.le
     have h2 : (v : ℝ) * (v * (Ka : ℝ) ^ 2) ≤ v * (h₀ * (Ka : ℝ) ^ 2) :=
       mul_le_mul_of_nonneg_left (mul_le_mul_of_nonneg_right hvle (sq_nonneg _)) hpos.le
-    nlinarith [mul_nonneg (mul_nonneg hpos.le hpos.le) (sq_nonneg (Ka : ℝ))]
+    nlinarith
   have h1ρ : (v : ℝ) * δ ≤ 1 - ρ := by linarith
   have hhδ : 0 < (v : ℝ) * δ := mul_pos hpos hδ
   have hcS : (a x₀ * v) ^ 2 + b x₀ ^ 2 * v ≤ v * (a x₀ ^ 2 * h₀ + b x₀ ^ 2) := by
@@ -1419,14 +1475,14 @@ lemma sq_integral_backIter_sub_limit_le (ha : LipschitzWith Ka a) (hb : Lipschit
         ring
 
 /-- **The level paths and the stationary chains of the level steps have the same limiting mean**
-(Giles 2015, §10.1, p. 61): if `T_ℓ = N_ℓ h_ℓ ≥ c ℓ` with `c δ ≥ 8 log 2`, then
-`E[f(X^{(ℓ)})] − E[f(X^{h_ℓ}_∞)] → 0` for every Lipschitz payoff `f`
+(Giles 2015, §10.1, p. 61): under the margin `K_b² + K_a² h₀ + δ ≤ 2κ`, if `T_ℓ = N_ℓ h_ℓ ≥ c ℓ`
+with `c δ ≥ 8 log 2`, then `E[f(X^{(ℓ)})] − E[f(X^{h_ℓ}_∞)] → 0` for every Lipschitz payoff `f`
 (`sq_integral_backIter_sub_limit_le`: the square is at most
 `4K² (a(x₀)² h₀ + b(x₀)²)/(δ² h₀) · 128^{−ℓ}`). -/
 lemma tendsto_integral_contractPath_sub_limit (ha : LipschitzWith Ka a)
     (hb : LipschitzWith Kb b) (hdiss : ∀ x y, (x - y) * (a x - a y) ≤ -(κ * (x - y) ^ 2))
     (hδ : 0 < δ) {h₀ : ℝ} (hh₀ : 0 < h₀)
-    (hmargin : (Kb : ℝ) ^ 2 + 2 * (Ka : ℝ) ^ 2 * h₀ + δ ≤ 2 * κ) (x₀ : ℝ) {N : ℕ → ℕ} {c : ℝ}
+    (hmargin : (Kb : ℝ) ^ 2 + (Ka : ℝ) ^ 2 * h₀ + δ ≤ 2 * κ) (x₀ : ℝ) {N : ℕ → ℕ} {c : ℝ}
     (hc : 8 * Real.log 2 ≤ c * δ) (hT : ∀ ℓ : ℕ, c * ℓ ≤ N ℓ * (h₀ / 2 ^ ℓ)) {f : ℝ → ℝ}
     {Kf : ℝ≥0} (hf : LipschitzWith Kf f) :
     Tendsto (fun ℓ => ∫ z, f (contractPath a b h₀ x₀ N ℓ z) ∂stdNormalSeq -
@@ -1444,7 +1500,7 @@ lemma tendsto_integral_contractPath_sub_limit (ha : LipschitzWith Ka a)
     have hpos : 0 < h₀ / 2 ^ ℓ := by positivity
     have hle : h₀ / 2 ^ ℓ ≤ h₀ := div_le_self hh₀.le (one_le_pow₀ (by norm_num))
     have h1 := (sq_integral_backIter_sub_limit_le ha hb hdiss hδ hmargin x₀
-      (v := ⟨h₀ / 2 ^ ℓ, hpos.le⟩) hpos hle (N ℓ) hf).2
+      (v := ⟨h₀ / 2 ^ ℓ, hpos.le⟩) hpos hle (N ℓ) hf).2.2
     refine h1.trans ?_
     show 4 * max (Kf : ℝ) 1 ^ 2 * (a x₀ ^ 2 * h₀ + b x₀ ^ 2) / (δ ^ 2 * (h₀ / 2 ^ ℓ)) *
       Real.exp (-(δ * (N ℓ * (h₀ / 2 ^ ℓ)))) ≤ C * (1 / 128) ^ ℓ
@@ -1475,40 +1531,56 @@ lemma tendsto_integral_contractPath_sub_limit (ha : LipschitzWith Ka a)
 /-- **Theorem 1 end to end for a contracting SDE with level-dependent time steps** (Giles 2015,
 §10.1, p. 61: "A very similar approach can also be used for contracting SDEs which converge to a
 limiting distribution.  For these, the level `ℓ` path will perform a simulation for the time
-interval `[−T_ℓ, 0]`, using timestep `h_ℓ` …", with §2.1, Theorem 1).  With the hypotheses of
-`variance_contractLevels_le_two_pow` (dissipative Lipschitz drift, Lipschitz volatility, margin
-`K_b² + 2K_a²h₀ + δ ≤ 2κ`, `h_ℓ = h₀ 2^{−ℓ}`, `2N_ℓ ≤ N_{ℓ+1}`, `T_ℓ = N_ℓ h_ℓ ≥ c ℓ` with
-`c δ ≥ 8 log 2`, a `K_f`-Lipschitz payoff `f`) and `N_ℓ ≤ m (ℓ + 1) 2^ℓ`:
-(1) the level means converge, `E[f(X^{(ℓ)})] → P`, and also `E[f(X^{h_ℓ}_∞)] → P`, where
-`X^h_∞` is the stationary Euler–Maruyama chain with step `h` (`contractLimit`, the almost sure
-limit of the chain started further and further in the past): `P` is the limit, along
-`h_ℓ → 0`, of the means under the limiting distributions of the discretised chains;
-(2) for every `η > 0` there is `c₄ > 0` such that for every `0 < ε < e⁻¹` there are `L` and
+interval `[−T_ℓ, 0]`, using timestep `h_ℓ` …", with §2.1, Theorem 1).  Let `a` be
+`K_a`-Lipschitz and dissipative, `(x − y)(a(x) − a(y)) ≤ −κ (x − y)²`, let `b` be
+`K_b`-Lipschitz, let `h_ℓ = h₀ 2^{−ℓ}` with the margin `K_b² + K_a² h₀ + δ ≤ 2κ`, `δ > 0`
+(mean-square contraction with margin `δ` of the Euler–Maruyama step for every step `≤ h₀`), let
+level `ℓ` take `N_ℓ` steps with `2N_ℓ ≤ N_{ℓ+1}`, `T_ℓ = N_ℓ h_ℓ ≥ c ℓ`, `c δ ≥ 8 log 2` and
+`N_ℓ ≤ m (ℓ + 1) 2^ℓ`, with the coupling of `variance_contractLevels_le`, and let `f` be a
+`K_f`-Lipschitz payoff.  Then:
+(1) for every `ℓ`, `f(X^{(ℓ)})` is integrable, the chain with step `h_ℓ` started at `x₀` `n` steps
+in the past converges almost surely as `n → ∞` to the stationary chain
+`X^{h_ℓ}_∞ = contractLimit ℓ` (whose law is the limiting distribution of the discretised chain),
+and `f(X^{h_ℓ}_∞)` is integrable;
+(2) the level means converge, `E[f(X^{(ℓ)})] → P`, and also `E[f(X^{h_ℓ}_∞)] → P`: `P` is the
+limit, along `h_ℓ → 0`, of the means under the limiting distributions of the discretised chains;
+(3) for every `η > 0` there is `c₄ > 0` such that for every `0 < ε < e⁻¹` there are `L` and
 sample sizes `M_ℓ ≥ 1` for which the multilevel estimator
 `∑_{ℓ ≤ L} M_ℓ⁻¹ ∑_{n < M_ℓ} (f(X^f_ℓ) − f(X^c_{ℓ−1}))(z^{(ℓ,n)})` (with `f(X^c_{−1}) ≡ 0` and
-independent copies `z^{(ℓ,n)}` of the normal sequence) has mean square error `< ε²` about `P`,
-at cost `∑_{ℓ ≤ L} M_ℓ N_ℓ ≤ c₄ ε^{−2−2η}`.
+independent copies `z^{(ℓ,n)}` of the normal sequence) has a square-integrable error with mean
+square `< ε²` about `P`, at cost `∑_{ℓ ≤ L} M_ℓ N_ℓ ≤ c₄ ε^{−2−2η}`.
 Theorem 1 is applied with `α = 1/2` (the means form a Cauchy sequence with
 `|E[f(X^{(ℓ+1)})] − E[f(X^{(ℓ)})]| = O(2^{−ℓ/2})`, by (2.4) and the variance bound), `β = 1`
-and `γ = 1 + η`.  Deviations: the cost of a sample is counted as the `N_ℓ` steps of its fine
+and `γ = 1 + η`.  Deviations: one dimension; the payoff is Lipschitz (the paper's §10.1 allows
+Hölder payoffs for Markov chains); the cost of a sample is counted as the `N_ℓ` steps of its fine
 path (the coarse path adds `N_{ℓ−1} ≤ N_ℓ/2` more); the cost `N_ℓ ≍ T_ℓ/h_ℓ` grows like `ℓ 2^ℓ`,
 not like `2^ℓ`, so Theorem 1 (which needs `C_ℓ ≤ c₃ 2^{γℓ}`) gives `ε^{−2−2η}` for every
-`η > 0`; the target `P` is identified with the limit of the means under the limiting
-distributions of the Euler–Maruyama chains, not with the mean under the invariant law of the
-SDE: that identification needs SDE theory (convergence of the invariant laws of the scheme as
-`h → 0`) that the library does not have. -/
+`η > 0`; `β = 1` is not sharp for additive noise (`β = 2` there for a smooth drift, which would
+give `O(ε^{−2})`; not proved, see `integral_sq_fine_sub_coarse_le`); the target `P` is
+identified with the limit of the means under the limiting distributions of the Euler–Maruyama
+chains, not with the mean under the invariant law of the SDE: that identification needs SDE
+theory (convergence of the invariant laws of the scheme as `h → 0`) that the library does not
+have. -/
 theorem contracting_levels_mlmc (ha : LipschitzWith Ka a) (hb : LipschitzWith Kb b)
     (hdiss : ∀ x y, (x - y) * (a x - a y) ≤ -(κ * (x - y) ^ 2)) (hδ : 0 < δ) {h₀ : ℝ}
-    (hh₀ : 0 < h₀) (hmargin : (Kb : ℝ) ^ 2 + 2 * (Ka : ℝ) ^ 2 * h₀ + δ ≤ 2 * κ) (x₀ : ℝ)
+    (hh₀ : 0 < h₀) (hmargin : (Kb : ℝ) ^ 2 + (Ka : ℝ) ^ 2 * h₀ + δ ≤ 2 * κ) (x₀ : ℝ)
     {N : ℕ → ℕ} (hN : ∀ ℓ, 2 * N ℓ ≤ N (ℓ + 1)) {c : ℝ} (hc : 8 * Real.log 2 ≤ c * δ)
     (hT : ∀ ℓ : ℕ, c * ℓ ≤ N ℓ * (h₀ / 2 ^ ℓ)) {m : ℕ}
     (hNm : ∀ ℓ, N ℓ ≤ m * (ℓ + 1) * 2 ^ ℓ) {f : ℝ → ℝ} {Kf : ℝ≥0} (hf : LipschitzWith Kf f)
     {η : ℝ} (hη : 0 < η) :
+    (∀ ℓ, Integrable (fun z => f (contractPath a b h₀ x₀ N ℓ z)) stdNormalSeq ∧
+      (∀ᵐ z ∂stdNormalSeq, Tendsto (fun n => backIter (emStep a b (h₀ / 2 ^ ℓ)) n
+        (fun k => Real.sqrt (h₀ / 2 ^ ℓ) * z k) x₀) atTop (𝓝 (contractLimit a b h₀ x₀ ℓ z))) ∧
+      Integrable (fun z => f (contractLimit a b h₀ x₀ ℓ z)) stdNormalSeq) ∧
     ∃ P : ℝ, Tendsto (fun ℓ => ∫ z, f (contractPath a b h₀ x₀ N ℓ z) ∂stdNormalSeq) atTop
         (𝓝 P) ∧
       Tendsto (fun ℓ => ∫ z, f (contractLimit a b h₀ x₀ ℓ z) ∂stdNormalSeq) atTop (𝓝 P) ∧
       ∃ c₄ : ℝ, 0 < c₄ ∧ ∀ ε : ℝ, 0 < ε → ε < Real.exp (-1) →
         ∃ (L : ℕ) (M : ℕ → ℕ), (∀ ℓ, 0 < M ℓ) ∧
+          Integrable (fun x => (∑ ℓ ∈ range (L + 1), blockMean (fineCoarseDiff
+              (fun ℓ z => f (contractPath a b h₀ x₀ N ℓ z))
+              (fun ℓ z => f (contractPath a b h₀ x₀ N ℓ (pairAvg z)))) (fun p x => x p) ℓ
+                (M ℓ) x - P) ^ 2) (Measure.infinitePi fun _ : ℕ × ℕ => stdNormalSeq) ∧
           ∫ x, (∑ ℓ ∈ range (L + 1), blockMean (fineCoarseDiff
               (fun ℓ z => f (contractPath a b h₀ x₀ N ℓ z))
               (fun ℓ z => f (contractPath a b h₀ x₀ N ℓ (pairAvg z)))) (fun p x => x p) ℓ
@@ -1541,19 +1613,21 @@ theorem contracting_levels_mlmc (ha : LipschitzWith Ka a) (hb : LipschitzWith Kb
     rw [hPcPf]
     exact (integral_comp_of_measurePreserving measurePreserving_pairAvg
       (hPfm ℓ).aestronglyMeasurable).symm
-  -- the constants
-  have hC₁ := contractC₁_nonneg a b Ka Kb hδ hh₀.le x₀
-  have hC₂ := contractC₂_nonneg a b Ka Kb hδ hh₀.le x₀
+  -- the constants (the coupling constants at `H = h₀/2`, the largest fine step)
+  have hh₀2 : 0 ≤ h₀ / 2 := by positivity
+  have hC₁ := contractC1_nonneg a b Ka Kb hδ hh₀2 x₀
+  have hC₂ := contractC2_nonneg a b Ka Kb hδ hh₀2 x₀
   have hM₀ := contractM_nonneg a b Ka Kb hδ hh₀.le x₀
   obtain ⟨B, hB⟩ : ∃ B : ℝ, B = (Kf : ℝ) ^ 2 *
-      (contractC₁ a b Ka Kb δ h₀ x₀ * h₀ + 2 * contractC₂ a b Ka Kb δ h₀ x₀) := ⟨_, rfl⟩
+      (contractC1 a b Ka Kb δ (h₀ / 2) x₀ * h₀ + 2 * contractC2 a b Ka Kb δ (h₀ / 2) x₀) :=
+    ⟨_, rfl⟩
   have hB0 : 0 ≤ B := by rw [hB]; positivity
   -- the second moments of the corrections decay like `2^{−ℓ}`
   have hsq : ∀ ℓ : ℕ, ∫ z, (Pf (ℓ + 1) z - Pc ℓ z) ^ 2 ∂stdNormalSeq ≤
       B * (2 : ℝ) ^ (-((ℓ + 1 : ℕ) : ℝ)) := fun ℓ => by
     rw [hPfdef, hPcdef, hB, mul_assoc]
-    exact (integral_sq_contractDiff_le ha hb hdiss hδ hh₀ hmargin x₀ hN hf ℓ).trans
-      (mul_le_mul_of_nonneg_left (contract_bound_le_two_pow hC₂ hδ hc hT ℓ) (sq_nonneg _))
+    exact (integral_sq_contractDiff_le ha hb hdiss hδ hh₀ hmargin x₀ hf ℓ (hN ℓ)).trans
+      (mul_le_mul_of_nonneg_left (contract_bound_le_two_pow hC₂ hδ hc ℓ (hT ℓ)) (sq_nonneg _))
   -- the means of the levels form a Cauchy sequence: condition (i) with `α = 1/2`
   obtain ⟨r, hrdef⟩ : ∃ r : ℝ, r = (2 : ℝ) ^ (-(1 / 2 : ℝ)) := ⟨_, rfl⟩
   have hr0 : 0 ≤ r := by rw [hrdef]; positivity
@@ -1664,9 +1738,20 @@ theorem contracting_levels_mlmc (ha : LipschitzWith Ka a) (hb : LipschitzWith Kb
       hT hf)
     rw [sub_zero] at h
     exact h.congr fun ℓ => sub_sub_cancel _ _
-  refine ⟨P, hP, hlimP, c₄, hc₄, fun ε hε hε1 => ?_⟩
+  -- the stationary chains: almost sure convergence and integrability
+  have hstat : ∀ ℓ : ℕ, (∀ᵐ z ∂stdNormalSeq, Tendsto (fun n => backIter (emStep a b (h₀ / 2 ^ ℓ))
+      n (fun k => Real.sqrt (h₀ / 2 ^ ℓ) * z k) x₀) atTop (𝓝 (contractLimit a b h₀ x₀ ℓ z))) ∧
+      Integrable (fun z => f (contractLimit a b h₀ x₀ ℓ z)) stdNormalSeq := fun ℓ => by
+    have hpos : 0 < h₀ / 2 ^ ℓ := by positivity
+    have hle : h₀ / 2 ^ ℓ ≤ h₀ := div_le_self hh₀.le (one_le_pow₀ (by norm_num))
+    obtain ⟨hX, hXint, -⟩ := sq_integral_backIter_sub_limit_le ha hb hdiss hδ hmargin x₀
+      (v := ⟨h₀ / 2 ^ ℓ, hpos.le⟩) hpos hle 0 hf
+    exact ⟨hX, hXint⟩
+  refine ⟨fun ℓ => ⟨(hPf ℓ).integrable one_le_two, hstat ℓ⟩, P, hP, hlimP, c₄, hc₄,
+    fun ε hε hε1 => ?_⟩
   obtain ⟨L, M, hM, hmse, hcost⟩ := H ε hε hε1
-  refine ⟨L, M, hM, ?_, ?_⟩
+  refine ⟨L, M, hM, ((memLp_finsetSum _ fun ℓ _ => memLp_blockMean hω
+    (memLp_fineCoarseDiff hPf hPc) ℓ (M ℓ)).sub (memLp_const P)).integrable_sq, ?_, ?_⟩
   · rw [integral_const, probReal_univ, one_smul] at hmse
     exact hmse
   · rw [complexityBound_of_gt (by linarith : (1 : ℝ) < 1 + η),

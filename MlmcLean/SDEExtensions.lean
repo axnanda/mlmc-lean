@@ -15,15 +15,16 @@ as `dS_t = −S_t³ dt + dW_t`, which have a super-linear growth in the drift an
 This again leads to numerical instability if a uniform timestep is used. … Other approaches to
 these problems include the use of drift-implicit methods (Dereich, Neuenkirch and Szpruch 2012,
 Higham, Mao and Stuart 2002)").  `MlmcLean/DriftImplicit.lean` treats additive noise.  Here the
-noise is multiplicative, `X_{n+1} = X_n + h a(X_{n+1}) + b(X_n)√h Z_n` (`implicitPathMult`), with a
-continuous, one-sided Lipschitz drift pointing towards `0` (`y a(y) ≤ 0`) and a volatility of
-linear growth, `b(x)² ≤ c(1 + x²)`.
+noise is multiplicative, `X_{n+1} = X_n + h a(X_{n+1}) + b(X_n)√h Z_n` (`implicitPathMult`, whose
+recursion is `implicitPathMult_succ_eq`), with a continuous, one-sided Lipschitz drift pointing
+towards `0` (`y a(y) ≤ 0`) and a volatility of linear growth, `b(x)² ≤ c(1 + x²)`.
 * `implicitPathMult_second_moment_le`: `X_N ∈ L²` and
   `E X_N² ≤ (x₀² + 1)(1 + ch)^N − 1 ≤ (x₀² + 1) e^{cNh} − 1`, from
   `|X_{n+1}| ≤ |X_n + b(X_n)√h Z_n|` (`abs_implicitStep_le`) and the independence of `X_n` and
   `Z_n` (`integral_add_mul_mul_sq`).
-* `implicitPathMult_second_moment_le_uniform`: hence `E X_N² ≤ (x₀² + 1) e^{cT} − 1` for `h = T/N`
-  and every `N`; for the paper's cubic drift with the noise `σS dW`:
+* `implicitPathMult_second_moment_le_uniform`: hence `E X_N² ≤ (x₀² + 1) e^{cT} − 1` for every
+  timestep `h` and number of steps `N` with `Nh ≤ T`; `implicitPathMult_second_moment_le_div` for
+  the uniform timestep `h = T/N`; for the paper's cubic drift with the noise `σS dW`:
   `implicitCubicMult_second_moment_le`.
 * `implicitPathMult_second_moment_sharp`: the first bound is attained for the zero drift and
   `b(x) = √(c(1 + x²))`.
@@ -40,12 +41,12 @@ pre-Brownian (finite-dimensional laws only).
   pre-Brownian with almost surely continuous paths) and `H ≠ 0`, `antitheticBM H B` is a Brownian
   motion; `iIndepFun_isBrownianReal_antitheticBM` for independent components, and
   `isBrownianReal_reverseFirstStep` for the reversal within the first coarse step only.
-* `map_iSup_antitheticBM`: hence payoffs of a continuum of path values have the same law under
-  `ω^a` as under `ω` (l. 1813–1814, p. 42: "This treatment has been extended to handle lookback and
-  barrier options"): for continuous `F`, `(sup_{t ≤ T} F(t, B^a_t), B^a_T)` has the law of
-  `(sup_{t ≤ T} F(t, B_t), B_T)` (`map_iSup_Icc_eq_of_isBrownianReal`: by continuity the supremum
-  is one over countably many times, whose joint law is that of any pre-Brownian motion,
-  `map_pi_eq_of_isPreBrownianReal`).
+* `map_iSup_antitheticBM`: hence, for continuous `F`, `(sup_{t ≤ T} F(t, B^a_t), B^a_T)` has the
+  law of `(sup_{t ≤ T} F(t, B_t), B_T)`, so lookback- and barrier-type functionals of the exact
+  path agree in law (l. 1813–1814, p. 42: "This treatment has been extended to handle lookback and
+  barrier options").  This follows from a fact about any two Brownian motions,
+  `map_iSup_Icc_eq_of_isBrownianReal`: by continuity the supremum is one over countably many
+  times, whose joint law is that of any pre-Brownian motion (`map_pi_eq_of_isPreBrownianReal`).
 
 **§9.1: several kinks** (lines 2550–2554, p. 58: "In their case, the function `f` was piecewise
 linear, not twice differentiable, and so the rate of variance convergence was slightly lower, with
@@ -53,10 +54,14 @@ linear, not twice differentiable, and so the rate of variance convergence was sl
 `O(ε⁻²)`").  `MlmcLean/NestedRates.lean` and `MlmcLean/NestedKinkSde.lean` treat one kink.  Here
 `f = f₀ + ∑_{i ∈ ι} c_i max(· − k_i, 0)` with finitely many kinks and `f₀′` Lipschitz (every
 continuous `f` that is `C^{1,1}` on each closed interval between consecutive kinks has this form,
-`c_i` being the jump of `f′` at `k_i`; for a piecewise linear `f`, `f₀` is affine).  With bounded
-conditional fourth moments and a small-ball bound for `E_W[g(Z, W)]` at each kink:
-* `nested_kinks_variance_rate`: `β = 3/2`;
-* `nested_kinks_bias_rate`: `α = 1`;
+`c_i` being the jump of `f′` at `k_i`; for a piecewise linear `f`, `f₀` is affine).  With a
+small-ball bound for `E_W[g(Z, W)]` at each kink:
+* `nested_kinks_variance_rate`: `β = 3/2`, for bounded conditional fourth moments
+  `E_W[g(z, W)⁴] ≤ m₄`;
+* `nested_kinks_bias_rate`: `α = 1`, for `E[g(Z, W)⁴] < ∞` and bounded centred conditional fourth
+  moments (the hypotheses of `nested_bias_rate` and `nested_kink_bias_rate_one`), so the
+  conditional mean may be unbounded; `nested_kinks_bias_rate_of_fiber` under the hypotheses of
+  `nested_kinks_variance_rate`;
 * `nested_kinks_mlmc_complexity`: cost `O(ε⁻²)`, Theorem 1 with `α = 1`, `β = 3/2`, `γ = 1`.
 The corrections are linear in `f` (`nestedDelta_succ_kinks`, `nestedP_kinks`,
 `nestedTarget_kinks`), so these follow from the smooth case (`nested_variance_rate`,
@@ -77,12 +82,25 @@ and Stuart 2002)") for the SDE `dX_t = a(X_t) dt + b(X_t) dW_t` with timestep `h
 normal variables `z = (Z_0, Z_1, …)` (Brownian increments `ΔW_n = √h Z_n`): `X_0 = x₀` and
 `X_{n+1} = implicitStep a h (X_n + b(X_n)√h Z_n)`, i.e.
 `X_{n+1} = X_n + h a(X_{n+1}) + b(X_n)√h Z_n` whenever the implicit equation is solvable
-(`implicitStep_eq`).  The drift is evaluated at the new point, the volatility at the old one.  For
-a constant volatility `b ≡ σ` this is `implicitPath` (`implicitPathMult_const`). -/
+(`implicitPathMult_succ_eq`, under the hypotheses of `existsUnique_implicitStep`, which also make
+the solution unique).  The drift is evaluated at the new point, the volatility at the old one.
+For a constant volatility `b ≡ σ` this is `implicitPath` (`implicitPathMult_const`). -/
 noncomputable def implicitPathMult (a b : ℝ → ℝ) (h x₀ : ℝ) (z : ℕ → ℝ) : ℕ → ℝ
   | 0 => x₀
   | n + 1 => implicitStep a h (implicitPathMult a b h x₀ z n +
       b (implicitPathMult a b h x₀ z n) * √h * z n)
+
+/-- The drift-implicit path with multiplicative noise satisfies its implicit recursion
+`X_{n+1} = X_n + h a(X_{n+1}) + b(X_n)√h z_n` (Giles 2015, §5.6, p. 44, l. 1901–1902: "the use of
+drift-implicit methods") under the hypotheses of `existsUnique_implicitStep`, which also says that
+`X_{n+1}` is the only solution (take `x = X_n`, `c = b(X_n)√h z_n` there). -/
+lemma implicitPathMult_succ_eq {a : ℝ → ℝ} {K h : ℝ} (ha : Continuous a)
+    (hK : ∀ x y, (a x - a y) * (x - y) ≤ K * (x - y) ^ 2) (hh : 0 ≤ h) (hhK : h * K < 1)
+    (b : ℝ → ℝ) (x₀ : ℝ) (z : ℕ → ℝ) (n : ℕ) :
+    implicitPathMult a b h x₀ z (n + 1) = implicitPathMult a b h x₀ z n +
+      h * a (implicitPathMult a b h x₀ z (n + 1)) +
+        b (implicitPathMult a b h x₀ z n) * √h * z n :=
+  (existsUnique_implicitStep ha hK hh hhK _ _).2
 
 /-- The drift-implicit path with multiplicative noise at step `n` depends only on
 `z_0, …, z_{n−1}` (Giles 2015, §5.6: so `X_n` is independent of the next increment `Z_n`). -/
@@ -201,7 +219,7 @@ survey states no theorem; this is the moment bound behind the remedy, for multip
 constant `K` and pointing towards `0` (`y a(y) ≤ 0`; e.g. `a(y) = −y³`, `K = 0`), `h ≥ 0` with
 `hK < 1`, `b` measurable with `b(x)² ≤ c(1 + x²)` for all `x`, and `Z_0, …, Z_{N−1}` independent
 with law `N(0, 1)`.  Then the scheme `X_{n+1} = X_n + h a(X_{n+1}) + b(X_n)√h Z_n`, `X_0 = x₀`
-(`implicitPathMult`), is square integrable and
+(`implicitPathMult`; the recursion is `implicitPathMult_succ_eq`), is square integrable and
 `E X_N² ≤ (x₀² + 1)(1 + ch)^N − 1 ≤ (x₀² + 1) e^{cNh} − 1`,
 so `E X_N² ≤ (x₀² + 1) e^{cT} − 1` whenever `Nh ≤ T`, whatever the timestep
 (`implicitPathMult_second_moment_le_uniform`).  The first bound is attained for the zero drift and
@@ -289,15 +307,17 @@ l. 1901–1902: "the use of drift-implicit methods").  The zero drift is continu
 and points towards `0`, so it satisfies the hypotheses of `implicitPathMult_second_moment_le` with
 `K = 0`; take the volatility `b(x) = √(c(1 + x²))`, `c ≥ 0`, for which `b(x)² = c(1 + x²)`.  For
 `h ≥ 0` and independent `Z_0, …, Z_{N−1}` with law `N(0, 1)` the scheme (here the Euler–Maruyama
-scheme for `dX = b(X) dW`) satisfies `E X_N² = (x₀² + 1)(1 + ch)^N − 1`: the bound of
-`implicitPathMult_second_moment_le` holds with equality, so it cannot be improved under its
-hypotheses.  Proof: `E X_{n+1}² = E X_n² + h E b(X_n)² = E X_n² + ch(1 + E X_n²)`
+scheme for `dX = b(X) dW`) is square integrable and satisfies `E X_N² = (x₀² + 1)(1 + ch)^N − 1`:
+the bound of `implicitPathMult_second_moment_le` holds with equality, so it cannot be improved
+under its hypotheses.  Proof: `E X_{n+1}² = E X_n² + h E b(X_n)² = E X_n² + ch(1 + E X_n²)`
 (`integral_add_mul_mul_sq`). -/
 theorem implicitPathMult_second_moment_sharp {Ω : Type*} [MeasurableSpace Ω] {μ : Measure Ω}
     {h c : ℝ} (hh : 0 ≤ h) (hc : 0 ≤ c) (x₀ : ℝ) {N : ℕ} (Z : ℕ → Ω → ℝ)
     (hZ : ∀ n < N, μ.map (Z n) = gaussianReal 0 1)
     (hind : iIndepFun (fun n : Fin N => Z n) μ) :
-    ∫ ω, implicitPathMult (fun _ => 0) (fun x => √(c * (1 + x ^ 2))) h x₀
+    MemLp (fun ω => implicitPathMult (fun _ => 0) (fun x => √(c * (1 + x ^ 2))) h x₀
+        (fun n => Z n ω) N) 2 μ ∧
+      ∫ ω, implicitPathMult (fun _ => 0) (fun x => √(c * (1 + x ^ 2))) h x₀
         (fun n => Z n ω) N ^ 2 ∂μ = (x₀ ^ 2 + 1) * (1 + c * h) ^ N - 1 := by
   have hprob : IsProbabilityMeasure μ := hind.isProbabilityMeasure
   have hm : ∀ n < N, AEMeasurable (Z n) μ := fun n hn =>
@@ -343,17 +363,48 @@ theorem implicitPathMult_second_moment_sharp {Ω : Type*} [MeasurableSpace Ω] {
       refine ⟨hY2, ?_⟩
       rw [hE, hB, Real.sq_sqrt hh, hXb', pow_succ (1 + c * h) n]
       ring
-  have := (key N le_rfl).2
-  linarith
+  obtain ⟨hmem, hval⟩ := key N le_rfl
+  exact ⟨hmem, by linarith⟩
+
+/-- **Moments bounded uniformly in the timestep** (Giles 2015, §5.6, p. 44, l. 1893–1902: "This
+again leads to numerical instability if a uniform timestep is used. … Other approaches to these
+problems include the use of drift-implicit methods").  Under the hypotheses of
+`implicitPathMult_second_moment_le` (in particular `h ≥ 0` and `hK < 1`), if `Nh ≤ T`, then the
+scheme is square integrable and `E X_N² ≤ (x₀² + 1) e^{cT} − 1`: one bound for every timestep `h`
+and every number of steps `N` with `Nh ≤ T`.  Proof: `implicitPathMult_second_moment_le` and
+`e^{cNh} ≤ e^{cT}`, as `c ≥ 0` (from `b(0)² ≤ c`).  The uniform timestep `h = T/N` is
+`implicitPathMult_second_moment_le_div`. -/
+theorem implicitPathMult_second_moment_le_uniform {Ω : Type*} [MeasurableSpace Ω]
+    {μ : Measure Ω} {a b : ℝ → ℝ} {K h c T : ℝ} (ha : Continuous a)
+    (hK : ∀ x y, (a x - a y) * (x - y) ≤ K * (x - y) ^ 2) (hdiss : ∀ y, y * a y ≤ 0)
+    (hh : 0 ≤ h) (hhK : h * K < 1) (hb : Measurable b) (hbc : ∀ x, b x ^ 2 ≤ c * (1 + x ^ 2))
+    (x₀ : ℝ) {N : ℕ} (hNT : N * h ≤ T) (Z : ℕ → Ω → ℝ)
+    (hZ : ∀ n < N, μ.map (Z n) = gaussianReal 0 1)
+    (hind : iIndepFun (fun n : Fin N => Z n) μ) :
+    MemLp (fun ω => implicitPathMult a b h x₀ (fun n => Z n ω) N) 2 μ ∧
+      ∫ ω, implicitPathMult a b h x₀ (fun n => Z n ω) N ^ 2 ∂μ ≤
+        (x₀ ^ 2 + 1) * Real.exp (c * T) - 1 := by
+  have hc : 0 ≤ c := by
+    have h0 := hbc 0
+    nlinarith [sq_nonneg (b 0)]
+  obtain ⟨hmem, -, hexp⟩ := implicitPathMult_second_moment_le ha hK hdiss hh hhK hb hbc x₀ Z hZ
+    hind
+  refine ⟨hmem, hexp.trans ?_⟩
+  have h1 : Real.exp (c * (N * h)) ≤ Real.exp (c * T) :=
+    Real.exp_le_exp.2 (mul_le_mul_of_nonneg_left hNT hc)
+  have hx : 0 ≤ x₀ ^ 2 + 1 := by positivity
+  nlinarith [mul_le_mul_of_nonneg_left h1 hx]
 
 /-- **Moments bounded uniformly in the number of steps** (Giles 2015, §5.6, p. 44, l. 1893–1902:
 "This again leads to numerical instability if a uniform timestep is used. … Other approaches to
 these problems include the use of drift-implicit methods").  Under the hypotheses of
 `implicitPathMult_second_moment_le`, with `T ≥ 0`, `TK < 1` (every `T` for a non-increasing drift,
-`K = 0`) and the timestep `h = T/N`, the scheme is square integrable and
-`E X_N² ≤ (x₀² + 1) e^{cT} − 1` for every number of steps `N`.  (`TK < 1` makes the implicit step
-well defined for the largest timestep `h = T`, `N = 1`.) -/
-theorem implicitPathMult_second_moment_le_uniform {Ω : Type*} [MeasurableSpace Ω]
+`K = 0`) and the uniform timestep `h = T/N`, the scheme is square integrable and
+`E X_N² ≤ (x₀² + 1) e^{cT} − 1` for every number of steps `N`
+(`implicitPathMult_second_moment_le_uniform`, as `N · T/N ≤ T`).  (`TK < 1` makes the implicit step
+well defined for the largest timestep `h = T`, `N = 1`; for `N = 0` there is no step, so Lean's
+`T/0 = 0` plays no role.) -/
+theorem implicitPathMult_second_moment_le_div {Ω : Type*} [MeasurableSpace Ω]
     {μ : Measure Ω} {a b : ℝ → ℝ} {K c T : ℝ} (ha : Continuous a)
     (hK : ∀ x y, (a x - a y) * (x - y) ≤ K * (x - y) ^ 2) (hdiss : ∀ y, y * a y ≤ 0)
     (hT : 0 ≤ T) (hTK : T * K < 1) (hb : Measurable b) (hbc : ∀ x, b x ^ 2 ≤ c * (1 + x ^ 2))
@@ -375,38 +426,30 @@ theorem implicitPathMult_second_moment_le_uniform {Ω : Type*} [MeasurableSpace 
     rcases le_or_gt K 0 with hK0 | hK0
     · nlinarith
     · nlinarith
-  have hc : 0 ≤ c := by
-    have h0 := hbc 0
-    nlinarith [sq_nonneg (b 0)]
-  obtain ⟨hmem, -, hexp⟩ := implicitPathMult_second_moment_le ha hK hdiss hh hhK hb hbc x₀ Z hZ
-    hind
-  refine ⟨hmem, hexp.trans ?_⟩
-  have h1 : Real.exp (c * (N * (T / N))) ≤ Real.exp (c * T) :=
-    Real.exp_le_exp.2 (mul_le_mul_of_nonneg_left hNT hc)
-  have hx : 0 ≤ x₀ ^ 2 + 1 := by positivity
-  nlinarith [mul_le_mul_of_nonneg_left h1 hx]
+  exact implicitPathMult_second_moment_le_uniform ha hK hdiss hh hhK hb hbc x₀ hNT Z hZ hind
 
 /-- **The drift-implicit scheme for `dS = −S³ dt + σS dW`** (Giles 2015, §5.6, p. 44,
 l. 1893–1902: "SDEs such as `dS_t = −S_t³ dt + dW_t`, which have a super-linear growth in the drift
 and/or the volatility. … Other approaches to these problems include the use of drift-implicit
 methods").  The paper's cubic drift with the multiplicative noise `σS dW` in place of the additive
-`dW`: for `T ≥ 0`, every number of steps `N` and independent `Z_0, …, Z_{N−1}` with law `N(0, 1)`,
-the scheme `X_{n+1} = X_n − h X_{n+1}³ + σ X_n √h Z_n`, `h = T/N` (`implicitPathMult`), is square
-integrable and `E X_N² ≤ (x₀² + 1) e^{σ²T} − 1` (`implicitPathMult_second_moment_le_uniform` with
-`K = 0` and `c = σ²`).  For the additive noise of the paper the moments of the explicit scheme
-diverge (`emCubic_moment_tendsto_atTop`); the explicit scheme for this multiplicative noise is not
-treated here. -/
+`dW`: for every timestep `h ≥ 0` and number of steps `N` with `Nh ≤ T` (e.g. the uniform timestep
+`h = T/N`, `T ≥ 0`) and independent `Z_0, …, Z_{N−1}` with law `N(0, 1)`, the scheme
+`X_{n+1} = X_n − h X_{n+1}³ + σ X_n √h Z_n` (`implicitPathMult`) is square integrable and
+`E X_N² ≤ (x₀² + 1) e^{σ²T} − 1` (`implicitPathMult_second_moment_le_uniform` with `K = 0` and
+`c = σ²`).  For the additive noise of the paper the moments of the explicit scheme diverge
+(`emCubic_moment_tendsto_atTop`); the explicit scheme for this multiplicative noise is not treated
+here. -/
 theorem implicitCubicMult_second_moment_le {Ω : Type*} [MeasurableSpace Ω] {μ : Measure Ω}
-    (σ x₀ : ℝ) {T : ℝ} (hT : 0 ≤ T) (N : ℕ) (Z : ℕ → Ω → ℝ)
+    (σ x₀ : ℝ) {h T : ℝ} (hh : 0 ≤ h) {N : ℕ} (hNT : N * h ≤ T) (Z : ℕ → Ω → ℝ)
     (hZ : ∀ n < N, μ.map (Z n) = gaussianReal 0 1)
     (hind : iIndepFun (fun n : Fin N => Z n) μ) :
-    MemLp (fun ω => implicitPathMult (fun y => -y ^ 3) (fun x => σ * x) (T / N) x₀
+    MemLp (fun ω => implicitPathMult (fun y => -y ^ 3) (fun x => σ * x) h x₀
       (fun n => Z n ω) N) 2 μ ∧
-      ∫ ω, implicitPathMult (fun y => -y ^ 3) (fun x => σ * x) (T / N) x₀
+      ∫ ω, implicitPathMult (fun y => -y ^ 3) (fun x => σ * x) h x₀
         (fun n => Z n ω) N ^ 2 ∂μ ≤ (x₀ ^ 2 + 1) * Real.exp (σ ^ 2 * T) - 1 :=
   implicitPathMult_second_moment_le_uniform continuous_cubicDrift cubic_oneSidedLipschitz
-    cubic_dissipative hT (by simp) (by fun_prop) (fun x => by nlinarith [sq_nonneg σ])
-    x₀ N Z hZ hind
+    cubic_dissipative hh (by simp) (by fun_prop) (fun x => by nlinarith [sq_nonneg σ]) x₀ hNT
+    Z hZ hind
 
 /-! ### §5.3: the antithetic Brownian path is continuous -/
 
@@ -883,40 +926,49 @@ theorem nested_kinks_variance_rate {ι : Type*} [Fintype ι] {f f₀ f₀' : ℝ
 
 /-- **`α = 1` for an `f` with several kinks** (Giles 2015, §9.1, p. 58, l. 2550–2554, the setting
 of Bujok et al.: "the function `f` was piecewise linear, not twice differentiable"; the paper does
-not state `α` for it).  Under the hypotheses of `nested_kinks_variance_rate`, the bias integrand
-`P_ℓ − f(E_W[g(Z, W)])` of the level-`ℓ` approximation `P_ℓ = f(A_{2^ℓ})` is integrable and
-`2^ℓ |E[P_ℓ − f(E_W[g(Z, W)])]| ≤ (K/2)(1 + 16 m₄) + ∑_i |c_i| 3 c_{d,i} (1 + 1280 m₄)`.  Proof: the
-bias is linear in `f` (`nestedP_kinks`, `nestedTarget_kinks`); the smooth part has bias
+not state `α` for it).  Let `f = f₀ + ∑_{i ∈ ι} c_i max(· − k_i, 0)` with finitely many kinks `k_i`
+and `f₀` differentiable with a `K`-Lipschitz derivative (as in `nested_kinks_variance_rate`).  Let
+`E[g(Z, W)⁴] < ∞`, let the centred conditional fourth moments be bounded,
+`E_W[(g(z, W) − E_W[g(z, W)])⁴] ≤ m₄` for `ν`-a.e. `z`, and let the conditional mean put little
+mass near each kink, `ν{|E_W[g(Z, W)] − k_i| ≤ t} ≤ c_{d,i} t` for all `t > 0`.  Then the bias
+integrand `P_ℓ − f(E_W[g(Z, W)])` of the level-`ℓ` approximation `P_ℓ = f(A_{2^ℓ})` is integrable
+and `2^ℓ |E[P_ℓ − f(E_W[g(Z, W)])]| ≤ (K/2)(1 + 16 E[g(Z, W)⁴]) + ∑_i |c_i| 3 c_{d,i} (1 + 80 m₄)`.
+Proof: the bias is linear in `f` (`nestedP_kinks`, `nestedTarget_kinks`); the smooth part has bias
 `O(2^{−ℓ})` (`nested_bias_rate`), and so has each hinge by its small-ball bound
-(`nested_kink_bias_rate_one`, with centred conditional fourth moments `≤ 16 m₄` by
-`centred_moments_le`).  (For Theorem 1 with `β = 3/2 > γ = 1`, `α = ½` would suffice.) -/
+(`nested_kink_bias_rate_one`).  The hypotheses are those of these two results.  As in
+`nested_kink_bias_rate_one` the moments are centred, so the conditional mean may be unbounded
+(e.g. `g(Z, W) = Z + W` with `Z`, `W` Gaussian); with one kink and `f₀` affine (`K = 0`) the bound
+is that of `nested_kink_bias_rate_one`.  `E[g(Z, W)⁴] < ∞` is used for the curved part `f₀`
+(`nested_bias_rate`); the one-kink theorem does not need it.  It also makes `g(z, ·)⁴`
+`ρ`-integrable for `ν`-a.e. `z` (Fubini), so the centred moments are genuine integrals.  Under the
+bounded raw conditional moments of `nested_kinks_variance_rate` the bound becomes
+`(K/2)(1 + 16 m₄) + ∑_i |c_i| 3 c_{d,i} (1 + 1280 m₄)` (`nested_kinks_bias_rate_of_fiber`).  (For
+Theorem 1 with `β = 3/2 > γ = 1`, `α = ½` would suffice.) -/
 theorem nested_kinks_bias_rate {ι : Type*} [Fintype ι] {f f₀ f₀' : ℝ → ℝ} {K : ℝ}
     {c k c_d : ι → ℝ} (hf : ∀ x, f x = f₀ x + ∑ i, c i * max (x - k i) 0)
     (hf₀ : ∀ x, HasDerivAt f₀ (f₀' x) x) (hf₀' : ∀ x y, x ≤ y → |f₀' y - f₀' x| ≤ K * (y - x))
-    {g : 𝒵 → 𝒲 → ℝ} (hg : Measurable (Function.uncurry g)) {m₄ : ℝ}
-    (hfib : ∀ᵐ z ∂ν, Integrable (fun v => g z v ^ 4) ρ ∧ ∫ v, g z v ^ 4 ∂ρ ≤ m₄)
+    {g : 𝒵 → 𝒲 → ℝ} (hg : Measurable (Function.uncurry g))
+    (hg4 : Integrable (fun p : 𝒵 × 𝒲 => g p.1 p.2 ^ 4) (ν.prod ρ)) {m₄ : ℝ}
+    (hcent : ∀ᵐ z ∂ν, ∫ v, (g z v - ∫ u, g z u ∂ρ) ^ 4 ∂ρ ≤ m₄)
     (hball : ∀ i, ∀ t : ℝ, 0 < t →
       ν {z | |∫ v, g z v ∂ρ - k i| ≤ t} ≤ ENNReal.ofReal (c_d i * t))
     (ℓ : ℕ) :
     Integrable (fun p => nestedP f g ℓ p - nestedTarget f g ρ p) (nestedLaw ν ρ) ∧
       (2 : ℝ) ^ ℓ * |∫ p, (nestedP f g ℓ p - nestedTarget f g ρ p) ∂(nestedLaw ν ρ)| ≤
-        K / 2 * (1 + 16 * m₄) + ∑ i, |c i| * (3 * c_d i * (1 + 1280 * m₄)) := by
-  have hg4 := integrable_pow_four_of_fiber ν ρ hg hfib
-  have hE4 := integral_pow_four_le_of_fiber ν ρ hg hfib
-  have hK := lipschitz_const_nonneg hf₀'
+        K / 2 * (1 + 16 * ∫ p, g p.1 p.2 ^ 4 ∂(ν.prod ρ)) +
+          ∑ i, |c i| * (3 * c_d i * (1 + 80 * m₄)) := by
   have hhinge : ∀ i, ∀ x, (fun x => max (x - k i) 0) x = 0 + 0 * x + 1 * max (x - k i) 0 :=
     fun i x => by ring
-  -- centred conditional fourth moments
-  have hfibc : ∀ᵐ z ∂ν, Integrable (fun v => g z v ^ 4) ρ ∧
-      ∫ v, (g z v - ∫ u, g z u ∂ρ) ^ 4 ∂ρ ≤ 16 * m₄ :=
-    hfib.mono fun z hz => ⟨hz.1, (centred_moments_le hg.of_uncurry_left hz.1).2.1.trans
-      (by linarith [hz.2])⟩
-  have hi := fun i => nested_kink_bias_rate_one ν ρ (hhinge i) hg hfibc (hball i) ℓ
+  -- the fibres `g(z, ·)⁴` are integrable (Fubini), as `nested_kink_bias_rate_one` requires
+  have hfib : ∀ᵐ z ∂ν, Integrable (fun v => g z v ^ 4) ρ ∧
+      ∫ v, (g z v - ∫ u, g z u ∂ρ) ^ 4 ∂ρ ≤ m₄ :=
+    (fourth_moment_fibers ν ρ hg4).1.and hcent
+  have hi := fun i => nested_kink_bias_rate_one ν ρ (hhinge i) hg hfib (hball i) ℓ
   set D₀ : 𝒵 × (ℕ → 𝒲) → ℝ := fun p => nestedP f₀ g ℓ p - nestedTarget f₀ g ρ p
   set D : ι → 𝒵 × (ℕ → 𝒲) → ℝ := fun i p =>
     nestedP (fun x => max (x - k i) 0) g ℓ p - nestedTarget (fun x => max (x - k i) 0) g ρ p
   have hi' : ∀ i, Integrable (D i) (nestedLaw ν ρ) ∧
-      (2 : ℝ) ^ ℓ * |∫ p, D i p ∂(nestedLaw ν ρ)| ≤ 3 * c_d i * |1| * (1 + 80 * (16 * m₄)) :=
+      (2 : ℝ) ^ ℓ * |∫ p, D i p ∂(nestedLaw ν ρ)| ≤ 3 * c_d i * |1| * (1 + 80 * m₄) :=
     hi
   have i0 : Integrable D₀ (nestedLaw ν ρ) :=
     ((memLp_nestedP ν ρ hf₀ hf₀' hg hg4 ℓ).integrable one_le_two).sub
@@ -935,19 +987,17 @@ theorem nested_kinks_bias_rate {ι : Type*} [Fintype ι] {f f₀ f₀' : ℝ →
     simp_rw [hD]
     rw [integral_add i0 iS, integral_finsetSum _ fun i _ => (hi' i).1.const_mul _]
     simp only [integral_const_mul]
-  have hb0 : (2 : ℝ) ^ ℓ * |∫ p, D₀ p ∂(nestedLaw ν ρ)| ≤ K / 2 * (1 + 16 * m₄) := by
-    have h := nested_bias_rate ν ρ hf₀ hf₀' hg hg4 ℓ
-    have : K / 2 * (1 + 16 * ∫ p, g p.1 p.2 ^ 4 ∂(ν.prod ρ)) ≤ K / 2 * (1 + 16 * m₄) := by
-      gcongr
-    exact h.trans this
+  have hb0 : (2 : ℝ) ^ ℓ * |∫ p, D₀ p ∂(nestedLaw ν ρ)| ≤
+      K / 2 * (1 + 16 * ∫ p, g p.1 p.2 ^ 4 ∂(ν.prod ρ)) :=
+    nested_bias_rate ν ρ hf₀ hf₀' hg hg4 ℓ
   have hbi : ∀ i, (2 : ℝ) ^ ℓ * |c i * ∫ p, D i p ∂(nestedLaw ν ρ)| ≤
-      |c i| * (3 * c_d i * (1 + 1280 * m₄)) := fun i => by
+      |c i| * (3 * c_d i * (1 + 80 * m₄)) := fun i => by
     have h := (hi' i).2
-    rw [abs_one, mul_one, show 1 + 80 * (16 * m₄) = 1 + 1280 * m₄ by ring] at h
+    rw [abs_one, mul_one] at h
     rw [abs_mul]
     calc (2 : ℝ) ^ ℓ * (|c i| * |∫ p, D i p ∂(nestedLaw ν ρ)|)
         = |c i| * ((2 : ℝ) ^ ℓ * |∫ p, D i p ∂(nestedLaw ν ρ)|) := by ring
-      _ ≤ |c i| * (3 * c_d i * (1 + 1280 * m₄)) := mul_le_mul_of_nonneg_left h (abs_nonneg _)
+      _ ≤ |c i| * (3 * c_d i * (1 + 80 * m₄)) := mul_le_mul_of_nonneg_left h (abs_nonneg _)
   rw [hsplit]
   have h2 : (0 : ℝ) ≤ 2 ^ ℓ := by positivity
   calc (2 : ℝ) ^ ℓ * |∫ p, D₀ p ∂(nestedLaw ν ρ) + ∑ i, c i * ∫ p, D i p ∂(nestedLaw ν ρ)|
@@ -958,24 +1008,61 @@ theorem nested_kinks_bias_rate {ι : Type*} [Fintype ι] {f f₀ f₀' : ℝ →
     _ = (2 : ℝ) ^ ℓ * |∫ p, D₀ p ∂(nestedLaw ν ρ)| +
           ∑ i, (2 : ℝ) ^ ℓ * |c i * ∫ p, D i p ∂(nestedLaw ν ρ)| := by
         rw [mul_add, Finset.mul_sum]
-    _ ≤ K / 2 * (1 + 16 * m₄) + ∑ i, |c i| * (3 * c_d i * (1 + 1280 * m₄)) :=
+    _ ≤ K / 2 * (1 + 16 * ∫ p, g p.1 p.2 ^ 4 ∂(ν.prod ρ)) +
+          ∑ i, |c i| * (3 * c_d i * (1 + 80 * m₄)) :=
         add_le_add hb0 (Finset.sum_le_sum fun i _ => hbi i)
+
+/-- `α = 1` for an `f` with several kinks under bounded raw conditional fourth moments (Giles 2015,
+§9.1, p. 58, l. 2550–2554: "the function `f` was piecewise linear, not twice differentiable").
+Under the hypotheses of `nested_kinks_variance_rate` (`E_W[g(z, W)⁴] ≤ m₄` for `ν`-a.e. `z`), the
+bias integrand is integrable and
+`2^ℓ |E[P_ℓ − f(E_W[g(Z, W)])]| ≤ (K/2)(1 + 16 m₄) + ∑_i |c_i| 3 c_{d,i} (1 + 1280 m₄)`:
+`nested_kinks_bias_rate` with `E[g(Z, W)⁴] ≤ m₄` (`integral_pow_four_le_of_fiber`) and centred
+conditional fourth moments `≤ 16 m₄` (`centred_moments_le`).  This is the form that
+`nested_kinks_mlmc_complexity` uses.  Its hypothesis also bounds the conditional mean,
+`(E_W[g(z, W)])⁴ ≤ m₄`, which `nested_kinks_bias_rate` does not require. -/
+lemma nested_kinks_bias_rate_of_fiber {ι : Type*} [Fintype ι] {f f₀ f₀' : ℝ → ℝ} {K : ℝ}
+    {c k c_d : ι → ℝ} (hf : ∀ x, f x = f₀ x + ∑ i, c i * max (x - k i) 0)
+    (hf₀ : ∀ x, HasDerivAt f₀ (f₀' x) x) (hf₀' : ∀ x y, x ≤ y → |f₀' y - f₀' x| ≤ K * (y - x))
+    {g : 𝒵 → 𝒲 → ℝ} (hg : Measurable (Function.uncurry g)) {m₄ : ℝ}
+    (hfib : ∀ᵐ z ∂ν, Integrable (fun v => g z v ^ 4) ρ ∧ ∫ v, g z v ^ 4 ∂ρ ≤ m₄)
+    (hball : ∀ i, ∀ t : ℝ, 0 < t →
+      ν {z | |∫ v, g z v ∂ρ - k i| ≤ t} ≤ ENNReal.ofReal (c_d i * t))
+    (ℓ : ℕ) :
+    Integrable (fun p => nestedP f g ℓ p - nestedTarget f g ρ p) (nestedLaw ν ρ) ∧
+      (2 : ℝ) ^ ℓ * |∫ p, (nestedP f g ℓ p - nestedTarget f g ρ p) ∂(nestedLaw ν ρ)| ≤
+        K / 2 * (1 + 16 * m₄) + ∑ i, |c i| * (3 * c_d i * (1 + 1280 * m₄)) := by
+  have hg4 := integrable_pow_four_of_fiber ν ρ hg hfib
+  have hE4 := integral_pow_four_le_of_fiber ν ρ hg hfib
+  have hK := lipschitz_const_nonneg hf₀'
+  have hcent : ∀ᵐ z ∂ν, ∫ v, (g z v - ∫ u, g z u ∂ρ) ^ 4 ∂ρ ≤ 16 * m₄ :=
+    hfib.mono fun z hz => (centred_moments_le hg.of_uncurry_left hz.1).2.1.trans
+      (by linarith [hz.2])
+  obtain ⟨hint, hb⟩ := nested_kinks_bias_rate ν ρ hf hf₀ hf₀' hg hg4 hcent hball ℓ
+  have h0 : K / 2 * (1 + 16 * ∫ p, g p.1 p.2 ^ 4 ∂(ν.prod ρ)) ≤ K / 2 * (1 + 16 * m₄) := by
+    gcongr
+  have h1 : ∑ i, |c i| * (3 * c_d i * (1 + 80 * (16 * m₄))) =
+      ∑ i, |c i| * (3 * c_d i * (1 + 1280 * m₄)) :=
+    Finset.sum_congr rfl fun i _ => by ring
+  exact ⟨hint, hb.trans (add_le_add h0 h1.le)⟩
 
 /-- **MLMC for nested simulation with several kinks has complexity `O(ε⁻²)`** (Giles 2015, §9.1,
 p. 58, l. 2550–2554: "In their case, the function `f` was piecewise linear, not twice
 differentiable, and so the rate of variance convergence was slightly lower, with `β = 1.5`.
 However, this is still sufficiently large to achieve an overall complexity which is `O(ε⁻²)`").
 Under the hypotheses of `nested_kinks_variance_rate` (`f = f₀ + ∑_i c_i max(· − k_i, 0)` with `f₀′`
-Lipschitz, bounded conditional fourth moments, a small-ball bound at each kink), for independent
-inputs `ω^{(ℓ,n)}` with law `ν ⊗ ρ^{⊗ℕ}` and level-`ℓ` costs with mean `C_ℓ ≤ c₃ 2^ℓ`
-(`M_ℓ = 2^ℓ` inner samples), there is `c₄ > 0` such that for every `0 < ε < e⁻¹` there are `L` and
-`N_ℓ ≥ 1` for which the MLMC estimator `∑_{ℓ ≤ L} N_ℓ⁻¹ ∑_{n < N_ℓ} Y_ℓ(ω^{(ℓ,n)})` of
-`E_Z[f(E_W[g(Z, W)])]` has mean square error `< ε²` and expected cost `≤ c₄ ε⁻²`: Theorem 1
-(`giles_theorem1_corrections`) with `α = 1` (`nested_kinks_bias_rate`), `β = 3/2`
-(`nested_kinks_variance_rate`) and `γ = 1`.  This extends `nested_kink_mlmc_complexity` (one kink,
-`f` piecewise linear) to finitely many kinks and curved pieces. -/
+Lipschitz, bounded raw conditional fourth moments as for one kink, a small-ball bound at each
+kink), for independent inputs `ω^{(ℓ,n)}` with law `ν ⊗ ρ^{⊗ℕ}` and level-`ℓ` costs with mean
+`C_ℓ ≤ c₃ 2^ℓ` (`M_ℓ = 2^ℓ` inner samples), there is `c₄ > 0` such that for every `0 < ε < e⁻¹`
+there are `L` and `N_ℓ ≥ 1` for which the MLMC estimator
+`∑_{ℓ ≤ L} N_ℓ⁻¹ ∑_{n < N_ℓ} Y_ℓ(ω^{(ℓ,n)})` of `E_Z[f(E_W[g(Z, W)])]` has a square-integrable
+error, mean square error `< ε²` and expected cost `≤ c₄ ε⁻²`: Theorem 1
+(`giles_theorem1_corrections`) with `α = 1` (`nested_kinks_bias_rate_of_fiber`), `β = 3/2`
+(`nested_kinks_variance_rate`) and `γ = 1`.  That `μ` is a probability measure follows from the
+independence of the inputs.  This extends `nested_kink_mlmc_complexity` (one kink, `f` piecewise
+linear) to finitely many kinks and curved pieces. -/
 theorem nested_kinks_mlmc_complexity {Ω : Type*} [MeasurableSpace Ω] {μ : Measure Ω}
-    [IsProbabilityMeasure μ] {ι : Type*} [Fintype ι] {f f₀ f₀' : ℝ → ℝ} {K : ℝ}
+    {ι : Type*} [Fintype ι] {f f₀ f₀' : ℝ → ℝ} {K : ℝ}
     {c k c_d : ι → ℝ} (hf : ∀ x, f x = f₀ x + ∑ i, c i * max (x - k i) 0)
     (hf₀ : ∀ x, HasDerivAt f₀ (f₀' x) x) (hf₀' : ∀ x y, x ≤ y → |f₀' y - f₀' x| ≤ K * (y - x))
     {g : 𝒵 → 𝒲 → ℝ} (hg : Measurable (Function.uncurry g)) {m₄ : ℝ}
@@ -988,9 +1075,12 @@ theorem nested_kinks_mlmc_complexity {Ω : Type*} [MeasurableSpace Ω] {μ : Mea
     (hC : ∀ ℓ : ℕ, C ℓ ≤ c₃ * 2 ^ ℓ) :
     ∃ c₄ : ℝ, 0 < c₄ ∧ ∀ ε : ℝ, 0 < ε → ε < Real.exp (-1) →
       ∃ (L : ℕ) (N : ℕ → ℕ), (∀ ℓ, 0 < N ℓ) ∧
+        Integrable (fun x => (∑ ℓ ∈ range (L + 1), blockMean (nestedDelta f g) ω ℓ (N ℓ) x -
+          ∫ z, f (∫ v, g z v ∂ρ) ∂ν) ^ 2) μ ∧
         μ[fun x => (∑ ℓ ∈ range (L + 1), blockMean (nestedDelta f g) ω ℓ (N ℓ) x -
           ∫ z, f (∫ v, g z v ∂ρ) ∂ν) ^ 2] < ε ^ 2 ∧
         μ[totalCost cost L N] ≤ c₄ * ε ^ (-2 : ℝ) := by
+  have hμ : IsProbabilityMeasure μ := hind.isProbabilityMeasure
   have hg4 := integrable_pow_four_of_fiber ν ρ hg hfib
   have hfm : Measurable f := (continuous_kinks hf hf₀).measurable
   obtain ⟨hGm, -⟩ := integrable_condMean_pow_four ν ρ hg hg4
@@ -1010,7 +1100,7 @@ theorem nested_kinks_mlmc_complexity {Ω : Type*} [MeasurableSpace Ω] {μ : Mea
       ∑ i, |c i| * (3 * c_d i * (1 + 1280 * m₄)) := ⟨_, rfl⟩
   have h_i : ∀ ℓ : ℕ, |∫ y, nestedP f g ℓ y - nestedTarget f g ρ y ∂(nestedLaw ν ρ)| ≤
       (|B₁| + 1) * (2 : ℝ) ^ (-((1 : ℝ) * (ℓ : ℝ))) := fun ℓ => by
-    have hb := (nested_kinks_bias_rate ν ρ hf hf₀ hf₀' hg hfib hball ℓ).2
+    have hb := (nested_kinks_bias_rate_of_fiber ν ρ hf hf₀ hf₀' hg hfib hball ℓ).2
     rw [← hB₁] at hb
     rw [one_mul, Real.rpow_neg (by norm_num : (0 : ℝ) ≤ 2), Real.rpow_natCast, ← div_eq_mul_inv,
       le_div_iff₀ (by positivity), mul_comm]
@@ -1079,7 +1169,8 @@ theorem nested_kinks_mlmc_complexity {Ω : Type*} [MeasurableSpace Ω] {μ : Mea
   obtain ⟨L, N, hN, hmse, hcost'⟩ := h ε hε hε1
   rw [hPint] at hmse
   rw [complexityBound_of_lt (by norm_num) ε] at hcost'
-  exact ⟨L, N, hN, hmse, hcost'⟩
+  exact ⟨L, N, hN, ((memLp_finsetSum _ fun ℓ _ => memLp_blockMean hω hΔ ℓ (N ℓ)).sub
+    (memLp_const _)).integrable_sq, hmse, hcost'⟩
 
 end Kinks
 

@@ -1,7 +1,6 @@
 import MlmcLean.GBMPathDependent
 import MlmcLean.ApplicationExtras
 import MlmcLean.BrownianPaths
-import Mathlib.Data.Fin.Tuple.Sort
 
 /-!
 # Jump processes: exponential Lévy Asian options, jump-adapted grids, thinning (Giles 2015, §6)
@@ -893,7 +892,7 @@ theorem levy_asian_theorem1 (ν : ℕ → Measure ℝ) [∀ ℓ, IsProbabilityMe
               (fun p x => x p) ℓ (N ℓ) x - P) ^ 2
             ∂(Measure.infinitePi fun _ : ℕ × ℕ =>
               Measure.infinitePi fun ℓ => Measure.infinitePi fun _ : ℕ => ν ℓ) < ε ^ 2 ∧
-    ∑ ℓ ∈ range (L + 1), (N ℓ : ℝ) * 2 ^ ℓ ≤ c₄ * ε ^ (-2 : ℝ) := by
+          ∑ ℓ ∈ range (L + 1), (N ℓ : ℝ) * 2 ^ ℓ ≤ c₄ * ε ^ (-2 : ℝ) := by
   -- the exponential moments of level `0`, written as `e^{Tκ₁}` and `e^{Tκ₂}` with `T = 1`
   obtain ⟨T, κ₁, κ₂, hT, h1, h2⟩ : ∃ T κ₁ κ₂ : ℝ, 0 < T ∧
       ∫ x, Real.exp x ∂ν 0 = Real.exp (T * κ₁) ∧
