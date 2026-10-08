@@ -173,6 +173,16 @@
 --   and the lookback option monitored at every time step, Theorem 1 end to end
 -- * `MlmcLean.EulerSuperlinearGeneral` — Giles §5.6: explicit Euler moments diverge for every
 --   super-linearly growing drift (Hutzenthaler–Jentzen–Kloeden), with examples
+-- * `MlmcLean.GBMDigitalTheorem1` — Giles §5.1–§5.2: the digital option for GBM end to end, barrier
+--   options at fixed monitoring dates, splitting with a Milstein final step
+-- * `MlmcLean.SpotCheckRemarks` — small results from the spot-check after round 21 (ML2R rate,
+--   smoothed CDF, Dirichlet heat scheme, nested inputs, nested MC cost, OU chain, Φ⁻¹ inputs)
+-- * `MlmcLean.ParabolicExample` — Giles §7.1: the parabolic example with one scalar Brownian motion,
+--   α = 2, β = 4 and Theorem 1 at cost O(ε⁻²) for the limit of the level means
+-- * `MlmcLean.NestedKinkCurved` — Giles §9.2: nested simulation with inner time steps for payoffs with
+--   several kinks and curved pieces; MIMC on the two axes for the kink counterexample
+-- * `MlmcLean.TauLeapingExtensions` — Giles §8: tau-leaping's weak rate for Lipschitz payoffs, and
+--   state-dependent rates on adaptive grids with (2.4)
 import MlmcLean.Allocation
 import MlmcLean.Estimator
 import MlmcLean.LevelDiff
@@ -258,3 +268,8 @@ import MlmcLean.GBMStrongLp
 import MlmcLean.GBMWeakOrder
 import MlmcLean.GBMGridMax
 import MlmcLean.EulerSuperlinearGeneral
+import MlmcLean.GBMDigitalTheorem1
+import MlmcLean.SpotCheckRemarks
+import MlmcLean.ParabolicExample
+import MlmcLean.NestedKinkCurved
+import MlmcLean.TauLeapingExtensions
