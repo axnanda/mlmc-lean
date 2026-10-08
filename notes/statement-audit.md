@@ -438,6 +438,15 @@ Lean statement or to the reason it is not formalised. The deviations of the new 
 * **Contracting levels (`ContractingLevels.lean`, round 19).** One dimension, Lipschitz payoffs, the
   target is the limit of the means of the discretised chains; the cost per sample grows like
   `ℓ 2^ℓ`, so the complexity is `O(ε^{−2−η})` for every `η > 0`.
+* **Adaptive grids (`AdaptiveGrids.lean`, round 20).** Step sizes are multiples of a fixed base
+  spacing `δ` (for `h_ℓ = 2^{−ℓ}H(Ŝ_n)`: `H` with values in `2^{−m₀}Tℕ`), so the union grid lies in a
+  base grid and only i.i.d. base increments are needed; real-valued step sizes would need Brownian
+  motion at stopping times.  Algorithm 3 is modelled with steps of at least one base interval and an
+  unbounded loop (stopping at `T` is part of the rule).  The Poisson results have a constant rate.
+* **Lattice rules in `d` dimensions (`LatticeRuleD.lean`, round 20).** The MLQMC theorems assume the
+  decay of the dual-lattice sums for `N = 2^m` points (the existence of good generating vectors is
+  not formalised); the generating vector may depend on `N`, and for `d ≥ 2` it must.  Parseval's
+  identity on `𝕋^d` is re-proved, since Mathlib's `AddCircleMulti` is not in this project's build.
 
 ### Corrections to the papers recorded elsewhere, collected
 
