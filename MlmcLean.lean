@@ -167,6 +167,12 @@
 --   bounds, and the contracting SDEs of §10.1 at cost O(ε⁻²|log ε|³)
 -- * `MlmcLean.GBMStrongLp` — Giles §5.1–§5.2: strong errors of Euler–Maruyama and Milstein for GBM in
 --   every L^{2m}, and the digital option's V_ℓ and fourth moment at every rate below the paper's
+-- * `MlmcLean.GBMWeakOrder` — Giles §5.1: weak order 1 of Euler–Maruyama for GBM (polynomial and
+--   smooth payoffs, refinement factor M), and Theorem 1 with α = 1, resp. α = log₂ M
+-- * `MlmcLean.GBMGridMax` — Giles §5.1–§5.2: the GBM Euler–Maruyama error uniformly over the grid,
+--   and the lookback option monitored at every time step, Theorem 1 end to end
+-- * `MlmcLean.EulerSuperlinearGeneral` — Giles §5.6: explicit Euler moments diverge for every
+--   super-linearly growing drift (Hutzenthaler–Jentzen–Kloeden), with examples
 import MlmcLean.Allocation
 import MlmcLean.Estimator
 import MlmcLean.LevelDiff
@@ -249,3 +255,6 @@ import MlmcLean.AdaptiveGrids
 import MlmcLean.LatticeRuleD
 import MlmcLean.Theorem1Log
 import MlmcLean.GBMStrongLp
+import MlmcLean.GBMWeakOrder
+import MlmcLean.GBMGridMax
+import MlmcLean.EulerSuperlinearGeneral
