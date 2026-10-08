@@ -27,8 +27,9 @@ proves the probabilistic and analytic steps that these sections rely on.
   moment bound `E|X − Y|^p ≤ c h^{p/2}` gives `O(h^{p/(2(p+1))})`; `digital_mismatch_le_of_tail`:
   Gaussian-type tails of the error give `O((h log(1/h))^{1/2})`; `gbm_digital_variance_le`: for
   geometric Brownian motion with the Euler–Maruyama estimator, `V_ℓ = O(h_ℓ^{1/3})` with explicit
-  constants.  The paper's `V_ℓ = O(h_ℓ^{1/2})` is the observed rate; `digital_mismatch_le` explains
-  the difference.
+  constants.  The paper's `V_ℓ = O(h_ℓ^{1/2})` is reached up to an arbitrarily small loss in
+  `MlmcLean.GBMStrongLp` (`gbm_em_digital_rate`: `O(h_ℓ^q)` for every `q < ½`, from the `L^{2m}`
+  errors).
 * **§5.2, conditional expectation.**  `integral_digital_final_step`:
   `E[1_{x + ah + b√h Z > K}] = Φ((x + ah − K)/(|b|√h))` for `Z ∼ N(0,1)`;
   `condExp_digital_last_step`, `digital_smoothing`: given the path before the last step, the

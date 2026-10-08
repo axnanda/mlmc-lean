@@ -20,7 +20,8 @@ The model is that of `MlmcLean/MarkovChain.lean`: `φ_n = φ(·, ξ_n)` with a j
 `φ : α × E → α` and independent noises `ξ_n` of law `ν`.  The contraction hypothesis is
 `E[d(φ(x, ξ), φ(y, ξ))^p] ≤ ρ d(x, y)^p` for all `x, y`, with `p > 0` (Giles: `p = 2γ`) and
 `0 ≤ ρ < 1`; the first step from `x₀` has a finite moment, `E[d(x₀, φ(x₀, ξ))^p] < ∞`; and the
-state space `α` is a complete separable metric space.
+state space `α` is a complete separable metric space.  The paper does not state the moment
+condition, but it cannot be dropped (`MlmcLean.MarkovNoWeakLimit`).
 
 * `fwdIter`: the chain `X_0 = x₀`, `X_{n+1} = φ(X_n, ξ_n)`.
 * `backIter_eq_fwdIter_rev`, `map_backIter_eq_map_fwdIter`: the chain started `n` steps in the

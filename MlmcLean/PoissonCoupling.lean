@@ -51,7 +51,8 @@ which is `O(h)`": for a Lipschitz, bounded propensity the coupled paths are `O(h
 square (`lintegral_sq_coupledIncr_le`, `lintegral_sq_coupledTwoStep_le`,
 `lintegral_sq_coupledChain_le`, `coupledChain_sq_le`), so the correction of a Lipschitz payoff has
 variance `O(h)` (`variance_coupledChain_le`), `O(2^{−ℓ})` on level `ℓ + 1`
-(`tauLeaping_level_variance`): `β = 1`.
+(`tauLeaping_level_variance`): `β = 1`.  `MlmcLean.TauLeapingLinearGrowth` drops the bound on the
+propensity (Lipschitz propensities of linear growth, e.g. `λ(x) = cx`).
 
 **Complexity.**  "a correction variance which is `O(h)`, leading to an `O(ε⁻²(log ε)²)` complexity"
 (`tauLeaping_complexity`: `α = β = γ = 1`); with an exact finest level "their overall multilevel

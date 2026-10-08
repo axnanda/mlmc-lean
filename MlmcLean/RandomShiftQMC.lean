@@ -27,7 +27,8 @@ translations.  A QMC rule uses points `x_0, …, x_{N−1}` of `𝕋^d` (for a r
   variance `V₁/R`, `V₁` the variance of one set average; and the usual estimate
   `(R(R − 1))⁻¹ ∑_r (Y_r − Ȳ)²` of this variance is unbiased (`integral_sum_sq_sub_mean`).
 
-The digital scrambling of Sobol sequences is not formalised.
+`MlmcLean.DigitalShiftQMC` proves the same for a random digital shift; Owen scrambling and the
+construction of Sobol sequences are not formalised.
 -/
 
 open MeasureTheory ProbabilityTheory Finset

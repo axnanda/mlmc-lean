@@ -161,3 +161,41 @@ the truncation limit and path-dependent Lévy payoffs; the SSA coupling for seve
 unbounded propensities; the identification of the parabolic limit with the SPDE functional, the
 variance rate of adaptive tau-leaping, the simplex optimality, the kurtosis upper bound, and whether
 MIMC reaches `O(ε⁻²)` for a general piecewise linear `f`.
+
+**Follow-up (round 25).** After round 24 a further spot-check ("spot-check 24"; two independent
+auditors, reports kept outside the repository) re-read both papers against the coverage tables and
+the elaborated Lean statements (auditor A: 226 theorems over about 145 rows of Giles §1–§5; auditor
+B: 70 rows of Giles §6–§11 and Haas–Giles) and found no wrong, vacuous or junk-dependent Lean
+statement. Its documentation fixes are the "Round 25" notes in the coverage tables and the
+spot-check 24 section of `notes/coverage/README.md`: row texts that only the resolution table showed
+resolved, round-10 sections without a pointer, G9.2-04 (PARTIAL by the spot-check-21 standard; done
+end to end by `nested_sde_mlmc_complexity`), the untracked barrier option monitored at every time
+step (G5.2-23), overclaims in the README and PLAN (the ML2R row, the every-step barrier, the
+"variance rates and costs" of the call delta, which are upper bounds), the deviations of §8, §9.1
+and §10.1 added to `notes/statement-audit.md`, and the paper slips added to its corrections table
+(among them the weak convergence of §10.1, now refuted formally); stale module docstrings were
+corrected. From the auditors' lists of provable claims, round 25 formalised: the strike `K = 0` and
+Theorem 1 for splitting (`GBMDigitalCondExpExtras.lean`); the `O(h)` correction variance and
+Theorem 1 for Lipschitz propensities of linear growth, given the weak rate, and the linear birth
+example with no assumed rate (`TauLeapingLinearGrowth.lean`); Theorem 1 in a Banach space with an
+assumed type-2 inequality (`BanachTheorem1.lean`); the random digital shift
+(`DigitalShiftQMC.lean`); the Brownian replacement of the small jumps, with the rates of the
+truncation, and Table 6.3's Asian row for Variance-Gamma laws (`LevyExtras.lean`); the
+counterexample to the weak convergence claim of §10.1 (`MarkovNoWeakLimit.lean`). Still open from
+the lists: the variance rate of the digital-delta corrections and Theorem 1 for them; the
+Euler–Maruyama digital endpoint `O(√(h log(1/h)))`; the barrier option monitored at every time step
+(it needs a small-ball bound for the grid maximum, uniform in the number of steps); the lower bounds
+`P(ΔP ≠ 0) ≥ c√h` (Euler–Maruyama) and `≥ ch` (Milstein), hence the kurtosis rates and the splitting
+variance "the same, to leading order"; the existence of good lattice generating vectors; Dereich's
+improved bias; the NIG column of Table 6.3; the exact halving ratio of HG25 §3.4; the non-convexity
+of the λ-function of HG25 §6.1 (numerical in the corrections table). Still open from earlier rounds:
+the digital option's weak order `α = 1` (hence the paper's `O(ε^{−2.5})`), the endpoints `β = 3/2`,
+`α = 1` of the conditional-expectation estimator and the exponential smallness for `K = 0`; the weak
+rate of tau-leaping for unbounded propensities; Mercer's theorem and the law of the limit field; the
+SSA coupling for several reactions and unbounded propensities; the identification of the parabolic
+limit with the SPDE functional, the variance rate of adaptive tau-leaping, the simplex optimality,
+and whether MIMC reaches `O(ε⁻²)` for a general piecewise linear `f`. Out of reach, as before: Itô
+calculus, the reflection principle, Clark–Cameron, Lévy areas and Giles–Szpruch, information-based
+complexity, Feynman–Kac and exit times, Rademacher type beyond spaces isomorphic to a subspace of a
+Hilbert space, Sobol nets and Owen's scrambling, general tangent processes, Lévy path functionals
+and Wiener–Hopf factorisation.

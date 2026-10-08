@@ -37,9 +37,11 @@ explicit hypotheses.
   `S ↦ S + h b(S)/(1 + h|b(S)|)` (`tamedDriftStep`) "limits the size of the drift term"
   (`abs_tamedDrift_lt`), is a "slight modification" of the explicit step
   (`abs_tamedDriftStep_sub_eulerDriftStep_le`), and keeps every orbit within `max(|S|, 1)`
-  (`tamedDriftStep_iterate_bounded`, `tamedCubic_bounded`).  The stochastic statements (divergence
-  of the moments of the Euler–Maruyama scheme, uniform moment bounds for the tamed scheme) are not
-  formalised.
+  (`tamedDriftStep_iterate_bounded`, `tamedCubic_bounded`).  The stochastic statements are in
+  `MlmcLean.EulerSuperlinear` (divergence of the Euler–Maruyama moments,
+  `emCubic_moment_tendsto_atTop`; moment bounds for the tamed scheme, `tamedPath_integral_abs_le`,
+  `tamedCubic_second_moment_le`), `MlmcLean.EulerSuperlinearGeneral` (HJK's general divergence
+  theorem) and `MlmcLean.EndToEndInstances` (`tamedCubic_fourth_moment_le`).
 * **§5.7, smoothing functions of either sign** (p. 46: "`g(x)` is a continuous function with
   `g(x) = 0` for `x < −1`, and `g(x) = 1` for `x > 1`").  `abs_smoothCDF_sub_le_of_bounded`,
   `tendsto_smoothCDF_of_bounded`, `tendsto_smoothCDF_of_continuous` remove the hypothesis
