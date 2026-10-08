@@ -71,7 +71,9 @@ independence of the last increments (`MomentBound.mul_eval`).
   matching holds in every `L^p`, not on every path); `α` is derived from the strong error and the
   density, not from a weak-order analysis.  Neither loss changes the complexity `O(ε⁻²)`.
 * `K ≠ 0` is assumed for the variance rate and Theorem 1 (near a strike `K ≠ 0` the conditional
-  standard deviation `|σŜ|√h` is of order `√h`); also `s₀ ≠ 0`, `σ ≠ 0`, `T > 0`.
+  standard deviation `|σŜ|√h` is of order `√h`); also `s₀ ≠ 0`, `σ ≠ 0`, `T > 0`.  `K = 0` is the
+  easy case left out to keep the proof uniform: for small `h` the Milstein path keeps the sign of
+  `s₀`, so the corrections are exponentially small (not proved here).
 * The factor `25 e^{−rT}` of the paper's payoffs is omitted; `b` stands for `|b|` in the
   denominators; the coarse numerator uses the re-used increment `b ΔW_{N−2}` in place of the
   paper's `b √h_ℓ` (the correction of `digital_smoothing_coarse`).
