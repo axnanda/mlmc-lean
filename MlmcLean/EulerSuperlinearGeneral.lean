@@ -1,7 +1,7 @@
 import MlmcLean.EulerSuperlinear
 
 /-!
-# Giles 2015, §5.6: the explicit Euler–Maruyama scheme diverges for every super-linear coefficient
+# Giles 2015, §5.6: explicit Euler–Maruyama diverges under HJK's super-linear growth condition
 
 Reference: M.B. Giles, *Multilevel Monte Carlo methods*, Acta Numerica 24 (2015), §5.6 "Stiff and
 highly nonlinear SDEs" (pp. 43–44), p. 44 (lines 1892–1897 of `docs/giles2015.txt`): "A related
@@ -28,20 +28,28 @@ argument.
   growth**: if `|b(x₀,0)| √h |z_0| ≥ hjkRadius C α β · h^{−e} + |x₀| + |a(x₀,0)|` and
   `1/2 ≤ |z_k| ≤ 1` (resp. `|z_k| ≤ 1`) for `1 ≤ k ≤ M`, then `|X_{M+1}| ≥ 2^{β^M}`.
 * `emPath_superlinear_lintegral_ge`: `E|X_N|^p ≥ P(Z ≥ t_N) P(1/2 ≤ Z ≤ 1)^{N−1} (2^{β^{N−1}})^p`
-  (Gaussian tail and independence); `hjk_event_prob_ge`: that probability is at least
-  `exp(−c N^{2e+1})` (`exp(−c N²)` for the cubic example, where `e = 1/2`).
+  (Gaussian tail and independence; `hjk_gaussian_event_measure` is the factorisation of the
+  probability of the event); `hjk_event_prob_ge`, `hjk_divergence_event_measure_ge`: that
+  probability is at least `exp(−c N^{2e+1})`; `emPath_superlinear_lintegral_ge_exp`: hence
+  `E|X_N|^p ≥ exp(−c N^{2e+1}) (2^{β^{N−1}})^p`.  The event has probability `exp(−Θ(N^{2e+1}))`,
+  and the pathwise lemma needs `e ≥ max(1/(β−1), 1/(2(β−α)))`, so the rate `exp(−c N²)` of the
+  cubic example holds only when `β ≥ 3` and `β − α ≥ 1`; for the drift `−x|x|` it is
+  `exp(−Θ(N³))`, and no event of this shape does better there (`hjk_event_prob_ge`).
 * `emPath_superlinear_moment_lintegral_tendsto`: **the theorem of Hutzenthaler, Jentzen and
   Kloeden**: `E|X_N|^p → ∞` in `[0, ∞]` for every `p > 0`, with no measurability or integrability
   assumption; `emPath_superlinear_payoff_lintegral_tendsto`,
-  `emPath_superlinear_payoff_integral_tendsto`, `mlmc_level_payoff_lintegral_tendsto`: the same
-  for `E|P(X_N)|` when `|P(x)| ≥ |x|^q/D` for `|x| ≥ D` (the level means of MLMC diverge).
+  `emPath_superlinear_payoff_integral_tendsto`: the same for `E|P(X_N)|` when `|P(x)| ≥ |x|^q/D`
+  for `|x| ≥ D`; `mlmc_level_payoff_lintegral_tendsto`, `mlmc_level_payoff_sq_lintegral_tendsto`:
+  on level `ℓ` of an MLMC hierarchy (`N₀ 2^ℓ` steps), `E|P_ℓ| → ∞` and `E[P_ℓ²] → ∞`.
 * `memLp_emPath_of_polyGrowth`, `emPath_superlinear_moment_tendsto_atTop`,
   `emPath_superlinear_integral_abs_tendsto_atTop`: for measurable, polynomially bounded
   coefficients `X_N` has moments of every order, and `E|X_N|^p → ∞`, `E|X_N| → ∞` as real numbers.
 * `hjk_cubic_moment_tendsto_atTop`: the paper's example; its statement is that of
-  `emCubic_moment_tendsto_atTop`, recovered as a special case.  `hjk_xabs_moment_tendsto_atTop`:
-  `dS = −S|S| dt + dW`; `hjk_ginzburgLandau_moment_tendsto_atTop`: the stochastic
-  Ginzburg–Landau equation `dS = (S − S³) dt + σS dW` (multiplicative noise).
+  `emCubic_moment_tendsto_atTop`, recovered as a special case (checked by `rfl` below).
+  `hjk_xabs_moment_tendsto_atTop`: `dS = −S|S| dt + dW`; `hjk_ginzburgLandau_moment_tendsto_atTop`:
+  the stochastic Ginzburg–Landau equation `dS = (S − S³) dt + σS dW` (multiplicative noise); these
+  three are drift-dominated.  `hjk_quadVol_moment_tendsto_atTop`: `dS = −S dt + S² dW`, where the
+  volatility dominates.
 
 Deviations from HJK: any `α < β` is allowed (HJK need `α > 1`; this is no restriction, since for
 `|x| ≥ max(C, 1)` a bound `C|x|^α` with `α ≤ 1` implies the bound `C|x|^{α'}` for every
@@ -50,11 +58,15 @@ Deviations from HJK: any `α < β` is allowed (HJK need `α > 1`; this is no res
 `P(b(ξ) ≠ 0) > 0`).  The event is `{Z_0 ≥ t_N, 1/2 ≤ Z_k ≤ 1 for 1 ≤ k < N}`: the lower bound
 `1/2` is needed only at points where the volatility dominates.
 
-Not covered: several dimensions; random initial values; HJK's comparison with the exact solution
-(strong and weak divergence `E|X_T − Y_N|^p → ∞`, `|E|X_T|^p − E|Y_N|^p| → ∞`), which needs the
-finiteness of the moments of the exact solution (SDE theory, not available here; given it, both
-follow from `E|Y_N|^p → ∞`); the divergence of the MLMC level variances `V_ℓ`; the divergence of
-the MLMC Euler estimator itself, the subject of HJK's 2013 paper cited by Giles.
+Not covered: several dimensions; random initial values `ξ` independent of the noise with
+`P(b(ξ, 0) ≠ 0) > 0`; coefficients outside HJK's condition, e.g. `b ≡ 0` (for `dX = −X³ dt` the
+explicit iterates satisfy `|X_n| ≤ |x₀|` once `h x₀² ≤ 2`) or equal growth (`a = −x³`, `b = x³`,
+where no `α < β` works); HJK's comparison with the exact solution (strong and weak divergence
+`E|X_T − Y_N|^p → ∞`, `|E|X_T|^p − E|Y_N|^p| → ∞`), which needs the finiteness of the moments of
+the exact solution (SDE theory, not available here; given it, both follow from `E|Y_N|^p → ∞`);
+the MLMC level means `E[P_ℓ − P_{ℓ−1}]` and level variances `V_ℓ` (see
+`mlmc_level_payoff_sq_lintegral_tendsto`); the divergence of the MLMC Euler estimator itself, the
+subject of HJK's 2013 paper cited by Giles.
 -/
 
 open MeasureTheory ProbabilityTheory Filter Real
@@ -99,7 +111,7 @@ Hutzenthaler, Jentzen and Kloeden, Proc. R. Soc. A 467 (2011)).  Let `C ≥ 1`, 
 at `x` (`|x|^β ≤ C|a|`, `|b| ≤ C|x|^α`) or the volatility dominates and the noise is not small
 (`|x|^β ≤ C|b|`, `|a| ≤ C|x|^α`, `|z| ≥ 1/2`), then `h|x|^β ≤ 4C|x + a h + b √h z|`: the dominant
 term is at least `h|x|^β/C` (resp. `√h|x|^β/(2C)`) and each of the two others is at most an eighth
-of it. -/
+(resp. a quarter) of that bound, so the sum is at least `3h|x|^β/(4C)` (resp. `√h|x|^β/(4C)`). -/
 lemma hjk_step_ge {C α β h x a b z : ℝ} (hC : 1 ≤ C) (hh0 : 0 < h) (hh1 : h ≤ 1)
     (hxC : C ≤ |x|) (hx1 : 8 * C ≤ h * |x| ^ (β - 1)) (hx2 : 8 * C ^ 2 ≤ √h * |x| ^ (β - α))
     (hcase : (|x| ^ β ≤ C * |a| ∧ |b| ≤ C * |x| ^ α) ∨
@@ -384,16 +396,17 @@ theorem emPath_drift_superlinear_abs_ge {a b : ℝ → ℝ → ℝ} {C α β : �
 
 /-! ### The divergence event and the lower bound for the moments -/
 
-/-- The probabilistic step of the divergence proof: if `Z_0, …, Z_M` are independent with law
-`N(0, 1)` and `F ≥ v` on the event `{Z_0 ∈ s₀, Z_k ∈ s for 1 ≤ k ≤ M}`, then
-`∫⁻ F dμ ≥ P(Z ∈ s₀) P(Z ∈ s)^M v` for `Z ∼ N(0, 1)`.  No measurability of `F` is needed (the lower
-Lebesgue integral is monotone), and the event is null-measurable because the `Z_k` have a law. -/
-lemma hjk_gaussian_event_le_lintegral {Ω : Type*} [MeasurableSpace Ω] {μ : Measure Ω} {M : ℕ}
+/-- The probability of the divergence event factorises (the probabilistic step of the divergence
+proof of Hutzenthaler, Jentzen and Kloeden, Proc. R. Soc. A 467 (2011)): if `Z_0, …, Z_M` are
+independent with law `N(0, 1)`, the event `E = {Z_0 ∈ s₀, Z_k ∈ s for 1 ≤ k ≤ M}` is
+null-measurable (the `Z_k` have a law) and `μ(E) = P(Z ∈ s₀) P(Z ∈ s)^M` for `Z ∼ N(0, 1)`. -/
+lemma hjk_gaussian_event_measure {Ω : Type*} [MeasurableSpace Ω] {μ : Measure Ω} {M : ℕ}
     (Z : ℕ → Ω → ℝ) (hZ : ∀ n < M + 1, μ.map (Z n) = gaussianReal 0 1)
     (hind : iIndepFun (fun n : Fin (M + 1) => Z n) μ) {s₀ s : Set ℝ} (hs₀ : MeasurableSet s₀)
-    (hs : MeasurableSet s) (F : Ω → ℝ≥0∞) (v : ℝ≥0∞)
-    (hF : ∀ ω, Z 0 ω ∈ s₀ → (∀ k, 1 ≤ k → k ≤ M → Z k ω ∈ s) → v ≤ F ω) :
-    gaussianReal 0 1 s₀ * gaussianReal 0 1 s ^ M * v ≤ ∫⁻ ω, F ω ∂μ := by
+    (hs : MeasurableSet s) :
+    NullMeasurableSet {ω | Z 0 ω ∈ s₀ ∧ ∀ k, 1 ≤ k → k ≤ M → Z k ω ∈ s} μ ∧
+      μ {ω | Z 0 ω ∈ s₀ ∧ ∀ k, 1 ≤ k → k ≤ M → Z k ω ∈ s} =
+        gaussianReal 0 1 s₀ * gaussianReal 0 1 s ^ M := by
   have hm : ∀ n < M + 1, AEMeasurable (Z n) μ := fun n hn =>
     aemeasurable_of_map_eq_gaussianReal (hZ n hn)
   let S : Fin (M + 1) → Set ℝ := fun i => if (i : ℕ) = 0 then s₀ else s
@@ -401,29 +414,52 @@ lemma hjk_gaussian_event_le_lintegral {Ω : Type*} [MeasurableSpace Ω] {μ : Me
     simp only [S]
     split_ifs
     exacts [hs₀, hs]
-  set E := ⋂ i ∈ (Finset.univ : Finset (Fin (M + 1))), (fun n : Fin (M + 1) => Z n) i ⁻¹' S i
-    with hE
-  have hμE : μ E = gaussianReal 0 1 s₀ * gaussianReal 0 1 s ^ M := by
-    have h1 := hind.measure_inter_preimage_eq_mul Finset.univ (sets := S) (fun i _ => hSm i)
-    have h2 : ∀ i : Fin (M + 1), μ (Z i ⁻¹' S i) = gaussianReal 0 1 (S i) := fun i => by
-      rw [← hZ i i.2, Measure.map_apply_of_aemeasurable (hm i i.2) (hSm i)]
-    rw [hE, h1]
-    simp only [h2, Fin.prod_univ_succ, Fin.val_zero, Fin.val_succ, S, if_true,
-      Nat.add_one_ne_zero, if_false, Finset.prod_const, Finset.card_univ, Fintype.card_fin]
-  have hEm : NullMeasurableSet E μ := Finset.nullMeasurableSet_biInter _ fun i _ =>
-    (hm i i.2).nullMeasurableSet_preimage (hSm i)
+  have hEq : {ω | Z 0 ω ∈ s₀ ∧ ∀ k, 1 ≤ k → k ≤ M → Z k ω ∈ s} =
+      ⋂ i ∈ (Finset.univ : Finset (Fin (M + 1))), (fun n : Fin (M + 1) => Z n) i ⁻¹' S i := by
+    ext ω
+    simp only [Set.mem_ofPred_eq, Set.mem_iInter, Finset.mem_univ, Set.mem_preimage,
+      forall_const]
+    constructor
+    · rintro ⟨h0, hk⟩ i
+      show Z i ω ∈ (if (i : ℕ) = 0 then s₀ else s)
+      by_cases hi : (i : ℕ) = 0
+      · rw [if_pos hi, hi]
+        exact h0
+      · rw [if_neg hi]
+        exact hk i (Nat.one_le_iff_ne_zero.mpr hi) (Nat.lt_succ_iff.mp i.2)
+    · intro h
+      refine ⟨by simpa [S] using h 0, fun k hk1 hkM => ?_⟩
+      have := h ⟨k, by omega⟩
+      have hk0 : k ≠ 0 := by omega
+      simpa [S, hk0] using this
+  refine ⟨by rw [hEq]; exact Finset.nullMeasurableSet_biInter _ fun i _ =>
+    (hm i i.2).nullMeasurableSet_preimage (hSm i), ?_⟩
+  have h1 := hind.measure_inter_preimage_eq_mul Finset.univ (sets := S) (fun i _ => hSm i)
+  have h2 : ∀ i : Fin (M + 1), μ (Z i ⁻¹' S i) = gaussianReal 0 1 (S i) := fun i => by
+    rw [← hZ i i.2, Measure.map_apply_of_aemeasurable (hm i i.2) (hSm i)]
+  rw [hEq, h1]
+  simp only [h2, Fin.prod_univ_succ, Fin.val_zero, Fin.val_succ, S, if_true,
+    Nat.add_one_ne_zero, if_false, Finset.prod_const, Finset.card_univ, Fintype.card_fin]
+
+/-- The probabilistic step of the divergence proof: if `Z_0, …, Z_M` are independent with law
+`N(0, 1)` and `F ≥ v` on the event `{Z_0 ∈ s₀, Z_k ∈ s for 1 ≤ k ≤ M}`, then
+`∫⁻ F dμ ≥ P(Z ∈ s₀) P(Z ∈ s)^M v` for `Z ∼ N(0, 1)` (`hjk_gaussian_event_measure`).  No
+measurability of `F` is needed (the lower Lebesgue integral is monotone). -/
+lemma hjk_gaussian_event_le_lintegral {Ω : Type*} [MeasurableSpace Ω] {μ : Measure Ω} {M : ℕ}
+    (Z : ℕ → Ω → ℝ) (hZ : ∀ n < M + 1, μ.map (Z n) = gaussianReal 0 1)
+    (hind : iIndepFun (fun n : Fin (M + 1) => Z n) μ) {s₀ s : Set ℝ} (hs₀ : MeasurableSet s₀)
+    (hs : MeasurableSet s) (F : Ω → ℝ≥0∞) (v : ℝ≥0∞)
+    (hF : ∀ ω, Z 0 ω ∈ s₀ → (∀ k, 1 ≤ k → k ≤ M → Z k ω ∈ s) → v ≤ F ω) :
+    gaussianReal 0 1 s₀ * gaussianReal 0 1 s ^ M * v ≤ ∫⁻ ω, F ω ∂μ := by
+  obtain ⟨hEm, hμE⟩ := hjk_gaussian_event_measure Z hZ hind hs₀ hs
+  set E := {ω | Z 0 ω ∈ s₀ ∧ ∀ k, 1 ≤ k → k ≤ M → Z k ω ∈ s}
   calc gaussianReal 0 1 s₀ * gaussianReal 0 1 s ^ M * v
       = ∫⁻ ω, E.indicator (fun _ => v) ω ∂μ := by
         rw [lintegral_indicator_const₀ hEm, hμE, mul_comm]
     _ ≤ ∫⁻ ω, F ω ∂μ := lintegral_mono fun ω => by
         by_cases hω : ω ∈ E
         · rw [Set.indicator_of_mem hω]
-          have hmem : ∀ i : Fin (M + 1), Z i ω ∈ S i := fun i =>
-            Set.mem_iInter₂.mp hω i (Finset.mem_univ i)
-          refine hF ω (by simpa [S] using hmem 0) fun k hk1 hkM => ?_
-          have := hmem ⟨k, by omega⟩
-          have hk0 : k ≠ 0 := by omega
-          simpa [S, hk0] using this
+          exact hF ω hω.1 hω.2
         · rw [Set.indicator_of_notMem hω]
           exact zero_le
 
@@ -500,7 +536,13 @@ every `N ≥ 1`, where `t_N = (K (N/T)^e + B)/(c₀ √(T/N))` and `Z ∼ N(0, 1
 and `P(Z ≥ t) ≥ e^{−(t+1)²/2}/√(2π)` (`le_gaussianReal_real_Ici`).  With `K = hjkRadius C α β`,
 `B = |x₀| + |a(x₀,0)|` and `c₀ = |b(x₀,0)|` this is the probability of the event of
 `emPath_superlinear_lintegral_ge`; for the paper's example `dS = −S³ dt + dW` (`β = 3`, `α = 0`,
-`e = 1/2`) the bound is `exp(−c N²)`, as in `emCubic_moment_ge`. -/
+`e = 1/2`) the bound is `exp(−c N²)`, as in `emCubic_moment_ge`.  The exponent `2e + 1` is sharp
+for this event: `P(Z ≥ t) ≤ e^{−t²/2}` and `t_N ≥ (K/c₀)(N/T)^{e+1/2}`, so for `K > 0` it has
+probability `exp(−Θ(N^{2e+1}))`, and `exp(−c N²)` holds only when `e ≤ 1/2`, i.e. (with the `e` of
+`emPath_superlinear_abs_ge`) `β ≥ 3` and `β − α ≥ 1`.  For the drift `−x|x|` (`β = 2`) with
+`b = 1` no event of this shape does better: while `h|x| ≤ 2` an explicit step with `|z| ≤ 1` raises
+`|x|` by at most `√h`, so the path can only take off if `|X_1| ≳ 2/h`, i.e. `|Z_0| ≳ 2(N/T)^{3/2}`,
+which has probability `exp(−Θ(N³))`. -/
 theorem hjk_event_prob_ge {K B c₀ T e : ℝ} (hK : 0 ≤ K) (hB : 0 ≤ B) (hc₀ : 0 < c₀)
     (hT : 0 < T) (he : 0 ≤ e) :
     ∃ c : ℝ, 0 ≤ c ∧ ∀ N : ℕ, 1 ≤ N →
@@ -588,6 +630,69 @@ theorem hjk_event_prob_ge {K B c₀ T e : ℝ} (hK : 0 ≤ K) (hB : 0 ≤ B) (hc
         ring_nf
     _ ≤ (gaussianReal 0 1).real (Set.Ici t) * q ^ (N - 1) :=
         mul_le_mul hG1 hG2 (by positivity) measureReal_nonneg
+
+/-- **The probability of the divergence event in `Ω`** (Giles 2015, §5.6, p. 44: "This again leads
+to numerical instability if a uniform timestep is used"; the event of Hutzenthaler, Jentzen and
+Kloeden, Proc. R. Soc. A 467 (2011)).  For `K, B ≥ 0`, `c₀ > 0`, `T > 0` and `e ≥ 0` there is
+`c ≥ 0` such that for every `N ≥ 1` and all independent `Z_0, …, Z_{N−1}` with law `N(0, 1)`,
+`μ{Z_0 ≥ t_N, 1/2 ≤ Z_k ≤ 1 for 1 ≤ k < N} ≥ exp(−c N^{2e+1})` with
+`t_N = (K (N/T)^e + B)/(c₀ √(T/N))`; `c` depends neither on `N` nor on the `Z_k`.  The event is
+null-measurable and its probability is `P(Z ≥ t_N) P(1/2 ≤ Z ≤ 1)^{N−1}`
+(`hjk_gaussian_event_measure`), which `hjk_event_prob_ge` bounds.  With `K = hjkRadius C α β`,
+`B = |x₀| + |a(x₀,0)|`, `c₀ = |b(x₀,0)|` and `N ≥ T`, on this event `|X_N| ≥ 2^{β^{N−1}}`
+(`emPath_superlinear_abs_ge` with `h = T/N`). -/
+theorem hjk_divergence_event_measure_ge {Ω : Type*} [MeasurableSpace Ω] (μ : Measure Ω)
+    {K B c₀ T e : ℝ} (hK : 0 ≤ K) (hB : 0 ≤ B) (hc₀ : 0 < c₀) (hT : 0 < T) (he : 0 ≤ e) :
+    ∃ c : ℝ, 0 ≤ c ∧ ∀ N : ℕ, 1 ≤ N → ∀ Z : ℕ → Ω → ℝ,
+      (∀ n < N, μ.map (Z n) = gaussianReal 0 1) → iIndepFun (fun n : Fin N => Z n) μ →
+      ENNReal.ofReal (Real.exp (-c * (N : ℝ) ^ (2 * e + 1))) ≤
+        μ {ω | (K * (N / T) ^ e + B) / (c₀ * √(T / N)) ≤ Z 0 ω ∧
+          ∀ k, 1 ≤ k → k < N → 1 / 2 ≤ Z k ω ∧ Z k ω ≤ 1} := by
+  obtain ⟨c, hc0, hc⟩ := hjk_event_prob_ge hK hB hc₀ hT he
+  refine ⟨c, hc0, fun N hN Z hZ hind => ?_⟩
+  obtain ⟨M, rfl⟩ : ∃ M, N = M + 1 := ⟨N - 1, by omega⟩
+  refine (hc (M + 1) hN).trans (le_of_eq ?_)
+  rw [Nat.add_sub_cancel, ← (hjk_gaussian_event_measure Z hZ hind measurableSet_Ici
+    measurableSet_Icc).2]
+  congr 1
+  ext ω
+  simp only [Set.mem_ofPred_eq, Set.mem_Ici, Set.mem_Icc, Nat.lt_succ_iff]
+
+/-- **An explicit lower bound `exp(−c N^{2e+1}) (2^{β^{N−1}})^p` for the moments of the explicit
+scheme** (Giles 2015, §5.6, p. 44: "SDEs such as `dS_t = −S_t³ dt + dW_t`, which have a
+super-linear growth in the drift and/or the volatility.  This again leads to numerical instability
+if a uniform timestep is used"; the argument of Hutzenthaler, Jentzen and Kloeden,
+Proc. R. Soc. A 467 (2011)).  Under HJK's growth condition (as in `emPath_superlinear_abs_ge`), with
+`b(x₀, 0) ≠ 0`, `T > 0`, `e(β − 1) ≥ 1` and `2e(β − α) ≥ 1`, there is `c ≥ 0` such that for every
+`p ≥ 0`, every `N ≥ T` and all independent `Z_0, …, Z_{N−1}` with law `N(0, 1)`, the explicit
+scheme with `h = T/N` satisfies `E|X_N|^p ≥ exp(−c N^{2e+1}) (2^{β^{N−1}})^p` (lower Lebesgue
+integral in `[0, ∞]`; `c` depends neither on `p`, `N` nor on the `Z_k`):
+`emPath_superlinear_lintegral_ge` and `hjk_event_prob_ge`.  For the paper's example (`β = 3`,
+`α = 0`, `e = 1/2`) this is `exp(p 3^{N−1} log 2 − c N²)`; `emCubic_moment_ge` has
+`exp(p 2^{N−1} log 2 − O(N²))`. -/
+theorem emPath_superlinear_lintegral_ge_exp {Ω : Type*} [MeasurableSpace Ω] (μ : Measure Ω)
+    {a b : ℝ → ℝ → ℝ} {C α β : ℝ} (hβ : 1 < β) (hαβ : α < β)
+    (hcoef : ∀ x t, C ≤ |x| →
+      |x| ^ β ≤ C * max |a x t| |b x t| ∧ min |a x t| |b x t| ≤ C * |x| ^ α)
+    {e : ℝ} (he1 : 1 ≤ e * (β - 1)) (he2 : 1 ≤ 2 * e * (β - α)) {x₀ : ℝ} (hb0 : b x₀ 0 ≠ 0)
+    {T : ℝ} (hT : 0 < T) :
+    ∃ c : ℝ, 0 ≤ c ∧ ∀ p : ℝ, 0 ≤ p → ∀ N : ℕ, T ≤ N → ∀ Z : ℕ → Ω → ℝ,
+      (∀ n < N, μ.map (Z n) = gaussianReal 0 1) → iIndepFun (fun n : Fin N => Z n) μ →
+      ENNReal.ofReal (Real.exp (-c * (N : ℝ) ^ (2 * e + 1)) * ((2 : ℝ) ^ β ^ (N - 1)) ^ p) ≤
+        ∫⁻ ω, ENNReal.ofReal (|emPath a b (T / N) x₀ (fun n => Z n ω) N| ^ p) ∂μ := by
+  have he : 0 ≤ e := by nlinarith
+  have hK : 0 ≤ hjkRadius C α β := by unfold hjkRadius; positivity
+  obtain ⟨c, hc0, hc⟩ := hjk_event_prob_ge hK (by positivity : 0 ≤ |x₀| + |a x₀ 0|)
+    (abs_pos.mpr hb0) hT he
+  refine ⟨c, hc0, fun p hp N hN Z hZ hind => ?_⟩
+  have hN1 : 1 ≤ N := by
+    have : (0 : ℝ) < N := hT.trans_le hN
+    exact_mod_cast this
+  have hP := hc N hN1
+  rw [← add_assoc] at hP
+  rw [ENNReal.ofReal_mul (Real.exp_pos _).le]
+  exact (mul_le_mul_left hP _).trans
+    (emPath_superlinear_lintegral_ge hβ hαβ hcoef he1 he2 hb0 hT hp hN Z hZ hind)
 
 /-! ### Divergence of the moments and of the payoffs -/
 
@@ -718,8 +823,8 @@ theorem emPath_superlinear_payoff_lintegral_tendsto {Ω : Type*} [MeasurableSpac
 and/or the volatility.  This again leads to numerical instability if a uniform timestep is used";
 Hutzenthaler, Jentzen and Kloeden, Proc. R. Soc. A 467 (2011)).  The Bochner-integral form of
 `emPath_superlinear_payoff_lintegral_tendsto`, under the same hypotheses and the integrability of
-`P(X_N)` for every `N`: `E|P(X_N)| → ∞`.  (Without the integrability hypothesis the Bochner integral
-of a non-integrable function would be `0`.) -/
+`P(X_N)` for all large `N`: `E|P(X_N)| → ∞`.  (Without the integrability hypothesis the Bochner
+integral of a non-integrable function would be `0`.) -/
 theorem emPath_superlinear_payoff_integral_tendsto {Ω : Type*} [MeasurableSpace Ω]
     {μ : Measure Ω} {a b : ℝ → ℝ → ℝ} {C α β : ℝ} (hβ : 1 < β) (hαβ : α < β)
     (hcoef : ∀ x t, C ≤ |x| →
@@ -728,15 +833,16 @@ theorem emPath_superlinear_payoff_integral_tendsto {Ω : Type*} [MeasurableSpace
     (hg : ∀ x, D ≤ |x| → |x| ^ q ≤ D * |g x|) (Z : ℕ → ℕ → Ω → ℝ)
     (hZ : ∀ N, ∀ n < N, μ.map (Z N n) = gaussianReal 0 1)
     (hind : ∀ N, iIndepFun (fun n : Fin N => Z N n) μ)
-    (hint : ∀ N : ℕ, Integrable (fun ω => g (emPath a b (T / N) x₀ (fun n => Z N n ω) N)) μ) :
+    (hint : ∀ᶠ N : ℕ in atTop,
+      Integrable (fun ω => g (emPath a b (T / N) x₀ (fun n => Z N n ω) N)) μ) :
     Tendsto (fun N : ℕ => ∫ ω, |g (emPath a b (T / N) x₀ (fun n => Z N n ω) N)| ∂μ)
       atTop atTop := by
   obtain ⟨Λ, hΛ, hev⟩ := exists_payoff_lower hβ hαβ hcoef hb0 hT hq hg Z hZ hind
   refine tendsto_atTop_mono' atTop ?_ hΛ
-  filter_upwards [hev] with N hN
+  filter_upwards [hev, hint] with N hN hiN
   rw [integral_eq_lintegral_of_nonneg_ae (Eventually.of_forall fun ω => abs_nonneg _)
-    (hint N).abs.aestronglyMeasurable]
-  exact (ENNReal.ofReal_le_iff_le_toReal (hint N).abs.lintegral_lt_top.ne).mp hN
+    hiN.abs.aestronglyMeasurable]
+  exact (ENNReal.ofReal_le_iff_le_toReal hiN.abs.lintegral_lt_top.ne).mp hN
 
 /-- **The theorem of Hutzenthaler, Jentzen and Kloeden: the moments of the explicit scheme diverge**
 (Giles 2015, §5.6, p. 44: "Hutzenthaler, Jentzen and Kloeden (2013), who are concerned with SDEs
@@ -765,15 +871,16 @@ theorem emPath_superlinear_moment_lintegral_tendsto {Ω : Type*} [MeasurableSpac
   refine h.congr fun N => lintegral_congr fun ω => ?_
   rw [abs_of_nonneg (by positivity)]
 
-/-- **The MLMC level means diverge** (Giles 2015, §5.6, p. 44: "SDEs such as
-`dS_t = −S_t³ dt + dW_t`, which have a super-linear growth in the drift and/or the volatility.  This
-again leads to numerical instability if a uniform timestep is used"; Hutzenthaler, Jentzen and
+/-- **The expected absolute payoff on MLMC level `ℓ` diverges** (Giles 2015, §5.6, p. 44: "SDEs such
+as `dS_t = −S_t³ dt + dW_t`, which have a super-linear growth in the drift and/or the volatility.
+This again leads to numerical instability if a uniform timestep is used"; Hutzenthaler, Jentzen and
 Kloeden, Proc. R. Soc. A 467 (2011)).  On level `ℓ` of an MLMC hierarchy with `N₀ 2^ℓ` uniform time
 steps (`h_ℓ = T/(N₀ 2^ℓ)`, `N₀ ≥ 1`), under the hypotheses of
-`emPath_superlinear_payoff_lintegral_tendsto`, the expected absolute payoff `E|P_ℓ|` of the explicit
-scheme tends to infinity as `ℓ → ∞`.  For a nonnegative payoff this means
-`E[P_L] = ∑_{ℓ ≤ L} E[P_ℓ − P_{ℓ−1}] → ∞`: the quantity MLMC estimates diverges as `L → ∞`.  The
-divergence of the level variances `V_ℓ` is not formalised. -/
+`emPath_superlinear_payoff_lintegral_tendsto`, the expected absolute payoff `E|P_ℓ|` of the
+single level-`ℓ` explicit path tends to infinity as `ℓ → ∞` (in `[0, ∞]`).  So for a nonnegative
+payoff the quantity `E[P_L]` that MLMC estimates on its finest level diverges as `L → ∞`.  Nothing
+is proved here about the level means `E[P_ℓ − P_{ℓ−1}]` (the coupled fine and coarse paths) or the
+level variances `V_ℓ`; see `mlmc_level_payoff_sq_lintegral_tendsto`. -/
 theorem mlmc_level_payoff_lintegral_tendsto {Ω : Type*} [MeasurableSpace Ω]
     {μ : Measure Ω} {a b : ℝ → ℝ → ℝ} {C α β : ℝ} (hβ : 1 < β) (hαβ : α < β)
     (hcoef : ∀ x t, C ≤ |x| →
@@ -788,6 +895,41 @@ theorem mlmc_level_payoff_lintegral_tendsto {Ω : Type*} [MeasurableSpace Ω]
     tendsto_atTop_mono (fun ℓ => Nat.le_mul_of_pos_left _ hN₀)
       (tendsto_pow_atTop_atTop_of_one_lt one_lt_two)
   exact (emPath_superlinear_payoff_lintegral_tendsto hβ hαβ hcoef hb0 hT hq hg Z hZ hind).comp hlev
+
+/-- **The second moment of the payoff on MLMC level `ℓ` diverges** (Giles 2015, §5.6, p. 44: "SDEs
+such as `dS_t = −S_t³ dt + dW_t`, which have a super-linear growth in the drift and/or the
+volatility.  This again leads to numerical instability if a uniform timestep is used"; Hutzenthaler,
+Jentzen and Kloeden, Proc. R. Soc. A 467 (2011)).  Under the hypotheses of
+`mlmc_level_payoff_lintegral_tendsto`, `E[P_ℓ²] → ∞` as `ℓ → ∞` (in `[0, ∞]`): apply it to `P²`,
+which satisfies `|x|^{2q} ≤ max(D, D²) P(x)²` for `|x| ≥ max(D, D²)`.  Neither
+`Var(P_ℓ) = E[P_ℓ²] − (E P_ℓ)²` nor the level variance `V_ℓ = Var(P_ℓ − P_{ℓ−1})` is covered: the
+first is a difference of two divergent quantities, and a lower bound for it would need an upper
+bound on `E|P_ℓ|` or a lower bound on `P(|P_ℓ| ≤ R)` (convergence in probability of the scheme),
+neither of which is available here. -/
+theorem mlmc_level_payoff_sq_lintegral_tendsto {Ω : Type*} [MeasurableSpace Ω]
+    {μ : Measure Ω} {a b : ℝ → ℝ → ℝ} {C α β : ℝ} (hβ : 1 < β) (hαβ : α < β)
+    (hcoef : ∀ x t, C ≤ |x| →
+      |x| ^ β ≤ C * max |a x t| |b x t| ∧ min |a x t| |b x t| ≤ C * |x| ^ α)
+    {x₀ : ℝ} (hb0 : b x₀ 0 ≠ 0) {T : ℝ} (hT : 0 < T) {g : ℝ → ℝ} {q D : ℝ} (hq : 0 < q)
+    (hg : ∀ x, D ≤ |x| → |x| ^ q ≤ D * |g x|) (Z : ℕ → ℕ → Ω → ℝ)
+    (hZ : ∀ N, ∀ n < N, μ.map (Z N n) = gaussianReal 0 1)
+    (hind : ∀ N, iIndepFun (fun n : Fin N => Z N n) μ) {N₀ : ℕ} (hN₀ : 1 ≤ N₀) :
+    Tendsto (fun ℓ : ℕ => ∫⁻ ω, ENNReal.ofReal (g (emPath a b (T / (N₀ * 2 ^ ℓ : ℕ)) x₀
+      (fun n => Z (N₀ * 2 ^ ℓ) n ω) (N₀ * 2 ^ ℓ)) ^ 2) ∂μ) atTop (𝓝 ∞) := by
+  have hg2 : ∀ x, max D (D ^ 2) ≤ |x| → |x| ^ (2 * q) ≤ max D (D ^ 2) * |g x ^ 2| := by
+    intro x hx
+    have h1 := hg x ((le_max_left _ _).trans hx)
+    have h0 : 0 ≤ |x| ^ q := by positivity
+    rw [show (2 : ℝ) * q = q * 2 from mul_comm _ _, Real.rpow_mul (abs_nonneg x), Real.rpow_two,
+      abs_pow]
+    calc (|x| ^ q) ^ 2 ≤ (D * |g x|) ^ 2 := pow_le_pow_left₀ h0 h1 2
+      _ = D ^ 2 * |g x| ^ 2 := mul_pow _ _ 2
+      _ ≤ max D (D ^ 2) * |g x| ^ 2 :=
+        mul_le_mul_of_nonneg_right (le_max_right _ _) (by positivity)
+  have h := mlmc_level_payoff_lintegral_tendsto hβ hαβ hcoef hb0 hT (g := fun x => g x ^ 2)
+    (by positivity : 0 < 2 * q) hg2 Z hZ hind hN₀
+  refine h.congr fun ℓ => lintegral_congr fun ω => ?_
+  rw [abs_of_nonneg (sq_nonneg _)]
 
 /-! ### Integrability, and the moments as real numbers -/
 
@@ -869,7 +1011,7 @@ theorem emPath_superlinear_moment_tendsto_atTop {Ω : Type*} [MeasurableSpace Ω
     simpa [Real.norm_eq_abs, ENNReal.toReal_ofReal hp.le] using this
   have h := emPath_superlinear_payoff_integral_tendsto hβ hαβ hcoef hb0 hT hp
     (g := fun x => |x| ^ p) (D := 1) (fun x _ => by rw [one_mul]; exact le_abs_self _) Z hZ hind
-    hint
+    (Eventually.of_forall hint)
   refine h.congr fun N => integral_congr_ae (Eventually.of_forall fun ω => ?_)
   exact abs_of_nonneg (Real.rpow_nonneg (abs_nonneg _) p)
 
@@ -917,6 +1059,11 @@ theorem hjk_cubic_moment_tendsto_atTop {Ω : Type*} [MeasurableSpace Ω] {μ : M
     linarith
   · rw [abs_one]
     nlinarith [pow_nonneg (abs_nonneg x) 3]
+
+/-- `hjk_cubic_moment_tendsto_atTop` has exactly the statement of `emCubic_moment_tendsto_atTop`
+(`MlmcLean/EulerSuperlinear.lean`): the two propositions are syntactically equal, so the two proofs
+are equal by `rfl` (proof irrelevance). -/
+example : @hjk_cubic_moment_tendsto_atTop = @emCubic_moment_tendsto_atTop := rfl
 
 /-- **Divergence for the drift `−S|S|`** (Giles 2015, §5.6, p. 44: "SDEs such as
 `dS_t = −S_t³ dt + dW_t`, which have a super-linear growth in the drift and/or the volatility.  This
@@ -986,5 +1133,30 @@ theorem hjk_ginzburgLandau_moment_tendsto_atTop {Ω : Type*} [MeasurableSpace Ω
     nlinarith [hcube x, pow_nonneg (abs_nonneg x) 3]
   · rw [abs_mul]
     nlinarith [hcube x, pow_nonneg (abs_nonneg x) 3, abs_nonneg x]
+
+/-- **Divergence when the volatility dominates: `dS = −S dt + S² dW`** (Giles 2015, §5.6, p. 44:
+"SDEs such as `dS_t = −S_t³ dt + dW_t`, which have a super-linear growth in the drift and/or the
+volatility.  This again leads to numerical instability if a uniform timestep is used"; Hutzenthaler,
+Jentzen and Kloeden, Proc. R. Soc. A 467 (2011)).  For `dS = −S dt + S² dW` (linear drift,
+quadratic volatility: `β = 2`, `α = 1`, `C = 1`), every `x₀ ≠ 0`, `T > 0` and `p > 0`, the explicit
+Euler–Maruyama scheme with `h = T/N` satisfies `E|X_N|^p → ∞`.  Here `|b(x)| = x² ≥ |a(x)| = |x|`
+for `|x| ≥ 1`, so every step of the divergence argument is in the volatility case of `hjk_step_ge`,
+which uses `|Z_k| ≥ 1/2`.  (For `x₀ = 0` the scheme stays at `0`.) -/
+theorem hjk_quadVol_moment_tendsto_atTop {Ω : Type*} [MeasurableSpace Ω] {μ : Measure Ω}
+    {x₀ : ℝ} (hx₀ : x₀ ≠ 0) {T : ℝ} (hT : 0 < T) {p : ℝ} (hp : 0 < p) (Z : ℕ → ℕ → Ω → ℝ)
+    (hZ : ∀ N, ∀ n < N, μ.map (Z N n) = gaussianReal 0 1)
+    (hind : ∀ N, iIndepFun (fun n : Fin N => Z N n) μ) :
+    Tendsto (fun N : ℕ => ∫ ω, |emPath (fun S _ => -S) (fun S _ => S ^ 2) (T / N) x₀
+      (fun n => Z N n ω) N| ^ p ∂μ) atTop atTop := by
+  refine emPath_superlinear_moment_tendsto_atTop (a := fun S _ => -S) (b := fun S _ => S ^ 2)
+    (C := 1) (α := 1) (β := 2) (K := 1) (r := 2) (by norm_num) (by norm_num) (fun x _ _ => ?_)
+    (fun _ => by fun_prop) (fun _ => by fun_prop) (fun x _ => ⟨?_, ?_⟩) (pow_ne_zero 2 hx₀) hT
+    hp Z hZ hind
+  · rw [one_mul, one_mul, Real.rpow_one, Real.rpow_two, abs_neg, abs_pow]
+    exact ⟨le_max_right _ _, min_le_left _ _⟩
+  · rw [abs_neg, one_mul]
+    nlinarith [sq_nonneg (|x| - 1)]
+  · rw [abs_pow, one_mul]
+    linarith
 
 end MLMC

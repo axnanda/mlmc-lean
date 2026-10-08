@@ -5,7 +5,7 @@ import MlmcLean.EndToEndInstances
 # Weak order one of the Euler–Maruyama scheme for geometric Brownian motion (Giles 2015, §5.1)
 
 Reference: M.B. Giles, *Multilevel Monte Carlo methods*, Acta Numerica 24 (2015), §5.1
-"Euler-Maruyama discretisation", pp. 29–30 (l. 1317–1320 of `docs/giles2015.txt`): "If
+"Euler-Maruyama discretisation", pp. 29–30 (p. 30, l. 1317–1320 of `docs/giles2015.txt`): "If
 `h_ℓ = 4^{−ℓ}h_0`, as in the numerical examples in (Giles 2008b), then this gives `α = 2`, `β = 2`
 and `γ = 2`. Alternatively, if `h_ℓ = 2^{−ℓ}h_0` with twice as many timesteps on each successive
 level, as used in the numerical examples in this article, then `α = 1`, `β = 1` and `γ = 1`", and
@@ -26,8 +26,9 @@ independent `Z_i ∼ N(0,1)` (`stdNormalSeq`).
   (`gbmWeakPowConst`).  The one-step moments `a_p = E[A^p]` satisfy
   `a_{p+2} = (1 + rh) a_{p+1} + (p+1)σ²h a_p` (`integral_gbmEMFactor_pow_add_two`), from which
   `|a_p − 1 − (pr + p(p−1)σ²/2)h| ≤ Λ_p² h² e^{Λ_p h}` (`gbmEMFactor_moment_lin_le`), so
-  `|a_p − E[B^p]| ≤ 2Λ_p² h² e^{Λ_p h}`.  `gbm_weak_error_poly`: the same for every polynomial
-  payoff, with the constant `∑_k |c_k| C_k(T)`.
+  `|a_p − E[B^p]| ≤ 2Λ_p² h² e^{Λ_p h}`.  `gbm_weak_error_poly`, `gbm_weak_error_poly_M`: the same
+  for every polynomial payoff, with the constant `∑_k |c_k| C_k(T)`, for refinement factor `2` and
+  for refinement factor `M` (`α = log₂ M`).
 * **Smooth payoffs.** `gbm_em_weak_error_smooth`, `gbm_weak_error_smooth`: if `g` is four times
   differentiable with `|g^{(k)}| ≤ K` for `k = 1, …, 4`, then
   `|E[g(Ŝ)] − E[g(S_T)]| ≤ C(T) h` with `C(T) = 5KΛ²(1 + S_0⁴) T e^{ΛT}`, `Λ = 4|r| + 8σ²`
@@ -41,30 +42,39 @@ independent `Z_i ∼ N(0,1)` (`stdNormalSeq`).
   third-order Taylor expansion with a fourth-order remainder, `abs_integral_taylor_four_le`; the
   first three moments of `A − 1` and `B − 1` agree up to `O(h²)` and their fourth moments are
   `O(h²)`, `gbm_step_moment_bounds`), and the steps are summed with `E[Ŝ_j⁴] ≤ S_0⁴ e^{Λjh}`.
-* **Theorem 1 with the paper's rates.** `gbm_mlmc_theorem1_smooth`: for such `g`, refinement
-  factor `2` and `h_0 = T`, Theorem 1 with `α = β = γ = 1` (`α` from `gbm_weak_error_smooth`, `β`
-  from `gbm_correction_variance_le`, as `g` is `K`-Lipschitz); `gbm_weak_error_smooth_M`,
-  `gbm_mlmc_theorem1_smooth_M`: refinement factor `M ≥ 2` and `h_0 = T/m`, with
-  `α = β = γ = log₂ M` (the paper's `α = β = γ = 2` for `h_ℓ = 4^{−ℓ}h_0`).
-  `gbm_mlmc_theorem1_poly`: Theorem 1 with `α = β = γ = 1` for every polynomial payoff `q` (not
-  Lipschitz in general), with `β = 1` from `gbm_poly_correction_variance_le`: by
+* **Theorem 1 with the paper's rates.** `gbm_mlmc_theorem1_smooth_M`: for such `g`, refinement
+  factor `M ≥ 2` and `h_0 = T/m`, Theorem 1 with `α = β = γ = log₂ M` (the paper's
+  `α = β = γ = 2` for `h_ℓ = 4^{−ℓ}h_0`; `α` from `gbm_weak_error_smooth_M`, `β` from
+  `gbm_correction_variance_le_M`, as `g` is `K`-Lipschitz); `gbm_mlmc_theorem1_smooth` is its case
+  `m = 1`, `M = 2` (`α = β = γ = 1`).  `gbm_mlmc_theorem1_poly_M`, `gbm_mlmc_theorem1_poly`: the
+  same for every polynomial payoff `q` (not Lipschitz in general), with `β` from
+  `gbm_poly_correction_variance_le_M` (and `gbm_poly_correction_variance_le` for `M = 2`): by
   `|q(x) − q(y)| ≤ c_q |x − y| (1 + |x| + |y|)^d` (`abs_eval_sub_eval_le`) and
-  `ab ≤ a²/(2h) + hb²/2`, `E[(q(S_T) − q(Ŝ_ℓ))²] = O(h_ℓ)` from the fourth moment of the strong
-  error (`gbm_em_moment_error_level`) and the moments of `Ŝ_ℓ`, `S_T` of order `4d`
-  (`integral_sq_poly_gbm_err_le`).
+  `ab ≤ a²/(2h) + hb²/2`, `E[(q(S_{t_n}) − q(Ŝ_n))²] = O(h)` from the fourth moment of the strong
+  error (`gbm_em_moment_error`) and the moments of `Ŝ_n`, `S_{t_n}` of order `4d`
+  (`integral_sq_poly_gbm_em_err_le`).  Besides the paper's conclusions (square-integrable error
+  with mean square `< ε²`, cost `O(ε⁻²(log ε)²)`), the four Theorem 1 statements bound the finest
+  level, `M^L ≤ c₅ ε⁻¹` (`2^L ≤ c₅ ε⁻¹` for `M = 2`): the paper's `C_L = O(ε^{−γ/α})` (p. 7,
+  l. 326) with `γ/α = 1`.  This conclusion is where the weak rate shows; it comes from
+  `giles_theorem1_fineCoarse_levels`, Theorem 1 for fine and coarse approximations with the bound
+  `2^{αL} ≤ K/ε` of its construction kept.
 
 **Deviations and scope.**  The smooth-payoff results assume four bounded derivatives (one more than
 needed for the expansion, to bound its remainder); the paper's call option (Figure 5.3) and digital
 option are not smooth, and their weak order one (Bally–Talay, via the smoothing of the law of `S_T`)
-is not proved here.  The conclusions of the two smooth Theorem 1 statements coincide with those of
-`gbm_mlmc_theorem1` and `gbm_mlmc_theorem1_M` (which hold for every Lipschitz payoff with the
-weaker `α = ½ log₂ M`); what is new is that the three rates used are exactly the paper's.
-`gbm_mlmc_theorem1_poly` is new also in its conclusion (polynomial payoffs are not Lipschitz); it
-is stated for refinement factor `2` only.  The constants are explicit but far from sharp: checked
-numerically (trapezoidal Gaussian quadrature, `1104` one-step and `432` end-to-end checks with
-`n ≤ 2`, payoffs `sin`, `cos(3x)/81`, softplus, `arctan`) the bound exceeds the true error by a
-factor of at least `400`; the monomial bound was checked against the exact moments (`5292` cases,
-`p ≤ 8`, `n ≤ 256`), with ratio at most `0.25`.
+is not proved here.  For smooth payoffs the cost and mean-square-error conclusions of Theorem 1 are
+already those of `gbm_mlmc_theorem1` and `gbm_mlmc_theorem1_M` (every Lipschitz payoff, weaker
+`α = ½ log₂ M`): with `β = γ` the complexity does not depend on `α`.  What the weak rate adds is
+the bound on the finest level, `M^L = O(ε⁻¹)` instead of `O(ε⁻²)`.  The polynomial Theorem 1
+statements are new also in their other conclusions (polynomial payoffs are not Lipschitz).  The
+constants are explicit but far from sharp: checked numerically (trapezoidal Gaussian quadrature,
+`1104` one-step and `432` end-to-end checks with `n ≤ 2`, payoffs `sin`, `cos(3x)/81`, softplus,
+`arctan`) the bound exceeds the true error by a factor of at least `400`; the monomial bound was
+checked against the exact moments (`5292` cases, `p ≤ 8`, `n ≤ 256`), with ratio at most `0.25`.
+The smooth-payoff constant is not scale invariant, as the hypothesis bounds `g^{(k)}` uniformly: for
+a payoff `g(x) = G(x/S_0)` the true error does not depend on `S_0`, while the constant grows like
+`S_0³` as `S_0 → ∞` and like `S_0^{−4}` as `S_0 → 0` (a hypothesis `|x^k g^{(k)}(x)| ≤ K` would
+remove this; it is not pursued here).
 -/
 
 open MeasureTheory ProbabilityTheory Finset
@@ -1251,7 +1261,8 @@ lemma integral_gbmEMFactor_pow_four_le (r σ : ℝ) {h : ℝ} (hh : 0 ≤ h) :
 
 /-- The constant of the weak error of the Euler–Maruyama scheme for GBM with a smooth payoff (Giles
 2015, §5.1): `C(t) = 5KΛ²(1 + S_0⁴) t e^{Λt}` with `Λ = 4|r| + 8σ²`, where `K` bounds the first four
-derivatives of the payoff. -/
+derivatives of the payoff.  It is explicit but neither sharp nor scale invariant (see the module
+docstring). -/
 noncomputable def gbmWeakSmoothConst (K r σ s₀ t : ℝ) : ℝ :=
   5 * K * (4 * |r| + 8 * σ ^ 2) ^ 2 * (1 + s₀ ^ 4) * t * Real.exp ((4 * |r| + 8 * σ ^ 2) * t)
 
@@ -1421,6 +1432,140 @@ theorem gbm_weak_error_smooth (r σ s₀ : ℝ) {T : ℝ} (hT : 0 ≤ T) (ℓ : 
   rw [cast_two_pow_mul_div] at h
   exact h
 
+/-! ### Theorem 1 with a bound on the finest level -/
+
+/-- **Theorem 1 for fine and coarse approximations, with a bound on the finest level** (Giles 2015,
+§2.1, Theorem 1 with (2.4), and the discussion of its proof, p. 7, l. 326: "Because of condition
+i), we have `2^{−αL} = O(ε)`, and hence `C_L = O(ε^{−γ/α})`", said there for `β < γ`; the choice
+of `L` is the same in every regime).  Under the hypotheses of `giles_theorem1_fineCoarse` (its
+`β > 0` is not needed), with a deterministic cost `C_ℓ` per level-`ℓ` sample, there is `c₄ > 0`
+such that for every `0 < ε < e⁻¹` there are `L` and `N_ℓ ≥ 1` for which the multilevel
+estimator has a square-integrable error with mean square `< ε²`, cost
+`∑_{ℓ≤L} N_ℓ C_ℓ ≤ c₄ · complexityBound α β γ ε`, and finest level `2^{αL} ≤ K/ε` with
+`K = 2^α (1 + 2c₁)` (`K1`): the weak rate `α` fixes the number of levels.  This is the construction
+of `mlmc_complexity_core` (`exists_L_N`, `cost_le_of_level`) with the bound on `L` kept. -/
+lemma giles_theorem1_fineCoarse_levels {Ω₀ Ω : Type*} [MeasurableSpace Ω₀] [MeasurableSpace Ω]
+    {ν : Measure Ω₀} {μ : Measure Ω} [IsProbabilityMeasure μ] (P : Ω₀ → ℝ)
+    (Pf Pc : ℕ → Ω₀ → ℝ) (ω : ℕ × ℕ → Ω → Ω₀) (C : ℕ → ℝ) {α β γ c₁ c₂ c₃ : ℝ} (hα : 0 < α)
+    (hγ : 0 < γ) (hc₁ : 0 < c₁) (hc₂ : 0 < c₂) (hc₃ : 0 < c₃) (hαβγ : min β γ / 2 ≤ α)
+    (hω : ∀ p, MeasurePreserving (ω p) μ ν) (hind : iIndepFun ω μ) (hP : Integrable P ν)
+    (hPfm : ∀ ℓ, Measurable (Pf ℓ)) (hPcm : ∀ ℓ, Measurable (Pc ℓ))
+    (hPf : ∀ ℓ, MemLp (Pf ℓ) 2 ν) (hPc : ∀ ℓ, MemLp (Pc ℓ) 2 ν)
+    (h24 : ∀ ℓ, ∫ y, Pf ℓ y ∂ν = ∫ y, Pc ℓ y ∂ν)
+    (h_i : ∀ ℓ : ℕ, |∫ y, Pf ℓ y - P y ∂ν| ≤ c₁ * (2 : ℝ) ^ (-(α * (ℓ : ℝ))))
+    (h_iii : ∀ ℓ, variance (fineCoarseDiff Pf Pc ℓ) ν ≤ c₂ * (2 : ℝ) ^ (-(β * (ℓ : ℝ))))
+    (h_iv : ∀ ℓ, C ℓ ≤ c₃ * (2 : ℝ) ^ (γ * (ℓ : ℝ))) :
+    ∃ c₄ : ℝ, 0 < c₄ ∧ ∀ ε : ℝ, 0 < ε → ε < Real.exp (-1) →
+      ∃ (L : ℕ) (N : ℕ → ℕ), (∀ ℓ, 0 < N ℓ) ∧
+        Integrable (fun x => (∑ ℓ ∈ range (L + 1), blockMean (fineCoarseDiff Pf Pc) ω ℓ (N ℓ) x -
+          ∫ y, P y ∂ν) ^ 2) μ ∧
+        ∫ x, (∑ ℓ ∈ range (L + 1), blockMean (fineCoarseDiff Pf Pc) ω ℓ (N ℓ) x -
+          ∫ y, P y ∂ν) ^ 2 ∂μ < ε ^ 2 ∧
+        ∑ ℓ ∈ range (L + 1), (N ℓ : ℝ) * C ℓ ≤ c₄ * complexityBound α β γ ε ∧
+        (2 : ℝ) ^ (α * (L : ℝ)) ≤ K1 α c₁ / ε := by
+  have : IsProbabilityMeasure ν := by
+    rw [← (hω (0, 0)).map_eq]
+    exact Measure.isProbabilityMeasure_map (hω (0, 0)).measurable.aemeasurable
+  obtain ⟨c₄, hc₄, hcost⟩ := cost_le_of_level (β := β) hα hγ hc₂ hc₃ (K1_pos (α := α) hc₁) hαβγ
+  refine ⟨c₄, hc₄, fun ε hε hε1 => ?_⟩
+  obtain ⟨L, N, hN, hbias, hvar, hcost', hL, -⟩ :=
+    exists_L_N (β := β) (γ := γ) hα hc₁ hc₂ hc₃ hε hε1
+  have hΔ : ∀ ℓ, MemLp (fineCoarseDiff Pf Pc ℓ) 2 ν := memLp_fineCoarseDiff hPf hPc
+  have hΔm : ∀ ℓ, Measurable (fineCoarseDiff Pf Pc ℓ) := measurable_fineCoarseDiff hPfm hPcm
+  have hΔ1 : ∀ ℓ, Integrable (fineCoarseDiff Pf Pc ℓ) ν := fun ℓ => (hΔ ℓ).integrable one_le_two
+  have hPf1 : ∀ ℓ, Integrable (Pf ℓ) ν := fun ℓ => (hPf ℓ).integrable one_le_two
+  have hPc1 : ∀ ℓ, Integrable (Pc ℓ) ν := fun ℓ => (hPc ℓ).integrable one_le_two
+  have hY : ∀ ℓ, MemLp (blockMean (fineCoarseDiff Pf Pc) ω ℓ (N ℓ)) 2 μ :=
+    fun ℓ => memLp_blockMean hω hΔ ℓ (N ℓ)
+  have hD : MemLp (fun x => ∑ ℓ ∈ range (L + 1), blockMean (fineCoarseDiff Pf Pc) ω ℓ (N ℓ) x -
+      ∫ y, P y ∂ν) 2 μ :=
+    (memLp_finsetSum _ fun ℓ _ => hY ℓ).sub (memLp_const _)
+  refine ⟨L, N, hN, hD.integrable_sq, ?_, ?_, hL⟩
+  · -- the mean square error, `MSE = ∑_ℓ V[Y_ℓ] + (E[P_L] − E[P])²` (Giles (2.1), (2.3))
+    have tr : ∀ f : Ω₀ → ℝ, Integrable f ν → ∫ x, f (ω (0, 0) x) ∂μ = ∫ y, f y ∂ν :=
+      fun f hf => integral_comp_of_measurePreserving (hω (0, 0)) hf.aestronglyMeasurable
+    have hPlμ : ∀ ℓ, Integrable (fun x => Pf ℓ (ω (0, 0) x)) μ :=
+      fun ℓ => ((hω (0, 0)).integrable_comp (hPf1 ℓ).aestronglyMeasurable).2 (hPf1 ℓ)
+    have hind' : Set.Pairwise ↑(range (L + 1)) fun i j =>
+        IndepFun (blockMean (fineCoarseDiff Pf Pc) ω i (N i))
+          (blockMean (fineCoarseDiff Pf Pc) ω j (N j)) μ :=
+      fun i _ j _ hij => indepFun_blockMean (fun p => (hω p).measurable) hind hΔm hij _ _
+    have h0 : ∫ x, blockMean (fineCoarseDiff Pf Pc) ω 0 (N 0) x ∂μ =
+        ∫ x, Pf 0 (ω (0, 0) x) ∂μ := by
+      rw [integral_blockMean hω hΔ1 0 (hN 0), tr (Pf 0) (hPf1 0)]
+      rfl
+    have hs : ∀ ℓ, ∫ x, blockMean (fineCoarseDiff Pf Pc) ω (ℓ + 1) (N (ℓ + 1)) x ∂μ =
+        ∫ x, Pf (ℓ + 1) (ω (0, 0) x) - Pf ℓ (ω (0, 0) x) ∂μ := fun ℓ => by
+      rw [integral_blockMean hω hΔ1 (ℓ + 1) (hN (ℓ + 1)),
+        integral_fineCoarseDiff hPf1 hPc1 h24 (ℓ + 1),
+        tr (fun y => Pf (ℓ + 1) y - Pf ℓ y) ((hPf1 (ℓ + 1)).sub (hPf1 ℓ)), levelDiff_succ]
+    have hmse := mlmc_mse (fun ℓ x => Pf ℓ (ω (0, 0) x))
+      (fun ℓ => blockMean (fineCoarseDiff Pf Pc) ω ℓ (N ℓ)) L (∫ y, P y ∂ν) hY hPlμ hind' h0 hs
+    have hb : (∫ y, Pf L y ∂ν - ∫ y, P y ∂ν) ^ 2 ≤ (c₁ * (2 : ℝ) ^ (-(α * (L : ℝ)))) ^ 2 := by
+      have h := h_i L
+      rw [integral_sub (hPf1 L) hP] at h
+      exact sq_le_sq' (abs_le.1 h).1 (abs_le.1 h).2
+    have hv : ∑ ℓ ∈ range (L + 1), variance (blockMean (fineCoarseDiff Pf Pc) ω ℓ (N ℓ)) μ ≤
+        ∑ ℓ ∈ range (L + 1), Vb β c₂ ℓ / (N ℓ : ℝ) := by
+      refine sum_le_sum fun ℓ _ => ?_
+      rw [variance_blockMean hω hind hΔm hΔ ℓ (hN ℓ)]
+      exact div_le_div_of_nonneg_right (h_iii ℓ) (by positivity)
+    have hL' : ∫ x, Pf L (ω (0, 0) x) ∂μ = ∫ y, Pf L y ∂ν := tr (Pf L) (hPf1 L)
+    have hε2 := pow_pos hε 2
+    simp only at hmse
+    rw [hmse, hL']
+    linarith
+  · -- the cost
+    calc ∑ ℓ ∈ range (L + 1), (N ℓ : ℝ) * C ℓ
+        ≤ ∑ ℓ ∈ range (L + 1), (N ℓ : ℝ) * Cb γ c₃ ℓ :=
+          sum_le_sum fun ℓ _ => mul_le_mul_of_nonneg_left (h_iv ℓ) (by positivity)
+      _ ≤ c₄ * complexityBound α β γ ε := hcost'.trans (hcost ε hε hε1 L hL)
+
+/-- **Theorem 1 for the Euler–Maruyama estimator with refinement factor `M`, with a bound on the
+finest level** (Giles 2015, §2.1, Theorem 1 with (2.4), and §5.1, p. 29, l. 1281–1282: "On level
+`ℓ`, the uniform timestep is taken to be `h_ℓ = h_0 M^ℓ` [read `h_0 M^{−ℓ}`], for some integer
+`M`").  The estimator of `em_mlmc_theorem1_M`, with a deterministic cost `C_ℓ` per level-`ℓ`
+sample: under (i), (iii) and (iv) with `α ≥ ½ min(β, γ)` there is `c₄ > 0` such that for every
+`0 < ε < e⁻¹` there are `L` and `N_ℓ ≥ 1` with a square-integrable error, `MSE < ε²`,
+`∑_{ℓ≤L} N_ℓ C_ℓ ≤ c₄ · complexityBound α β γ ε` and `2^{αL} ≤ K1 α c₁ / ε`
+(`giles_theorem1_fineCoarse_levels`; (2.4) is `integral_emCoarseM`). -/
+lemma em_mlmc_theorem1_levels_M {Ω : Type*} [MeasurableSpace Ω] {μ : Measure Ω}
+    [IsProbabilityMeasure μ] (a b : ℝ → ℝ → ℝ) (h₀ S₀ : ℝ) {M : ℕ} (hM : 0 < M)
+    (Φ : ℕ → (ℕ → ℝ) → ℝ) (P : (ℕ → ℝ) → ℝ) (ω : ℕ × ℕ → Ω → ℕ → ℝ) (C : ℕ → ℝ)
+    {α β γ c₁ c₂ c₃ : ℝ} (hα : 0 < α) (hγ : 0 < γ) (hc₁ : 0 < c₁) (hc₂ : 0 < c₂)
+    (hc₃ : 0 < c₃) (hαβγ : min β γ / 2 ≤ α) (hω : ∀ p, MeasurePreserving (ω p) μ stdNormalSeq)
+    (hind : iIndepFun ω μ) (hP : Integrable P stdNormalSeq)
+    (hPfm : ∀ ℓ, Measurable (emFineM a b h₀ S₀ M Φ ℓ))
+    (hPf : ∀ ℓ, MemLp (emFineM a b h₀ S₀ M Φ ℓ) 2 stdNormalSeq)
+    (h_i : ∀ ℓ : ℕ, |∫ z, emFineM a b h₀ S₀ M Φ ℓ z - P z ∂stdNormalSeq| ≤
+      c₁ * (2 : ℝ) ^ (-(α * (ℓ : ℝ))))
+    (h_iii : ∀ ℓ, variance
+      (fineCoarseDiff (emFineM a b h₀ S₀ M Φ) (emCoarseM a b h₀ S₀ M Φ) ℓ) stdNormalSeq ≤
+        c₂ * (2 : ℝ) ^ (-(β * (ℓ : ℝ))))
+    (h_iv : ∀ ℓ, C ℓ ≤ c₃ * (2 : ℝ) ^ (γ * (ℓ : ℝ))) :
+    ∃ c₄ : ℝ, 0 < c₄ ∧ ∀ ε : ℝ, 0 < ε → ε < Real.exp (-1) →
+      ∃ (L : ℕ) (N : ℕ → ℕ), (∀ ℓ, 0 < N ℓ) ∧
+        Integrable (fun x => (∑ ℓ ∈ range (L + 1),
+          blockMean (fineCoarseDiff (emFineM a b h₀ S₀ M Φ) (emCoarseM a b h₀ S₀ M Φ)) ω ℓ
+            (N ℓ) x - ∫ z, P z ∂stdNormalSeq) ^ 2) μ ∧
+        ∫ x, (∑ ℓ ∈ range (L + 1),
+          blockMean (fineCoarseDiff (emFineM a b h₀ S₀ M Φ) (emCoarseM a b h₀ S₀ M Φ)) ω ℓ
+            (N ℓ) x - ∫ z, P z ∂stdNormalSeq) ^ 2 ∂μ < ε ^ 2 ∧
+        ∑ ℓ ∈ range (L + 1), (N ℓ : ℝ) * C ℓ ≤ c₄ * complexityBound α β γ ε ∧
+        (2 : ℝ) ^ (α * (L : ℝ)) ≤ K1 α c₁ / ε := by
+  have hc : ∀ ℓ, emCoarseM a b h₀ S₀ M Φ ℓ = emFineM a b h₀ S₀ M Φ ℓ ∘ blockAvg M := fun ℓ =>
+    funext (emCoarseM_eq a b h₀ S₀ hM Φ ℓ)
+  have hPcm : ∀ ℓ, Measurable (emCoarseM a b h₀ S₀ M Φ ℓ) := fun ℓ => by
+    rw [hc]
+    exact (hPfm ℓ).comp (measurePreserving_blockAvg hM).measurable
+  have hPc : ∀ ℓ, MemLp (emCoarseM a b h₀ S₀ M Φ ℓ) 2 stdNormalSeq := fun ℓ => by
+    rw [hc]
+    exact (hPf ℓ).comp_measurePreserving (measurePreserving_blockAvg hM)
+  exact giles_theorem1_fineCoarse_levels P (emFineM a b h₀ S₀ M Φ) (emCoarseM a b h₀ S₀ M Φ) ω C
+    hα hγ hc₁ hc₂ hc₃ hαβγ hω hind hP hPfm hPcm hPf hPc
+    (fun ℓ => (integral_emCoarseM a b h₀ S₀ hM Φ ℓ (hPfm ℓ).aestronglyMeasurable).symm)
+    h_i h_iii h_iv
+
 /-! ### Theorem 1 with the paper's rates -/
 
 /-- A payoff with `|g'| ≤ K` (and `g` differentiable) is continuous and `K`-Lipschitz, so the
@@ -1440,124 +1585,6 @@ lemma continuous_lipschitz_of_iteratedDeriv {g : ℝ → ℝ}
     (by simp) (k := 0) (fun t => by simpa using hK 1 le_rfl (by norm_num) (y + t)) (x - y)
   simp only [zero_add, pow_one, Nat.cast_zero, div_one, add_sub_cancel] at this
   exact this
-
-/-- **Theorem 1 for the Euler–Maruyama MLMC estimator of GBM with a smooth payoff, with the paper's
-rates `α = β = γ = 1`** (Giles 2015, §5.1, p. 30, l. 1318–1321: "if `h_ℓ = 2^{−ℓ}h_0` with twice as
-many timesteps on each successive level, as used in the numerical examples in this article, then
-`α = 1`, `β = 1` and `γ = 1`. In either case, Theorem 1 gives the complexity to achieve a
-root-mean-square error of `ε` to be `O(ε^{−2}(log ε)²)`").  Let `dS = rS dt + σS dW`, `S_0 = s₀`,
-`T ≥ 0`, and let `g` be four times differentiable with `|g^{(k)}| ≤ K` for `k = 1, …, 4`.  Level `ℓ`
-uses `2^ℓ` Euler–Maruyama steps of size `h_ℓ = T 2^{−ℓ}`; its correction is the payoff of the fine
-path minus the payoff of the coarse path driven by the summed increments, the samples are
-independent, and a level-`ℓ` sample costs `2^ℓ`.  Then there is `c₄ > 0` such that for every
-`0 < ε < e⁻¹` there are `L` and `N_ℓ ≥ 1` for which the multilevel estimator of
-`E[g(S_T)] = E[g(s₀ e^{(r − σ²/2)T + σ √T Z})]`, `Z ∼ N(0,1)`, has mean square error `< ε²` and
-cost `∑_{ℓ≤L} N_ℓ 2^ℓ ≤ c₄ ε⁻²(log ε)²`.  The rates are all proved: `α = 1`
-(`gbm_weak_error_smooth`), `β = 1` (`gbm_correction_variance_le`, as `g` is `K`-Lipschitz) and
-`γ = 1`.  The conclusion is that of `gbm_mlmc_theorem1`, which needs only a Lipschitz payoff and
-uses the weaker `α = ½`; here the rates are exactly the paper's. -/
-theorem gbm_mlmc_theorem1_smooth (r σ s₀ : ℝ) {T : ℝ} (hT : 0 ≤ T) {g : ℝ → ℝ}
-    (hg : ∀ k < 4, Differentiable ℝ (iteratedDeriv k g)) {K : ℝ}
-    (hK : ∀ k, 1 ≤ k → k ≤ 4 → ∀ x, |iteratedDeriv k g x| ≤ K) :
-    ∃ c₄ : ℝ, 0 < c₄ ∧ ∀ ε : ℝ, 0 < ε → ε < Real.exp (-1) →
-      ∃ (L : ℕ) (N : ℕ → ℕ), (∀ ℓ, 0 < N ℓ) ∧
-        ∫ x, (∑ ℓ ∈ range (L + 1),
-            blockMean (fineCoarseDiff (emFine (gbmDrift r) (gbmVol σ) T s₀ (europeanPayoff g))
-              (emCoarse (gbmDrift r) (gbmVol σ) T s₀ (europeanPayoff g))) (fun p x => x p) ℓ
-              (N ℓ) x -
-            ∫ w, g (s₀ * Real.exp ((r - σ ^ 2 / 2) * T + σ * (Real.sqrt T * w)))
-              ∂gaussianReal 0 1) ^ 2 ∂(Measure.infinitePi fun _ : ℕ × ℕ => stdNormalSeq) < ε ^ 2 ∧
-        ∑ ℓ ∈ range (L + 1), (N ℓ : ℝ) * 2 ^ ℓ ≤ c₄ * (ε ^ (-2 : ℝ) * Real.log ε ^ 2) := by
-  obtain ⟨hgc, hgL⟩ := continuous_lipschitz_of_iteratedDeriv hg hK
-  have hK0 : 0 ≤ K := (abs_nonneg _).trans (hK 1 le_rfl (by norm_num) 0)
-  obtain ⟨-, hind, hω⟩ := exists_iid_inputs stdNormalSeq
-  have hC := gbmStrongConst_nonneg r σ s₀ hT
-  have hPint : ∫ z, g (gbmExact r σ T s₀ 0 z) ∂stdNormalSeq =
-      ∫ w, g (s₀ * Real.exp ((r - σ ^ 2 / 2) * T + σ * (Real.sqrt T * w))) ∂gaussianReal 0 1 := by
-    simp_rw [gbmExact_zero]
-    have hF : Measurable fun w : ℝ =>
-        g (s₀ * Real.exp ((r - σ ^ 2 / 2) * T + σ * (Real.sqrt T * w))) :=
-      hgc.measurable.comp (by fun_prop)
-    exact integral_comp_of_measurePreserving
-      (measurePreserving_eval_infinitePi (fun _ : ℕ => gaussianReal 0 1) 0) hF.aestronglyMeasurable
-  have hP : MemLp (fun z => g (gbmExact r σ T s₀ 0 z)) 2 stdNormalSeq :=
-    memLp_two_comp_of_abs_sub_le hgL (memLp_gbmExact r σ T s₀ 0)
-  have hPf : ∀ ℓ, MemLp (emFine (gbmDrift r) (gbmVol σ) T s₀ (europeanPayoff g) ℓ) 2
-      stdNormalSeq := fun ℓ => memLp_two_comp_of_abs_sub_le hgL (memLp_gbmEM r σ T s₀ ℓ)
-  have hPfm : ∀ ℓ, Measurable (emFine (gbmDrift r) (gbmVol σ) T s₀ (europeanPayoff g) ℓ) :=
-    fun ℓ => hgc.measurable.comp (measurable_gbmEM r σ T s₀ ℓ)
-  -- (i): the weak rate `α = 1`
-  have hCW : 0 ≤ gbmWeakSmoothConst K r σ s₀ T := by
-    unfold gbmWeakSmoothConst
-    positivity
-  have hc₁ : 0 < gbmWeakSmoothConst K r σ s₀ T * T + 1 := by positivity
-  have h_i : ∀ ℓ : ℕ, |∫ z, emFine (gbmDrift r) (gbmVol σ) T s₀ (europeanPayoff g) ℓ z -
-      g (gbmExact r σ T s₀ 0 z) ∂stdNormalSeq| ≤
-      (gbmWeakSmoothConst K r σ s₀ T * T + 1) * (2 : ℝ) ^ (-(1 * (ℓ : ℝ))) := fun ℓ => by
-    have h := gbm_weak_error_smooth r σ s₀ hT ℓ hg hK
-    have e1 : ∫ z, emFine (gbmDrift r) (gbmVol σ) T s₀ (europeanPayoff g) ℓ z -
-        g (gbmExact r σ T s₀ 0 z) ∂stdNormalSeq =
-        ∫ z, g (gbmEM r σ T s₀ ℓ z) ∂stdNormalSeq -
-          ∫ z, g (gbmExact r σ T s₀ ℓ z) ∂stdNormalSeq := by
-      rw [integral_sub ((hPf ℓ).integrable one_le_two) (hP.integrable one_le_two),
-        integral_comp_gbmExact r σ T s₀ ℓ hgc.measurable]
-      rfl
-    have e2 : (2 : ℝ) ^ (-(1 * (ℓ : ℝ))) = ((2 : ℝ) ^ ℓ)⁻¹ := by
-      rw [one_mul, Real.rpow_neg (by norm_num : (0 : ℝ) ≤ 2), Real.rpow_natCast]
-    rw [e1, e2]
-    have hpos : 0 < ((2 : ℝ) ^ ℓ)⁻¹ := by positivity
-    calc _ ≤ gbmWeakSmoothConst K r σ s₀ T * (T / 2 ^ ℓ) := h
-      _ = gbmWeakSmoothConst K r σ s₀ T * T * ((2 : ℝ) ^ ℓ)⁻¹ := by rw [div_eq_mul_inv]; ring
-      _ ≤ _ := by nlinarith
-  -- (iii): the variance rate `β = 1`
-  obtain ⟨V₀, hV₀⟩ : ∃ V₀, V₀ = variance
-      (emFine (gbmDrift r) (gbmVol σ) T s₀ (europeanPayoff g) 0) stdNormalSeq := ⟨_, rfl⟩
-  have hV₀0 : 0 ≤ V₀ := by
-    rw [hV₀]
-    exact variance_nonneg _ _
-  have hc₂ : 0 < V₀ + 6 * K ^ 2 * (gbmStrongConst r σ T s₀ * T) + 1 := by positivity
-  have h_iii : ∀ ℓ, variance (fineCoarseDiff
-      (emFine (gbmDrift r) (gbmVol σ) T s₀ (europeanPayoff g))
-      (emCoarse (gbmDrift r) (gbmVol σ) T s₀ (europeanPayoff g)) ℓ) stdNormalSeq ≤
-      (V₀ + 6 * K ^ 2 * (gbmStrongConst r σ T s₀ * T) + 1) * (2 : ℝ) ^ (-(1 * (ℓ : ℝ))) := by
-    intro ℓ
-    rw [one_mul, Real.rpow_neg (by norm_num : (0 : ℝ) ≤ 2), Real.rpow_natCast]
-    cases ℓ with
-    | zero =>
-      simp only [fineCoarseDiff, pow_zero, inv_one, mul_one]
-      rw [← hV₀]
-      linarith [mul_nonneg (sq_nonneg K) (mul_nonneg hC hT)]
-    | succ ℓ =>
-      have hv := gbm_correction_variance_le r σ s₀ hT hgL ℓ
-      have e : fineCoarseDiff (emFine (gbmDrift r) (gbmVol σ) T s₀ (europeanPayoff g))
-          (emCoarse (gbmDrift r) (gbmVol σ) T s₀ (europeanPayoff g)) (ℓ + 1) =
-          fun z => g (gbmEM r σ T s₀ (ℓ + 1) z) - g (gbmEM r σ T s₀ ℓ (pairAvg z)) := by
-        funext z
-        simp only [fineCoarseDiff, emCoarse_eq]
-        rfl
-      rw [e]
-      have hinv : 0 < ((2 : ℝ) ^ (ℓ + 1))⁻¹ := by positivity
-      calc _ ≤ 6 * K ^ 2 * (gbmStrongConst r σ T s₀ * T) * ((2 : ℝ) ^ (ℓ + 1))⁻¹ := hv
-        _ ≤ _ := by linarith [mul_nonneg hV₀0 hinv.le]
-  -- (iv): a level-`ℓ` sample costs `2^ℓ`
-  have h_iv : ∀ ℓ : ℕ, (2 : ℝ) ^ ℓ ≤ 1 * (2 : ℝ) ^ ((1 : ℝ) * (ℓ : ℝ)) := fun ℓ => by
-    rw [one_mul, one_mul, Real.rpow_natCast]
-  obtain ⟨c₄, hc₄, h⟩ := em_mlmc_theorem1
-    (μ := Measure.infinitePi fun _ : ℕ × ℕ => stdNormalSeq)
-    (gbmDrift r) (gbmVol σ) T s₀ (europeanPayoff g) (fun z => g (gbmExact r σ T s₀ 0 z))
-    (fun p x => x p) (fun ℓ _ _ => (2 : ℝ) ^ ℓ) (fun ℓ => (2 : ℝ) ^ ℓ) (α := 1) (β := 1)
-    (γ := 1) one_pos one_pos one_pos hc₁ hc₂ one_pos (by norm_num) hω hind
-    (hP.integrable one_le_two) hPfm hPf (fun _ _ => integrable_const _)
-    (fun _ _ => by simp only [integral_const, probReal_univ, one_smul]) h_i h_iii h_iv
-  refine ⟨c₄, hc₄, fun ε hε hε1 => ?_⟩
-  obtain ⟨L, N, hN, hmse, hcost⟩ := h ε hε hε1
-  refine ⟨L, N, hN, ?_, ?_⟩
-  · rw [← hPint]
-    exact hmse
-  · simp only [totalCost, Finset.sum_const, Finset.card_range, nsmul_eq_mul, integral_const,
-      probReal_univ, one_smul] at hcost
-    rw [complexityBound_of_eq rfl ε] at hcost
-    exact hcost
 
 /-- **Weak order one for refinement factor `M`** (Giles 2015, §5.1, p. 29, l. 1281–1282: "On level
 `ℓ`, the uniform timestep is taken to be `h_ℓ = h_0 M^ℓ` [read `h_0 M^{−ℓ}`], for some integer `M`",
@@ -1584,24 +1611,29 @@ theorem gbm_weak_error_smooth_M (r σ s₀ : ℝ) {T : ℝ} (hT : 0 ≤ T) {m M 
   exact H
 
 /-- **Theorem 1 for GBM with refinement factor `M` and a smooth payoff, with the paper's rates
-`α = β = γ = log₂ M`** (Giles 2015, §5.1, pp. 29–30, l. 1317–1321: "If `h_ℓ = 4^{−ℓ}h_0`, as in the
+`α = β = γ = log₂ M`** (Giles 2015, §5.1, p. 30, l. 1317–1321: "If `h_ℓ = 4^{−ℓ}h_0`, as in the
 numerical examples in (Giles 2008b), then this gives `α = 2`, `β = 2` and `γ = 2` … In either case,
 Theorem 1 gives the complexity to achieve a root-mean-square error of `ε` to be
-`O(ε^{−2}(log ε)²)`").  Let `dS = rS dt + σS dW`, `T ≥ 0`, `m ≥ 1`, `M ≥ 2`, and let `g` be four
-times differentiable with `|g^{(k)}| ≤ K` for `k = 1, …, 4`.  Level `ℓ` uses `m M^ℓ` Euler–Maruyama
-steps of size `h_ℓ = h_0 M^{−ℓ}`, `h_0 = T/m` (`emFineM`); the coarse path of a level-`(ℓ+1)` sample
-is driven by the sums of `M` fine increments (`emCoarseM`); the samples are independent and a
-level-`ℓ` sample costs `m M^ℓ`.  Then there is `c₄ > 0` such that for every `0 < ε < e⁻¹` there
-are `L` and `N_ℓ ≥ 1` for which the multilevel estimator of `E[g(S_T)]` has a square-integrable
-error with mean square `< ε²`, and cost `∑_{ℓ≤L} N_ℓ m M^ℓ ≤ c₄ ε⁻²(log ε)²`.  The rates are the
-paper's, in Theorem 1's base `2`: `α = log₂ M` (`gbm_weak_error_smooth_M`), `β = log₂ M`
-(`gbm_correction_variance_le_M`) and `γ = log₂ M`; for `M = 4`, `α = β = γ = 2`.  The conclusion
-is that of `gbm_mlmc_theorem1_M`, which holds for every Lipschitz payoff with the weaker
-`α = ½ log₂ M`; the coarsest step is `T/m` so that the grid reaches `T`. -/
+`O(ε^{−2}(log ε)²)`"; §2.1, p. 7, l. 326: "Because of condition i), we have `2^{−αL} = O(ε)`, and
+hence `C_L = O(ε^{−γ/α})`").  Let `dS = rS dt + σS dW`, `T ≥ 0`, `m ≥ 1`, `M ≥ 2`, and let `g` be
+four times differentiable with `|g^{(k)}| ≤ K` for `k = 1, …, 4`.  Level `ℓ` uses `m M^ℓ`
+Euler–Maruyama steps of size `h_ℓ = h_0 M^{−ℓ}`, `h_0 = T/m` (`emFineM`); the coarse path of a
+level-`(ℓ+1)` sample is driven by the sums of `M` fine increments (`emCoarseM`); the samples are
+independent and a level-`ℓ` sample costs `m M^ℓ`.  Then there are `c₄, c₅ > 0` such that for every
+`0 < ε < e⁻¹` there are `L` and `N_ℓ ≥ 1` for which the multilevel estimator of `E[g(S_T)]` has a
+square-integrable error with mean square `< ε²`, cost `∑_{ℓ≤L} N_ℓ m M^ℓ ≤ c₄ ε⁻²(log ε)²`, and
+finest level `M^L ≤ c₅ ε⁻¹`, i.e. `m M^L = O(ε⁻¹)` time steps on the finest level (the paper's
+`C_L = O(ε^{−γ/α})` with `γ/α = 1`).  The rates are the paper's, in Theorem 1's base `2`:
+`α = log₂ M` (`gbm_weak_error_smooth_M`), `β = log₂ M` (`gbm_correction_variance_le_M`) and
+`γ = log₂ M`; for `M = 4`, `α = β = γ = 2`.  The bound on the finest level is where the weak rate
+shows: from `α = ½ log₂ M` alone (`gbm_weak_error_le_M`, any Lipschitz payoff) the same
+construction gives only `M^L = O(ε⁻²)`; the other three conclusions are those of
+`gbm_mlmc_theorem1_M`, since with `β = γ` the complexity does not depend on `α`.  The coarsest
+step is `T/m` so that the grid reaches `T`. -/
 theorem gbm_mlmc_theorem1_smooth_M (r σ s₀ : ℝ) {T : ℝ} (hT : 0 ≤ T) {m M : ℕ} (hm : 0 < m)
     (hM : 2 ≤ M) {g : ℝ → ℝ} (hg : ∀ k < 4, Differentiable ℝ (iteratedDeriv k g)) {K : ℝ}
     (hK : ∀ k, 1 ≤ k → k ≤ 4 → ∀ x, |iteratedDeriv k g x| ≤ K) :
-    ∃ c₄ : ℝ, 0 < c₄ ∧ ∀ ε : ℝ, 0 < ε → ε < Real.exp (-1) →
+    ∃ c₄ c₅ : ℝ, 0 < c₄ ∧ 0 < c₅ ∧ ∀ ε : ℝ, 0 < ε → ε < Real.exp (-1) →
       ∃ (L : ℕ) (N : ℕ → ℕ), (∀ ℓ, 0 < N ℓ) ∧
         Integrable (fun x => (∑ ℓ ∈ range (L + 1),
             blockMean (fineCoarseDiff
@@ -1620,7 +1652,8 @@ theorem gbm_mlmc_theorem1_smooth_M (r σ s₀ : ℝ) {T : ℝ} (hT : 0 ≤ T) {m
             ∫ w, g (s₀ * Real.exp ((r - σ ^ 2 / 2) * T + σ * (Real.sqrt T * w)))
               ∂gaussianReal 0 1) ^ 2 ∂(Measure.infinitePi fun _ : ℕ × ℕ => stdNormalSeq) < ε ^ 2 ∧
         ∑ ℓ ∈ range (L + 1), (N ℓ : ℝ) * (m * (M : ℝ) ^ ℓ) ≤
-          c₄ * (ε ^ (-2 : ℝ) * Real.log ε ^ 2) := by
+          c₄ * (ε ^ (-2 : ℝ) * Real.log ε ^ 2) ∧
+        (M : ℝ) ^ L ≤ c₅ / ε := by
   have hM0 : 0 < M := by omega
   have hM1 : (1 : ℝ) < M := by exact_mod_cast hM
   have hm' : (0 : ℝ) < m := Nat.cast_pos.2 hm
@@ -1704,63 +1737,96 @@ theorem gbm_mlmc_theorem1_smooth_M (r σ s₀ : ℝ) {T : ℝ} (hT : 0 ≤ T) {m
   -- (iv): a level-`ℓ` sample costs `m M^ℓ = m 2^{ℓ log₂ M}`
   have h_iv : ∀ ℓ : ℕ, (m : ℝ) * (M : ℝ) ^ ℓ ≤ m * (2 : ℝ) ^ (Real.logb 2 M * (ℓ : ℝ)) :=
     fun ℓ => by rw [two_rpow_logb_mul hM0]
-  obtain ⟨c₄, hc₄, h⟩ := em_mlmc_theorem1_M
+  obtain ⟨c₄, hc₄, h⟩ := em_mlmc_theorem1_levels_M
     (μ := Measure.infinitePi fun _ : ℕ × ℕ => stdNormalSeq)
     (gbmDrift r) (gbmVol σ) (T / m) s₀ hM0 (fun ℓ path => g (path (m * M ^ ℓ))) P
-    (fun p x => x p) (fun ℓ _ _ => (m : ℝ) * (M : ℝ) ^ ℓ)
-    (fun ℓ => (m : ℝ) * (M : ℝ) ^ ℓ) (α := Real.logb 2 M) (β := Real.logb 2 M)
-    (γ := Real.logb 2 M) hβ hβ hβ hc₁ hc₂ hm' (by rw [min_self]; linarith) hω hind
-    (hP.integrable one_le_two) hPfm hPf (fun _ _ => integrable_const _)
-    (fun _ _ => by simp only [integral_const, probReal_univ, one_smul]) h_i h_iii h_iv
-  refine ⟨c₄, hc₄, fun ε hε hε1 => ?_⟩
-  obtain ⟨L, N, hN, hint, hmse, hcost⟩ := h ε hε hε1
+    (fun p x => x p) (fun ℓ => (m : ℝ) * (M : ℝ) ^ ℓ) (α := Real.logb 2 M)
+    (β := Real.logb 2 M) (γ := Real.logb 2 M) hβ hβ hc₁ hc₂ hm' (by rw [min_self]; linarith)
+    hω hind (hP.integrable one_le_two) hPfm hPf h_i h_iii h_iv
+  refine ⟨c₄, K1 (Real.logb 2 M) (gbmWeakSmoothConst K r σ s₀ T * (T / m) + 1), hc₄,
+    K1_pos hc₁, fun ε hε hε1 => ?_⟩
+  obtain ⟨L, N, hN, hint, hmse, hcost, hL⟩ := h ε hε hε1
   rw [hPint] at hint hmse
-  refine ⟨L, N, hN, hint, hmse, ?_⟩
-  simp only [totalCost, Finset.sum_const, Finset.card_range, nsmul_eq_mul, integral_const,
-    probReal_univ, one_smul] at hcost
   rw [complexityBound_of_eq rfl ε] at hcost
-  exact hcost
+  rw [two_rpow_logb_mul hM0] at hL
+  exact ⟨L, N, hN, hint, hmse, hcost, hL⟩
+
+/-- **Theorem 1 for the Euler–Maruyama MLMC estimator of GBM with a smooth payoff, with the paper's
+rates `α = β = γ = 1`** (Giles 2015, §5.1, p. 30, l. 1318–1321: "Alternatively, if
+`h_ℓ = 2^{−ℓ}h_0` with twice as many timesteps on each successive level, as used in the numerical
+examples in this article, then `α = 1`, `β = 1` and `γ = 1`. In either case, Theorem 1 gives the
+complexity to achieve a root-mean-square error of `ε` to be `O(ε^{−2}(log ε)²)`"; §2.1, p. 7,
+l. 326: "Because of condition i), we have `2^{−αL} = O(ε)`, and hence `C_L = O(ε^{−γ/α})`").  Let
+`dS = rS dt + σS dW`, `S_0 = s₀`, `T ≥ 0`, and let `g` be four times differentiable with
+`|g^{(k)}| ≤ K` for `k = 1, …, 4`.  Level `ℓ` uses `2^ℓ` Euler–Maruyama steps of size
+`h_ℓ = T 2^{−ℓ}`; its correction is the payoff of the fine path minus the payoff of the coarse path
+driven by the summed increments, the samples are independent, and a level-`ℓ` sample costs `2^ℓ`.
+Then there are `c₄, c₅ > 0` such that for every `0 < ε < e⁻¹` there are `L` and `N_ℓ ≥ 1` for
+which the multilevel estimator of `E[g(S_T)] = E[g(s₀ e^{(r − σ²/2)T + σ √T Z})]`, `Z ∼ N(0,1)`,
+has a square-integrable error with mean square `< ε²`, cost `∑_{ℓ≤L} N_ℓ 2^ℓ ≤ c₄ ε⁻²(log ε)²`,
+and finest level `2^L ≤ c₅ ε⁻¹` (`O(ε⁻¹)` time steps on the finest level).  The rates are all
+proved: `α = 1` (`gbm_weak_error_smooth`), `β = 1` (`gbm_correction_variance_le`, as `g` is
+`K`-Lipschitz) and `γ = 1`.  The bound on the finest level is where `α = 1` shows: from the rate
+`α = ½` of `gbm_weak_error_le` (any Lipschitz payoff) the same construction gives only
+`2^L = O(ε⁻²)`; the other three conclusions are those of `gbm_mlmc_theorem1` (any Lipschitz
+payoff), since with `β = γ` the complexity does not depend on `α`.  The case `m = 1`, `M = 2` of
+`gbm_mlmc_theorem1_smooth_M`. -/
+theorem gbm_mlmc_theorem1_smooth (r σ s₀ : ℝ) {T : ℝ} (hT : 0 ≤ T) {g : ℝ → ℝ}
+    (hg : ∀ k < 4, Differentiable ℝ (iteratedDeriv k g)) {K : ℝ}
+    (hK : ∀ k, 1 ≤ k → k ≤ 4 → ∀ x, |iteratedDeriv k g x| ≤ K) :
+    ∃ c₄ c₅ : ℝ, 0 < c₄ ∧ 0 < c₅ ∧ ∀ ε : ℝ, 0 < ε → ε < Real.exp (-1) →
+      ∃ (L : ℕ) (N : ℕ → ℕ), (∀ ℓ, 0 < N ℓ) ∧
+        Integrable (fun x => (∑ ℓ ∈ range (L + 1),
+            blockMean (fineCoarseDiff (emFine (gbmDrift r) (gbmVol σ) T s₀ (europeanPayoff g))
+              (emCoarse (gbmDrift r) (gbmVol σ) T s₀ (europeanPayoff g))) (fun p x => x p) ℓ
+              (N ℓ) x -
+            ∫ w, g (s₀ * Real.exp ((r - σ ^ 2 / 2) * T + σ * (Real.sqrt T * w)))
+              ∂gaussianReal 0 1) ^ 2) (Measure.infinitePi fun _ : ℕ × ℕ => stdNormalSeq) ∧
+        ∫ x, (∑ ℓ ∈ range (L + 1),
+            blockMean (fineCoarseDiff (emFine (gbmDrift r) (gbmVol σ) T s₀ (europeanPayoff g))
+              (emCoarse (gbmDrift r) (gbmVol σ) T s₀ (europeanPayoff g))) (fun p x => x p) ℓ
+              (N ℓ) x -
+            ∫ w, g (s₀ * Real.exp ((r - σ ^ 2 / 2) * T + σ * (Real.sqrt T * w)))
+              ∂gaussianReal 0 1) ^ 2 ∂(Measure.infinitePi fun _ : ℕ × ℕ => stdNormalSeq) < ε ^ 2 ∧
+        ∑ ℓ ∈ range (L + 1), (N ℓ : ℝ) * 2 ^ ℓ ≤ c₄ * (ε ^ (-2 : ℝ) * Real.log ε ^ 2) ∧
+        (2 : ℝ) ^ L ≤ c₅ / ε := by
+  have H := gbm_mlmc_theorem1_smooth_M r σ s₀ hT (m := 1) (M := 2) one_pos le_rfl hg hK
+  simp only [Nat.cast_one, div_one, one_mul, Nat.cast_ofNat, emFineM_two, emCoarseM_two] at H
+  exact H
 
 /-! ### Theorem 1 for polynomial payoffs -/
 
-/-- The even moments of the level-`ℓ` Euler–Maruyama approximation of GBM are bounded uniformly in
-`ℓ`: `E[Ŝ_ℓ^{2m}] ≤ S_0^{2m} e^{(2m|r| + 2m²σ²)T}` for `T ≥ 0` (Giles 2015, §5.1). -/
-lemma integral_gbmEM_pow_two_mul_le (r σ s₀ : ℝ) {T : ℝ} (hT : 0 ≤ T) (ℓ m : ℕ) :
-    ∫ z, gbmEM r σ T s₀ ℓ z ^ (2 * m) ∂stdNormalSeq ≤
-      s₀ ^ (2 * m) * Real.exp ((2 * m * |r| + 2 * m ^ 2 * σ ^ 2) * T) := by
-  have hh : 0 ≤ T / 2 ^ ℓ := div_nonneg hT (by positivity)
-  have e := integral_emPath_gbm_pow r σ (T / 2 ^ ℓ) s₀ (2 ^ ℓ) (2 * m)
-  change ∫ z, gbmEM r σ T s₀ ℓ z ^ (2 * m) ∂stdNormalSeq = _ at e
-  rw [e]
-  have h0 : 0 ≤ ∫ x, gbmEMFactor r σ (T / 2 ^ ℓ) x ^ (2 * m) ∂gaussianReal 0 1 :=
+/-- The even moments of the Euler–Maruyama value of GBM: `E[Ŝ_n^{2m}] ≤ S_0^{2m} e^{(2m|r| +
+2m²σ²) t_n}` for `h ≥ 0` and `t_n = nh` (Giles 2015, §5.1). -/
+lemma integral_emPath_gbm_pow_two_mul_le (r σ s₀ : ℝ) {h : ℝ} (hh : 0 ≤ h) (n m : ℕ) :
+    ∫ z, emPath (gbmDrift r) (gbmVol σ) h s₀ z n ^ (2 * m) ∂stdNormalSeq ≤
+      s₀ ^ (2 * m) * Real.exp ((2 * m * |r| + 2 * m ^ 2 * σ ^ 2) * (n * h)) := by
+  rw [integral_emPath_gbm_pow]
+  have h0 : 0 ≤ ∫ x, gbmEMFactor r σ h x ^ (2 * m) ∂gaussianReal 0 1 :=
     integral_nonneg fun x => by rw [pow_mul]; positivity
   have h1 := (le_abs_self _).trans (abs_integral_gbmEMFactor_pow_le r σ hh (2 * m))
-  have hT' := cast_two_pow_mul_div T ℓ
-  have h2 : Real.exp ((((2 * m : ℕ) : ℝ) * |r| + ((2 * m : ℕ) : ℝ) ^ 2 * σ ^ 2 / 2) *
-      (T / 2 ^ ℓ)) ^ (2 ^ ℓ) = Real.exp ((2 * m * |r| + 2 * m ^ 2 * σ ^ 2) * T) := by
+  have h2 : Real.exp ((((2 * m : ℕ) : ℝ) * |r| + ((2 * m : ℕ) : ℝ) ^ 2 * σ ^ 2 / 2) * h) ^ n =
+      Real.exp ((2 * m * |r| + 2 * m ^ 2 * σ ^ 2) * (n * h)) := by
     rw [← Real.exp_nat_mul]
     congr 1
-    calc ((2 ^ ℓ : ℕ) : ℝ) * ((((2 * m : ℕ) : ℝ) * |r| + ((2 * m : ℕ) : ℝ) ^ 2 * σ ^ 2 / 2) *
-          (T / 2 ^ ℓ)) = (((2 * m : ℕ) : ℝ) * |r| + ((2 * m : ℕ) : ℝ) ^ 2 * σ ^ 2 / 2) *
-          (((2 ^ ℓ : ℕ) : ℝ) * (T / 2 ^ ℓ)) := by ring
-      _ = _ := by
-          rw [hT']
-          push_cast
-          ring
-  calc s₀ ^ (2 * m) * (∫ x, gbmEMFactor r σ (T / 2 ^ ℓ) x ^ (2 * m) ∂gaussianReal 0 1) ^ 2 ^ ℓ
-      ≤ s₀ ^ (2 * m) * Real.exp ((((2 * m : ℕ) : ℝ) * |r| + ((2 * m : ℕ) : ℝ) ^ 2 * σ ^ 2 / 2) *
-          (T / 2 ^ ℓ)) ^ (2 ^ ℓ) :=
+    push_cast
+    ring
+  calc s₀ ^ (2 * m) * (∫ x, gbmEMFactor r σ h x ^ (2 * m) ∂gaussianReal 0 1) ^ n
+      ≤ s₀ ^ (2 * m) * Real.exp ((((2 * m : ℕ) : ℝ) * |r| +
+          ((2 * m : ℕ) : ℝ) ^ 2 * σ ^ 2 / 2) * h) ^ n :=
         mul_le_mul_of_nonneg_left (pow_le_pow_left₀ h0 h1 _) (by rw [pow_mul]; positivity)
     _ = _ := by rw [h2]
 
-/-- The even moments of the exact GBM solution: `E[S_T^{2m}] ≤ S_0^{2m} e^{(2m|r| + 2m²σ²)T}` for
-`T ≥ 0` (Giles 2015, §5.1). -/
-lemma integral_gbmExact_pow_two_mul_le (r σ s₀ : ℝ) {T : ℝ} (hT : 0 ≤ T) (ℓ m : ℕ) :
-    ∫ z, gbmExact r σ T s₀ ℓ z ^ (2 * m) ∂stdNormalSeq ≤
-      s₀ ^ (2 * m) * Real.exp ((2 * m * |r| + 2 * m ^ 2 * σ ^ 2) * T) := by
-  rw [integral_gbmExact_pow r σ s₀ hT]
-  refine mul_le_mul_of_nonneg_left (Real.exp_le_exp.2 (mul_le_mul_of_nonneg_right ?_ hT))
-    (by rw [pow_mul]; positivity)
+/-- The even moments of the exact GBM solution on the grid:
+`E[S_{t_n}^{2m}] ≤ S_0^{2m} e^{(2m|r| + 2m²σ²) t_n}` for `h ≥ 0` and `t_n = nh` (Giles 2015,
+§5.1). -/
+lemma integral_gbmExp_pow_two_mul_le (r σ s₀ : ℝ) {h : ℝ} (hh : 0 ≤ h) (n m : ℕ) :
+    ∫ z, (s₀ * Real.exp ((r - σ ^ 2 / 2) * (n * h) +
+        σ * (Real.sqrt h * ∑ i ∈ range n, z i))) ^ (2 * m) ∂stdNormalSeq ≤
+      s₀ ^ (2 * m) * Real.exp ((2 * m * |r| + 2 * m ^ 2 * σ ^ 2) * (n * h)) := by
+  rw [integral_gbmExp_pow r σ s₀ hh]
+  refine mul_le_mul_of_nonneg_left (Real.exp_le_exp.2 (mul_le_mul_of_nonneg_right ?_
+    (by positivity))) (by rw [pow_mul]; positivity)
   push_cast
   have hm : (0 : ℝ) ≤ m := Nat.cast_nonneg m
   have h1 : (m : ℝ) * r ≤ m * |r| := mul_le_mul_of_nonneg_left (le_abs_self r) hm
@@ -1836,31 +1902,56 @@ lemma sq_eval_sub_eval_le (q : Polynomial ℝ) {h : ℝ} (hh : 0 < h) (x y : ℝ
         mul_le_mul_of_nonneg_left h3 (sq_nonneg c)
     _ ≤ _ := by gcongr
 
-/-- **The mean square error of a polynomial payoff on level `ℓ`** (Giles 2015, §5.1, p. 29:
-"`V[P − P_ℓ] ≤ E[(P − P_ℓ)²]`").  For `T > 0`, `E[(q(S_T) − q(Ŝ_ℓ))²]` is finite and at most
-`c_q² (C₂(T) + 3^{N−1}(1 + 2M_N(T)))/2 · h_ℓ`, with `h_ℓ = T 2^{−ℓ}`, `N = 4d`, `C₂` the
-fourth-moment constant of the strong error (`gbmEMMomentConst 2`) and
-`M_N(T) = S_0^N e^{(N|r| + N²σ²/2)T}` the moment bound of `integral_gbmEM_pow_two_mul_le`. -/
-lemma integral_sq_poly_gbm_err_le (r σ s₀ : ℝ) {T : ℝ} (hT : 0 < T) (q : Polynomial ℝ) (ℓ : ℕ) :
-    Integrable (fun z => (q.eval (gbmExact r σ T s₀ ℓ z) - q.eval (gbmEM r σ T s₀ ℓ z)) ^ 2)
-      stdNormalSeq ∧
-    ∫ z, (q.eval (gbmExact r σ T s₀ ℓ z) - q.eval (gbmEM r σ T s₀ ℓ z)) ^ 2 ∂stdNormalSeq ≤
+/-- The exact GBM solution on the grid (Giles 2015, §5.1) is a measurable function of the
+increments. -/
+lemma measurable_gbmExp (r σ h s₀ : ℝ) (n : ℕ) :
+    Measurable fun z : ℕ → ℝ => s₀ * Real.exp ((r - σ ^ 2 / 2) * (n * h) +
+      σ * (Real.sqrt h * ∑ i ∈ range n, z i)) :=
+  ((((Finset.measurable_sum _ fun i _ => measurable_pi_apply i).const_mul
+    (Real.sqrt h)).const_mul σ).const_add _).exp.const_mul s₀
+
+/-- `(S_{t_n} − Ŝ_n)^{2m}` is integrable for the Euler–Maruyama approximation of GBM on the grid
+`t_n = nh`, `h ≥ 0` (Giles 2015, §5.1). -/
+lemma integrable_gbmExp_sub_emPath_pow (r σ s₀ : ℝ) {h : ℝ} (hh : 0 ≤ h) (n m : ℕ) :
+    Integrable (fun z => (s₀ * Real.exp ((r - σ ^ 2 / 2) * (n * h) +
+        σ * (Real.sqrt h * ∑ i ∈ range n, z i)) -
+      emPath (gbmDrift r) (gbmVol σ) h s₀ z n) ^ (2 * m)) stdNormalSeq := by
+  simp_rw [gbmExp_eq_prod, emPath_gbm, mul_sub_mul_pow_two_mul]
+  exact (integrable_pow_prod_sub_prod (measurable_gbmExpFactor r σ _)
+    (measurable_gbmEMFactor r σ _) (even_two_mul m) (integrable_gbmExpFactor_pow r σ _ _)
+    (integrable_gbmEMFactor_pow r σ hh m) _).const_mul _
+
+/-- **The mean square error of a polynomial payoff at a grid time** (Giles 2015, §5.1, p. 29:
+"`V[P − P_ℓ] ≤ E[(P − P_ℓ)²]`").  For `h > 0`, `n ∈ ℕ` and `t_n = nh`,
+`E[(q(S_{t_n}) − q(Ŝ_n))²]` is finite and at most
+`c_q² (C₂(t_n) + 3^{N−1}(1 + 2M_N(t_n)))/2 · h`, with `N = 4d` (`d = deg q`),
+`c_q = ∑_k |c_k| k`, `C₂` the fourth-moment constant of the strong error (`gbmEMMomentConst 2`,
+`gbm_em_moment_error`) and `M_N(t) = S_0^N e^{(N|r| + N²σ²/2)t}` the moment bound of
+`integral_emPath_gbm_pow_two_mul_le` and `integral_gbmExp_pow_two_mul_le`; the pointwise bound is
+`sq_eval_sub_eval_le`. -/
+lemma integral_sq_poly_gbm_em_err_le (r σ s₀ : ℝ) {h : ℝ} (hh : 0 < h) (n : ℕ)
+    (q : Polynomial ℝ) :
+    Integrable (fun z => (q.eval (s₀ * Real.exp ((r - σ ^ 2 / 2) * (n * h) +
+        σ * (Real.sqrt h * ∑ i ∈ range n, z i))) -
+      q.eval (emPath (gbmDrift r) (gbmVol σ) h s₀ z n)) ^ 2) stdNormalSeq ∧
+    ∫ z, (q.eval (s₀ * Real.exp ((r - σ ^ 2 / 2) * (n * h) +
+        σ * (Real.sqrt h * ∑ i ∈ range n, z i))) -
+      q.eval (emPath (gbmDrift r) (gbmVol σ) h s₀ z n)) ^ 2 ∂stdNormalSeq ≤
       (∑ k ∈ range (q.natDegree + 1), |q.coeff k| * k) ^ 2 *
-        (gbmEMMomentConst 2 r σ T s₀ + 3 ^ (2 * (2 * q.natDegree) - 1) *
+        (gbmEMMomentConst 2 r σ (n * h) s₀ + 3 ^ (2 * (2 * q.natDegree) - 1) *
           (1 + 2 * (s₀ ^ (2 * (2 * q.natDegree)) * Real.exp ((2 * ((2 * q.natDegree : ℕ) : ℝ) *
-            |r| + 2 * ((2 * q.natDegree : ℕ) : ℝ) ^ 2 * σ ^ 2) * T)))) / 2 * (T / 2 ^ ℓ) := by
+            |r| + 2 * ((2 * q.natDegree : ℕ) : ℝ) ^ 2 * σ ^ 2) * (n * h))))) / 2 * h := by
   set c := ∑ k ∈ range (q.natDegree + 1), |q.coeff k| * k with hcdef
   set N : ℕ := 2 * (2 * q.natDegree) with hNdef
   set Mom := s₀ ^ (2 * (2 * q.natDegree)) * Real.exp ((2 * ((2 * q.natDegree : ℕ) : ℝ) * |r| +
-    2 * ((2 * q.natDegree : ℕ) : ℝ) ^ 2 * σ ^ 2) * T) with hMomdef
-  set h := T / 2 ^ ℓ with hhdef
-  have hh : 0 < h := div_pos hT (by positivity)
-  set E := fun z => gbmExact r σ T s₀ ℓ z with hEdef
-  set F := fun z => gbmEM r σ T s₀ ℓ z with hFdef
+    2 * ((2 * q.natDegree : ℕ) : ℝ) ^ 2 * σ ^ 2) * (n * h)) with hMomdef
+  set E := fun z : ℕ → ℝ => s₀ * Real.exp ((r - σ ^ 2 / 2) * (n * h) +
+    σ * (Real.sqrt h * ∑ i ∈ range n, z i)) with hEdef
+  set F := fun z => emPath (gbmDrift r) (gbmVol σ) h s₀ z n with hFdef
   have iD : Integrable (fun z => (E z - F z) ^ 4) stdNormalSeq :=
-    integrable_gbm_em_err_pow r σ T s₀ hh.le 2
-  have iE : Integrable (fun z => E z ^ N) stdNormalSeq := integrable_gbmExact_pow r σ T s₀ ℓ N
-  have iF : Integrable (fun z => F z ^ N) stdNormalSeq := integrable_gbmEM_pow r σ T s₀ ℓ N
+    integrable_gbmExp_sub_emPath_pow r σ s₀ hh.le n 2
+  have iE : Integrable (fun z => E z ^ N) stdNormalSeq := integrable_gbmExp_pow r σ h s₀ n N
+  have iF : Integrable (fun z => F z ^ N) stdNormalSeq := integrable_emPath_gbm_pow r σ h s₀ n N
   have iG : Integrable (fun z => c ^ 2 * ((E z - F z) ^ 4 / (2 * h) +
       h * (3 ^ (N - 1) * (1 + E z ^ N + F z ^ N)) / 2)) stdNormalSeq :=
     ((iD.div_const _).add ((((integrable_const 1).add iE).add iF).const_mul _
@@ -1869,18 +1960,18 @@ lemma integral_sq_poly_gbm_err_le (r σ s₀ : ℝ) {T : ℝ} (hT : 0 < T) (q : 
       h * (3 ^ (N - 1) * (1 + E z ^ N + F z ^ N)) / 2) := fun z =>
     sq_eval_sub_eval_le q hh (E z) (F z)
   have hm : Measurable fun z => (q.eval (E z) - q.eval (F z)) ^ 2 :=
-    ((q.continuous.measurable.comp (measurable_gbmExact r σ T s₀ ℓ)).sub
-      (q.continuous.measurable.comp (measurable_gbmEM r σ T s₀ ℓ))).pow_const 2
+    ((q.continuous.measurable.comp (measurable_gbmExp r σ h s₀ n)).sub
+      (q.continuous.measurable.comp (measurable_gbmEMn r σ h s₀ n))).pow_const 2
   refine ⟨iG.mono' hm.aestronglyMeasurable (Filter.Eventually.of_forall fun z => ?_), ?_⟩
   · rw [Real.norm_of_nonneg (sq_nonneg _)]
     exact hpt z
   refine (integral_mono_of_nonneg (Filter.Eventually.of_forall fun z => sq_nonneg _) iG
     (Filter.Eventually.of_forall hpt)).trans ?_
-  have hD := gbm_em_moment_error_level r σ s₀ hT.le ℓ (m := 2) two_pos
+  have hD := gbm_em_moment_error r σ s₀ hh.le n (m := 2) two_pos
   have hEN : ∫ z, E z ^ N ∂stdNormalSeq ≤ Mom :=
-    integral_gbmExact_pow_two_mul_le r σ s₀ hT.le ℓ (2 * q.natDegree)
+    integral_gbmExp_pow_two_mul_le r σ s₀ hh.le n (2 * q.natDegree)
   have hFN : ∫ z, F z ^ N ∂stdNormalSeq ≤ Mom :=
-    integral_gbmEM_pow_two_mul_le r σ s₀ hT.le ℓ (2 * q.natDegree)
+    integral_emPath_gbm_pow_two_mul_le r σ s₀ hh.le n (2 * q.natDegree)
   have iS1 : Integrable (fun z => 1 + E z ^ N) stdNormalSeq := (integrable_const 1).add iE
   have iS : Integrable (fun z => 1 + E z ^ N + F z ^ N) stdNormalSeq := iS1.add iF
   have iQ : Integrable (fun z => (E z - F z) ^ 4 / (2 * h)) stdNormalSeq := iD.div_const _
@@ -1891,9 +1982,9 @@ lemma integral_sq_poly_gbm_err_le (r σ s₀ : ℝ) {T : ℝ} (hT : 0 < T) (q : 
     probReal_univ, one_smul]
   have hc2 : 0 ≤ c ^ 2 := sq_nonneg c
   have h3 : (0 : ℝ) ≤ 3 ^ (N - 1) := by positivity
-  have e4 : ∫ z, (E z - F z) ^ 4 ∂stdNormalSeq ≤ gbmEMMomentConst 2 r σ T s₀ * h ^ 2 := hD
+  have e4 : ∫ z, (E z - F z) ^ 4 ∂stdNormalSeq ≤ gbmEMMomentConst 2 r σ (n * h) s₀ * h ^ 2 := hD
   have k1 : (∫ z, (E z - F z) ^ 4 ∂stdNormalSeq) / (2 * h) ≤
-      gbmEMMomentConst 2 r σ T s₀ * h / 2 := by
+      gbmEMMomentConst 2 r σ (n * h) s₀ * h / 2 := by
     rw [div_le_iff₀ (by positivity)]
     nlinarith
   have k2 : h * (3 ^ (N - 1) * (1 + ∫ z, E z ^ N ∂stdNormalSeq + ∫ z, F z ^ N ∂stdNormalSeq)) /
@@ -1902,13 +1993,33 @@ lemma integral_sq_poly_gbm_err_le (r σ s₀ : ℝ) {T : ℝ} (hT : 0 < T) (q : 
       linarith
     have := mul_le_mul_of_nonneg_left (mul_le_mul_of_nonneg_left hXY h3) hh.le
     linarith
-  calc _ ≤ c ^ 2 * (gbmEMMomentConst 2 r σ T s₀ * h / 2 + h * (3 ^ (N - 1) * (1 + 2 * Mom)) / 2) :=
+  calc _ ≤ c ^ 2 * (gbmEMMomentConst 2 r σ (n * h) s₀ * h / 2 +
+        h * (3 ^ (N - 1) * (1 + 2 * Mom)) / 2) :=
         mul_le_mul_of_nonneg_left (add_le_add k1 k2) hc2
     _ = _ := by ring
 
-/-- **The variance of the level corrections for a polynomial payoff** (Giles 2015, §5.1, p. 29:
-"`V_ℓ ≡ V[P_ℓ − P_{ℓ−1}] ≤ 2(V[P − P_ℓ] + V[P − P_{ℓ−1}])`, and hence `V_ℓ = O(h_ℓ)`"; the rate
-`β = 1`, here for polynomial payoffs, which are not Lipschitz).  For `T ≥ 0`, every polynomial `q`
+/-- **The mean square error of a polynomial payoff on level `ℓ`** (Giles 2015, §5.1, p. 29:
+"`V[P − P_ℓ] ≤ E[(P − P_ℓ)²]`").  For `T > 0`, `E[(q(S_T) − q(Ŝ_ℓ))²]` is finite and at most
+`c_q² (C₂(T) + 3^{N−1}(1 + 2M_N(T)))/2 · h_ℓ`, with `h_ℓ = T 2^{−ℓ}` (the grid bound
+`integral_sq_poly_gbm_em_err_le` with `2^ℓ` steps). -/
+lemma integral_sq_poly_gbm_err_le (r σ s₀ : ℝ) {T : ℝ} (hT : 0 < T) (q : Polynomial ℝ) (ℓ : ℕ) :
+    Integrable (fun z => (q.eval (gbmExact r σ T s₀ ℓ z) - q.eval (gbmEM r σ T s₀ ℓ z)) ^ 2)
+      stdNormalSeq ∧
+    ∫ z, (q.eval (gbmExact r σ T s₀ ℓ z) - q.eval (gbmEM r σ T s₀ ℓ z)) ^ 2 ∂stdNormalSeq ≤
+      (∑ k ∈ range (q.natDegree + 1), |q.coeff k| * k) ^ 2 *
+        (gbmEMMomentConst 2 r σ T s₀ + 3 ^ (2 * (2 * q.natDegree) - 1) *
+          (1 + 2 * (s₀ ^ (2 * (2 * q.natDegree)) * Real.exp ((2 * ((2 * q.natDegree : ℕ) : ℝ) *
+            |r| + 2 * ((2 * q.natDegree : ℕ) : ℝ) ^ 2 * σ ^ 2) * T)))) / 2 * (T / 2 ^ ℓ) := by
+  have H := integral_sq_poly_gbm_em_err_le r σ s₀ (div_pos hT (by positivity : (0 : ℝ) < 2 ^ ℓ))
+    (2 ^ ℓ) q
+  rw [cast_two_pow_mul_div] at H
+  exact H
+
+/-- **The variance of the level corrections for a polynomial payoff** (Giles 2015, §5.1, p. 29,
+l. 1310–1313: "`V_ℓ ≡ V[P_ℓ − P_{ℓ−1}] ≤ 2(V[P − P_ℓ] + V[P − P_{ℓ−1}])`, and hence
+`V_ℓ = O(h_ℓ)`", and p. 30, l. 1318–1320: "if `h_ℓ = 2^{−ℓ}h_0` … then `α = 1`, `β = 1`"; the rate
+`β = 1`, here for polynomial payoffs, which are not Lipschitz, while the paper's argument is for
+Lipschitz payoffs).  For `T ≥ 0`, every polynomial `q`
 and every level `ℓ`, the correction on level `ℓ + 1`, the payoff of the fine path minus the payoff
 of the coarse path driven by the summed increments, has variance at most
 `3 c_q² T (C₂(T) + 3^{N−1}(1 + 2M_N(T))) 2^{−(ℓ+1)}` (constants of
@@ -1979,6 +2090,117 @@ theorem gbm_poly_correction_variance_le (r σ s₀ : ℝ) {T : ℝ} (hT : 0 ≤ 
         rw [hT', div_eq_mul_inv T]
         ring
 
+/-- **The variance of the level corrections for a polynomial payoff with refinement factor `M`**
+(Giles 2015, §5.1, p. 29, l. 1310–1313: "`V_ℓ ≡ V[P_ℓ − P_{ℓ−1}] ≤ 2(V[P − P_ℓ] + V[P − P_{ℓ−1}])`,
+and hence `V_ℓ = O(h_ℓ)`", and p. 30, l. 1317–1318: "If `h_ℓ = 4^{−ℓ}h_0` … then this gives
+`α = 2`, `β = 2`"; here for polynomial payoffs, which are not Lipschitz).  For `T ≥ 0`, `m, M ≥ 1`,
+`h_0 = T/m`, every polynomial `q` and every level `ℓ`, the correction on level `ℓ + 1`, the payoff
+of the fine path with `m M^{ℓ+1}` steps minus the payoff of the coarse path with `m M^ℓ` steps
+driven by the block sums of the same increments (`emCoarseM`), has variance at most
+`K_q(T) h_0 (M + 1) M^{−(ℓ+1)}`, `K_q(T) = c_q² (C₂(T) + 3^{N−1}(1 + 2M_N(T)))` (constants of
+`integral_sq_poly_gbm_em_err_le`): `V_ℓ = O(h_ℓ)`, the rate `β = log₂ M` in Theorem 1's base
+`2`. -/
+theorem gbm_poly_correction_variance_le_M (r σ s₀ : ℝ) {T : ℝ} (hT : 0 ≤ T) {m M : ℕ}
+    (hm : 0 < m) (hM : 0 < M) (q : Polynomial ℝ) (ℓ : ℕ) :
+    variance (fineCoarseDiff
+        (emFineM (gbmDrift r) (gbmVol σ) (T / m) s₀ M (fun ℓ path => q.eval (path (m * M ^ ℓ))))
+        (emCoarseM (gbmDrift r) (gbmVol σ) (T / m) s₀ M
+          (fun ℓ path => q.eval (path (m * M ^ ℓ)))) (ℓ + 1)) stdNormalSeq ≤
+      (∑ k ∈ range (q.natDegree + 1), |q.coeff k| * k) ^ 2 *
+        (gbmEMMomentConst 2 r σ T s₀ + 3 ^ (2 * (2 * q.natDegree) - 1) *
+          (1 + 2 * (s₀ ^ (2 * (2 * q.natDegree)) * Real.exp ((2 * ((2 * q.natDegree : ℕ) : ℝ) *
+            |r| + 2 * ((2 * q.natDegree : ℕ) : ℝ) ^ 2 * σ ^ 2) * T)))) * (T / m) * (M + 1) /
+        (M : ℝ) ^ (ℓ + 1) := by
+  rcases eq_or_lt_of_le hT with hT0 | hT0
+  · -- `T = 0`: both paths stay at `s₀`
+    subst hT0
+    have hS : ∀ k z, emPath (gbmDrift r) (gbmVol σ) 0 s₀ z k = s₀ := fun k z => by
+      rw [emPath_gbm]
+      simp [gbmEMFactor]
+    have e : fineCoarseDiff
+        (emFineM (gbmDrift r) (gbmVol σ) (0 / m) s₀ M (fun ℓ path => q.eval (path (m * M ^ ℓ))))
+        (emCoarseM (gbmDrift r) (gbmVol σ) (0 / m) s₀ M
+          (fun ℓ path => q.eval (path (m * M ^ ℓ)))) (ℓ + 1) = 0 := by
+      funext z
+      show emFineM (gbmDrift r) (gbmVol σ) (0 / m) s₀ M (fun ℓ path => q.eval (path (m * M ^ ℓ)))
+          (ℓ + 1) z - emCoarseM (gbmDrift r) (gbmVol σ) (0 / m) s₀ M
+            (fun ℓ path => q.eval (path (m * M ^ ℓ))) ℓ z = 0
+      simp only [emFineM, emCoarseM, zero_div, mul_zero, hS, sub_self]
+    rw [e, variance_zero]
+    simp
+  set KP := (∑ k ∈ range (q.natDegree + 1), |q.coeff k| * k) ^ 2 *
+    (gbmEMMomentConst 2 r σ T s₀ + 3 ^ (2 * (2 * q.natDegree) - 1) *
+      (1 + 2 * (s₀ ^ (2 * (2 * q.natDegree)) * Real.exp ((2 * ((2 * q.natDegree : ℕ) : ℝ) *
+        |r| + 2 * ((2 * q.natDegree : ℕ) : ℝ) ^ 2 * σ ^ 2) * T)))) with hKPdef
+  have hMp := measurePreserving_blockAvg hM
+  have hM' : (0 : ℝ) < M := Nat.cast_pos.2 hM
+  have hm' : (0 : ℝ) < m := Nat.cast_pos.2 hm
+  set F : ℕ → (ℕ → ℝ) → ℝ :=
+    fun k z => emPath (gbmDrift r) (gbmVol σ) (T / m / (M : ℝ) ^ k) s₀ z (m * M ^ k) with hFdef
+  set X : ℕ → (ℕ → ℝ) → ℝ := fun k => gbmExactM r σ T s₀ m M k with hXdef
+  have e : fineCoarseDiff
+      (emFineM (gbmDrift r) (gbmVol σ) (T / m) s₀ M (fun ℓ path => q.eval (path (m * M ^ ℓ))))
+      (emCoarseM (gbmDrift r) (gbmVol σ) (T / m) s₀ M (fun ℓ path => q.eval (path (m * M ^ ℓ))))
+      (ℓ + 1) = fun z => q.eval (F (ℓ + 1) z) - q.eval (F ℓ (blockAvg M z)) := by
+    funext z
+    show emFineM (gbmDrift r) (gbmVol σ) (T / m) s₀ M (fun ℓ path => q.eval (path (m * M ^ ℓ)))
+        (ℓ + 1) z -
+      emCoarseM (gbmDrift r) (gbmVol σ) (T / m) s₀ M (fun ℓ path => q.eval (path (m * M ^ ℓ))) ℓ z
+        = _
+    rw [emCoarseM_eq _ _ _ _ hM]
+    rfl
+  rw [e]
+  have hErr : ∀ k, Integrable (fun z => (q.eval (X k z) - q.eval (F k z)) ^ 2) stdNormalSeq ∧
+      ∫ z, (q.eval (X k z) - q.eval (F k z)) ^ 2 ∂stdNormalSeq ≤
+        KP / 2 * (T / m / (M : ℝ) ^ k) := fun k => by
+    have hh : 0 < T / m / (M : ℝ) ^ k := by positivity
+    have H := integral_sq_poly_gbm_em_err_le r σ s₀ hh (m * M ^ k) q
+    rw [cast_mul_pow_mul_div hm hM] at H
+    exact H
+  have hm1 : Measurable (F (ℓ + 1)) := measurable_gbmEMn r σ _ s₀ _
+  have hm0 : Measurable fun z => F ℓ (blockAvg M z) :=
+    (measurable_gbmEMn r σ _ s₀ _).comp hMp.measurable
+  have hY : AEStronglyMeasurable (fun z => q.eval (F (ℓ + 1) z) - q.eval (F ℓ (blockAvg M z)))
+      stdNormalSeq :=
+    ((q.continuous.measurable.comp hm1).sub (q.continuous.measurable.comp hm0)).aestronglyMeasurable
+  refine (variance_le_expectation_sq hY).trans ?_
+  simp only [Pi.pow_apply]
+  obtain ⟨i1, j1⟩ := hErr (ℓ + 1)
+  obtain ⟨i0, j0⟩ := hErr ℓ
+  have i0' : Integrable (fun z => (q.eval (X ℓ (blockAvg M z)) -
+      q.eval (F ℓ (blockAvg M z))) ^ 2) stdNormalSeq :=
+    (hMp.integrable_comp i0.aestronglyMeasurable).2 i0
+  have hpt : ∀ z, (q.eval (F (ℓ + 1) z) - q.eval (F ℓ (blockAvg M z))) ^ 2 ≤
+      2 * (q.eval (X (ℓ + 1) z) - q.eval (F (ℓ + 1) z)) ^ 2 +
+        2 * (q.eval (X ℓ (blockAvg M z)) - q.eval (F ℓ (blockAvg M z))) ^ 2 := fun z => by
+    have hx : X ℓ (blockAvg M z) = X (ℓ + 1) z := gbmExactM_blockAvg r σ T s₀ m hM ℓ z
+    rw [hx]
+    nlinarith [sq_nonneg (q.eval (X (ℓ + 1) z) - q.eval (F (ℓ + 1) z) +
+      (q.eval (X (ℓ + 1) z) - q.eval (F ℓ (blockAvg M z))))]
+  calc ∫ z, (q.eval (F (ℓ + 1) z) - q.eval (F ℓ (blockAvg M z))) ^ 2 ∂stdNormalSeq
+      ≤ ∫ z, (2 * (q.eval (X (ℓ + 1) z) - q.eval (F (ℓ + 1) z)) ^ 2 +
+          2 * (q.eval (X ℓ (blockAvg M z)) - q.eval (F ℓ (blockAvg M z))) ^ 2) ∂stdNormalSeq :=
+        integral_mono_of_nonneg (Filter.Eventually.of_forall fun z => sq_nonneg _)
+          ((i1.const_mul 2).add (i0'.const_mul 2)) (Filter.Eventually.of_forall hpt)
+    _ = 2 * ∫ z, (q.eval (X (ℓ + 1) z) - q.eval (F (ℓ + 1) z)) ^ 2 ∂stdNormalSeq +
+        2 * ∫ z, (q.eval (X ℓ z) - q.eval (F ℓ z)) ^ 2 ∂stdNormalSeq := by
+        rw [integral_add (i1.const_mul _) (i0'.const_mul _), integral_const_mul,
+          integral_const_mul, integral_comp_of_measurePreserving hMp i0.aestronglyMeasurable]
+    _ ≤ 2 * (KP / 2 * (T / m / (M : ℝ) ^ (ℓ + 1))) + 2 * (KP / 2 * (T / m / (M : ℝ) ^ ℓ)) := by
+        gcongr
+    _ = KP * (T / m) * (M + 1) / (M : ℝ) ^ (ℓ + 1) := by
+        rw [pow_succ]
+        field_simp
+        ring
+
+/-- The powers of the exact GBM solution on the level-`ℓ` grid with refinement factor `M`
+(`gbmExactM`, Giles 2015, §5.1) are integrable. -/
+lemma integrable_gbmExactM_pow (r σ T s₀ : ℝ) {m M : ℕ} (hm : 0 < m) (hM : 0 < M) (ℓ i : ℕ) :
+    Integrable (fun z => gbmExactM r σ T s₀ m M ℓ z ^ i) stdNormalSeq := by
+  have H := integrable_gbmExp_pow r σ (T / m / (M : ℝ) ^ ℓ) s₀ (m * M ^ ℓ) i
+  rw [cast_mul_pow_mul_div hm hM] at H
+  exact H
+
 /-- A polynomial in a random variable with integrable powers is square integrable (Giles 2015,
 §5.1, polynomial payoffs). -/
 lemma memLp_two_eval_of_integrable_pow {Ω : Type*} [MeasurableSpace Ω] {μ : Measure Ω}
@@ -1990,75 +2212,99 @@ lemma memLp_two_eval_of_integrable_pow {Ω : Type*} [MeasurableSpace Ω] {μ : M
   simp_rw [← pow_mul]
   exact hi (k * 2)
 
-/-- **Theorem 1 for the Euler–Maruyama MLMC estimator of GBM with a polynomial payoff** (Giles 2015,
-§5.1, p. 30, l. 1318–1321: "if `h_ℓ = 2^{−ℓ}h_0` … then `α = 1`, `β = 1` and `γ = 1`. In either
-case, Theorem 1 gives the complexity to achieve a root-mean-square error of `ε` to be
-`O(ε^{−2}(log ε)²)`").  Let `dS = rS dt + σS dW`, `S_0 = s₀`, `T ≥ 0`, and let `q` be any real
-polynomial (a payoff which is not Lipschitz unless `deg q ≤ 1`, so `gbm_mlmc_theorem1` does not
-apply).  With the levels, corrections, independent samples and costs `2^ℓ` of
-`gbm_mlmc_theorem1`, there is `c₄ > 0` such that for every `0 < ε < e⁻¹` there are `L` and
-`N_ℓ ≥ 1` for which the multilevel estimator of `E[q(S_T)]` has mean square error `< ε²` and cost
-`∑_{ℓ≤L} N_ℓ 2^ℓ ≤ c₄ ε⁻²(log ε)²`.  The rates are proved: `α = 1` (`gbm_weak_error_poly`), `β = 1`
-(`gbm_poly_correction_variance_le`, from the fourth moment of the strong error,
-`gbm_em_moment_error_level`, and the moments of `Ŝ` and `S_T`) and `γ = 1`. -/
-theorem gbm_mlmc_theorem1_poly (r σ s₀ : ℝ) {T : ℝ} (hT : 0 ≤ T) (q : Polynomial ℝ) :
-    ∃ c₄ : ℝ, 0 < c₄ ∧ ∀ ε : ℝ, 0 < ε → ε < Real.exp (-1) →
+/-- **Theorem 1 for the Euler–Maruyama MLMC estimator of GBM with a polynomial payoff and
+refinement factor `M`** (Giles 2015, §5.1, p. 30, l. 1317–1321: "If `h_ℓ = 4^{−ℓ}h_0`, as in the
+numerical examples in (Giles 2008b), then this gives `α = 2`, `β = 2` and `γ = 2` … In either case,
+Theorem 1 gives the complexity to achieve a root-mean-square error of `ε` to be
+`O(ε^{−2}(log ε)²)`"; §2.1, p. 7, l. 326: "Because of condition i), we have `2^{−αL} = O(ε)`, and
+hence `C_L = O(ε^{−γ/α})`").  Let `dS = rS dt + σS dW`, `T ≥ 0`, `m ≥ 1`, `M ≥ 2`, and let `q` be
+any real polynomial (a payoff which is not Lipschitz unless `deg q ≤ 1`, so `gbm_mlmc_theorem1_M`
+does not apply).  With the levels, corrections, independent samples and costs `m M^ℓ` of
+`gbm_mlmc_theorem1_smooth_M`, there are `c₄, c₅ > 0` such that for every `0 < ε < e⁻¹` there are
+`L` and `N_ℓ ≥ 1` for which the multilevel estimator of `E[q(S_T)]` has a square-integrable error
+with mean square `< ε²`, cost `∑_{ℓ≤L} N_ℓ m M^ℓ ≤ c₄ ε⁻²(log ε)²`, and finest level
+`M^L ≤ c₅ ε⁻¹`.  The rates are proved, in Theorem 1's base `2`: `α = log₂ M`
+(`gbm_weak_error_poly_M`), `β = log₂ M` (`gbm_poly_correction_variance_le_M`, from the fourth
+moment of the strong error and the moments of `Ŝ` and `S_T`) and `γ = log₂ M`; for `M = 4`,
+`α = β = γ = 2`. -/
+theorem gbm_mlmc_theorem1_poly_M (r σ s₀ : ℝ) {T : ℝ} (hT : 0 ≤ T) {m M : ℕ} (hm : 0 < m)
+    (hM : 2 ≤ M) (q : Polynomial ℝ) :
+    ∃ c₄ c₅ : ℝ, 0 < c₄ ∧ 0 < c₅ ∧ ∀ ε : ℝ, 0 < ε → ε < Real.exp (-1) →
       ∃ (L : ℕ) (N : ℕ → ℕ), (∀ ℓ, 0 < N ℓ) ∧
+        Integrable (fun x => (∑ ℓ ∈ range (L + 1),
+            blockMean (fineCoarseDiff
+              (emFineM (gbmDrift r) (gbmVol σ) (T / m) s₀ M
+                (fun ℓ path => q.eval (path (m * M ^ ℓ))))
+              (emCoarseM (gbmDrift r) (gbmVol σ) (T / m) s₀ M
+                (fun ℓ path => q.eval (path (m * M ^ ℓ)))))
+              (fun p x => x p) ℓ (N ℓ) x -
+            ∫ w, q.eval (s₀ * Real.exp ((r - σ ^ 2 / 2) * T + σ * (Real.sqrt T * w)))
+              ∂gaussianReal 0 1) ^ 2) (Measure.infinitePi fun _ : ℕ × ℕ => stdNormalSeq) ∧
         ∫ x, (∑ ℓ ∈ range (L + 1),
             blockMean (fineCoarseDiff
-              (emFine (gbmDrift r) (gbmVol σ) T s₀ (europeanPayoff fun x => q.eval x))
-              (emCoarse (gbmDrift r) (gbmVol σ) T s₀ (europeanPayoff fun x => q.eval x)))
+              (emFineM (gbmDrift r) (gbmVol σ) (T / m) s₀ M
+                (fun ℓ path => q.eval (path (m * M ^ ℓ))))
+              (emCoarseM (gbmDrift r) (gbmVol σ) (T / m) s₀ M
+                (fun ℓ path => q.eval (path (m * M ^ ℓ)))))
               (fun p x => x p) ℓ (N ℓ) x -
             ∫ w, q.eval (s₀ * Real.exp ((r - σ ^ 2 / 2) * T + σ * (Real.sqrt T * w)))
               ∂gaussianReal 0 1) ^ 2 ∂(Measure.infinitePi fun _ : ℕ × ℕ => stdNormalSeq) < ε ^ 2 ∧
-        ∑ ℓ ∈ range (L + 1), (N ℓ : ℝ) * 2 ^ ℓ ≤ c₄ * (ε ^ (-2 : ℝ) * Real.log ε ^ 2) := by
+        ∑ ℓ ∈ range (L + 1), (N ℓ : ℝ) * (m * (M : ℝ) ^ ℓ) ≤
+          c₄ * (ε ^ (-2 : ℝ) * Real.log ε ^ 2) ∧
+        (M : ℝ) ^ L ≤ c₅ / ε := by
+  have hM0 : 0 < M := by omega
+  have hM1 : (1 : ℝ) < M := by exact_mod_cast hM
+  have hm' : (0 : ℝ) < m := Nat.cast_pos.2 hm
+  have hβ : 0 < Real.logb 2 M := Real.logb_pos (by norm_num) hM1
   have hqm : Measurable fun x => q.eval x := q.continuous.measurable
   obtain ⟨-, hind, hω⟩ := exists_iid_inputs stdNormalSeq
-  have hPint : ∫ z, q.eval (gbmExact r σ T s₀ 0 z) ∂stdNormalSeq =
+  have hTm : 0 ≤ T / m := div_nonneg hT hm'.le
+  set P : (ℕ → ℝ) → ℝ :=
+    fun z => q.eval (s₀ * Real.exp ((r - σ ^ 2 / 2) * T + σ * (Real.sqrt T * z 0))) with hPdef
+  have hPint : ∫ z, P z ∂stdNormalSeq =
       ∫ w, q.eval (s₀ * Real.exp ((r - σ ^ 2 / 2) * T + σ * (Real.sqrt T * w)))
         ∂gaussianReal 0 1 := by
-    simp_rw [gbmExact_zero]
     have hF : Measurable fun w : ℝ =>
         q.eval (s₀ * Real.exp ((r - σ ^ 2 / 2) * T + σ * (Real.sqrt T * w))) :=
       hqm.comp (by fun_prop)
     exact integral_comp_of_measurePreserving
       (measurePreserving_eval_infinitePi (fun _ : ℕ => gaussianReal 0 1) 0) hF.aestronglyMeasurable
-  have hP : MemLp (fun z => q.eval (gbmExact r σ T s₀ 0 z)) 2 stdNormalSeq :=
-    memLp_two_eval_of_integrable_pow (measurable_gbmExact r σ T s₀ 0)
-      (integrable_gbmExact_pow r σ T s₀ 0) q
-  have hPf : ∀ ℓ, MemLp (emFine (gbmDrift r) (gbmVol σ) T s₀ (europeanPayoff fun x => q.eval x) ℓ)
-      2 stdNormalSeq := fun ℓ =>
-    memLp_two_eval_of_integrable_pow (measurable_gbmEM r σ T s₀ ℓ)
-      (integrable_gbmEM_pow r σ T s₀ ℓ) q
-  have hPfm : ∀ ℓ, Measurable
-      (emFine (gbmDrift r) (gbmVol σ) T s₀ (europeanPayoff fun x => q.eval x) ℓ) :=
-    fun ℓ => hqm.comp (measurable_gbmEM r σ T s₀ ℓ)
-  -- (i): the weak rate `α = 1`
+  have eP : P = fun z => q.eval (gbmExactM r σ T s₀ 1 M 0 z) := funext fun z => by
+    rw [hPdef, gbmExactM_one_zero]
+  have hP : MemLp P 2 stdNormalSeq := by
+    rw [eP]
+    exact memLp_two_eval_of_integrable_pow (measurable_gbmExactM r σ T s₀ 1 M 0)
+      (integrable_gbmExactM_pow r σ T s₀ one_pos hM0 0) q
+  have hPfm : ∀ ℓ, Measurable (emFineM (gbmDrift r) (gbmVol σ) (T / m) s₀ M
+      (fun ℓ path => q.eval (path (m * M ^ ℓ))) ℓ) := fun ℓ => by
+    have h := hqm.comp (measurable_gbmEMn r σ (T / m / (M : ℝ) ^ ℓ) s₀ (m * M ^ ℓ))
+    exact h
+  have hPf : ∀ ℓ, MemLp (emFineM (gbmDrift r) (gbmVol σ) (T / m) s₀ M
+      (fun ℓ path => q.eval (path (m * M ^ ℓ))) ℓ) 2 stdNormalSeq := fun ℓ => by
+    have h := memLp_two_eval_of_integrable_pow
+      (measurable_gbmEMn r σ (T / m / (M : ℝ) ^ ℓ) s₀ (m * M ^ ℓ))
+      (integrable_emPath_gbm_pow r σ (T / m / (M : ℝ) ^ ℓ) s₀ (m * M ^ ℓ)) q
+    exact h
+  -- (i): the weak rate `α = log₂ M`
   set CP := ∑ i ∈ range (q.natDegree + 1), |q.coeff i| * gbmWeakPowConst i r σ T s₀ with hCPdef
   have hCP : 0 ≤ CP := sum_nonneg fun i _ => mul_nonneg (abs_nonneg _) (by
     unfold gbmWeakPowConst
     positivity)
-  have hc₁ : 0 < CP * T + 1 := by positivity
-  have h_i : ∀ ℓ : ℕ, |∫ z, emFine (gbmDrift r) (gbmVol σ) T s₀ (europeanPayoff fun x => q.eval x)
-      ℓ z - q.eval (gbmExact r σ T s₀ 0 z) ∂stdNormalSeq| ≤
-      (CP * T + 1) * (2 : ℝ) ^ (-(1 * (ℓ : ℝ))) := fun ℓ => by
-    have h := gbm_weak_error_poly r σ s₀ hT ℓ q
-    have e1 : ∫ z, emFine (gbmDrift r) (gbmVol σ) T s₀ (europeanPayoff fun x => q.eval x) ℓ z -
-        q.eval (gbmExact r σ T s₀ 0 z) ∂stdNormalSeq =
-        ∫ z, q.eval (gbmEM r σ T s₀ ℓ z) ∂stdNormalSeq -
-          ∫ z, q.eval (gbmExact r σ T s₀ ℓ z) ∂stdNormalSeq := by
-      rw [integral_sub ((hPf ℓ).integrable one_le_two) (hP.integrable one_le_two),
-        integral_comp_gbmExact r σ T s₀ ℓ hqm]
-      rfl
-    have e2 : (2 : ℝ) ^ (-(1 * (ℓ : ℝ))) = ((2 : ℝ) ^ ℓ)⁻¹ := by
-      rw [one_mul, Real.rpow_neg (by norm_num : (0 : ℝ) ≤ 2), Real.rpow_natCast]
-    rw [e1, e2]
-    have hpos : 0 < ((2 : ℝ) ^ ℓ)⁻¹ := by positivity
-    calc _ ≤ CP * (T / 2 ^ ℓ) := h
-      _ = CP * T * ((2 : ℝ) ^ ℓ)⁻¹ := by rw [div_eq_mul_inv]; ring
+  have hc₁ : 0 < CP * (T / m) + 1 := by positivity
+  have h_i : ∀ ℓ : ℕ, |∫ z, emFineM (gbmDrift r) (gbmVol σ) (T / m) s₀ M
+      (fun ℓ path => q.eval (path (m * M ^ ℓ))) ℓ z - P z ∂stdNormalSeq| ≤
+      (CP * (T / m) + 1) * (2 : ℝ) ^ (-(Real.logb 2 M * (ℓ : ℝ))) := fun ℓ => by
+    have h := gbm_weak_error_poly_M r σ s₀ hT hm hM0 q ℓ
+    rw [← hPint, ← integral_sub ((hPf ℓ).integrable one_le_two) (hP.integrable one_le_two)] at h
+    rw [two_rpow_neg_logb_mul hM0]
+    have hinv : 0 < ((M : ℝ) ^ ℓ)⁻¹ := by positivity
+    calc _ ≤ CP * (T / m / (M : ℝ) ^ ℓ) := h
+      _ = CP * (T / m) * ((M : ℝ) ^ ℓ)⁻¹ := by
+          rw [div_eq_mul_inv (T / m)]
+          ring
       _ ≤ _ := by nlinarith
-  -- (iii): the variance rate `β = 1`
-  set KV := 3 * (∑ k ∈ range (q.natDegree + 1), |q.coeff k| * k) ^ 2 * T *
+  -- (iii): the variance rate `β = log₂ M`
+  set KV := (∑ k ∈ range (q.natDegree + 1), |q.coeff k| * k) ^ 2 *
     (gbmEMMomentConst 2 r σ T s₀ + 3 ^ (2 * (2 * q.natDegree) - 1) *
       (1 + 2 * (s₀ ^ (2 * (2 * q.natDegree)) * Real.exp ((2 * ((2 * q.natDegree : ℕ) : ℝ) *
         |r| + 2 * ((2 * q.natDegree : ℕ) : ℝ) ^ 2 * σ ^ 2) * T)))) with hKVdef
@@ -2067,57 +2313,82 @@ theorem gbm_mlmc_theorem1_poly (r σ s₀ : ℝ) {T : ℝ} (hT : 0 ≤ T) (q : P
     have h2 : 0 ≤ s₀ ^ (2 * (2 * q.natDegree)) := by rw [pow_mul]; positivity
     rw [hKVdef]
     positivity
-  obtain ⟨V₀, hV₀⟩ : ∃ V₀, V₀ = variance
-      (emFine (gbmDrift r) (gbmVol σ) T s₀ (europeanPayoff fun x => q.eval x) 0) stdNormalSeq :=
-    ⟨_, rfl⟩
-  have hV₀0 : 0 ≤ V₀ := by
-    rw [hV₀]
-    exact variance_nonneg _ _
-  have hc₂ : 0 < V₀ + KV + 1 := by positivity
+  obtain ⟨V₀, hV₀⟩ : ∃ V₀, V₀ = variance (emFineM (gbmDrift r) (gbmVol σ) (T / m) s₀ M
+      (fun ℓ path => q.eval (path (m * M ^ ℓ))) 0) stdNormalSeq := ⟨_, rfl⟩
+  have hV₀0 : 0 ≤ V₀ := hV₀ ▸ variance_nonneg _ _
+  have hc₂ : 0 < V₀ + KV * (T / m) * (M + 1) + 1 := by positivity
   have h_iii : ∀ ℓ, variance (fineCoarseDiff
-      (emFine (gbmDrift r) (gbmVol σ) T s₀ (europeanPayoff fun x => q.eval x))
-      (emCoarse (gbmDrift r) (gbmVol σ) T s₀ (europeanPayoff fun x => q.eval x)) ℓ)
-      stdNormalSeq ≤ (V₀ + KV + 1) * (2 : ℝ) ^ (-(1 * (ℓ : ℝ))) := by
+      (emFineM (gbmDrift r) (gbmVol σ) (T / m) s₀ M (fun ℓ path => q.eval (path (m * M ^ ℓ))))
+      (emCoarseM (gbmDrift r) (gbmVol σ) (T / m) s₀ M
+        (fun ℓ path => q.eval (path (m * M ^ ℓ)))) ℓ) stdNormalSeq ≤
+      (V₀ + KV * (T / m) * (M + 1) + 1) * (2 : ℝ) ^ (-(Real.logb 2 M * (ℓ : ℝ))) := by
     intro ℓ
-    rw [one_mul, Real.rpow_neg (by norm_num : (0 : ℝ) ≤ 2), Real.rpow_natCast]
+    rw [two_rpow_neg_logb_mul hM0]
     cases ℓ with
     | zero =>
-      simp only [fineCoarseDiff, pow_zero, inv_one, mul_one]
-      rw [← hV₀]
+      change variance (emFineM (gbmDrift r) (gbmVol σ) (T / m) s₀ M
+        (fun ℓ path => q.eval (path (m * M ^ ℓ))) 0) stdNormalSeq ≤ _
+      rw [pow_zero, inv_one, mul_one, ← hV₀]
+      have : 0 ≤ KV * (T / m) * (M + 1) := by positivity
       linarith
     | succ ℓ =>
-      have hv := gbm_poly_correction_variance_le r σ s₀ hT q ℓ
-      rw [← hKVdef] at hv
-      have e : fineCoarseDiff
-          (emFine (gbmDrift r) (gbmVol σ) T s₀ (europeanPayoff fun x => q.eval x))
-          (emCoarse (gbmDrift r) (gbmVol σ) T s₀ (europeanPayoff fun x => q.eval x)) (ℓ + 1) =
-          fun z => q.eval (gbmEM r σ T s₀ (ℓ + 1) z) - q.eval (gbmEM r σ T s₀ ℓ (pairAvg z)) := by
-        funext z
-        simp only [fineCoarseDiff, emCoarse_eq]
-        rfl
-      rw [e]
-      have hinv : 0 < ((2 : ℝ) ^ (ℓ + 1))⁻¹ := by positivity
-      calc _ ≤ KV * ((2 : ℝ) ^ (ℓ + 1))⁻¹ := hv
+      have hv := gbm_poly_correction_variance_le_M r σ s₀ hT hm hM0 q ℓ
+      have hinv : 0 < ((M : ℝ) ^ (ℓ + 1))⁻¹ := by positivity
+      calc _ ≤ KV * (T / m) * (M + 1) / (M : ℝ) ^ (ℓ + 1) := hv
+        _ = KV * (T / m) * (M + 1) * ((M : ℝ) ^ (ℓ + 1))⁻¹ := by
+          rw [div_eq_mul_inv]
         _ ≤ _ := by nlinarith
-  -- (iv): a level-`ℓ` sample costs `2^ℓ`
-  have h_iv : ∀ ℓ : ℕ, (2 : ℝ) ^ ℓ ≤ 1 * (2 : ℝ) ^ ((1 : ℝ) * (ℓ : ℝ)) := fun ℓ => by
-    rw [one_mul, one_mul, Real.rpow_natCast]
-  obtain ⟨c₄, hc₄, h⟩ := em_mlmc_theorem1
+  -- (iv): a level-`ℓ` sample costs `m M^ℓ = m 2^{ℓ log₂ M}`
+  have h_iv : ∀ ℓ : ℕ, (m : ℝ) * (M : ℝ) ^ ℓ ≤ m * (2 : ℝ) ^ (Real.logb 2 M * (ℓ : ℝ)) :=
+    fun ℓ => by rw [two_rpow_logb_mul hM0]
+  obtain ⟨c₄, hc₄, h⟩ := em_mlmc_theorem1_levels_M
     (μ := Measure.infinitePi fun _ : ℕ × ℕ => stdNormalSeq)
-    (gbmDrift r) (gbmVol σ) T s₀ (europeanPayoff fun x => q.eval x)
-    (fun z => q.eval (gbmExact r σ T s₀ 0 z))
-    (fun p x => x p) (fun ℓ _ _ => (2 : ℝ) ^ ℓ) (fun ℓ => (2 : ℝ) ^ ℓ) (α := 1) (β := 1)
-    (γ := 1) one_pos one_pos one_pos hc₁ hc₂ one_pos (by norm_num) hω hind
-    (hP.integrable one_le_two) hPfm hPf (fun _ _ => integrable_const _)
-    (fun _ _ => by simp only [integral_const, probReal_univ, one_smul]) h_i h_iii h_iv
-  refine ⟨c₄, hc₄, fun ε hε hε1 => ?_⟩
-  obtain ⟨L, N, hN, hmse, hcost⟩ := h ε hε hε1
-  refine ⟨L, N, hN, ?_, ?_⟩
-  · rw [← hPint]
-    exact hmse
-  · simp only [totalCost, Finset.sum_const, Finset.card_range, nsmul_eq_mul, integral_const,
-      probReal_univ, one_smul] at hcost
-    rw [complexityBound_of_eq rfl ε] at hcost
-    exact hcost
+    (gbmDrift r) (gbmVol σ) (T / m) s₀ hM0 (fun ℓ path => q.eval (path (m * M ^ ℓ))) P
+    (fun p x => x p) (fun ℓ => (m : ℝ) * (M : ℝ) ^ ℓ) (α := Real.logb 2 M)
+    (β := Real.logb 2 M) (γ := Real.logb 2 M) hβ hβ hc₁ hc₂ hm' (by rw [min_self]; linarith)
+    hω hind (hP.integrable one_le_two) hPfm hPf h_i h_iii h_iv
+  refine ⟨c₄, K1 (Real.logb 2 M) (CP * (T / m) + 1), hc₄, K1_pos hc₁, fun ε hε hε1 => ?_⟩
+  obtain ⟨L, N, hN, hint, hmse, hcost, hL⟩ := h ε hε hε1
+  rw [hPint] at hint hmse
+  rw [complexityBound_of_eq rfl ε] at hcost
+  rw [two_rpow_logb_mul hM0] at hL
+  exact ⟨L, N, hN, hint, hmse, hcost, hL⟩
+
+/-- **Theorem 1 for the Euler–Maruyama MLMC estimator of GBM with a polynomial payoff** (Giles
+2015, §5.1, p. 30, l. 1318–1321: "Alternatively, if `h_ℓ = 2^{−ℓ}h_0` with twice as many timesteps
+on each successive level, as used in the numerical examples in this article, then `α = 1`, `β = 1`
+and `γ = 1`. In either case, Theorem 1 gives the complexity to achieve a root-mean-square error of
+`ε` to be `O(ε^{−2}(log ε)²)`"; §2.1, p. 7, l. 326: "Because of condition i), we have
+`2^{−αL} = O(ε)`, and hence `C_L = O(ε^{−γ/α})`").  Let `dS = rS dt + σS dW`, `S_0 = s₀`, `T ≥ 0`,
+and let `q` be any real polynomial (a payoff which is not Lipschitz unless `deg q ≤ 1`, so
+`gbm_mlmc_theorem1` does not apply).  With the levels, corrections, independent samples and costs
+`2^ℓ` of `gbm_mlmc_theorem1`, there are `c₄, c₅ > 0` such that for every `0 < ε < e⁻¹` there are
+`L` and `N_ℓ ≥ 1` for which the multilevel estimator of `E[q(S_T)]` has a square-integrable error
+with mean square `< ε²`, cost `∑_{ℓ≤L} N_ℓ 2^ℓ ≤ c₄ ε⁻²(log ε)²`, and finest level
+`2^L ≤ c₅ ε⁻¹`.  The rates are proved: `α = 1` (`gbm_weak_error_poly`), `β = 1`
+(`gbm_poly_correction_variance_le`) and `γ = 1`.  The case `m = 1`, `M = 2` of
+`gbm_mlmc_theorem1_poly_M`. -/
+theorem gbm_mlmc_theorem1_poly (r σ s₀ : ℝ) {T : ℝ} (hT : 0 ≤ T) (q : Polynomial ℝ) :
+    ∃ c₄ c₅ : ℝ, 0 < c₄ ∧ 0 < c₅ ∧ ∀ ε : ℝ, 0 < ε → ε < Real.exp (-1) →
+      ∃ (L : ℕ) (N : ℕ → ℕ), (∀ ℓ, 0 < N ℓ) ∧
+        Integrable (fun x => (∑ ℓ ∈ range (L + 1),
+            blockMean (fineCoarseDiff
+              (emFine (gbmDrift r) (gbmVol σ) T s₀ (europeanPayoff fun x => q.eval x))
+              (emCoarse (gbmDrift r) (gbmVol σ) T s₀ (europeanPayoff fun x => q.eval x)))
+              (fun p x => x p) ℓ (N ℓ) x -
+            ∫ w, q.eval (s₀ * Real.exp ((r - σ ^ 2 / 2) * T + σ * (Real.sqrt T * w)))
+              ∂gaussianReal 0 1) ^ 2) (Measure.infinitePi fun _ : ℕ × ℕ => stdNormalSeq) ∧
+        ∫ x, (∑ ℓ ∈ range (L + 1),
+            blockMean (fineCoarseDiff
+              (emFine (gbmDrift r) (gbmVol σ) T s₀ (europeanPayoff fun x => q.eval x))
+              (emCoarse (gbmDrift r) (gbmVol σ) T s₀ (europeanPayoff fun x => q.eval x)))
+              (fun p x => x p) ℓ (N ℓ) x -
+            ∫ w, q.eval (s₀ * Real.exp ((r - σ ^ 2 / 2) * T + σ * (Real.sqrt T * w)))
+              ∂gaussianReal 0 1) ^ 2 ∂(Measure.infinitePi fun _ : ℕ × ℕ => stdNormalSeq) < ε ^ 2 ∧
+        ∑ ℓ ∈ range (L + 1), (N ℓ : ℝ) * 2 ^ ℓ ≤ c₄ * (ε ^ (-2 : ℝ) * Real.log ε ^ 2) ∧
+        (2 : ℝ) ^ L ≤ c₅ / ε := by
+  have H := gbm_mlmc_theorem1_poly_M r σ s₀ hT (m := 1) (M := 2) one_pos le_rfl q
+  simp only [Nat.cast_one, div_one, one_mul, Nat.cast_ofNat, emFineM_two, emCoarseM_two] at H
+  exact H
 
 end MLMC
