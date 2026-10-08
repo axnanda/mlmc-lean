@@ -2216,7 +2216,8 @@ lemma alg3_exists_reach (κ : ℕ → ℕ) (k : ℕ) : ∃ n, k ≤ κ n ∨ ∀
 (Giles 2015, §5.6). -/
 noncomputable def alg3FirstReach (κ : ℕ → ℕ) (k : ℕ) : ℕ :=
   @Nat.find (fun n => k ≤ κ n ∨ ∀ j, κ j < k) (fun _ => Classical.propDecidable _)
-    (alg3_exists_reach κ k)
+    (Classical.byCases (fun h : ∃ j, k ≤ κ j => h.elim fun j hj => ⟨j, Or.inl hj⟩)
+      fun h => ⟨0, Or.inr fun j => Nat.lt_of_not_le fun hj => h ⟨j, hj⟩⟩)
 
 /-- If the counter reaches `k`, it has reached it at `alg3FirstReach` (Giles 2015, §5.6). -/
 lemma le_alg3FirstReach {κ : ℕ → ℕ} {k : ℕ} (h : ∃ j, k ≤ κ j) :
