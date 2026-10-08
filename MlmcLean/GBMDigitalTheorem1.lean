@@ -31,13 +31,16 @@ using the Milstein approximation for the final timestep").  Geometric Brownian m
   fine/coarse pair coupled by `pairAvg`.
 * **The barrier option at `m` fixed monitoring dates** `t_k = kT/m` (`barrierPayoff`:
   `g(S_T) ∏_{k=1}^m 1_A(S_{t_k})` with `A = (−∞, B]`, up-and-out, or `A = (B, ∞)`, down-and-out,
-  and `g` bounded and Lipschitz).  `gbm_em_barrier_rate`, `gbm_mil_barrier_rate`: the correction
-  variance and the bias are `O(h^q)` for every `q < ½`, resp. `q < 1`, from the mismatch
-  probabilities at the dates (a union bound over the dates of the marginal small-ball estimates,
-  `gbm_mon_mismatch_rate_of_moment` with the density bound `gbmMonExact_smallBall` at every date)
-  and the strong error at `t_m` (`barrierPayoff_sub_le`, `barrier_variance_le`, `barrier_bias_le`,
-  `barrier_rate_of`).  `gbm_em_barrier_theorem1`, `gbm_mil_barrier_theorem1`: Theorem 1 end to end,
-  cost `O(ε^{−3−η})`, resp. `O(ε^{−2−η})`.
+  and `g` Lipschitz, e.g. the down-and-out call `g(x) = (x − K)⁺`).  `gbm_em_barrier_rate`,
+  `gbm_mil_barrier_rate`: the correction variance and the bias are `O(h^q)` for every `q < ½`,
+  resp. `q < 1`, from the mismatch probabilities at the dates (a union bound over the dates of the
+  marginal small-ball estimates, `gbm_mon_mismatch_rate_of_moment` with the density bound
+  `gbmMonExact_smallBall` at every date), the strong error at `t_m`, and the moments of `S_T` of
+  every order for the unbounded payoff `g(S_T)` on the mismatch event (a truncation at the level
+  `t = h^{−q₀/n}` in place of Hölder's inequality, `mul_le_add_pow_div`, `barrierPayoff_sub_le`,
+  `barrier_err_le`, `barrier_err_rate`, `variance_pairAvg_corr_le`, `barrier_rate_of`).
+  `gbm_em_barrier_theorem1`, `gbm_mil_barrier_theorem1`: Theorem 1 end to end, cost
+  `O(ε^{−3−η})`, resp. `O(ε^{−2−η})`.
 * **Splitting with a Milstein final step** (l. 1635–1636).  `map_milstein_coarse_eq_fine`: the
   coarse path of level `ℓ` with a Milstein last step (re-using the known first half of the last
   coarse increment) has the law of the fine path of level `ℓ − 1` (the Milstein analogue of
@@ -53,8 +56,8 @@ here `α` is the mismatch rate `q < ½`, which gives `O(ε^{−3−η})`.  The e
 `η > 0`.  The barrier option of the paper is continuously monitored; its analysis (Giles, Higham and
 Mao 2009) and the Milstein rows `O(h^{3/2})` of Table 5.2 (Brownian-bridge estimators) are out of
 reach here; for the discretely monitored option with the natural estimators the rates are those of
-the digital option.  Unbounded `g` (e.g. the down-and-out call) is not covered.  The variance of the
-splitting estimator (l. 1597–1600, "the variance is the same, to leading order") is not formalised.
+the digital option.  The variance of the splitting estimator (l. 1597–1600, "the variance is the
+same, to leading order") is not formalised.
 
 **Hypotheses.**  `σ ≠ 0` is needed in the digital and the barrier statements: for `σ = 0`,
 `s₀ = −1`, `r = T = 1` and `K = −e` the Euler–Maruyama (= Milstein) paths are deterministic,
@@ -426,14 +429,14 @@ lemma theorem1_pairAvg_of_rate {T : ℝ} (hT : 0 < T) {q : ℝ} (hq0 : 0 < q) (h
   exact hcost
 
 /-- **Theorem 1 end to end for the digital option with Euler–Maruyama: MSE `< ε²` at cost
-`O(ε^{−3−η})` for every `η > 0`** (Giles 2015, §5.1, p. 33, l. 1435–1449: "Figure 5.4 shows the
-results for a digital call option … Consequently, this application has `α = 1`, `β = ½`, `γ = 1`,
-leading to the MLMC complexity being `O(ε^{−2.5})`", with Theorem 1, §2.1, p. 6, and (2.4)).  For
-`dS = rS dt + σS dW`, `S_0 = s₀`, `σ ≠ 0`, `T > 0`, any strike `K` and any `η > 0`: level `ℓ` uses
-`2^ℓ` Euler–Maruyama steps of size `T 2^{−ℓ}`, the payoff is `H(Ŝ_ℓ − K) = 1_{Ŝ_ℓ > K}`, the
-coarse path of a sample is driven by the summed increments, the samples are independent and a
-level-`ℓ` sample costs `2^ℓ`.  Then there is `c₄ > 0` such that for every `0 < ε < e⁻¹` there are
-`L` and `N_ℓ ≥ 1` for which the multilevel estimator of
+`O(ε^{−3−η})` for every `η > 0`** (Giles 2015, §5.1, p. 30, l. 1356: "Figure 5.4 illustrates the
+problem with discontinuous payoff functions"; p. 33, l. 1447–1449: "Consequently, this application
+has `α = 1`, `β = ½`, `γ = 1`, leading to the MLMC complexity being `O(ε^{−2.5})`", with Theorem 1,
+§2.1, p. 6, and (2.4)).  For `dS = rS dt + σS dW`, `S_0 = s₀`, `σ ≠ 0`, `T > 0`, any strike `K`
+and any `η > 0`: level `ℓ` uses `2^ℓ` Euler–Maruyama steps of size `T 2^{−ℓ}`, the payoff is
+`H(Ŝ_ℓ − K) = 1_{Ŝ_ℓ > K}`, the coarse path of a sample is driven by the summed increments, the
+samples are independent and a level-`ℓ` sample costs `2^ℓ`.  Then there is `c₄ > 0` such that
+for every `0 < ε < e⁻¹` there are `L` and `N_ℓ ≥ 1` for which the multilevel estimator of
 `E[H(S_T − K)] = ∫ 1_{s₀ e^{(r−σ²/2)T + σ√T w} > K} dN(0,1)(w)` has a square-integrable error with
 mean square `< ε²`, at cost `∑_{ℓ≤L} N_ℓ 2^ℓ ≤ c₄ ε^{−3−η}`.  No rate is assumed: Theorem 1 with
 `α = β = q = 1/(2 + η) < ½`, `γ = 1` (`theorem1_pairAvg_of_rate`; cost
@@ -442,11 +445,11 @@ mean square `< ε²`, at cost `∑_{ℓ≤L} N_ℓ 2^ℓ ≤ c₄ ε^{−3−η}
 `pairAvg`).
 
 **How close to the paper.**  The paper's `O(ε^{−2.5})` uses the weak order `α = 1` of
-Euler–Maruyama for the digital option (Bally and Talay 1996, not cited in the paper; a
-Malliavin-calculus result that is out of scope here) together with `β = ½`.  Here `α` is only the
-mismatch rate `q < ½`, and `β = q < ½` (the endpoint `β = ½` is not proved either,
-`gbm_em_digital_rate`), so Theorem 1 gives `ε^{−2−(1−q)/q}`, i.e. `ε^{−3−η}` with `η > 0`
-arbitrary but not `0`.  The constant `c₄` depends on `η`.
+Euler–Maruyama for the digital option (a result of Bally–Talay type for non-smooth payoffs, not
+cited in the paper; a Malliavin-calculus argument that is out of scope here) together with
+`β = ½`.  Here `α` is only the mismatch rate `q < ½`, and `β = q < ½` (the endpoint `β = ½` is not
+proved either, `gbm_em_digital_rate`), so Theorem 1 gives `ε^{−2−(1−q)/q}`, i.e. `ε^{−3−η}` with
+`η > 0` arbitrary but not `0`.  The constant `c₄` depends on `η`.
 
 **`σ ≠ 0` is needed.**  For `σ = 0`, `s₀ = −1`, `r = T = 1`, the paths are deterministic,
 `Ŝ_ℓ = −(1 + 2^{−ℓ})^{2^ℓ} > −e = S_T`, so with `K = −e` the estimator is `H(Ŝ_L − K) = 1` for
@@ -595,21 +598,25 @@ lemma barrier_indicator_ne {A : Set ℝ} {B : ℝ} (hA : A = Set.Iic B ∨ A = S
     rw [indicator_Iic_eq_one_sub, indicator_Iic_eq_one_sub, h']
   · exact h
 
-/-- The barrier sets `(−∞, B]` and `(B, ∞)` are measurable. -/
+/-- The barrier sets `(−∞, B]` and `(B, ∞)` are measurable (the knock-out sets of the barrier
+option, Giles 2015, §5.1, p. 33). -/
 lemma measurableSet_barrier {A : Set ℝ} {B : ℝ} (hA : A = Set.Iic B ∨ A = Set.Ioi B) :
     MeasurableSet A := by
   rcases hA with rfl | rfl
   · exact measurableSet_Iic
   · exact measurableSet_Ioi
 
-/-- The barrier payoff is measurable for a measurable `g` and a measurable `A`. -/
+/-- The barrier payoff is measurable for a measurable `g` and a measurable `A` (Giles 2015, §5.1,
+p. 33). -/
 lemma measurable_barrierPayoff {g : ℝ → ℝ} (hg : Measurable g) {A : Set ℝ}
     (hA : MeasurableSet A) (m : ℕ) : Measurable (barrierPayoff g A m) := by
   unfold barrierPayoff
   exact (hg.comp (measurable_pi_apply m)).mul (Finset.measurable_prod _ fun k _ =>
     (measurable_one.indicator hA).comp (measurable_pi_apply (k + 1)))
 
-/-- If two products of knock-out indicators differ, one of the factors differs. -/
+/-- If two products of knock-out indicators differ, one of the factors differs (the barrier option
+is knocked out on one path and not on the other only if the paths are on different sides of the
+barrier at some date; Giles 2015, §5.1, p. 33). -/
 lemma prod_indicator_ne {A : Set ℝ} {m : ℕ} {a b : ℕ → ℝ}
     (h : ∏ k ∈ range m, A.indicator (1 : ℝ → ℝ) (a (k + 1)) ≠
       ∏ k ∈ range m, A.indicator (1 : ℝ → ℝ) (b (k + 1))) :
@@ -617,49 +624,61 @@ lemma prod_indicator_ne {A : Set ℝ} {m : ℕ} {a b : ℕ → ℝ}
   by_contra hcon
   exact h (Finset.prod_congr rfl fun k hk => not_not.1 fun hne => hcon ⟨k, hk, hne⟩)
 
-/-- `(1_{a>B} − 1_{b>B})² ≤ (1_{c>B} − 1_{a>B})² + (1_{c>B} − 1_{b>B})²`: if the digital payoffs of
-`a` and `b` differ, one of them differs from that of `c` (Giles 2015, §5.1, p. 33). -/
-lemma sq_digital_sub_le_add (B a b c : ℝ) :
-    ((Set.Ioi B).indicator (1 : ℝ → ℝ) a - (Set.Ioi B).indicator 1 b) ^ 2 ≤
-      ((Set.Ioi B).indicator (1 : ℝ → ℝ) c - (Set.Ioi B).indicator 1 a) ^ 2 +
-        ((Set.Ioi B).indicator (1 : ℝ → ℝ) c - (Set.Ioi B).indicator 1 b) ^ 2 := by
-  rcases digital_eq_zero_or_one B a with h1 | h1 <;>
-    rcases digital_eq_zero_or_one B b with h2 | h2 <;>
-    rcases digital_eq_zero_or_one B c with h3 | h3 <;>
-    · rw [h1, h2, h3]
-      norm_num
+/-- A knock-out indicator lies in `[0, 1]` (Giles 2015, §5.1, p. 33). -/
+lemma indicator_one_mem_Icc (A : Set ℝ) (x : ℝ) :
+    0 ≤ A.indicator (1 : ℝ → ℝ) x ∧ A.indicator (1 : ℝ → ℝ) x ≤ 1 := by
+  by_cases hx : x ∈ A
+  · simp [Set.indicator_of_mem hx]
+  · simp [Set.indicator_of_notMem hx]
 
-/-- **The barrier payoff difference is controlled by the final values and the digital mismatches
-at the dates** (Giles 2015, §5.1, p. 33: the barrier is "a discontinuous function"; the argument
-for the digital option, l. 1436–1441, at every monitoring date).  For `g` with
-`|g(x) − g(y)| ≤ K_g |x − y|` and `|g| ≤ M`, and `A = (−∞, B]` or `(B, ∞)`,
-`|Φ(a) − Φ(b)| ≤ K_g |a_m − b_m| + M ∑_{k<m} (1_{a_{k+1}>B} − 1_{b_{k+1}>B})²` and
-`(Φ(a) − Φ(b))² ≤ 2K_g² (a_m − b_m)² + 2M² ∑_{k<m} (1_{a_{k+1}>B} − 1_{b_{k+1}>B})²`: write
-`Φ(a) − Φ(b) = (g(a_m) − g(b_m)) Π_a + g(b_m)(Π_a − Π_b)` with `Π ∈ [0, 1]`, and `Π_a ≠ Π_b` only
-if the indicators differ at some date. -/
-lemma barrierPayoff_sub_le {g : ℝ → ℝ} {Kg M : ℝ} (hg : ∀ x y, |g x - g y| ≤ Kg * |x - y|)
-    (hM : ∀ x, |g x| ≤ M) {A : Set ℝ} {B : ℝ} (hA : A = Set.Iic B ∨ A = Set.Ioi B) (m : ℕ)
-    (a b : ℕ → ℝ) :
-    |barrierPayoff g A m a - barrierPayoff g A m b| ≤ Kg * |a m - b m| +
-        M * ∑ k ∈ range m, ((Set.Ioi B).indicator (1 : ℝ → ℝ) (a (k + 1)) -
-          (Set.Ioi B).indicator 1 (b (k + 1))) ^ 2 ∧
-    (barrierPayoff g A m a - barrierPayoff g A m b) ^ 2 ≤ 2 * Kg ^ 2 * (a m - b m) ^ 2 +
-        2 * M ^ 2 * ∑ k ∈ range m, ((Set.Ioi B).indicator (1 : ℝ → ℝ) (a (k + 1)) -
-          (Set.Ioi B).indicator 1 (b (k + 1))) ^ 2 := by
+/-- For `f ≥ 0`, `0 ≤ D ≤ 1` and `t > 0`, `f D ≤ t D + f^{k+1}/t^k` (if `f ≤ t` the first term
+suffices, otherwise `f ≤ f (f/t)^k`).  This truncation at the level `t` takes the place of
+Hölder's inequality for the unbounded payoff `g(S_T)` on the event that the knock-out indicators of
+the scheme and of the exact solution differ (the barrier option, Giles 2015, §5.1, p. 33). -/
+lemma mul_le_add_pow_div {f D t : ℝ} (hf : 0 ≤ f) (hD0 : 0 ≤ D) (hD1 : D ≤ 1) (ht : 0 < t)
+    (k : ℕ) : f * D ≤ t * D + f ^ (k + 1) / t ^ k := by
+  rcases le_or_gt f t with hft | hft
+  · have h1 : 0 ≤ f ^ (k + 1) / t ^ k := by positivity
+    nlinarith [mul_le_mul_of_nonneg_right hft hD0]
+  · have h1 : 1 ≤ (f / t) ^ k := one_le_pow₀ ((one_le_div ht).2 hft.le)
+    have h2 : f ^ (k + 1) / t ^ k = f * (f / t) ^ k := by
+      rw [div_pow, pow_succ, mul_comm (f ^ k) f, mul_div_assoc]
+    have h3 : f * D ≤ f := mul_le_of_le_one_right hf hD1
+    have h4 : f ≤ f * (f / t) ^ k := le_mul_of_one_le_right hf h1
+    have h5 : 0 ≤ t * D := mul_nonneg ht.le hD0
+    rw [h2]
+    linarith
+
+/-- **The barrier payoff of a path against that of the exact path** (Giles 2015, §5.1, p. 33: the
+barrier is "a discontinuous function"; the argument for the digital option, l. 1436–1441, at every
+monitoring date).  For `g` with `|g(x) − g(y)| ≤ K_g |x − y|` (not necessarily bounded),
+`A = (−∞, B]` or `(B, ∞)`, `t > 0` and `n ∈ ℕ`, with `S = ∑_{k<m} (1_{x_{k+1}>B} − 1_{a_{k+1}>B})²`
+(the number of dates at which the digital payoffs of `a` and `x` differ):
+`|Φ(a) − Φ(x)| ≤ K_g |x_m − a_m| + t S + g(x_m)^{2n+2}/t^{2n+1}` and
+`(Φ(a) − Φ(x))² ≤ 2K_g² (x_m − a_m)² + 2(t S + g(x_m)^{2n+2}/tⁿ)`.  Write
+`Φ(a) − Φ(x) = (g(a_m) − g(x_m)) Π_a + g(x_m)(Π_a − Π_x)` with `Π ∈ [0, 1]`; `Π_a ≠ Π_x` only if
+the indicators differ at some date (`prod_indicator_ne`, `barrier_indicator_ne`), and
+`|g(x_m)| 1{Π_a ≠ Π_x}` is bounded by `mul_le_add_pow_div`. -/
+lemma barrierPayoff_sub_le {g : ℝ → ℝ} {Kg : ℝ} (hg : ∀ x y, |g x - g y| ≤ Kg * |x - y|)
+    {A : Set ℝ} {B : ℝ} (hA : A = Set.Iic B ∨ A = Set.Ioi B) (m n : ℕ) {t : ℝ} (ht : 0 < t)
+    (a x : ℕ → ℝ) :
+    |barrierPayoff g A m a - barrierPayoff g A m x| ≤ Kg * |x m - a m| +
+        (t * ∑ k ∈ range m, ((Set.Ioi B).indicator (1 : ℝ → ℝ) (x (k + 1)) -
+          (Set.Ioi B).indicator 1 (a (k + 1))) ^ 2 + g (x m) ^ (2 * (n + 1)) / t ^ (2 * n + 1)) ∧
+    (barrierPayoff g A m a - barrierPayoff g A m x) ^ 2 ≤ 2 * Kg ^ 2 * (x m - a m) ^ 2 +
+        2 * (t * ∑ k ∈ range m, ((Set.Ioi B).indicator (1 : ℝ → ℝ) (x (k + 1)) -
+          (Set.Ioi B).indicator 1 (a (k + 1))) ^ 2 + g (x m) ^ (2 * (n + 1)) / t ^ n) := by
   set P := ∏ k ∈ range m, A.indicator (1 : ℝ → ℝ) (a (k + 1)) with hP
-  set Q := ∏ k ∈ range m, A.indicator (1 : ℝ → ℝ) (b (k + 1)) with hQ
-  set S := ∑ k ∈ range m, ((Set.Ioi B).indicator (1 : ℝ → ℝ) (a (k + 1)) -
-    (Set.Ioi B).indicator 1 (b (k + 1))) ^ 2 with hS
+  set Q := ∏ k ∈ range m, A.indicator (1 : ℝ → ℝ) (x (k + 1)) with hQ
+  set S := ∑ k ∈ range m, ((Set.Ioi B).indicator (1 : ℝ → ℝ) (x (k + 1)) -
+    (Set.Ioi B).indicator 1 (a (k + 1))) ^ 2 with hS
   have hKg : 0 ≤ Kg := (continuous_of_abs_sub_le hg).1
-  have hM0 : 0 ≤ M := (abs_nonneg _).trans (hM 0)
-  have hind01 : ∀ x, 0 ≤ A.indicator (1 : ℝ → ℝ) x ∧ A.indicator (1 : ℝ → ℝ) x ≤ 1 := fun x => by
-    by_cases hx : x ∈ A
-    · simp [Set.indicator_of_mem hx]
-    · simp [Set.indicator_of_notMem hx]
-  have hP0 : 0 ≤ P := Finset.prod_nonneg fun k _ => (hind01 _).1
-  have hP1 : P ≤ 1 := Finset.prod_le_one (fun k _ => (hind01 _).1) fun k _ => (hind01 _).2
-  have hQ0 : 0 ≤ Q := Finset.prod_nonneg fun k _ => (hind01 _).1
-  have hQ1 : Q ≤ 1 := Finset.prod_le_one (fun k _ => (hind01 _).1) fun k _ => (hind01 _).2
+  have hP0 : 0 ≤ P := Finset.prod_nonneg fun k _ => (indicator_one_mem_Icc A _).1
+  have hP1 : P ≤ 1 := Finset.prod_le_one (fun k _ => (indicator_one_mem_Icc A _).1)
+    fun k _ => (indicator_one_mem_Icc A _).2
+  have hQ0 : 0 ≤ Q := Finset.prod_nonneg fun k _ => (indicator_one_mem_Icc A _).1
+  have hQ1 : Q ≤ 1 := Finset.prod_le_one (fun k _ => (indicator_one_mem_Icc A _).1)
+    fun k _ => (indicator_one_mem_Icc A _).2
   have hS0 : 0 ≤ S := Finset.sum_nonneg fun k _ => sq_nonneg _
   -- `|P − Q| ≤ I ≤ S` for some `I ∈ [0, 1]`
   obtain ⟨I, hI0, hI1, hPQ, hIS⟩ : ∃ I : ℝ, 0 ≤ I ∧ I ≤ 1 ∧ |P - Q| ≤ I ∧ I ≤ S := by
@@ -667,69 +686,117 @@ lemma barrierPayoff_sub_le {g : ℝ → ℝ} {Kg M : ℝ} (hg : ∀ x y, |g x - 
     · exact ⟨0, le_rfl, zero_le_one, by rw [hpq, sub_self, abs_zero], hS0⟩
     · refine ⟨1, zero_le_one, le_rfl, abs_le.2 ⟨by linarith, by linarith⟩, ?_⟩
       obtain ⟨k, hk, hne⟩ := prod_indicator_ne hpq
-      have hne' := barrier_indicator_ne hA hne
-      have h1 : ((Set.Ioi B).indicator (1 : ℝ → ℝ) (a (k + 1)) -
-          (Set.Ioi B).indicator 1 (b (k + 1))) ^ 2 = 1 := by
-        rcases digital_eq_zero_or_one B (a (k + 1)) with h1 | h1 <;>
-          rcases digital_eq_zero_or_one B (b (k + 1)) with h2 | h2 <;>
+      have hne' := barrier_indicator_ne hA (Ne.symm hne)
+      have h1 : ((Set.Ioi B).indicator (1 : ℝ → ℝ) (x (k + 1)) -
+          (Set.Ioi B).indicator 1 (a (k + 1))) ^ 2 = 1 := by
+        rcases digital_eq_zero_or_one B (x (k + 1)) with h1 | h1 <;>
+          rcases digital_eq_zero_or_one B (a (k + 1)) with h2 | h2 <;>
           rw [h1, h2] at hne' ⊢ <;> first | exact absurd rfl hne' | norm_num
       rw [← h1]
-      exact Finset.single_le_sum (f := fun k => ((Set.Ioi B).indicator (1 : ℝ → ℝ) (a (k + 1)) -
-        (Set.Ioi B).indicator 1 (b (k + 1))) ^ 2) (fun i _ => sq_nonneg _) hk
-  have e : barrierPayoff g A m a - barrierPayoff g A m b =
-      (g (a m) - g (b m)) * P + g (b m) * (P - Q) := by
+      exact Finset.single_le_sum (f := fun k => ((Set.Ioi B).indicator (1 : ℝ → ℝ) (x (k + 1)) -
+        (Set.Ioi B).indicator 1 (a (k + 1))) ^ 2) (fun i _ => sq_nonneg _) hk
+  have e : barrierPayoff g A m a - barrierPayoff g A m x =
+      (g (a m) - g (x m)) * P + g (x m) * (P - Q) := by
     simp only [barrierPayoff, hP, hQ]
     ring
-  have hu : |(g (a m) - g (b m)) * P| ≤ Kg * |a m - b m| := by
-    rw [abs_mul, abs_of_nonneg hP0]
-    calc |g (a m) - g (b m)| * P ≤ Kg * |a m - b m| * 1 :=
-          mul_le_mul (hg _ _) hP1 hP0 (by positivity)
+  have hu : |(g (a m) - g (x m)) * P| ≤ Kg * |x m - a m| := by
+    rw [abs_mul, abs_of_nonneg hP0, abs_sub_comm (x m)]
+    calc |g (a m) - g (x m)| * P ≤ Kg * |a m - x m| * 1 :=
+          mul_le_mul (hg _ _) hP1 hP0 (mul_nonneg hKg (abs_nonneg _))
       _ = _ := mul_one _
-  have hv : |g (b m) * (P - Q)| ≤ M * I := by
+  have hv : |g (x m) * (P - Q)| ≤ t * S + g (x m) ^ (2 * (n + 1)) / t ^ (2 * n + 1) := by
+    have h := mul_le_add_pow_div (abs_nonneg (g (x m))) hI0 hI1 ht (2 * n + 1)
+    rw [show 2 * n + 1 + 1 = 2 * (n + 1) by ring, (even_two_mul (n + 1)).pow_abs] at h
     rw [abs_mul]
-    exact mul_le_mul (hM _) hPQ (abs_nonneg _) hM0
+    nlinarith [mul_le_mul_of_nonneg_left hPQ (abs_nonneg (g (x m))),
+      mul_le_mul_of_nonneg_left hIS ht.le]
+  have hv2 : (g (x m) * (P - Q)) ^ 2 ≤ t * S + g (x m) ^ (2 * (n + 1)) / t ^ n := by
+    have h := mul_le_add_pow_div (sq_nonneg (g (x m))) hI0 hI1 ht n
+    rw [← pow_mul] at h
+    have hPQ2 : (P - Q) ^ 2 ≤ I := by
+      rw [← sq_abs]
+      nlinarith [mul_le_mul hPQ hPQ (abs_nonneg _) hI0, mul_le_mul_of_nonneg_left hI1 hI0]
+    rw [mul_pow]
+    nlinarith [mul_le_mul_of_nonneg_left hPQ2 (sq_nonneg (g (x m))),
+      mul_le_mul_of_nonneg_left hIS ht.le]
   rw [e]
   constructor
-  · calc |(g (a m) - g (b m)) * P + g (b m) * (P - Q)|
-        ≤ |(g (a m) - g (b m)) * P| + |g (b m) * (P - Q)| := abs_add_le _ _
-      _ ≤ Kg * |a m - b m| + M * I := add_le_add hu hv
-      _ ≤ _ := add_le_add le_rfl (mul_le_mul_of_nonneg_left hIS hM0)
-  · have h1 : ((g (a m) - g (b m)) * P) ^ 2 ≤ Kg ^ 2 * (a m - b m) ^ 2 := by
+  · calc |(g (a m) - g (x m)) * P + g (x m) * (P - Q)|
+        ≤ |(g (a m) - g (x m)) * P| + |g (x m) * (P - Q)| := abs_add_le _ _
+      _ ≤ _ := add_le_add hu hv
+  · have h1 : ((g (a m) - g (x m)) * P) ^ 2 ≤ Kg ^ 2 * (x m - a m) ^ 2 := by
       have := pow_le_pow_left₀ (abs_nonneg _) hu 2
       rwa [sq_abs, mul_pow Kg, sq_abs] at this
-    have h2 : (g (b m) * (P - Q)) ^ 2 ≤ M ^ 2 * S := by
-      have := pow_le_pow_left₀ (abs_nonneg _) hv 2
-      rw [sq_abs, mul_pow M] at this
-      have hII : I ^ 2 ≤ S := by nlinarith
-      nlinarith [sq_nonneg M]
-    nlinarith [sq_nonneg ((g (a m) - g (b m)) * P - g (b m) * (P - Q))]
+    nlinarith [sq_nonneg ((g (a m) - g (x m)) * P - g (x m) * (P - Q))]
 
-/-- The barrier payoff is bounded by `M` when `|g| ≤ M`. -/
-lemma abs_barrierPayoff_le {g : ℝ → ℝ} {M : ℝ} (hM : ∀ x, |g x| ≤ M) (A : Set ℝ) (m : ℕ)
-    (a : ℕ → ℝ) : |barrierPayoff g A m a| ≤ M := by
-  have hind01 : ∀ x, 0 ≤ A.indicator (1 : ℝ → ℝ) x ∧ A.indicator (1 : ℝ → ℝ) x ≤ 1 := fun x => by
-    by_cases hx : x ∈ A
-    · simp [Set.indicator_of_mem hx]
-    · simp [Set.indicator_of_notMem hx]
+/-- `|Φ(a)| ≤ |g(a_m)|` for the barrier payoff `Φ`, whose knock-out factor lies in `[0, 1]`
+(Giles 2015, §5.1, p. 33). -/
+lemma abs_barrierPayoff_le (g : ℝ → ℝ) (A : Set ℝ) (m : ℕ) (a : ℕ → ℝ) :
+    |barrierPayoff g A m a| ≤ |g (a m)| := by
   have hP0 : 0 ≤ ∏ k ∈ range m, A.indicator (1 : ℝ → ℝ) (a (k + 1)) :=
-    Finset.prod_nonneg fun k _ => (hind01 _).1
+    Finset.prod_nonneg fun k _ => (indicator_one_mem_Icc A _).1
   have hP1 : ∏ k ∈ range m, A.indicator (1 : ℝ → ℝ) (a (k + 1)) ≤ 1 :=
-    Finset.prod_le_one (fun k _ => (hind01 _).1) fun k _ => (hind01 _).2
+    Finset.prod_le_one (fun k _ => (indicator_one_mem_Icc A _).1)
+      fun k _ => (indicator_one_mem_Icc A _).2
   rw [barrierPayoff, abs_mul, abs_of_nonneg hP0]
-  calc |g (a m)| * ∏ k ∈ range m, A.indicator (1 : ℝ → ℝ) (a (k + 1)) ≤ M * 1 :=
-        mul_le_mul (hM _) hP1 hP0 ((abs_nonneg _).trans (hM 0))
-    _ = M := mul_one M
+  exact mul_le_of_le_one_right (abs_nonneg _) hP1
 
-/-- The difference of two barrier payoffs of measurable paths is square integrable when `g` is
-measurable and bounded (Giles 2015, §5.1; the correction of the barrier option). -/
-lemma memLp_barrierPayoff_sub {g : ℝ → ℝ} (hg : Measurable g) {M : ℝ} (hM : ∀ x, |g x| ≤ M)
-    {A : Set ℝ} (hA : MeasurableSet A) (m : ℕ) {U V : (ℕ → ℝ) → ℕ → ℝ} (hU : Measurable U)
-    (hV : Measurable V) :
-    MemLp (fun z => barrierPayoff g A m (U z) - barrierPayoff g A m (V z)) 2 stdNormalSeq :=
-  (MemLp.of_bound ((measurable_barrierPayoff hg hA m).comp hU).aestronglyMeasurable M
-      (Eventually.of_forall fun z => abs_barrierPayoff_le hM A m (U z))).sub
-    (MemLp.of_bound ((measurable_barrierPayoff hg hA m).comp hV).aestronglyMeasurable M
-      (Eventually.of_forall fun z => abs_barrierPayoff_le hM A m (V z)))
+/-- `|g(y)| ≤ |g(0)| + K_g |y|` for a Lipschitz `g` (the linear growth of the payoff, e.g. of the
+call `(y − K)⁺`; Giles 2015, §5.1, p. 33). -/
+lemma abs_le_of_lipschitz {g : ℝ → ℝ} {Kg : ℝ} (hg : ∀ x y, |g x - g y| ≤ Kg * |x - y|)
+    (y : ℝ) : |g y| ≤ |g 0| + Kg * |y| := by
+  have h1 := hg y 0
+  rw [sub_zero] at h1
+  have h2 := abs_sub_abs_le_abs_sub (g y) (g 0)
+  linarith
+
+/-- The barrier payoff of a measurable path whose value at `t_m` is square integrable is square
+integrable when `g` is Lipschitz (`|Φ(a)| ≤ |g(a_m)| ≤ |g(0)| + K_g |a_m|`; Giles 2015, §5.1,
+p. 33). -/
+lemma memLp_barrierPayoff {g : ℝ → ℝ} {Kg : ℝ} (hg : ∀ x y, |g x - g y| ≤ Kg * |x - y|)
+    {A : Set ℝ} (hA : MeasurableSet A) (m : ℕ) {W : (ℕ → ℝ) → ℕ → ℝ} (hW : Measurable W)
+    (hW2 : MemLp (fun z => W z m) 2 stdNormalSeq) :
+    MemLp (fun z => barrierPayoff g A m (W z)) 2 stdNormalSeq := by
+  have hgc := (continuous_of_abs_sub_le hg).2
+  have hKg := (continuous_of_abs_sub_le hg).1
+  refine ((memLp_const |g 0|).add (hW2.norm.const_mul Kg)).of_le
+    ((measurable_barrierPayoff hgc.measurable hA m).comp hW).aestronglyMeasurable
+    (Eventually.of_forall fun z => ?_)
+  have h0 : 0 ≤ |g 0| + Kg * |W z m| := add_nonneg (abs_nonneg _) (mul_nonneg hKg (abs_nonneg _))
+  simp only [Pi.add_apply, Real.norm_eq_abs]
+  rw [abs_of_nonneg h0]
+  exact (abs_barrierPayoff_le g A m (W z)).trans (abs_le_of_lipschitz hg _)
+
+/-- `g(X)^{2N}` is integrable if `X^{2N}` is and `g` is Lipschitz (`|g(x)| ≤ |g(0)| + K_g |x|` and
+`(a + b)^{2N} ≤ 2^{2N−1}(a^{2N} + b^{2N})`; the moments of the payoff `g(S_T)`, Giles 2015, §5.1,
+p. 33). -/
+lemma integrable_lipschitz_pow {g : ℝ → ℝ} {Kg : ℝ} (hg : ∀ x y, |g x - g y| ≤ Kg * |x - y|)
+    {X : (ℕ → ℝ) → ℝ} (hX : Measurable X) (N : ℕ)
+    (hXN : Integrable (fun z => X z ^ (2 * N)) stdNormalSeq) :
+    Integrable (fun z => g (X z) ^ (2 * N)) stdNormalSeq := by
+  have hgc := (continuous_of_abs_sub_le hg).2
+  have hKg := (continuous_of_abs_sub_le hg).1
+  refine (((integrable_const (|g 0| ^ (2 * N))).add (hXN.const_mul (Kg ^ (2 * N)))).const_mul
+    (2 ^ (2 * N - 1))).mono' ((hgc.measurable.comp hX).pow_const _).aestronglyMeasurable
+    (Eventually.of_forall fun z => ?_)
+  rw [Real.norm_eq_abs, abs_pow]
+  calc |g (X z)| ^ (2 * N) ≤ (|g 0| + Kg * |X z|) ^ (2 * N) :=
+        pow_le_pow_left₀ (abs_nonneg _) (abs_le_of_lipschitz hg _) _
+    _ ≤ 2 ^ (2 * N - 1) * (|g 0| ^ (2 * N) + (Kg * |X z|) ^ (2 * N)) :=
+        add_pow_le (abs_nonneg _) (mul_nonneg hKg (abs_nonneg _)) _
+    _ = 2 ^ (2 * N - 1) * (|g 0| ^ (2 * N) + Kg ^ (2 * N) * X z ^ (2 * N)) := by
+        rw [mul_pow, (even_two_mul N).pow_abs (X z)]
+
+/-- The exact solution at a monitoring date has moments of every order: `(S_{t_k})^N` is integrable
+(a product of `k 2^j` independent lognormal factors, `gbmMonExact_eq_prod`; Giles 2015, §5.1). -/
+lemma integrable_gbmMonExact_pow (r σ T s₀ : ℝ) (m j k N : ℕ) :
+    Integrable (fun z => gbmMonExact r σ T s₀ m j z k ^ N) stdNormalSeq := by
+  have e : (fun z => gbmMonExact r σ T s₀ m j z k ^ N) = fun z => s₀ ^ N *
+      (∏ i ∈ range (k * 2 ^ j), gbmExpFactor r σ (T / (m * 2 ^ j)) (z i)) ^ N :=
+    funext fun z => by rw [gbmMonExact_eq_prod, mul_pow]
+  rw [e]
+  exact (integrable_prod_range_pow (measurable_gbmExpFactor r σ _)
+    (integrable_gbmExpFactor_pow r σ _ N) _).const_mul _
 
 /-- The law of `∑_{i<n} Z_i` under `N(0,1)^{⊗ℕ}` is `N(0, n)` (the Brownian value
 `W_{t_n} = √h ∑_{i<n} Z_i`, Giles 2015, §5.1). -/
@@ -836,214 +903,271 @@ lemma gbmMonExact_smallBall (r σ : ℝ) {s₀ T : ℝ} (hs₀ : s₀ ≠ 0) (h�
 
 section BarrierAbstract
 
-variable {g : ℝ → ℝ} {Kg M : ℝ} {A : Set ℝ} {B : ℝ} {m : ℕ} {X Y : ℕ → (ℕ → ℝ) → ℕ → ℝ}
+variable {g : ℝ → ℝ} {Kg : ℝ} {A : Set ℝ} {B : ℝ} {m : ℕ}
 
-/-- **The correction variance of the barrier option from the strong error at `t_m` and the
-mismatch probabilities at the dates** (Giles 2015, §5.1, p. 33, l. 1436–1441 at every monitoring
-date, and "`V_ℓ ≤ 2(V[P − P_ℓ] + V[P − P_{ℓ−1}])`", p. 29).  Let `X_j` be level-consistent exact
-paths (`X_j ∘ pairAvg = X_{j+1}`) and `Y_j` approximations with
-`E[(X_{j,t_m} − Y_{j,t_m})²] ≤ e₂(j)` and `P(1_{X_{j,t_{k+1}} > B} ≠ 1_{Y_{j,t_{k+1}} > B}) ≤ e₁(j)`
-for `k < m`.  Then the correction `Φ(Y_{j+1}) − Φ(Y_j ∘ pairAvg)` of the barrier payoff `Φ`
-(`barrierPayoff`) is square integrable with variance at most
-`4K_g² (e₂(j+1) + e₂(j)) + 2M² m (e₁(j+1) + e₁(j))` (`barrierPayoff_sub_le`,
-`sq_digital_sub_le_add`, `integral_sq_digital_sub`). -/
-lemma barrier_variance_le (hg : ∀ x y, |g x - g y| ≤ Kg * |x - y|) (hM : ∀ x, |g x| ≤ M)
-    (hA : A = Set.Iic B ∨ A = Set.Ioi B) (hXm : ∀ j, Measurable (X j))
-    (hYm : ∀ j, Measurable (Y j)) (hX : ∀ j, MemLp (fun z => X j z m) 2 stdNormalSeq)
-    (hY : ∀ j, MemLp (fun z => Y j z m) 2 stdNormalSeq)
-    (hpair : ∀ j z, X j (pairAvg z) = X (j + 1) z) {e₂ e₁ : ℕ → ℝ}
-    (hs2 : ∀ j, ∫ z, (X j z m - Y j z m) ^ 2 ∂stdNormalSeq ≤ e₂ j)
-    (hmis : ∀ j k, k < m → stdNormalSeq.real {z | (Set.Ioi B).indicator (1 : ℝ → ℝ)
-      (X j z (k + 1)) ≠ (Set.Ioi B).indicator 1 (Y j z (k + 1))} ≤ e₁ j) (j : ℕ) :
-    MemLp (fun z => barrierPayoff g A m (Y (j + 1) z) - barrierPayoff g A m (Y j (pairAvg z)))
-        2 stdNormalSeq ∧
-    variance (fun z => barrierPayoff g A m (Y (j + 1) z) - barrierPayoff g A m (Y j (pairAvg z)))
-        stdNormalSeq ≤
-      4 * Kg ^ 2 * (e₂ (j + 1) + e₂ j) + 2 * M ^ 2 * (m * (e₁ (j + 1) + e₁ j)) := by
-  have hgc := (continuous_of_abs_sub_le hg).2
-  have hΦm := measurable_barrierPayoff hgc.measurable (measurableSet_barrier hA) m
-  have hpm := measurePreserving_pairAvg
-  refine ⟨memLp_barrierPayoff_sub hgc.measurable hM (measurableSet_barrier hA) m (hYm (j + 1))
-    ((hYm j).comp hpm.measurable), ?_⟩
-  have hM0 : 0 ≤ M := (abs_nonneg _).trans (hM 0)
-  have hXk : ∀ i k, Measurable fun z => X i z k := fun i k =>
-    (measurable_pi_apply k).comp (hXm i)
-  have hYk : ∀ i k, Measurable fun z => Y i z k := fun i k =>
-    (measurable_pi_apply k).comp (hYm i)
-  have hm : AEStronglyMeasurable (fun z => barrierPayoff g A m (Y (j + 1) z) -
-      barrierPayoff g A m (Y j (pairAvg z))) stdNormalSeq :=
-    ((hΦm.comp (hYm (j + 1))).sub ((hΦm.comp (hYm j)).comp hpm.measurable)).aestronglyMeasurable
-  refine (variance_le_expectation_sq hm).trans ?_
-  simp only [Pi.pow_apply]
-  -- integrability of the four families of terms
-  have hF₁ : Integrable (fun z => (X (j + 1) z m - Y (j + 1) z m) ^ 2) stdNormalSeq :=
-    ((hX (j + 1)).sub (hY (j + 1))).integrable_sq
-  have hF₀' : Integrable (fun z => (X j z m - Y j z m) ^ 2) stdNormalSeq :=
-    ((hX j).sub (hY j)).integrable_sq
-  have hF₀ : Integrable (fun z => (X j (pairAvg z) m - Y j (pairAvg z) m) ^ 2) stdNormalSeq :=
-    (hpm.integrable_comp hF₀'.aestronglyMeasurable).2 hF₀'
-  have hG : ∀ i k, Integrable (fun z => ((Set.Ioi B).indicator (1 : ℝ → ℝ) (X i z (k + 1)) -
-      (Set.Ioi B).indicator 1 (Y i z (k + 1))) ^ 2) stdNormalSeq := fun i k =>
-    ((memLp_digital (hXk i (k + 1)) B).sub (memLp_digital (hYk i (k + 1)) B)).integrable_sq
-  have hG₀ : ∀ k, Integrable (fun z => ((Set.Ioi B).indicator (1 : ℝ → ℝ)
-      (X j (pairAvg z) (k + 1)) - (Set.Ioi B).indicator 1 (Y j (pairAvg z) (k + 1))) ^ 2)
-      stdNormalSeq := fun k =>
-    (hpm.integrable_comp (hG j k).aestronglyMeasurable).2 (hG j k)
-  -- the pointwise bound
-  have hpt : ∀ z, (barrierPayoff g A m (Y (j + 1) z) - barrierPayoff g A m (Y j (pairAvg z))) ^ 2
-      ≤ 4 * Kg ^ 2 * ((X (j + 1) z m - Y (j + 1) z m) ^ 2 +
-          (X j (pairAvg z) m - Y j (pairAvg z) m) ^ 2) +
-        2 * M ^ 2 * ∑ k ∈ range m, (((Set.Ioi B).indicator (1 : ℝ → ℝ) (X (j + 1) z (k + 1)) -
-          (Set.Ioi B).indicator 1 (Y (j + 1) z (k + 1))) ^ 2 +
-          ((Set.Ioi B).indicator (1 : ℝ → ℝ) (X j (pairAvg z) (k + 1)) -
-          (Set.Ioi B).indicator 1 (Y j (pairAvg z) (k + 1))) ^ 2) := fun z => by
-    have h1 := (barrierPayoff_sub_le hg hM hA m (Y (j + 1) z) (Y j (pairAvg z))).2
-    rw [hpair j z]
-    have h2 : (Y (j + 1) z m - Y j (pairAvg z) m) ^ 2 ≤
-        2 * (X (j + 1) z m - Y (j + 1) z m) ^ 2 + 2 * (X (j + 1) z m - Y j (pairAvg z) m) ^ 2 := by
-      nlinarith [sq_nonneg (X (j + 1) z m - Y (j + 1) z m + (X (j + 1) z m - Y j (pairAvg z) m))]
-    have h3 : ∑ k ∈ range m, ((Set.Ioi B).indicator (1 : ℝ → ℝ) (Y (j + 1) z (k + 1)) -
-        (Set.Ioi B).indicator 1 (Y j (pairAvg z) (k + 1))) ^ 2 ≤
-        ∑ k ∈ range m, (((Set.Ioi B).indicator (1 : ℝ → ℝ) (X (j + 1) z (k + 1)) -
-          (Set.Ioi B).indicator 1 (Y (j + 1) z (k + 1))) ^ 2 +
-          ((Set.Ioi B).indicator (1 : ℝ → ℝ) (X (j + 1) z (k + 1)) -
-          (Set.Ioi B).indicator 1 (Y j (pairAvg z) (k + 1))) ^ 2) :=
-      Finset.sum_le_sum fun k _ => sq_digital_sub_le_add B _ _ _
-    have hK2 : 0 ≤ 2 * Kg ^ 2 := by positivity
-    have hM2 : 0 ≤ 2 * M ^ 2 := by positivity
-    nlinarith [mul_le_mul_of_nonneg_left h2 hK2, mul_le_mul_of_nonneg_left h3 hM2]
-  have hR : Integrable (fun z => 4 * Kg ^ 2 * ((X (j + 1) z m - Y (j + 1) z m) ^ 2 +
-          (X j (pairAvg z) m - Y j (pairAvg z) m) ^ 2) +
-        2 * M ^ 2 * ∑ k ∈ range m, (((Set.Ioi B).indicator (1 : ℝ → ℝ) (X (j + 1) z (k + 1)) -
-          (Set.Ioi B).indicator 1 (Y (j + 1) z (k + 1))) ^ 2 +
-          ((Set.Ioi B).indicator (1 : ℝ → ℝ) (X j (pairAvg z) (k + 1)) -
-          (Set.Ioi B).indicator 1 (Y j (pairAvg z) (k + 1))) ^ 2)) stdNormalSeq :=
-    ((hF₁.add hF₀).const_mul _).add ((integrable_finsetSum _ fun k _ =>
-      (hG (j + 1) k).add (hG₀ k)).const_mul _)
-  refine (integral_mono_of_nonneg (Eventually.of_forall fun z => sq_nonneg _) hR
-    (Eventually.of_forall hpt)).trans ?_
-  -- the integrals of the terms
-  have hI₀ : ∫ z, (X j (pairAvg z) m - Y j (pairAvg z) m) ^ 2 ∂stdNormalSeq ≤ e₂ j := by
-    rw [integral_comp_of_measurePreserving hpm hF₀'.aestronglyMeasurable]
-    exact hs2 j
-  have hJ : ∀ i k, k < m → ∫ z, ((Set.Ioi B).indicator (1 : ℝ → ℝ) (X i z (k + 1)) -
-      (Set.Ioi B).indicator 1 (Y i z (k + 1))) ^ 2 ∂stdNormalSeq ≤ e₁ i := fun i k hk => by
-    rw [integral_sq_digital_sub (hXk i (k + 1)) (hYk i (k + 1)) B]
-    exact hmis i k hk
-  have hJ₀ : ∀ k, k < m → ∫ z, ((Set.Ioi B).indicator (1 : ℝ → ℝ) (X j (pairAvg z) (k + 1)) -
-      (Set.Ioi B).indicator 1 (Y j (pairAvg z) (k + 1))) ^ 2 ∂stdNormalSeq ≤ e₁ j :=
-    fun k hk => by
-    rw [integral_comp_of_measurePreserving hpm (hG j k).aestronglyMeasurable]
-    exact hJ j k hk
-  have hF : Integrable (fun z => (X (j + 1) z m - Y (j + 1) z m) ^ 2 +
-      (X j (pairAvg z) m - Y j (pairAvg z) m) ^ 2) stdNormalSeq := hF₁.add hF₀
-  have hGk : ∀ k, Integrable (fun z => ((Set.Ioi B).indicator (1 : ℝ → ℝ) (X (j + 1) z (k + 1)) -
-      (Set.Ioi B).indicator 1 (Y (j + 1) z (k + 1))) ^ 2 +
-      ((Set.Ioi B).indicator (1 : ℝ → ℝ) (X j (pairAvg z) (k + 1)) -
-      (Set.Ioi B).indicator 1 (Y j (pairAvg z) (k + 1))) ^ 2) stdNormalSeq := fun k =>
-    (hG (j + 1) k).add (hG₀ k)
-  rw [integral_add (hF.const_mul _) ((integrable_finsetSum _ fun k _ => hGk k).const_mul _),
-    integral_const_mul, integral_const_mul, integral_add hF₁ hF₀,
-    integral_finsetSum _ fun k _ => hGk k]
-  have hsum : ∑ k ∈ range m, ∫ z, (((Set.Ioi B).indicator (1 : ℝ → ℝ) (X (j + 1) z (k + 1)) -
-          (Set.Ioi B).indicator 1 (Y (j + 1) z (k + 1))) ^ 2 +
-          ((Set.Ioi B).indicator (1 : ℝ → ℝ) (X j (pairAvg z) (k + 1)) -
-          (Set.Ioi B).indicator 1 (Y j (pairAvg z) (k + 1))) ^ 2) ∂stdNormalSeq ≤
-      m * (e₁ (j + 1) + e₁ j) := by
-    calc _ ≤ ∑ _k ∈ range m, (e₁ (j + 1) + e₁ j) := Finset.sum_le_sum fun k hk => by
-          rw [integral_add (hG (j + 1) k) (hG₀ k)]
-          exact add_le_add (hJ (j + 1) k (Finset.mem_range.1 hk))
-            (hJ₀ k (Finset.mem_range.1 hk))
-      _ = _ := by rw [Finset.sum_const, Finset.card_range, nsmul_eq_mul]
-  have hK4 : 0 ≤ 4 * Kg ^ 2 := by positivity
-  have hM2 : 0 ≤ 2 * M ^ 2 := by positivity
-  exact add_le_add (mul_le_mul_of_nonneg_left (add_le_add (hs2 (j + 1)) hI₀) hK4)
-    (mul_le_mul_of_nonneg_left hsum hM2)
-
-/-- **The bias of the barrier option from the strong error at `t_m` and the mismatch
-probabilities at the dates** (Giles 2015, §5.1, p. 33; condition (i) of Theorem 1, §2.1, p. 6).
-In the setting of `barrier_variance_le`,
-`|E[Φ(Y_j)] − E[Φ(X_0)]| ≤ K_g √(e₂(j)) + M m e₁(j)`: the law of `X_j` does not depend on `j`
-(`integral_comp_monLevel`), `E|X_{j,t_m} − Y_{j,t_m}| ≤ √(e₂(j))` (Jensen), and the digital
-mismatches at the dates cost at most `M` each (`barrierPayoff_sub_le`). -/
-lemma barrier_bias_le (hg : ∀ x y, |g x - g y| ≤ Kg * |x - y|) (hM : ∀ x, |g x| ≤ M)
-    (hA : A = Set.Iic B ∨ A = Set.Ioi B) (hXm : ∀ j, Measurable (X j))
-    (hYm : ∀ j, Measurable (Y j)) (hX : ∀ j, MemLp (fun z => X j z m) 2 stdNormalSeq)
-    (hY : ∀ j, MemLp (fun z => Y j z m) 2 stdNormalSeq)
-    (hpair : ∀ j z, X j (pairAvg z) = X (j + 1) z) {e₂ e₁ : ℕ → ℝ}
-    (hs2 : ∀ j, ∫ z, (X j z m - Y j z m) ^ 2 ∂stdNormalSeq ≤ e₂ j)
-    (hmis : ∀ j k, k < m → stdNormalSeq.real {z | (Set.Ioi B).indicator (1 : ℝ → ℝ)
-      (X j z (k + 1)) ≠ (Set.Ioi B).indicator 1 (Y j z (k + 1))} ≤ e₁ j) (j : ℕ) :
-    |∫ z, barrierPayoff g A m (Y j z) ∂stdNormalSeq -
-        ∫ z, barrierPayoff g A m (X 0 z) ∂stdNormalSeq| ≤
-      Kg * Real.sqrt (e₂ j) + M * (m * e₁ j) := by
-  have hKg : 0 ≤ Kg := (continuous_of_abs_sub_le hg).1
-  have hgc := (continuous_of_abs_sub_le hg).2
-  have hΦm := measurable_barrierPayoff hgc.measurable (measurableSet_barrier hA) m
-  have hM0 : 0 ≤ M := (abs_nonneg _).trans (hM 0)
-  have hXk : ∀ k, Measurable fun z => X j z k := fun k => (measurable_pi_apply k).comp (hXm j)
-  have hYk : ∀ k, Measurable fun z => Y j z k := fun k => (measurable_pi_apply k).comp (hYm j)
-  have hint : ∀ W : (ℕ → ℝ) → ℕ → ℝ, Measurable W →
-      Integrable (fun z => barrierPayoff g A m (W z)) stdNormalSeq := fun W hW =>
-    Integrable.of_bound (hΦm.comp hW).aestronglyMeasurable M
-      (Eventually.of_forall fun z => abs_barrierPayoff_le hM A m (W z))
-  rw [← integral_comp_monLevel hpair hXm hΦm j,
-    ← integral_sub (hint _ (hYm j)) (hint _ (hXm j))]
-  refine abs_integral_le_integral_abs.trans ?_
-  have hG : ∀ k, Integrable (fun z => ((Set.Ioi B).indicator (1 : ℝ → ℝ) (X j z (k + 1)) -
-      (Set.Ioi B).indicator 1 (Y j z (k + 1))) ^ 2) stdNormalSeq := fun k =>
+/-- **The mean square and the mean absolute error of the barrier payoff of an approximation**
+(Giles 2015, §5.1, p. 33, l. 1436–1441 at every monitoring date).  Let `X` (exact) and `Y`
+(approximate) be measurable paths with `X_{t_m}`, `Y_{t_m}` square integrable,
+`g(X_{t_m})^{2n+2}` integrable, `t > 0`, and `p_k = P(1_{X_{t_{k+1}} > B} ≠ 1_{Y_{t_{k+1}} > B})`.
+Then, with `G = E[g(X_{t_m})^{2n+2}]`,
+`E[(Φ(Y) − Φ(X))²] ≤ 2K_g² E[(X_{t_m} − Y_{t_m})²] + 2(t ∑_{k<m} p_k + G/tⁿ)` and
+`E|Φ(Y) − Φ(X)| ≤ K_g √(E[(X_{t_m} − Y_{t_m})²]) + t ∑_{k<m} p_k + G/t^{2n+1}`
+(`barrierPayoff_sub_le`, `integral_sq_digital_sub`).  The truncation level `t` takes the place of
+Hölder's inequality `E[g(X)² 1_{mismatch}] ≤ ‖g(X)‖²_{2p} P(mismatch)^{1−1/p}` for unbounded `g`. -/
+lemma barrier_err_le (hg : ∀ x y, |g x - g y| ≤ Kg * |x - y|)
+    (hA : A = Set.Iic B ∨ A = Set.Ioi B) {X Y : (ℕ → ℝ) → ℕ → ℝ} (hXm : Measurable X)
+    (hYm : Measurable Y) (hX : MemLp (fun z => X z m) 2 stdNormalSeq)
+    (hY : MemLp (fun z => Y z m) 2 stdNormalSeq) (n : ℕ)
+    (hG : Integrable (fun z => g (X z m) ^ (2 * (n + 1))) stdNormalSeq) {t : ℝ} (ht : 0 < t) :
+    ∫ z, (barrierPayoff g A m (Y z) - barrierPayoff g A m (X z)) ^ 2 ∂stdNormalSeq ≤
+      2 * Kg ^ 2 * ∫ z, (X z m - Y z m) ^ 2 ∂stdNormalSeq +
+        2 * (t * ∑ k ∈ range m, stdNormalSeq.real {z | (Set.Ioi B).indicator (1 : ℝ → ℝ)
+          (X z (k + 1)) ≠ (Set.Ioi B).indicator 1 (Y z (k + 1))} +
+          (∫ z, g (X z m) ^ (2 * (n + 1)) ∂stdNormalSeq) / t ^ n) ∧
+    ∫ z, |barrierPayoff g A m (Y z) - barrierPayoff g A m (X z)| ∂stdNormalSeq ≤
+      Kg * Real.sqrt (∫ z, (X z m - Y z m) ^ 2 ∂stdNormalSeq) +
+        (t * ∑ k ∈ range m, stdNormalSeq.real {z | (Set.Ioi B).indicator (1 : ℝ → ℝ)
+          (X z (k + 1)) ≠ (Set.Ioi B).indicator 1 (Y z (k + 1))} +
+          (∫ z, g (X z m) ^ (2 * (n + 1)) ∂stdNormalSeq) / t ^ (2 * n + 1)) := by
+  have hKg := (continuous_of_abs_sub_le hg).1
+  have hXk : ∀ k, Measurable fun z => X z k := fun k => (measurable_pi_apply k).comp hXm
+  have hYk : ∀ k, Measurable fun z => Y z k := fun k => (measurable_pi_apply k).comp hYm
+  -- the number of dates with a digital mismatch
+  have hDk : ∀ k, Integrable (fun z => ((Set.Ioi B).indicator (1 : ℝ → ℝ) (X z (k + 1)) -
+      (Set.Ioi B).indicator 1 (Y z (k + 1))) ^ 2) stdNormalSeq := fun k =>
     ((memLp_digital (hXk (k + 1)) B).sub (memLp_digital (hYk (k + 1)) B)).integrable_sq
-  have hD : MemLp (fun z => X j z m - Y j z m) 2 stdNormalSeq := (hX j).sub (hY j)
-  have hIabs : Integrable (fun z => |X j z m - Y j z m|) stdNormalSeq :=
+  have hS : Integrable (fun z => ∑ k ∈ range m, ((Set.Ioi B).indicator (1 : ℝ → ℝ)
+      (X z (k + 1)) - (Set.Ioi B).indicator 1 (Y z (k + 1))) ^ 2) stdNormalSeq :=
+    integrable_finsetSum _ fun k _ => hDk k
+  have hSint : ∫ z, ∑ k ∈ range m, ((Set.Ioi B).indicator (1 : ℝ → ℝ) (X z (k + 1)) -
+      (Set.Ioi B).indicator 1 (Y z (k + 1))) ^ 2 ∂stdNormalSeq =
+      ∑ k ∈ range m, stdNormalSeq.real {z | (Set.Ioi B).indicator (1 : ℝ → ℝ)
+          (X z (k + 1)) ≠ (Set.Ioi B).indicator 1 (Y z (k + 1))} := by
+    rw [integral_finsetSum _ fun k _ => hDk k]
+    exact Finset.sum_congr rfl fun k _ => integral_sq_digital_sub (hXk (k + 1)) (hYk (k + 1)) B
+  have hD : MemLp (fun z => X z m - Y z m) 2 stdNormalSeq := hX.sub hY
+  have hD2 : Integrable (fun z => (X z m - Y z m) ^ 2) stdNormalSeq := hD.integrable_sq
+  have hDabs : Integrable (fun z => |X z m - Y z m|) stdNormalSeq :=
     (hD.integrable one_le_two).abs
-  have hpt : ∀ z, |barrierPayoff g A m (Y j z) - barrierPayoff g A m (X j z)| ≤
-      Kg * |X j z m - Y j z m| + M * ∑ k ∈ range m,
-        ((Set.Ioi B).indicator (1 : ℝ → ℝ) (X j z (k + 1)) -
-          (Set.Ioi B).indicator 1 (Y j z (k + 1))) ^ 2 := fun z => by
-    rw [abs_sub_comm]
-    exact (barrierPayoff_sub_le hg hM hA m (X j z) (Y j z)).1
-  have hR : Integrable (fun z => Kg * |X j z m - Y j z m| + M * ∑ k ∈ range m,
-        ((Set.Ioi B).indicator (1 : ℝ → ℝ) (X j z (k + 1)) -
-          (Set.Ioi B).indicator 1 (Y j z (k + 1))) ^ 2) stdNormalSeq :=
-    (hIabs.const_mul Kg).add ((integrable_finsetSum _ fun k _ => hG k).const_mul M)
-  refine (integral_mono_of_nonneg (Eventually.of_forall fun z => abs_nonneg _) hR
-    (Eventually.of_forall hpt)).trans ?_
-  rw [integral_add (hIabs.const_mul Kg) ((integrable_finsetSum _ fun k _ => hG k).const_mul M),
-    integral_const_mul, integral_const_mul, integral_finsetSum _ fun k _ => hG k]
-  have habs : ∫ z, |X j z m - Y j z m| ∂stdNormalSeq ≤ Real.sqrt (e₂ j) := by
-    have h1 := sq_integral_le_integral_sq_of_memLp (X := fun z => |X j z m - Y j z m|) hD.norm
-    simp only [sq_abs] at h1
-    exact (le_abs_self _).trans (Real.abs_le_sqrt (h1.trans (hs2 j)))
-  have hsum : ∑ k ∈ range m, ∫ z, ((Set.Ioi B).indicator (1 : ℝ → ℝ) (X j z (k + 1)) -
-      (Set.Ioi B).indicator 1 (Y j z (k + 1))) ^ 2 ∂stdNormalSeq ≤ m * e₁ j := by
-    calc _ ≤ ∑ _k ∈ range m, e₁ j := Finset.sum_le_sum fun k hk => by
-          rw [integral_sq_digital_sub (hXk (k + 1)) (hYk (k + 1)) B]
-          exact hmis j k (Finset.mem_range.1 hk)
+  have hSt : Integrable (fun z => t * ∑ k ∈ range m, ((Set.Ioi B).indicator (1 : ℝ → ℝ)
+      (X z (k + 1)) - (Set.Ioi B).indicator 1 (Y z (k + 1))) ^ 2) stdNormalSeq := hS.const_mul t
+  have hGt : ∀ c : ℝ, Integrable (fun z => g (X z m) ^ (2 * (n + 1)) / c) stdNormalSeq :=
+    fun c => hG.div_const c
+  have hSG : ∀ c : ℝ, Integrable (fun z => t * ∑ k ∈ range m, ((Set.Ioi B).indicator
+      (1 : ℝ → ℝ) (X z (k + 1)) - (Set.Ioi B).indicator 1 (Y z (k + 1))) ^ 2 +
+      g (X z m) ^ (2 * (n + 1)) / c) stdNormalSeq := fun c => hSt.add (hGt c)
+  have hSGi : ∀ c : ℝ, ∫ z, (t * ∑ k ∈ range m, ((Set.Ioi B).indicator (1 : ℝ → ℝ)
+      (X z (k + 1)) - (Set.Ioi B).indicator 1 (Y z (k + 1))) ^ 2 +
+      g (X z m) ^ (2 * (n + 1)) / c) ∂stdNormalSeq =
+      t * ∑ k ∈ range m, stdNormalSeq.real {z | (Set.Ioi B).indicator (1 : ℝ → ℝ)
+          (X z (k + 1)) ≠ (Set.Ioi B).indicator 1 (Y z (k + 1))} +
+        (∫ z, g (X z m) ^ (2 * (n + 1)) ∂stdNormalSeq) / c := fun c => by
+    rw [integral_add hSt (hGt c), integral_const_mul, integral_div, hSint]
+  constructor
+  · have hR1 : Integrable (fun z => 2 * Kg ^ 2 * (X z m - Y z m) ^ 2) stdNormalSeq :=
+      hD2.const_mul _
+    have hR2 : Integrable (fun z => 2 * (t * ∑ k ∈ range m, ((Set.Ioi B).indicator (1 : ℝ → ℝ)
+        (X z (k + 1)) - (Set.Ioi B).indicator 1 (Y z (k + 1))) ^ 2 +
+        g (X z m) ^ (2 * (n + 1)) / t ^ n)) stdNormalSeq := (hSG _).const_mul 2
+    have hR : Integrable (fun z => 2 * Kg ^ 2 * (X z m - Y z m) ^ 2 +
+        2 * (t * ∑ k ∈ range m, ((Set.Ioi B).indicator (1 : ℝ → ℝ) (X z (k + 1)) -
+          (Set.Ioi B).indicator 1 (Y z (k + 1))) ^ 2 + g (X z m) ^ (2 * (n + 1)) / t ^ n))
+        stdNormalSeq := hR1.add hR2
+    refine (integral_mono_of_nonneg (Eventually.of_forall fun z => sq_nonneg _) hR
+      (Eventually.of_forall fun z => (barrierPayoff_sub_le hg hA m n ht (Y z) (X z)).2)).trans
+      (le_of_eq ?_)
+    rw [integral_add hR1 hR2, integral_const_mul, integral_const_mul, hSGi]
+  · have hR1 : Integrable (fun z => Kg * |X z m - Y z m|) stdNormalSeq := hDabs.const_mul _
+    have hR : Integrable (fun z => Kg * |X z m - Y z m| +
+        (t * ∑ k ∈ range m, ((Set.Ioi B).indicator (1 : ℝ → ℝ) (X z (k + 1)) -
+          (Set.Ioi B).indicator 1 (Y z (k + 1))) ^ 2 +
+          g (X z m) ^ (2 * (n + 1)) / t ^ (2 * n + 1))) stdNormalSeq := hR1.add (hSG _)
+    refine (integral_mono_of_nonneg (Eventually.of_forall fun z => abs_nonneg _) hR
+      (Eventually.of_forall fun z => (barrierPayoff_sub_le hg hA m n ht (Y z) (X z)).1)).trans ?_
+    rw [integral_add hR1 (hSG _), integral_const_mul, hSGi]
+    have habs : ∫ z, |X z m - Y z m| ∂stdNormalSeq ≤
+        Real.sqrt (∫ z, (X z m - Y z m) ^ 2 ∂stdNormalSeq) := by
+      have h1 := sq_integral_le_integral_sq_of_memLp (X := fun z => |X z m - Y z m|) hD.norm
+      simp only [sq_abs] at h1
+      exact (le_abs_self _).trans (Real.abs_le_sqrt h1)
+    linarith [mul_le_mul_of_nonneg_left habs hKg]
+
+/-- **`V_ℓ ≤ 2(E[(P̂_ℓ − P)²] + E[(P̂_{ℓ−1} − P)²])` for a fine/coarse pair coupled by `pairAvg`**
+(Giles 2015, §5.1, p. 29: "`V_ℓ ≤ 2(V[P − P_ℓ] + V[P − P_{ℓ−1}])`").  For level-consistent exact
+paths `X_j` (`X_j ∘ pairAvg = X_{j+1}`), approximations `Y_j` and a measurable `Φ` with `Φ(X_j)`,
+`Φ(Y_j)` square integrable, the correction `Φ(Y_{j+1}) − Φ(Y_j ∘ pairAvg)` is square integrable
+with variance at most `2E[(Φ(Y_{j+1}) − Φ(X_{j+1}))²] + 2E[(Φ(Y_j) − Φ(X_j))²]`
+(`measurePreserving_pairAvg`). -/
+lemma variance_pairAvg_corr_le {Φ : (ℕ → ℝ) → ℝ} {X Y : ℕ → (ℕ → ℝ) → ℕ → ℝ}
+    (hX : ∀ j, MemLp (fun z => Φ (X j z)) 2 stdNormalSeq)
+    (hY : ∀ j, MemLp (fun z => Φ (Y j z)) 2 stdNormalSeq)
+    (hpair : ∀ j z, X j (pairAvg z) = X (j + 1) z) (j : ℕ) :
+    MemLp (fun z => Φ (Y (j + 1) z) - Φ (Y j (pairAvg z))) 2 stdNormalSeq ∧
+    variance (fun z => Φ (Y (j + 1) z) - Φ (Y j (pairAvg z))) stdNormalSeq ≤
+      2 * ∫ z, (Φ (Y (j + 1) z) - Φ (X (j + 1) z)) ^ 2 ∂stdNormalSeq +
+        2 * ∫ z, (Φ (Y j z) - Φ (X j z)) ^ 2 ∂stdNormalSeq := by
+  have hpm := measurePreserving_pairAvg
+  have hYc : MemLp (fun z => Φ (Y j (pairAvg z))) 2 stdNormalSeq :=
+    (hY j).comp_measurePreserving hpm
+  have hXc : MemLp (fun z => Φ (X j (pairAvg z))) 2 stdNormalSeq :=
+    (hX j).comp_measurePreserving hpm
+  refine ⟨(hY (j + 1)).sub hYc, ?_⟩
+  refine (variance_le_expectation_sq ((hY (j + 1)).sub hYc).aestronglyMeasurable).trans ?_
+  simp only [Pi.pow_apply]
+  have h1 : Integrable (fun z => (Φ (Y (j + 1) z) - Φ (X (j + 1) z)) ^ 2) stdNormalSeq :=
+    ((hY (j + 1)).sub (hX (j + 1))).integrable_sq
+  have h0 : Integrable (fun z => (Φ (Y j z) - Φ (X j z)) ^ 2) stdNormalSeq :=
+    ((hY j).sub (hX j)).integrable_sq
+  have h0c : Integrable (fun z => (Φ (Y j (pairAvg z)) - Φ (X j (pairAvg z))) ^ 2)
+      stdNormalSeq :=
+    (hYc.sub hXc).integrable_sq
+  have hpt : ∀ z, (Φ (Y (j + 1) z) - Φ (Y j (pairAvg z))) ^ 2 ≤
+      2 * (Φ (Y (j + 1) z) - Φ (X (j + 1) z)) ^ 2 +
+        2 * (Φ (Y j (pairAvg z)) - Φ (X j (pairAvg z))) ^ 2 := fun z => by
+    rw [hpair j z]
+    nlinarith [sq_nonneg (Φ (Y (j + 1) z) + Φ (Y j (pairAvg z)) - 2 * Φ (X (j + 1) z))]
+  have hR : Integrable (fun z => 2 * (Φ (Y (j + 1) z) - Φ (X (j + 1) z)) ^ 2 +
+      2 * (Φ (Y j (pairAvg z)) - Φ (X j (pairAvg z))) ^ 2) stdNormalSeq :=
+    (h1.const_mul 2).add (h0c.const_mul 2)
+  refine (integral_mono_of_nonneg (Eventually.of_forall fun z => sq_nonneg _) hR
+    (Eventually.of_forall hpt)).trans (le_of_eq ?_)
+  rw [integral_add (h1.const_mul 2) (h0c.const_mul 2), integral_const_mul, integral_const_mul,
+    integral_comp_of_measurePreserving hpm h0.aestronglyMeasurable]
+
+/-- `G/(h^{−a})^k = G h^{ak}` for `h > 0` (the truncation level `t = h^{−a}` of `barrier_err_le`;
+Giles 2015, §5.1). -/
+lemma div_rpow_neg_pow {h : ℝ} (hh : 0 < h) (G a : ℝ) (k : ℕ) :
+    G / (h ^ (-a)) ^ k = G * h ^ (a * k) := by
+  rw [← Real.rpow_mul_natCast hh.le, neg_mul, Real.rpow_neg hh.le, div_inv_eq_mul]
+
+/-- **The barrier payoff error at one level, at the rate `h^{q₀}`** (Giles 2015, §5.1, p. 33,
+Table 5.2, row "barrier").  In the setting of `barrier_err_le`, let `0 < h ≤ T`,
+`E[(X_{t_m} − Y_{t_m})²] ≤ E h^κ`, `p_k ≤ C h^{q₁}` at the dates, `n ≥ 1`, `0 ≤ q₀ ≤ κ/2` and
+`q₀ (n + 1) ≤ q₁ n`.  Then `E[(Φ(Y) − Φ(X))²] ≤ D₁ h^{q₀}` and `E|Φ(Y) − Φ(X)| ≤ D₂ h^{q₀}` with
+`D₁ = 2K_g² E T^{κ−q₀} + 2(m C T^{q₁−q₀/n−q₀} + G)` and
+`D₂ = K_g √E T^{κ/2−q₀} + m C T^{q₁−q₀/n−q₀} + G T^{q₀(2n+1)/n−q₀}`, `G = E[g(X_{t_m})^{2n+2}]`:
+`barrier_err_le` with the truncation level `t = h^{−q₀/n}`, so that `t h^{q₁} = h^{q₁−q₀/n}`,
+`G/tⁿ = G h^{q₀}` and `G/t^{2n+1} = G h^{q₀(2n+1)/n}` (`div_rpow_neg_pow`), and
+`rpow_le_rpow_sub_mul_rpow`. -/
+lemma barrier_err_rate (hg : ∀ x y, |g x - g y| ≤ Kg * |x - y|)
+    (hA : A = Set.Iic B ∨ A = Set.Ioi B) {X Y : (ℕ → ℝ) → ℕ → ℝ} (hXm : Measurable X)
+    (hYm : Measurable Y) (hX : MemLp (fun z => X z m) 2 stdNormalSeq)
+    (hY : MemLp (fun z => Y z m) 2 stdNormalSeq) {n : ℕ} (hn : 0 < n)
+    (hG : Integrable (fun z => g (X z m) ^ (2 * (n + 1))) stdNormalSeq) {h T : ℝ} (hh : 0 < h)
+    (hhT : h ≤ T) {κ : ℕ} {E C q₀ q₁ : ℝ} (hE : 0 ≤ E) (hC : 0 ≤ C) (hq₀ : 0 ≤ q₀)
+    (hq₀κ : q₀ ≤ κ / 2) (hq₀₁ : q₀ * (n + 1) ≤ q₁ * n)
+    (hs2 : ∫ z, (X z m - Y z m) ^ 2 ∂stdNormalSeq ≤ E * h ^ κ)
+    (hmis : ∀ k, k < m → stdNormalSeq.real {z | (Set.Ioi B).indicator (1 : ℝ → ℝ)
+      (X z (k + 1)) ≠ (Set.Ioi B).indicator 1 (Y z (k + 1))} ≤ C * h ^ q₁) :
+    ∫ z, (barrierPayoff g A m (Y z) - barrierPayoff g A m (X z)) ^ 2 ∂stdNormalSeq ≤
+      (2 * Kg ^ 2 * E * T ^ ((κ : ℝ) - q₀) + 2 * (m * C * T ^ (q₁ - q₀ / n - q₀) +
+        ∫ z, g (X z m) ^ (2 * (n + 1)) ∂stdNormalSeq)) * h ^ q₀ ∧
+    ∫ z, |barrierPayoff g A m (Y z) - barrierPayoff g A m (X z)| ∂stdNormalSeq ≤
+      (Kg * Real.sqrt E * T ^ ((κ : ℝ) / 2 - q₀) + m * C * T ^ (q₁ - q₀ / n - q₀) +
+        (∫ z, g (X z m) ^ (2 * (n + 1)) ∂stdNormalSeq) *
+          T ^ (q₀ / n * ((2 * n + 1 : ℕ) : ℝ) - q₀)) * h ^ q₀ := by
+  have hKg := (continuous_of_abs_sub_le hg).1
+  have hn' : (0 : ℝ) < n := Nat.cast_pos.2 hn
+  set G := ∫ z, g (X z m) ^ (2 * (n + 1)) ∂stdNormalSeq with hGdef
+  have hG0 : 0 ≤ G := integral_nonneg fun z => (even_two_mul (n + 1)).pow_nonneg _
+  have ht : 0 < h ^ (-(q₀ / n)) := Real.rpow_pos_of_pos hh _
+  obtain ⟨h1, h2⟩ := barrier_err_le hg hA hXm hYm hX hY n hG ht
+  -- the exponents
+  have hq₁ : q₀ ≤ q₁ - q₀ / n := by
+    have : q₀ / n ≤ q₁ - q₀ := by
+      rw [div_le_iff₀ hn']
+      linarith
+    linarith
+  have hq2 : q₀ ≤ q₀ / n * ((2 * n + 1 : ℕ) : ℝ) := by
+    have e : q₀ / n * ((2 * n + 1 : ℕ) : ℝ) = 2 * q₀ + q₀ / n := by
+      push_cast
+      field_simp
+    rw [e]
+    have : 0 ≤ q₀ / n := div_nonneg hq₀ hn'.le
+    linarith
+  have hκ : q₀ ≤ (κ : ℝ) := by linarith [Nat.cast_nonneg (α := ℝ) κ]
+  have hhq : 0 ≤ h ^ q₀ := Real.rpow_nonneg hh.le _
+  -- the mismatch term
+  have hsum : ∑ k ∈ range m, stdNormalSeq.real {z | (Set.Ioi B).indicator (1 : ℝ → ℝ)
+      (X z (k + 1)) ≠ (Set.Ioi B).indicator 1 (Y z (k + 1))} ≤ m * (C * h ^ q₁) := by
+    calc _ ≤ ∑ _k ∈ range m, C * h ^ q₁ :=
+          Finset.sum_le_sum fun k hk => hmis k (Finset.mem_range.1 hk)
       _ = _ := by rw [Finset.sum_const, Finset.card_range, nsmul_eq_mul]
-  exact add_le_add (mul_le_mul_of_nonneg_left habs hKg) (mul_le_mul_of_nonneg_left hsum hM0)
-
-end BarrierAbstract
-
-section BarrierRate
-
-variable {g : ℝ → ℝ} {Kg M : ℝ} {A : Set ℝ} {B : ℝ} {m : ℕ} {X Y : ℕ → (ℕ → ℝ) → ℕ → ℝ}
+  have htm : h ^ (-(q₀ / n)) * (m * (C * h ^ q₁)) ≤
+      m * C * T ^ (q₁ - q₀ / n - q₀) * h ^ q₀ := by
+    have e : h ^ (-(q₀ / n)) * (m * (C * h ^ q₁)) = m * C * h ^ (q₁ - q₀ / n) := by
+      rw [show q₁ - q₀ / n = -(q₀ / n) + q₁ by ring, Real.rpow_add hh]
+      ring
+    rw [e, mul_assoc (m * C)]
+    exact mul_le_mul_of_nonneg_left (rpow_le_rpow_sub_mul_rpow hh hhT hq₁) (by positivity)
+  have hmt : h ^ (-(q₀ / n)) * ∑ k ∈ range m, stdNormalSeq.real {z | (Set.Ioi B).indicator
+      (1 : ℝ → ℝ) (X z (k + 1)) ≠ (Set.Ioi B).indicator 1 (Y z (k + 1))} ≤
+      m * C * T ^ (q₁ - q₀ / n - q₀) * h ^ q₀ :=
+    (mul_le_mul_of_nonneg_left hsum ht.le).trans htm
+  -- the moment term
+  have hGn : G / (h ^ (-(q₀ / n))) ^ n = G * h ^ q₀ := by
+    rw [div_rpow_neg_pow hh, div_mul_cancel₀ q₀ hn'.ne']
+  have hGn2 : G / (h ^ (-(q₀ / n))) ^ (2 * n + 1) ≤
+      G * T ^ (q₀ / n * ((2 * n + 1 : ℕ) : ℝ) - q₀) * h ^ q₀ := by
+    rw [div_rpow_neg_pow hh, mul_assoc]
+    exact mul_le_mul_of_nonneg_left (rpow_le_rpow_sub_mul_rpow hh hhT hq2) hG0
+  -- the strong error at `t_m`
+  have hE2 : E * h ^ κ ≤ E * T ^ ((κ : ℝ) - q₀) * h ^ q₀ := by
+    rw [mul_assoc, ← Real.rpow_natCast]
+    exact mul_le_mul_of_nonneg_left (rpow_le_rpow_sub_mul_rpow hh hhT hκ) hE
+  have hsq : Real.sqrt (∫ z, (X z m - Y z m) ^ 2 ∂stdNormalSeq) ≤
+      Real.sqrt E * T ^ ((κ : ℝ) / 2 - q₀) * h ^ q₀ := by
+    have e : Real.sqrt (E * h ^ κ) = Real.sqrt E * h ^ ((κ : ℝ) / 2) := by
+      rw [Real.sqrt_mul hE, Real.sqrt_eq_rpow (h ^ κ), ← Real.rpow_natCast,
+        ← Real.rpow_mul hh.le]
+      ring_nf
+    calc _ ≤ Real.sqrt (E * h ^ κ) := Real.sqrt_le_sqrt hs2
+      _ = Real.sqrt E * h ^ ((κ : ℝ) / 2) := e
+      _ ≤ Real.sqrt E * (T ^ ((κ : ℝ) / 2 - q₀) * h ^ q₀) :=
+          mul_le_mul_of_nonneg_left (rpow_le_rpow_sub_mul_rpow hh hhT hq₀κ)
+            (Real.sqrt_nonneg _)
+      _ = _ := by ring
+  constructor
+  · have a1 : 2 * Kg ^ 2 * ∫ z, (X z m - Y z m) ^ 2 ∂stdNormalSeq ≤
+        2 * Kg ^ 2 * (E * T ^ ((κ : ℝ) - q₀) * h ^ q₀) :=
+      mul_le_mul_of_nonneg_left (hs2.trans hE2) (by positivity)
+    calc _ ≤ _ := h1
+      _ ≤ 2 * Kg ^ 2 * (E * T ^ ((κ : ℝ) - q₀) * h ^ q₀) +
+          2 * (m * C * T ^ (q₁ - q₀ / n - q₀) * h ^ q₀ + G * h ^ q₀) := by
+        rw [hGn]
+        linarith
+      _ = _ := by ring
+  · have a1 : Kg * Real.sqrt (∫ z, (X z m - Y z m) ^ 2 ∂stdNormalSeq) ≤
+        Kg * (Real.sqrt E * T ^ ((κ : ℝ) / 2 - q₀) * h ^ q₀) :=
+      mul_le_mul_of_nonneg_left hsq hKg
+    calc _ ≤ _ := h2
+      _ ≤ Kg * (Real.sqrt E * T ^ ((κ : ℝ) / 2 - q₀) * h ^ q₀) +
+          (m * C * T ^ (q₁ - q₀ / n - q₀) * h ^ q₀ +
+            G * T ^ (q₀ / n * ((2 * n + 1 : ℕ) : ℝ) - q₀) * h ^ q₀) := by
+        linarith
+      _ = _ := by ring
 
 /-- **The barrier rates from the strong error and the mismatch rate** (Giles 2015, §5.1–§5.2,
-Table 5.2, row "barrier").  In the setting of `barrier_variance_le`, with steps `h_j = T 2^{−j}`
-(`T > 0`), `E[(X_{j,t_m} − Y_{j,t_m})²] ≤ E h_j^κ` and mismatch probabilities `≤ C h_j^q` at the
-dates, for `q ≤ κ/2`: there is `C'` such that the correction `Φ(Y_{j+1}) − Φ(Y_j ∘ pairAvg)` is
-square integrable with variance `≤ C' h_{j+1}^q`, and
-`|E[Φ(Y_j)] − E[Φ(X_0)]| ≤ C' h_j^q` (`barrier_variance_le`, `barrier_bias_le`,
-`dyadic_rpow_add_le`, `rpow_le_rpow_sub_mul_rpow`). -/
-lemma barrier_rate_of (hg : ∀ x y, |g x - g y| ≤ Kg * |x - y|) (hM : ∀ x, |g x| ≤ M)
-    (hA : A = Set.Iic B ∨ A = Set.Ioi B) (hXm : ∀ j, Measurable (X j))
-    (hYm : ∀ j, Measurable (Y j)) (hX : ∀ j, MemLp (fun z => X j z m) 2 stdNormalSeq)
+Table 5.2, row "barrier").  Let `X_j` be level-consistent exact paths (`X_j ∘ pairAvg = X_{j+1}`)
+and `Y_j` approximations, measurable and square integrable at `t_m`, `h_j = T 2^{−j}` (`T > 0`),
+`E[(X_{j,t_m} − Y_{j,t_m})²] ≤ E h_j^κ`, mismatch probabilities `≤ C h_j^{q₁}` at the dates, and
+`g(X_{j,t_m})^{2n+2}` integrable with `n ≥ 1`.  If `q ≤ q₀`, `0 ≤ q₀ ≤ κ/2` and
+`q₀ (n + 1) ≤ q₁ n`, there is `C'` such that the correction `Φ(Y_{j+1}) − Φ(Y_j ∘ pairAvg)` is
+square integrable with variance `≤ C' h_{j+1}^q` and `|E[Φ(Y_j)] − E[Φ(X_0)]| ≤ C' h_j^q`
+(`barrier_err_rate`, `variance_pairAvg_corr_le`; the law of `X_j` does not depend on `j`,
+`integral_comp_monLevel`; `dyadic_rpow_add_le`, `rpow_le_rpow_sub_mul_rpow`). -/
+lemma barrier_rate_of (hg : ∀ x y, |g x - g y| ≤ Kg * |x - y|)
+    (hA : A = Set.Iic B ∨ A = Set.Ioi B) {X Y : ℕ → (ℕ → ℝ) → ℕ → ℝ}
+    (hXm : ∀ j, Measurable (X j)) (hYm : ∀ j, Measurable (Y j))
+    (hX : ∀ j, MemLp (fun z => X j z m) 2 stdNormalSeq)
     (hY : ∀ j, MemLp (fun z => Y j z m) 2 stdNormalSeq)
-    (hpair : ∀ j z, X j (pairAvg z) = X (j + 1) z) {T : ℝ} (hT : 0 < T) {κ : ℕ} {E C q : ℝ}
-    (hE : 0 ≤ E) (hC : 0 ≤ C) (hqκ : q ≤ κ / 2)
+    (hpair : ∀ j z, X j (pairAvg z) = X (j + 1) z) {n : ℕ} (hn : 0 < n)
+    (hG : ∀ j, Integrable (fun z => g (X j z m) ^ (2 * (n + 1))) stdNormalSeq)
+    {T : ℝ} (hT : 0 < T) {κ : ℕ} {E C q q₀ q₁ : ℝ} (hE : 0 ≤ E) (hC : 0 ≤ C) (hqq₀ : q ≤ q₀)
+    (hq₀ : 0 ≤ q₀) (hq₀κ : q₀ ≤ κ / 2) (hq₀₁ : q₀ * (n + 1) ≤ q₁ * n)
     (hs2 : ∀ j, ∫ z, (X j z m - Y j z m) ^ 2 ∂stdNormalSeq ≤ E * (T / 2 ^ j) ^ κ)
     (hmis : ∀ j k, k < m → stdNormalSeq.real {z | (Set.Ioi B).indicator (1 : ℝ → ℝ)
-      (X j z (k + 1)) ≠ (Set.Ioi B).indicator 1 (Y j z (k + 1))} ≤ C * (T / 2 ^ j) ^ q) :
+      (X j z (k + 1)) ≠ (Set.Ioi B).indicator 1 (Y j z (k + 1))} ≤ C * (T / 2 ^ j) ^ q₁) :
     ∃ C' : ℝ, 0 ≤ C' ∧ ∀ j : ℕ,
       MemLp (fun z => barrierPayoff g A m (Y (j + 1) z) -
           barrierPayoff g A m (Y j (pairAvg z))) 2 stdNormalSeq ∧
@@ -1052,54 +1176,88 @@ lemma barrier_rate_of (hg : ∀ x y, |g x - g y| ≤ Kg * |x - y|) (hM : ∀ x, 
       |∫ z, barrierPayoff g A m (Y j z) ∂stdNormalSeq -
           ∫ z, barrierPayoff g A m (X 0 z) ∂stdNormalSeq| ≤ C' * (T / 2 ^ j) ^ q := by
   have hKg := (continuous_of_abs_sub_le hg).1
-  have hM0 : 0 ≤ M := (abs_nonneg _).trans (hM 0)
-  have hκ0 : (0 : ℝ) ≤ κ := Nat.cast_nonneg κ
-  have hκq : q ≤ (κ : ℝ) := by linarith
-  set Cv := 4 * Kg ^ 2 * E * (T ^ ((κ : ℝ) - q) * (1 + 2 ^ q)) +
-    2 * M ^ 2 * m * C * (1 + 2 ^ q) with hCv
-  set Cb := Kg * Real.sqrt E * T ^ ((κ : ℝ) / 2 - q) + M * m * C with hCb
-  have hCv0 : 0 ≤ Cv := by positivity
-  have hCb0 : 0 ≤ Cb := by positivity
-  refine ⟨Cv + Cb, by positivity, fun j =>
-    ⟨(barrier_variance_le hg hM hA hXm hYm hX hY hpair hs2 hmis j).1, ?_, ?_⟩⟩
-  · have hv := (barrier_variance_le hg hM hA hXm hYm hX hY hpair hs2 hmis j).2
-    have hd1 : (T / 2 ^ (j + 1)) ^ κ + (T / 2 ^ j) ^ κ ≤
-        T ^ ((κ : ℝ) - q) * (1 + 2 ^ q) * (T / 2 ^ (j + 1)) ^ q := by
-      have := dyadic_rpow_add_le hT hκq j
-      rwa [Real.rpow_natCast, Real.rpow_natCast] at this
-    have hd2 : (T / 2 ^ (j + 1)) ^ q + (T / 2 ^ j) ^ q ≤ (1 + 2 ^ q) * (T / 2 ^ (j + 1)) ^ q := by
-      have := dyadic_rpow_add_le hT (le_refl q) j
+  have hgc := (continuous_of_abs_sub_le hg).2
+  have hAm := measurableSet_barrier hA
+  have hΦm := measurable_barrierPayoff hgc.measurable hAm m
+  have hΦX : ∀ j, MemLp (fun z => barrierPayoff g A m (X j z)) 2 stdNormalSeq := fun j =>
+    memLp_barrierPayoff hg hAm m (hXm j) (hX j)
+  have hΦY : ∀ j, MemLp (fun z => barrierPayoff g A m (Y j z)) 2 stdNormalSeq := fun j =>
+    memLp_barrierPayoff hg hAm m (hYm j) (hY j)
+  -- the moment of the payoff does not depend on the level
+  set G := ∫ z, g (X 0 z m) ^ (2 * (n + 1)) ∂stdNormalSeq with hGdef
+  have hGj : ∀ j, ∫ z, g (X j z m) ^ (2 * (n + 1)) ∂stdNormalSeq = G := fun j =>
+    integral_comp_monLevel hpair hXm (F := fun S => g (S m) ^ (2 * (n + 1)))
+      ((hgc.measurable.comp (measurable_pi_apply m)).pow_const _) j
+  have hG0 : 0 ≤ G := integral_nonneg fun z => (even_two_mul (n + 1)).pow_nonneg _
+  set D₁ := 2 * Kg ^ 2 * E * T ^ ((κ : ℝ) - q₀) + 2 * (m * C * T ^ (q₁ - q₀ / n - q₀) + G)
+    with hD₁
+  set D₂ := Kg * Real.sqrt E * T ^ ((κ : ℝ) / 2 - q₀) + m * C * T ^ (q₁ - q₀ / n - q₀) +
+    G * T ^ (q₀ / n * ((2 * n + 1 : ℕ) : ℝ) - q₀) with hD₂
+  have hD₁0 : 0 ≤ D₁ := by positivity
+  have hD₂0 : 0 ≤ D₂ := by positivity
+  have hlev : ∀ j : ℕ,
+      ∫ z, (barrierPayoff g A m (Y j z) - barrierPayoff g A m (X j z)) ^ 2 ∂stdNormalSeq ≤
+        D₁ * (T / 2 ^ j) ^ q₀ ∧
+      ∫ z, |barrierPayoff g A m (Y j z) - barrierPayoff g A m (X j z)| ∂stdNormalSeq ≤
+        D₂ * (T / 2 ^ j) ^ q₀ := fun j => by
+    have h := barrier_err_rate hg hA (hXm j) (hYm j) (hX j) (hY j) hn (hG j)
+      (h := T / 2 ^ j) (by positivity) (div_le_self hT.le (one_le_pow₀ (by norm_num))) hE hC hq₀
+      hq₀κ hq₀₁ (hs2 j) (hmis j)
+    rwa [hGj j] at h
+  have hTq : 0 ≤ T ^ (q₀ - q) := Real.rpow_nonneg hT.le _
+  have hconv : ∀ i : ℕ, (T / 2 ^ i) ^ q₀ ≤ T ^ (q₀ - q) * (T / 2 ^ i) ^ q := fun i =>
+    rpow_le_rpow_sub_mul_rpow (by positivity) (div_le_self hT.le (one_le_pow₀ (by norm_num)))
+      hqq₀
+  refine ⟨2 * D₁ * (1 + 2 ^ q₀) * T ^ (q₀ - q) + D₂ * T ^ (q₀ - q), by positivity, fun j =>
+    ⟨(variance_pairAvg_corr_le hΦX hΦY hpair j).1, ?_, ?_⟩⟩
+  · have hv := (variance_pairAvg_corr_le hΦX hΦY hpair j).2
+    have hd : (T / 2 ^ (j + 1)) ^ q₀ + (T / 2 ^ j) ^ q₀ ≤
+        (1 + 2 ^ q₀) * (T / 2 ^ (j + 1)) ^ q₀ := by
+      have := dyadic_rpow_add_le hT (le_refl q₀) j
       rwa [sub_self, Real.rpow_zero, one_mul] at this
     have hpos : 0 ≤ (T / 2 ^ (j + 1)) ^ q := by positivity
+    have h2 : 0 ≤ D₂ * T ^ (q₀ - q) * (T / 2 ^ (j + 1)) ^ q := by positivity
     calc _ ≤ _ := hv
-      _ = 4 * Kg ^ 2 * E * ((T / 2 ^ (j + 1)) ^ κ + (T / 2 ^ j) ^ κ) +
-          2 * M ^ 2 * m * C * ((T / 2 ^ (j + 1)) ^ q + (T / 2 ^ j) ^ q) := by ring
-      _ ≤ 4 * Kg ^ 2 * E * (T ^ ((κ : ℝ) - q) * (1 + 2 ^ q) * (T / 2 ^ (j + 1)) ^ q) +
-          2 * M ^ 2 * m * C * ((1 + 2 ^ q) * (T / 2 ^ (j + 1)) ^ q) :=
-          add_le_add (mul_le_mul_of_nonneg_left hd1 (by positivity))
-            (mul_le_mul_of_nonneg_left hd2 (by positivity))
-      _ = Cv * (T / 2 ^ (j + 1)) ^ q := by rw [hCv]; ring
-      _ ≤ _ := mul_le_mul_of_nonneg_right (by linarith) hpos
-  · have hb := barrier_bias_le hg hM hA hXm hYm hX hY hpair hs2 hmis j
-    have hh : 0 < T / 2 ^ j := by positivity
-    have hhT : T / 2 ^ j ≤ T := div_le_self hT.le (one_le_pow₀ (by norm_num))
+      _ ≤ 2 * (D₁ * (T / 2 ^ (j + 1)) ^ q₀) + 2 * (D₁ * (T / 2 ^ j) ^ q₀) := by
+          linarith [(hlev (j + 1)).1, (hlev j).1]
+      _ = 2 * D₁ * ((T / 2 ^ (j + 1)) ^ q₀ + (T / 2 ^ j) ^ q₀) := by ring
+      _ ≤ 2 * D₁ * ((1 + 2 ^ q₀) * (T / 2 ^ (j + 1)) ^ q₀) :=
+          mul_le_mul_of_nonneg_left hd (by positivity)
+      _ ≤ 2 * D₁ * ((1 + 2 ^ q₀) * (T ^ (q₀ - q) * (T / 2 ^ (j + 1)) ^ q)) :=
+          mul_le_mul_of_nonneg_left (mul_le_mul_of_nonneg_left (hconv (j + 1)) (by positivity))
+            (by positivity)
+      _ ≤ _ := by nlinarith
+  · have hint : ∀ i, Integrable (fun z => barrierPayoff g A m (Y i z)) stdNormalSeq := fun i =>
+      (hΦY i).integrable one_le_two
+    have hintX : ∀ i, Integrable (fun z => barrierPayoff g A m (X i z)) stdNormalSeq := fun i =>
+      (hΦX i).integrable one_le_two
+    rw [← integral_comp_monLevel hpair hXm hΦm j, ← integral_sub (hint j) (hintX j)]
     have hpos : 0 ≤ (T / 2 ^ j) ^ q := by positivity
-    have hsq : Real.sqrt (E * (T / 2 ^ j) ^ κ) = Real.sqrt E * (T / 2 ^ j) ^ ((κ : ℝ) / 2) := by
-      rw [Real.sqrt_mul hE, Real.sqrt_eq_rpow ((T / 2 ^ j) ^ κ), ← Real.rpow_natCast,
-        ← Real.rpow_mul hh.le]
-      ring_nf
-    have hr := rpow_le_rpow_sub_mul_rpow hh hhT hqκ
-    calc _ ≤ _ := hb
-      _ = Kg * Real.sqrt E * (T / 2 ^ j) ^ ((κ : ℝ) / 2) + M * m * C * (T / 2 ^ j) ^ q := by
-          rw [hsq]
-          ring
-      _ ≤ Kg * Real.sqrt E * (T ^ ((κ : ℝ) / 2 - q) * (T / 2 ^ j) ^ q) +
-          M * m * C * (T / 2 ^ j) ^ q :=
-          add_le_add (mul_le_mul_of_nonneg_left hr (by positivity)) le_rfl
-      _ = Cb * (T / 2 ^ j) ^ q := by rw [hCb]; ring
-      _ ≤ _ := mul_le_mul_of_nonneg_right (by linarith) hpos
+    have h2 : 0 ≤ 2 * D₁ * (1 + 2 ^ q₀) * T ^ (q₀ - q) * (T / 2 ^ j) ^ q := by positivity
+    calc _ ≤ _ := abs_integral_le_integral_abs
+      _ ≤ D₂ * (T / 2 ^ j) ^ q₀ := (hlev j).2
+      _ ≤ D₂ * (T ^ (q₀ - q) * (T / 2 ^ j) ^ q) := mul_le_mul_of_nonneg_left (hconv j) hD₂0
+      _ ≤ _ := by nlinarith
 
-end BarrierRate
+end BarrierAbstract
+
+/-- For `0 < κ` and `q < κ/2` there are exponents `q ≤ q₀`, `0 ≤ q₀ ≤ κ/2`, `q₁ < κ/2` and `n ≥ 1`
+with `q₀ (n + 1) ≤ q₁ n` (`q₀ = max(q, 0)`, `q₁ = (q₀ + κ/2)/2`; the exponents of
+`barrier_rate_of`, Giles 2015, §5.1–§5.2). -/
+lemma exists_barrier_exponents {κ : ℕ} (hκ : 0 < κ) {q : ℝ} (hq : q < κ / 2) :
+    ∃ q₀ q₁ : ℝ, ∃ n : ℕ, q ≤ q₀ ∧ 0 ≤ q₀ ∧ q₀ ≤ κ / 2 ∧ q₁ < κ / 2 ∧ 0 < n ∧
+      q₀ * (n + 1) ≤ q₁ * n := by
+  have hκ' : (0 : ℝ) < κ / 2 := by
+    have : (0 : ℝ) < κ := Nat.cast_pos.2 hκ
+    positivity
+  have h0 : max q 0 < κ / 2 := max_lt hq hκ'
+  have hd : 0 < (max q 0 + κ / 2) / 2 - max q 0 := by linarith
+  obtain ⟨n, hn⟩ := exists_nat_gt (max q 0 / ((max q 0 + κ / 2) / 2 - max q 0))
+  rw [div_lt_iff₀ hd] at hn
+  refine ⟨max q 0, (max q 0 + κ / 2) / 2, n + 1, le_max_left _ _, le_max_right _ _, h0.le,
+    by linarith, Nat.succ_pos n, ?_⟩
+  push_cast
+  nlinarith
 
 /-- **The mismatch at the monitoring dates, from `2p`-th moment bounds of the strong error**
 (Giles 2015, §5.1, p. 33, l. 1436–1441, at every date).  Let `σ ≠ 0`, `T > 0`, `m ≥ 1`, and let
@@ -1203,27 +1361,31 @@ lemma gbmMon_mil_moment_error (r σ s₀ : ℝ) {T : ℝ} (hT : 0 ≤ T) (m j : 
 `O(h_ℓ^q)` for every `q < ½`** (Giles 2015, §5.1, p. 33, Table 5.2, row "barrier", Euler–Maruyama:
 numerics `O(h^{1/2})`, analysis `o(h^{1/2−δ})`; l. 1454–1456: "the barrier is a discontinuous
 function of the maximum or minimum").  For GBM with `σ ≠ 0`, `T > 0`, `m ≥ 1` monitoring dates
-`t_k = kT/m`, a payoff `g` with `|g(x) − g(y)| ≤ K_g |x − y|` and `|g| ≤ M`, and the knock-out set
-`A = (−∞, B]` (up-and-out) or `A = (B, ∞)` (down-and-out), level `j` with `m 2^j` steps of size
-`h_j = T/(m 2^j)` (`gbmMonEM`): for every `q < ½` there is `C` such that the correction
-`Φ(Ŝ^f_{j+1}) − Φ(Ŝ^c_j)` (the coarse path driven by the summed increments) is square integrable
-with variance `≤ C h_{j+1}^q`, and `|E[Φ(Ŝ_j)] − E[Φ(S)]| ≤ C h_j^q`, `Φ = barrierPayoff g A m`
-and `S` the exact solution at the dates (`gbmMonExact … 0`).  Proof: the mismatch probability at
-every date is `O(h_j^q)` (`gbm_mon_mismatch_rate_of_moment` with the `L^{2p}` strong errors
-`gbmMon_em_moment_error` and the density bound `gbmMonExact_smallBall`: a union bound over the dates
-of the marginal small-ball estimates), and the Lipschitz part is `O(h_j)`
-(`gbm_em_monitored_strong_error`); `barrier_rate_of`.
+`t_k = kT/m`, a Lipschitz payoff `g` (`|g(x) − g(y)| ≤ K_g |x − y|`, not necessarily bounded), and
+the knock-out set `A = (−∞, B]` (up-and-out) or `A = (B, ∞)` (down-and-out), level `j` with
+`m 2^j` steps of size `h_j = T/(m 2^j)` (`gbmMonEM`): for every `q < ½` there is `C` such that the
+correction `Φ(Ŝ^f_{j+1}) − Φ(Ŝ^c_j)` (the coarse path driven by the summed increments) is square
+integrable with variance `≤ C h_{j+1}^q`, and `|E[Φ(Ŝ_j)] − E[Φ(S)]| ≤ C h_j^q`,
+`Φ = barrierPayoff g A m` and `S` the exact solution at the dates (`gbmMonExact … 0`).  Proof: the
+mismatch probability at every date is `O(h_j^{q₁})` for some `q₁ ∈ (q, ½)`
+(`gbm_mon_mismatch_rate_of_moment` with the `L^{2p}` strong errors `gbmMon_em_moment_error` and the
+density bound `gbmMonExact_smallBall`: a union bound over the dates of the marginal small-ball
+estimates), the Lipschitz part is `O(h_j)` (`gbm_em_monitored_strong_error`), and the payoff
+`g(S_T)` on the mismatch event is controlled by the moments of `S_T` of every order
+(`integrable_gbmMonExact_pow`, `integrable_lipschitz_pow`) with a truncation that replaces Hölder's
+inequality (`barrier_err_le`); `barrier_rate_of`, `exists_barrier_exponents`.
 
 **How close to the paper.**  The paper's barrier option is continuously monitored (its maximum or
 minimum over `[0, T]`), and the analysis column of Table 5.2 is due to Giles, Higham and Mao
 (2009); here the barrier is monitored at the `m` fixed dates, which lie on every grid, so no
-Brownian-bridge argument is needed.  `g` is bounded: this covers the up-and-out call
-`max(S_T − K, 0) 1{max_k S_{t_k} ≤ B}`, which equals the payoff with the bounded `1`-Lipschitz
-`g(x) = max(min(x, B) − K, 0)`, but not the down-and-out call (unbounded `g`). -/
+Brownian-bridge argument is needed.  Every Lipschitz `g` is covered, e.g. the up-and-out and the
+down-and-out calls `max(S_T − K, 0) 1{max_k S_{t_k} ≤ B}`, `max(S_T − K, 0) 1{min_k S_{t_k} > B}`.
+`m = 0` is excluded: there are no dates and no time steps (`h_j = T/0` would be Lean's junk value
+`0`), and `Φ ≡ g(s₀)` makes the statement trivial.  `σ ≠ 0` is needed (see
+`gbm_em_barrier_theorem1`). -/
 theorem gbm_em_barrier_rate (r σ s₀ : ℝ) {T : ℝ} (hσ : σ ≠ 0) (hT : 0 < T) {m : ℕ}
-    (hm : 0 < m) {g : ℝ → ℝ} {Kg M : ℝ} (hg : ∀ x y, |g x - g y| ≤ Kg * |x - y|)
-    (hM : ∀ x, |g x| ≤ M) {A : Set ℝ} {B : ℝ} (hA : A = Set.Iic B ∨ A = Set.Ioi B) {q : ℝ}
-    (hq : q < 1 / 2) :
+    (hm : 0 < m) {g : ℝ → ℝ} {Kg : ℝ} (hg : ∀ x y, |g x - g y| ≤ Kg * |x - y|)
+    {A : Set ℝ} {B : ℝ} (hA : A = Set.Iic B ∨ A = Set.Ioi B) {q : ℝ} (hq : q < 1 / 2) :
     ∃ C : ℝ, 0 ≤ C ∧ ∀ j : ℕ,
       MemLp (fun z => barrierPayoff g A m (gbmMonEM r σ T s₀ m (j + 1) z) -
           barrierPayoff g A m (gbmMonEM r σ T s₀ m j (pairAvg z))) 2 stdNormalSeq ∧
@@ -1236,20 +1398,24 @@ theorem gbm_em_barrier_rate (r σ s₀ : ℝ) {T : ℝ} (hσ : σ ≠ 0) (hT : 0
   have hm' : (0 : ℝ) < m := Nat.cast_pos.2 hm
   have hTm : 0 < T / m := div_pos hT hm'
   have hq' : q < ((1 : ℕ) : ℝ) / 2 := by rw [Nat.cast_one]; exact hq
+  obtain ⟨q₀, q₁, n, hqq₀, hq₀, hq₀κ, hq₁, hn, hq₀₁⟩ := exists_barrier_exponents one_pos hq'
   obtain ⟨C, hC, hmis⟩ := gbm_mon_mismatch_rate_of_moment r σ s₀ hσ hT hm B one_pos
     (Y := gbmMonEM r σ T s₀ m) (fun hs0 j z k => by rw [gbmMonEM_eq_prod, hs0, zero_mul])
     (fun p hp => ⟨gbmEMMomentConst p r σ T s₀, gbmEMMomentConst_nonneg p r σ s₀ hT.le,
       fun j k hk => ⟨integrable_gbmMon_em_err_pow r σ T s₀ m j (by positivity) k p, by
         rw [one_mul]
-        exact gbmMon_em_moment_error r σ s₀ hT.le m j hk hp⟩⟩) hq'
+        exact gbmMon_em_moment_error r σ s₀ hT.le m j hk hp⟩⟩) hq₁
   have e : ∀ j : ℕ, T / (m * 2 ^ j) = T / m / 2 ^ j := fun j => (div_div T m (2 ^ j)).symm
-  obtain ⟨C', hC', h⟩ := barrier_rate_of hg hM hA (X := gbmMonExact r σ T s₀ m)
+  obtain ⟨C', hC', h⟩ := barrier_rate_of hg hA (X := gbmMonExact r σ T s₀ m)
     (Y := gbmMonEM r σ T s₀ m) (fun j => (measurable_memLp_gbmMonExact r σ T s₀ m j).1)
     (fun j => (measurable_memLp_gbmMonEM r σ T s₀ m j).1)
     (fun j => (measurable_memLp_gbmMonExact r σ T s₀ m j).2 m)
     (fun j => (measurable_memLp_gbmMonEM r σ T s₀ m j).2 m)
-    (gbmMonExact_pairAvg r σ T s₀ m) hTm (κ := 1) (q := q) (gbmStrongConst_nonneg r σ s₀ hT.le) hC
-    (by push_cast; linarith)
+    (gbmMonExact_pairAvg r σ T s₀ m) hn
+    (fun j => integrable_lipschitz_pow hg
+      ((measurable_pi_apply m).comp (measurable_memLp_gbmMonExact r σ T s₀ m j).1) (n + 1)
+      (integrable_gbmMonExact_pow r σ T s₀ m j m _))
+    hTm (κ := 1) (gbmStrongConst_nonneg r σ s₀ hT.le) hC hqq₀ hq₀ hq₀κ hq₀₁
     (fun j => by
       rw [pow_one, ← e]
       exact gbm_em_monitored_strong_error r σ s₀ hT.le m j le_rfl)
@@ -1261,24 +1427,29 @@ theorem gbm_em_barrier_rate (r σ s₀ : ℝ) {T : ℝ} (hσ : σ ≠ 0) (hT : 0
   exact h j
 
 /-- **The discretely monitored barrier option with the natural Milstein estimator:
-`V_ℓ = O(h_ℓ^q)` and bias `O(h_ℓ^q)` for every `q < 1`** (Giles 2015, §5.2, p. 35, the natural
-estimator of a discontinuous payoff, l. 1525–1532: "small differences in the coarse and fine path
-simulations can lead to an `O(1)` difference in the payoff function … giving `V_ℓ = O(h_ℓ)`"; Table
-5.2, l. 1430, row "barrier").  In the setting of `gbm_em_barrier_rate` with the Milstein scheme
-(`gbmMonMil`): for every `q < 1` there is `C` such that the correction is square integrable with
-`V[Φ(Ŝ^f_{j+1}) − Φ(Ŝ^c_j)] ≤ C h_{j+1}^q`, and `|E[Φ(Ŝ_j)] − E[Φ(S)]| ≤ C h_j^q`.  Proof: as
-`gbm_em_barrier_rate` with `gbmMon_mil_moment_error` (`κ = 2`) and
-`gbm_mil_monitored_strong_error`.
+`V_ℓ = O(h_ℓ^q)` and bias `O(h_ℓ^q)` for every `q < 1`** (Giles 2015, §5.2, p. 35, l. 1525–1531,
+the paper's argument for the digital option, applied here at every monitoring date: "In the case
+of a digital option, if we use the natural multilevel estimator then `P_ℓ − P_{ℓ−1} = O(1)` for an
+`O(h_ℓ)` fraction of the paths, giving `V_ℓ = O(h_ℓ)`"; Table 5.2, l. 1430, row "barrier").  In
+the setting of `gbm_em_barrier_rate` (`σ ≠ 0`, `T > 0`, `m ≥ 1` dates, `g` Lipschitz, up-and-out
+or down-and-out) with the Milstein scheme (`gbmMonMil`): for every `q < 1` there is `C` such that
+the correction is square integrable with `V[Φ(Ŝ^f_{j+1}) − Φ(Ŝ^c_j)] ≤ C h_{j+1}^q`, and
+`|E[Φ(Ŝ_j)] − E[Φ(S)]| ≤ C h_j^q`.  Proof: as `gbm_em_barrier_rate` with
+`gbmMon_mil_moment_error` (`κ = 2`) and `gbm_mil_monitored_strong_error`.
 
-**How close to the paper.**  The Milstein row of Table 5.2 for the barrier (`O(h^{3/2})`,
-`o(h^{3/2−δ})`) is for the continuously monitored option with the Brownian-bridge (conditional
-expectation) estimator of §5.2 (Giles 2008a; Giles, Debrabant and Rößler 2013), which is not
-formalised; for the natural estimator of the discretely monitored option the rate is `O(h_ℓ)` up
-to the loss in the exponent, as for the digital option. -/
+**How close to the paper.**  For the barrier option the paper states, for the continuously
+monitored option (§5.2, p. 38, l. 1653–1662): an estimator "based directly on the minimum (or
+maximum) of the values at the discrete timesteps will have a poor variance … an even worse
+`O(h_ℓ^{1/2})` variance for barrier options", because of the `O(h^{1/2})` variation of the path
+within a timestep; the Milstein row of Table 5.2 (`O(h^{3/2})`, `o(h^{3/2−δ})`) is for the
+Brownian-bridge (conditional expectation) estimator of §5.2 (Giles 2008a; Giles, Debrabant and
+Rößler 2013), which is not formalised.  For the discretely monitored option, whose dates lie on
+every grid, the natural estimator has the rate `O(h_ℓ)` of the digital option up to the loss in the
+exponent.  `m = 0` is excluded as in `gbm_em_barrier_rate`; `σ ≠ 0` is needed (for `σ = 0` the
+Milstein path is the Euler–Maruyama one, see `gbm_em_barrier_theorem1`). -/
 theorem gbm_mil_barrier_rate (r σ s₀ : ℝ) {T : ℝ} (hσ : σ ≠ 0) (hT : 0 < T) {m : ℕ}
-    (hm : 0 < m) {g : ℝ → ℝ} {Kg M : ℝ} (hg : ∀ x y, |g x - g y| ≤ Kg * |x - y|)
-    (hM : ∀ x, |g x| ≤ M) {A : Set ℝ} {B : ℝ} (hA : A = Set.Iic B ∨ A = Set.Ioi B) {q : ℝ}
-    (hq : q < 1) :
+    (hm : 0 < m) {g : ℝ → ℝ} {Kg : ℝ} (hg : ∀ x y, |g x - g y| ≤ Kg * |x - y|)
+    {A : Set ℝ} {B : ℝ} (hA : A = Set.Iic B ∨ A = Set.Ioi B) {q : ℝ} (hq : q < 1) :
     ∃ C : ℝ, 0 ≤ C ∧ ∀ j : ℕ,
       MemLp (fun z => barrierPayoff g A m (gbmMonMil r σ T s₀ m (j + 1) z) -
           barrierPayoff g A m (gbmMonMil r σ T s₀ m j (pairAvg z))) 2 stdNormalSeq ∧
@@ -1291,20 +1462,23 @@ theorem gbm_mil_barrier_rate (r σ s₀ : ℝ) {T : ℝ} (hσ : σ ≠ 0) (hT : 
   have hm' : (0 : ℝ) < m := Nat.cast_pos.2 hm
   have hTm : 0 < T / m := div_pos hT hm'
   have hq' : q < ((2 : ℕ) : ℝ) / 2 := by rw [Nat.cast_two, div_self two_ne_zero]; exact hq
+  obtain ⟨q₀, q₁, n, hqq₀, hq₀, hq₀κ, hq₁, hn, hq₀₁⟩ := exists_barrier_exponents two_pos hq'
   obtain ⟨C, hC, hmis⟩ := gbm_mon_mismatch_rate_of_moment r σ s₀ hσ hT hm B two_pos
     (Y := gbmMonMil r σ T s₀ m) (fun hs0 j z k => by rw [gbmMonMil_eq_prod, hs0, zero_mul])
     (fun p hp => ⟨gbmMilMomentConst p r σ T s₀, gbmMilMomentConst_nonneg p r σ s₀ hT.le,
       fun j k hk => ⟨integrable_gbmMon_mil_err_pow r σ T s₀ m j (by positivity) k p,
-        gbmMon_mil_moment_error r σ s₀ hT.le m j hk hp⟩⟩) hq'
+        gbmMon_mil_moment_error r σ s₀ hT.le m j hk hp⟩⟩) hq₁
   have e : ∀ j : ℕ, T / (m * 2 ^ j) = T / m / 2 ^ j := fun j => (div_div T m (2 ^ j)).symm
-  obtain ⟨C', hC', h⟩ := barrier_rate_of hg hM hA (X := gbmMonExact r σ T s₀ m)
+  obtain ⟨C', hC', h⟩ := barrier_rate_of hg hA (X := gbmMonExact r σ T s₀ m)
     (Y := gbmMonMil r σ T s₀ m) (fun j => (measurable_memLp_gbmMonExact r σ T s₀ m j).1)
     (fun j => (measurable_memLp_gbmMonMil r σ T s₀ m j).1)
     (fun j => (measurable_memLp_gbmMonExact r σ T s₀ m j).2 m)
     (fun j => (measurable_memLp_gbmMonMil r σ T s₀ m j).2 m)
-    (gbmMonExact_pairAvg r σ T s₀ m) hTm (κ := 2) (q := q)
-    (gbmMilStrongConst_nonneg r σ s₀ hT.le) hC
-    (by push_cast; linarith)
+    (gbmMonExact_pairAvg r σ T s₀ m) hn
+    (fun j => integrable_lipschitz_pow hg
+      ((measurable_pi_apply m).comp (measurable_memLp_gbmMonExact r σ T s₀ m j).1) (n + 1)
+      (integrable_gbmMonExact_pow r σ T s₀ m j m _))
+    hTm (κ := 2) (gbmMilStrongConst_nonneg r σ s₀ hT.le) hC hqq₀ hq₀ hq₀κ hq₀₁
     (fun j => by
       rw [← e]
       exact gbm_mil_monitored_strong_error r σ s₀ hT.le m j le_rfl)
@@ -1318,20 +1492,26 @@ theorem gbm_mil_barrier_rate (r σ s₀ : ℝ) {T : ℝ} (hσ : σ ≠ 0) (hT : 
 /-- **Theorem 1 end to end for the discretely monitored barrier option with Euler–Maruyama: MSE
 `< ε²` at cost `O(ε^{−3−η})` for every `η > 0`** (Giles 2015, §5.1, p. 33, Table 5.2, row
 "barrier", with Theorem 1, §2.1, p. 6, and (2.4)).  In the setting of `gbm_em_barrier_rate`
-(`σ ≠ 0`, `T > 0`, `m ≥ 1` dates, `g` bounded and Lipschitz, up-and-out or down-and-out), level
-`j` uses `m 2^j` Euler–Maruyama steps, the coarse path of a sample is driven by the summed
-increments, the samples are independent and a level-`j` sample costs `m 2^j`.  Then for every
-`η > 0` there is `c₄ > 0` such that for every `0 < ε < e⁻¹` there are `L` and `N_j ≥ 1` for which
-the multilevel estimator of `E[g(S_T) ∏_{k=1}^m 1_A(S_{t_k})]` (`S = gbmMonExact … 0`, the exact
-solution at the dates) has a square-integrable error with mean square `< ε²`, at cost
+(`σ ≠ 0`, `T > 0`, `m ≥ 1` dates, `g` Lipschitz, up-and-out or down-and-out), level `j` uses
+`m 2^j` Euler–Maruyama steps, the coarse path of a sample is driven by the summed increments, the
+samples are independent and a level-`j` sample costs `m 2^j`.  Then for every `η > 0` there is
+`c₄ > 0` such that for every `0 < ε < e⁻¹` there are `L` and `N_j ≥ 1` for which the multilevel
+estimator of `E[g(S_T) ∏_{k=1}^m 1_A(S_{t_k})]` (`S = gbmMonExact … 0`, the exact solution at the
+dates) has a square-integrable error with mean square `< ε²`, at cost
 `∑_{j≤L} N_j m 2^j ≤ c₄ ε^{−3−η}`.  No rate is assumed: `α = β = q = 1/(2 + η)` and `γ = 1`
-(`gbm_em_barrier_rate`, `theorem1_pairAvg_of_rate`).  As for the digital option
-(`gbm_em_digital_theorem1`), the paper's weak order `α = 1` is not proved, and `σ ≠ 0` is needed
-(for `m = 1`, `g = 1`, `A = (B, ∞)` the barrier payoff is the digital payoff). -/
+(`gbm_em_barrier_rate`, `theorem1_pairAvg_of_rate`).
+
+**How close to the paper.**  Table 5.2 gives only variance rates for the barrier option; the paper
+states no weak rate `α` for it.  Here `α = q < ½` comes from the mismatch probability, as for the
+digital option (`gbm_em_digital_theorem1`), and `β = q < ½` (Table 5.2: numerics `O(h^{1/2})`,
+analysis `o(h^{1/2−δ})`; the endpoint `β = ½` is not proved), so the cost carries the loss
+`η > 0`.  The barrier is monitored at the `m` fixed dates, not continuously (see
+`gbm_em_barrier_rate`).  `σ ≠ 0` is needed: for `m = 1`,
+`g = 1` and `A = (B, ∞)` the barrier payoff is the digital payoff, for which `σ = 0` gives a mean
+square error `1` (`gbm_em_digital_theorem1`). -/
 theorem gbm_em_barrier_theorem1 (r σ s₀ : ℝ) {T : ℝ} (hσ : σ ≠ 0) (hT : 0 < T) {m : ℕ}
-    (hm : 0 < m) {g : ℝ → ℝ} {Kg M : ℝ} (hg : ∀ x y, |g x - g y| ≤ Kg * |x - y|)
-    (hM : ∀ x, |g x| ≤ M) {A : Set ℝ} {B : ℝ} (hA : A = Set.Iic B ∨ A = Set.Ioi B) {η : ℝ}
-    (hη : 0 < η) :
+    (hm : 0 < m) {g : ℝ → ℝ} {Kg : ℝ} (hg : ∀ x y, |g x - g y| ≤ Kg * |x - y|)
+    {A : Set ℝ} {B : ℝ} (hA : A = Set.Iic B ∨ A = Set.Ioi B) {η : ℝ} (hη : 0 < η) :
     ∃ c₄ : ℝ, 0 < c₄ ∧ ∀ ε : ℝ, 0 < ε → ε < Real.exp (-1) →
       ∃ (L : ℕ) (N : ℕ → ℕ), (∀ j, 0 < N j) ∧
         Integrable (fun x => (∑ j ∈ range (L + 1),
@@ -1355,17 +1535,18 @@ theorem gbm_em_barrier_theorem1 (r σ s₀ : ℝ) {T : ℝ} (hσ : σ ≠ 0) (hT
     rw [hqdef, div_lt_div_iff₀ (by positivity) (by norm_num)]
     linarith
   have hgc := (continuous_of_abs_sub_le hg).2
-  have hΦm := measurable_barrierPayoff hgc.measurable (measurableSet_barrier hA) m
-  obtain ⟨C, -, hC⟩ := gbm_em_barrier_rate r σ s₀ hσ hT hm hg hM hA hq
+  have hAm := measurableSet_barrier hA
+  have hΦm := measurable_barrierPayoff hgc.measurable hAm m
+  obtain ⟨C, -, hC⟩ := gbm_em_barrier_rate r σ s₀ hσ hT hm hg hA hq
   have e : ∀ j : ℕ, T / (m * 2 ^ j) = T / m / 2 ^ j := fun j => (div_div T m (2 ^ j)).symm
   obtain ⟨c₄, hc₄, h⟩ := theorem1_pairAvg_of_rate hTm hq0 (by linarith)
     (Pf := fun j z => barrierPayoff g A m (gbmMonEM r σ T s₀ m j z))
     (P := fun z => barrierPayoff g A m (gbmMonExact r σ T s₀ m 0 z))
     (fun j => hΦm.comp (measurable_memLp_gbmMonEM r σ T s₀ m j).1)
-    (fun j => MemLp.of_bound (hΦm.comp (measurable_memLp_gbmMonEM r σ T s₀ m j).1
-      ).aestronglyMeasurable M (Eventually.of_forall fun z => abs_barrierPayoff_le hM A m _))
-    (Integrable.of_bound (hΦm.comp (measurable_memLp_gbmMonExact r σ T s₀ m 0).1
-      ).aestronglyMeasurable M (Eventually.of_forall fun z => abs_barrierPayoff_le hM A m _))
+    (fun j => memLp_barrierPayoff hg hAm m (measurable_memLp_gbmMonEM r σ T s₀ m j).1
+      ((measurable_memLp_gbmMonEM r σ T s₀ m j).2 m))
+    ((memLp_barrierPayoff hg hAm m (measurable_memLp_gbmMonExact r σ T s₀ m 0).1
+      ((measurable_memLp_gbmMonExact r σ T s₀ m 0).2 m)).integrable one_le_two)
     (c₁ := C) (c₂ := C)
     (fun j => by
       rw [← e]
@@ -1390,16 +1571,24 @@ theorem gbm_em_barrier_theorem1 (r σ s₀ : ℝ) {T : ℝ} (hσ : σ ≠ 0) (hT
 
 /-- **Theorem 1 end to end for the discretely monitored barrier option with the natural Milstein
 estimator: MSE `< ε²` at cost `O(ε^{−2−η})` for every `η > 0`** (Giles 2015, §5.2, p. 35,
-l. 1525–1532, and Table 5.2, row "barrier", with Theorem 1, §2.1, p. 6, and (2.4)).  In the setting
-of `gbm_mil_barrier_rate`, with `m 2^j` Milstein steps on level `j` and cost `m 2^j` per sample:
-for every `η > 0` there is `c₄ > 0` such that for every `0 < ε < e⁻¹` there are `L` and `N_j ≥ 1`
-with a square-integrable error of mean square `< ε²` and cost `∑_{j≤L} N_j m 2^j ≤ c₄ ε^{−2−η}`.
-No rate is assumed: `α = β = q = 1/(1 + η)`, `γ = 1` (`gbm_mil_barrier_rate`,
-`theorem1_pairAvg_of_rate`). -/
+l. 1525–1531 (the natural estimator of a discontinuous payoff), and Table 5.2, row "barrier", with
+Theorem 1, §2.1, p. 6, and (2.4)).  In the setting of `gbm_mil_barrier_rate` (`σ ≠ 0`, `T > 0`,
+`m ≥ 1` dates, `g` Lipschitz, up-and-out or down-and-out), with `m 2^j` Milstein steps on level
+`j` and cost `m 2^j` per sample: for every `η > 0` there is `c₄ > 0` such that for every
+`0 < ε < e⁻¹` there are `L` and `N_j ≥ 1` with a square-integrable error of mean square `< ε²` and
+cost `∑_{j≤L} N_j m 2^j ≤ c₄ ε^{−2−η}`.  No rate is assumed: `α = β = q = 1/(1 + η)`, `γ = 1`
+(`gbm_mil_barrier_rate`, `theorem1_pairAvg_of_rate`).
+
+**How close to the paper.**  The Milstein barrier rate `β = 3/2 > γ = 1` of Table 5.2, which would
+give `O(ε^{−2})`, is for the continuously monitored option with the Brownian-bridge estimator of
+§5.2, which is not formalised.  For the natural estimator of the discretely monitored option
+`β = q < 1` (the endpoint `β = 1` is not proved), hence `O(ε^{−2−η})`; the paper states no weak
+rate for the barrier option, and here `α = q` comes from the mismatch probability.  `σ ≠ 0` is
+needed: for `σ = 0` the Milstein path is the Euler–Maruyama one, and `m = 1`, `g = 1`,
+`A = (B, ∞)` give the digital counterexample of `gbm_em_digital_theorem1`. -/
 theorem gbm_mil_barrier_theorem1 (r σ s₀ : ℝ) {T : ℝ} (hσ : σ ≠ 0) (hT : 0 < T) {m : ℕ}
-    (hm : 0 < m) {g : ℝ → ℝ} {Kg M : ℝ} (hg : ∀ x y, |g x - g y| ≤ Kg * |x - y|)
-    (hM : ∀ x, |g x| ≤ M) {A : Set ℝ} {B : ℝ} (hA : A = Set.Iic B ∨ A = Set.Ioi B) {η : ℝ}
-    (hη : 0 < η) :
+    (hm : 0 < m) {g : ℝ → ℝ} {Kg : ℝ} (hg : ∀ x y, |g x - g y| ≤ Kg * |x - y|)
+    {A : Set ℝ} {B : ℝ} (hA : A = Set.Iic B ∨ A = Set.Ioi B) {η : ℝ} (hη : 0 < η) :
     ∃ c₄ : ℝ, 0 < c₄ ∧ ∀ ε : ℝ, 0 < ε → ε < Real.exp (-1) →
       ∃ (L : ℕ) (N : ℕ → ℕ), (∀ j, 0 < N j) ∧
         Integrable (fun x => (∑ j ∈ range (L + 1),
@@ -1423,17 +1612,18 @@ theorem gbm_mil_barrier_theorem1 (r σ s₀ : ℝ) {T : ℝ} (hσ : σ ≠ 0) (h
     rw [hqdef, div_lt_one (by positivity)]
     linarith
   have hgc := (continuous_of_abs_sub_le hg).2
-  have hΦm := measurable_barrierPayoff hgc.measurable (measurableSet_barrier hA) m
-  obtain ⟨C, -, hC⟩ := gbm_mil_barrier_rate r σ s₀ hσ hT hm hg hM hA hq
+  have hAm := measurableSet_barrier hA
+  have hΦm := measurable_barrierPayoff hgc.measurable hAm m
+  obtain ⟨C, -, hC⟩ := gbm_mil_barrier_rate r σ s₀ hσ hT hm hg hA hq
   have e : ∀ j : ℕ, T / (m * 2 ^ j) = T / m / 2 ^ j := fun j => (div_div T m (2 ^ j)).symm
   obtain ⟨c₄, hc₄, h⟩ := theorem1_pairAvg_of_rate hTm hq0 hq
     (Pf := fun j z => barrierPayoff g A m (gbmMonMil r σ T s₀ m j z))
     (P := fun z => barrierPayoff g A m (gbmMonExact r σ T s₀ m 0 z))
     (fun j => hΦm.comp (measurable_memLp_gbmMonMil r σ T s₀ m j).1)
-    (fun j => MemLp.of_bound (hΦm.comp (measurable_memLp_gbmMonMil r σ T s₀ m j).1
-      ).aestronglyMeasurable M (Eventually.of_forall fun z => abs_barrierPayoff_le hM A m _))
-    (Integrable.of_bound (hΦm.comp (measurable_memLp_gbmMonExact r σ T s₀ m 0).1
-      ).aestronglyMeasurable M (Eventually.of_forall fun z => abs_barrierPayoff_le hM A m _))
+    (fun j => memLp_barrierPayoff hg hAm m (measurable_memLp_gbmMonMil r σ T s₀ m j).1
+      ((measurable_memLp_gbmMonMil r σ T s₀ m j).2 m))
+    ((memLp_barrierPayoff hg hAm m (measurable_memLp_gbmMonExact r σ T s₀ m 0).1
+      ((measurable_memLp_gbmMonExact r σ T s₀ m 0).2 m)).integrable one_le_two)
     (c₁ := C) (c₂ := C)
     (fun j => by
       rw [← e]

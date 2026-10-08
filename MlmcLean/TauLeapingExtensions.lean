@@ -5,7 +5,8 @@ import MlmcLean.TauLeapingExact
 
 Reference: M.B. Giles, *Multilevel Monte Carlo methods*, Acta Numerica 24 (2015), §8
 "Continuous-time Markov chains", pp. 55–56 (`docs/giles2015.txt`, ll. 2366–2447), with §5.6
-(p. 44, ll. 1917–1930, Figure 5.9 and Algorithm 3) and §2.1, (2.4) (p. 8, l. 378).
+(p. 44, ll. 1917–1930, and p. 45, ll. 1934–1966, Figure 5.9 and Algorithm 3) and §2.1, (2.4)
+(p. 8, ll. 378–382).
 
 §8, p. 55, ll. 2372–2375: "the 'tau-leaping' method (which is essentially the Euler-Maruyama
 method, approximating the reaction rate as being constant throughout the timestep) gives the
@@ -28,7 +29,7 @@ every Lipschitz payoff on `ℕ`, such as the count `Φ(x) = x` itself.
 * `lintegral_natCast_exactLaw_le`, `lintegral_natCast_tauChain_le`: both chains have finite means,
   `E_x[X_t] ≤ x + Λt` and `E[x_n] ≤ x₀ + nΛh`; `integral_bind_of_abs_le_linear`: the Markov
   property for functions of linear growth.
-* `exactLaw_tauStep_le_linear`: the local error,
+* `exactLaw_tauStep_le_linear`: **the local error**,
   `|E_x[f(X_h)] − E[f(x + P(hλ(x)))]| ≤ 2(Λh)²(A + B(x + 1))` for `|f y| ≤ A + B y`.
 * `exactLaw_tauChain_le_linear`: telescoping in the class of functions of linear growth, which
   both the exact semigroup and the tau-leaping kernel map into itself (`A` grows by `BΛh`).
@@ -39,34 +40,40 @@ every Lipschitz payoff on `ℕ`, such as the count `Φ(x) = x` itself.
   `O(ε⁻²(log ε)²)`.
 
 The method differs from "truncation plus Poisson tails": truncating `Φ` at the level `R` and
-applying the bounded result costs `O(R/N)` plus the tail `P(P(ΛT) > R − x₀)` of both chains, which
-is only `O(log N/N)` after optimising `R`; the weighted telescoping gives the sharp `O(1/N)`.
+applying the bounded result costs `O(R/N)` plus the tails `E[|Φ(X)| 1_{X > R}]` of both chains,
+which are super-exponentially small in `R` (both chains are dominated by `x₀ + P(ΛT)`); optimising
+`R ≈ log N / log log N` gives only `O(log N/N)` up to `log log` factors, not `O(1/N)`.  The
+weighted telescoping gives the sharp `O(1/N)`.
 
 **2. Adaptive grids with state-dependent propensities.**  All times are multiples of a base spacing
 `δ` (a time unit; `T = Mδ`).  A path's state on the union grid is `(x, a, e)`: its count `x`, its
 state `a` at the start of its current step, whose propensity `λ(a)` is frozen during the step, and
 the base time `e` at which the step ends.  A rule `ν(t, x)` gives the number of base intervals of a
 step that starts at base time `t` in the state `x` (`adaptStart`), as `h_ℓ = 2^{−ℓ} H(Ŝ_n)` of §5.6
-does, with the truncation `min(·, T − t)` of Algorithm 3 built in: `ν(t, x) = min(n(x), M − t)`
-with `n ≥ 1`.  The fine and the coarse path have independent rules.
+does.  A rule is *admissible* if its steps before `M` have at least one base interval
+(`1 ≤ ν(t, x)` for `t < M`), and *truncated* if moreover they end at or before `M`
+(`t + ν(t, x) ≤ M`), as the truncation `t^c := min(t^c + h^c, T)` of Algorithm 3 does:
+`ν(t, x) = min(n(x), M − t)` with `n ≥ 1`.  The fine and the coarse path have independent rules.
 * `adaptTauStep`, `adaptTauRun`: the single-level scheme,
   `(t, x) ↦ (t + ν(t, x), x + P(ν(t, x) δ λ(x)))`, stopped at `M`.
 * `adaptUnionStep`, `adaptUnionRun`, `adaptUnionInit`: **Algorithm 3 for tau-leaping**: from the
   base time `j` the loop moves to the next union grid point `u = min(e^f, e^c)`; on `[jδ, uδ]` the
   counts of the two paths are one Anderson–Higham split of `P((u − j)δλ(a^f))` and
   `P((u − j)δλ(a^c))` ("`P₁` … for the path with the smaller rate, and `P₁ + P₂` for the path with
-  the larger rate", p. 55), and a path whose step ends at `u` starts its next one (`tauAdvance`).
-* `coupledIncr_bind_map_add`: the split is additive over sub-intervals with frozen rates;
-  `adaptCoupledRun_union`: so the simulation on the base intervals (`adaptCoupledStep`, one split
-  per base interval) is, over each union sub-interval, one split of the sub-interval, and the loop
-  is the base-interval simulation at the union grid points (`adaptUnionRun_eq`).
-* `adaptRun_law`: a path simulated alone on the base intervals has, at `T`, the law of its
-  single-level scheme (a whole step is one tau-leaping step, `adaptRun_step`).
+  the larger rate", pp. 55–56), and a path whose step ends at `u` starts its next one
+  (`tauAdvance`).
+* `coupledIncr_bind_map_add`: **the split is additive over sub-intervals with frozen rates**;
+  so the simulation on the base intervals (`adaptCoupledStep`, one split per base interval) is,
+  over each union sub-interval, one split of the sub-interval (`adaptCoupledRun_union`), and
+  `adaptUnion_baseGrid`: **the union-grid loop is the base-interval simulation** observed at the
+  union grid points (both rules admissible, at least one of them truncated; `adaptUnionRun_eq`).
+* `adaptRun_law`: **a path simulated alone on the base intervals has, at `T`, the law of its
+  single-level scheme** (a whole step is one tau-leaping step, `adaptRun_step`).
 * `adaptUnion_fine`, `adaptUnion_coarse`: **each path of the union-grid loop has, at `T`, the law
-  of its single-level adaptive scheme**, whatever the other path's rule (the split gives each path
-  its own Poisson counts, `adaptCoupledRun_fst`, `adaptCoupledRun_snd`); `adaptUnion_2_4`: hence
-  **(2.4)** `E[P^c_ℓ] = E[P^f_ℓ]` (with integrability of one iff the other) for every payoff of the
-  terminal state.
+  of its single-level adaptive scheme**, for its own truncated rule and whatever the admissible
+  rule of the other path (the split gives each path its own Poisson counts, `adaptCoupledRun_fst`,
+  `adaptCoupledRun_snd`); `adaptUnion_2_4`: hence **(2.4)** `E[P^c_ℓ] = E[P^f_ℓ]` (with
+  integrability of one iff the other) for every payoff of the terminal state.
 
 **Checks.**  The constants of part 1 were checked numerically (`mpmath`, truncated state space) for
 `λ(x) = min(x, 3)`, `λ ≡ 2`, `λ(x) = 1 + (x mod 2)` and `λ = 1_{x even}`: the one-step ratio
@@ -74,16 +81,22 @@ with `n ≥ 1`.  The fine and the coarse path have independent rules.
 `0.62` against the bound `90` (`λ(x) = min(x, 3)`, `Λ = 3`, `T = 1`, `x₀ = 1`).  Part 2 was
 checked by computing both laws exactly (truncated Poisson laws) for `λ(x) = 1 + min(x, 4)/2`,
 `δ = 0.3`, `M = 5` and two state-dependent rules: the marginals of the loop and the single-level
-laws agree to the truncation error.
+laws agree to the truncation error, also when the rule of the other path is admissible but not
+truncated (its steps overshoot `M`).
 
 **Scope.**  Part 1: bounded propensities (uniformisation needs `Λ < ∞`; e.g. `λ(x) = cx` is not
-covered), one reaction.  Part 2: the propensity is arbitrary; the step sizes are multiples of the
-base spacing `δ` (common to the samples of all levels, e.g. the spacing of the finest level), the
-rules depend on the time and the state at the start of a step (rules depending on the whole past
-would need a larger state), and the laws compared are those of the state at `T` (payoffs of the
-terminal state).  Each path's count is added on every sub-interval, which is the same as
-accumulating it as Algorithm 3 does, since the propensity is frozen during the step.  The variance
-rate (`β`) of the adaptive coupling and Theorem 1 for adaptive tau-leaping are not formalised.
+covered), one reaction.  Part 2: the propensity `λ(x)` is an arbitrary function of the state;
+explicitly time-dependent propensities `λ(t, x)` (the paper's motivation is that "propensities
+vary greatly in time") are not covered: freezing `λ` at the time and the state at the start of a
+step is a routine extension, but needs the start time of the current step in the path state, and
+is not formalised.  The step sizes are multiples of the base spacing `δ` (common to the samples of
+all levels, e.g. the spacing of the finest level), the rules depend on the time and the state at
+the start of a step (rules depending on the whole past would need a larger state), and the laws
+compared are those of the state at `T` (payoffs of the terminal state; payoffs of the whole path
+are not covered, as in `unionChain_2_4`).  Each path's count is added on every sub-interval, which
+is the same as accumulating it as Algorithm 3 does, since the propensity is frozen during the
+step.  The variance rate (`β`) of the adaptive coupling and Theorem 1 for adaptive tau-leaping are
+not formalised.
 -/
 
 open MeasureTheory ProbabilityTheory Finset
@@ -380,19 +393,24 @@ lemma poisson_integral_split_linear (r : ℝ≥0) {u : ℕ → ℝ} {c d : ℝ} 
     simp only [Finset.sum_range_succ, Finset.sum_range_zero, hw_def]
     norm_num
 
-/-- The local weak error of tau-leaping is `O(h²)` for payoffs of linear growth (Giles 2015,
+/-- **The local weak error of tau-leaping is `O(h²)` for payoffs of linear growth** (Giles 2015,
 §8, p. 55, ll. 2372–2375: "the 'tau-leaping' method (which is essentially the Euler-Maruyama
 method, approximating the reaction rate as being constant throughout the timestep) gives the
 discrete equation `x_{n+1} = x_n + P(hλ(x_n))`").  For a propensity `0 ≤ λ ≤ Λ`, a function
-`|f y| ≤ A + B y`, a step `h ≥ 0` and a state `x`,
-`|E_x[f(X_h)] − E[f(x + P(hλ(x)))]| ≤ 2(Λh)²(A + B(x + 1))`, where `X` is the exact chain
+`|f y| ≤ A + B y`, a step `h ≥ 0` and a state `x`, `f(X_h)` and `f(x + P(hλ(x)))` are integrable
+and `|E_x[f(X_h)] − E[f(x + P(hλ(x)))]| ≤ 2(Λh)²(A + B(x + 1))`, where `X` is the exact chain
 (`exactLaw`).  As in `exactLaw_tauStep_le` (the bounded case `B = 0`), with no clock tick (resp. no
 jump) or exactly one the two laws agree up to `O((Λh)²)`; two or more ticks contribute at most
 `E[(A + B(x + N)) 1_{N ≥ 2}] ≤ (A + B(x + 1))(Λh)²` for `N ~ P(Λh)`. -/
-lemma exactLaw_tauStep_le_linear (hΛ : ∀ x, lam x ≤ Λ) {f : ℕ → ℝ} {A B : ℝ}
+theorem exactLaw_tauStep_le_linear (hΛ : ∀ x, lam x ≤ Λ) {f : ℕ → ℝ} {A B : ℝ}
     (hf : ∀ y, |f y| ≤ A + B * y) (h : ℝ≥0) (x : ℕ) :
-    |∫ y, f y ∂(exactLaw lam Λ h x) - ∫ y, f y ∂(tauStep lam h x)| ≤
-      2 * ((Λ : ℝ) * h) ^ 2 * (A + B * (x + 1)) := by
+    Integrable f (exactLaw lam Λ h x) ∧ Integrable f (tauStep lam h x) ∧
+      |∫ y, f y ∂(exactLaw lam Λ h x) - ∫ y, f y ∂(tauStep lam h x)| ≤
+        2 * ((Λ : ℝ) * h) ^ 2 * (A + B * (x + 1)) := by
+  have hPE := isProbabilityMeasure_exactLaw hΛ h x
+  have hPS : IsProbabilityMeasure (tauStep lam h x) := ⟨tauStep_univ lam h x⟩
+  refine ⟨integrable_of_abs_le_linear (lintegral_natCast_exactLaw_le hΛ h x) hf,
+    integrable_of_abs_le_linear (lintegral_natCast_tauStep_le hΛ h x) hf, ?_⟩
   obtain ⟨hA, hB⟩ := nonneg_of_abs_le_linear hf
   have hP : ∀ n y, IsProbabilityMeasure (jumpPow lam Λ n y) := fun n y => ⟨jumpPow_univ hΛ n y⟩
   set g : ℕ → ℝ := fun n => ∫ y, f y ∂(jumpPow lam Λ n x) with hg_def
@@ -538,7 +556,7 @@ lemma exactLaw_tauChain_le_linear (hΛ : ∀ x, lam x ≤ Λ) (h : ℝ≥0) (x�
         (A + B * ((Λ : ℝ) * h)) B hGb
       have hdiff : ∀ z : ℕ, |∫ y, f y ∂(exactLaw lam Λ h z) - ∫ y, f y ∂(tauStep lam h z)| ≤
           2 * ((Λ : ℝ) * h) ^ 2 * (A + B) + 2 * ((Λ : ℝ) * h) ^ 2 * B * z := fun z => by
-        have := exactLaw_tauStep_le_linear hΛ hf h z
+        have := (exactLaw_tauStep_le_linear hΛ hf h z).2.2
         nlinarith
       have hstep : |∫ z, ∫ y, f y ∂(exactLaw lam Λ h z) ∂(tauChain lam h x₀ n) -
           ∫ z, ∫ y, f y ∂(tauStep lam h z) ∂(tauChain lam h x₀ n)| ≤
@@ -575,8 +593,9 @@ For a propensity `0 ≤ λ ≤ Λ`, a payoff with `|Φ(y)| ≤ A + B y` for all 
 integrable and `|E[Φ(x_N)] − E[Φ(X_T)]| ≤ 2Λ²T²(A + B(1 + x₀ + ΛT))/N`, where `X` is the exact
 chain with jump rates `λ` (`exactLaw`).  This extends `tauLeaping_weak_error_exact` (the case
 `B = 0`, bounded payoffs) to unbounded payoffs such as `Φ(x) = x`.  The proof does not truncate the
-payoff: a truncation at level `R` costs `O(R/N)` plus the Poisson tail `P(P(ΛT) > R − x₀)`, i.e.
-`O(log N/N)` at best; the telescoping in the class of functions of linear growth
+payoff: a truncation at level `R` costs only `O(R/N)` plus a super-exponentially small tail
+`E[|Φ(X)| 1_{X > R}]` of both chains (dominated by `x₀ + P(ΛT)`), i.e. `O(log N/N)` up to
+`log log N` factors, not `O(1/N)`; the telescoping in the class of functions of linear growth
 (`exactLaw_tauChain_le_linear`) gives the sharp `O(1/N)`.  Deviation: bounded propensities (as in
 `TauLeapingExact.lean`; uniformisation needs `Λ < ∞`). -/
 theorem tauLeaping_weak_error_exact_linear (hΛ : ∀ x, lam x ≤ Λ) {Φ : ℕ → ℝ} {A B : ℝ}
@@ -686,18 +705,19 @@ end WeakLinear
 
 /-! ### Adaptive grids with state-dependent propensities
 
-Giles 2015, §8, p. 56, ll. 2442–2447, with §5.6, Algorithm 3.  Times are counted in base intervals
-of length `δ`; a path's state is `(x, a, e)` (count, state at the start of the current step, end of
-the current step); `ν(t, x)` is the number of base intervals of a step starting at time `t` in the
-state `x`. -/
+Giles 2015, §8, p. 56, ll. 2442–2447, with §5.6, p. 45, Algorithm 3.  Times are counted in base
+intervals of length `δ`; a path's state is `(x, a, e)` (count, state at the start of the current
+step, end of the current step); `ν(t, x)` is the number of base intervals of a step starting at
+time `t` in the state `x`. -/
 
 section Adaptive
 
 variable (lam : ℕ → ℝ≥0) (δ : ℝ≥0)
 
 /-- **One path over one sub-interval of the union grid** (Giles 2015, §8, p. 56, ll. 2442–2446:
-"with Poisson variates for each time interval instead of Brownian increments", and §5.6,
-Algorithm 3: "if `t = t^c` then update coarse path … compute adapted coarse path timestep `h^c`").
+"with Poisson variates for each time interval instead of Brownian increments", and §5.6, p. 45,
+ll. 1953–1955, Algorithm 3: "if `t = t^c` then update coarse path … compute adapted coarse path
+timestep `h^c`").
 The state of a path is `p = (x, a, e)`: its current count `x`, its state `a` at the start of its
 current step (whose propensity `λ(a)` is frozen during the step) and the base time `e` at which the
 step ends.  The path receives the count `i` over a sub-interval ending at base time `u`: `x` becomes
@@ -708,7 +728,7 @@ def tauAdvance (ν : ℕ → ℕ → ℕ) (u : ℕ) (p : ℕ × ℕ × ℕ) (i :
   if u = p.2.2 then (p.1 + i, p.1 + i, u + ν u (p.1 + i)) else (p.1 + i, p.2.1, p.2.2)
 
 /-- The state of a path at the start of a step at base time `t` from the state `x` (Giles 2015,
-§5.6, p. 44, l. 1922: "an adaptive timestep of the form `h_ℓ = 2^{−ℓ} H(Ŝ_n)`"):
+§5.6, p. 44, ll. 1920–1922: "an adaptive timestep of the form `h_ℓ = 2^{−ℓ} H(Ŝ_n)`"):
 `(x, x, t + ν(t, x))`, the step having `ν(t, x)` base intervals. -/
 def adaptStart (ν : ℕ → ℕ → ℕ) (t x : ℕ) : ℕ × ℕ × ℕ := (x, x, t + ν t x)
 
@@ -724,7 +744,7 @@ noncomputable def adaptRun (ν : ℕ → ℕ → ℕ) (j : ℕ) : ℕ → ℕ ×
   | 0 => Measure.dirac
   | r + 1 => fun p => (adaptRun ν j r p).bind (adaptSubStep lam δ ν (j + r))
 
-/-- **The coupled step over one base interval** (Giles 2015, §8, p. 55, ll. 2393–2407:
+/-- **The coupled step over one base interval** (Giles 2015, §8, pp. 55–56, ll. 2393–2407:
 "`P₁ = P(h min(λ(x_n), λ(x^c_n)))`, `P₂ = P(h|λ(x_n) − λ(x^c_n)|)`, and then using `P₁` as the
 Poisson variate for the path with the smaller rate, and `P₁ + P₂` for the path with the larger
 rate").  From the fine state `s.1 = (x, a, e)` and the coarse state `s.2 = (y, c, e')`, the counts
@@ -747,13 +767,17 @@ noncomputable def adaptCoupledRun (νf νc : ℕ → ℕ → ℕ) (j : ℕ) :
 ll. 2442–2446: "The non-nested adaptive timestepping approach described in Section 5.6 for SDEs is
 equally applicable in this setting. … the construction is exactly the same as illustrated in
 Figure 5.9, but with Poisson variates for each time interval instead of Brownian increments"; §5.6,
-Algorithm 3: "`t := min(t^c, t^f)`, `h := t − t_old`").  The state `q = (j, s)` is the current
-base time `j` and the fine and coarse path states.  If `j ≥ M` (time `T = Mδ` is reached) the loop
-has stopped.  Otherwise the next point of the union grid is `u = min(e, e')`, the earlier of the
-two step ends; on the sub-interval `[jδ, uδ]` of length `h = (u − j)δ` the counts of the two paths
-are one Anderson–Higham split of `P(hλ(a))` and `P(hλ(c))` (`coupledIncr`), with the propensities
-frozen at the starts `a`, `c` of the current steps; each path adds its count and, if its step ends
-at `u`, starts its next step with its own rule (`tauAdvance`). -/
+p. 45, ll. 1947–1948, Algorithm 3: "`t := min(t^c, t^f)`, `h := t − t_old`").  The state
+`q = (j, s)` is the current base time `j` and the fine and coarse path states.  If `j ≥ M` (time
+`T = Mδ` is reached) the loop has stopped.  Otherwise the next point of the union grid is
+`u = min(e, e')`, the earlier of the two step ends; on the sub-interval `[jδ, uδ]` of length
+`h = (u − j)δ` the counts of the two paths are one Anderson–Higham split of `P(hλ(a))` and
+`P(hλ(c))` (`coupledIncr`), with the propensities frozen at the starts `a`, `c` of the current
+steps; each path adds its count and, if its step ends at `u`, starts its next step with its own
+rule (`tauAdvance`).  The length `u − j` is a natural subtraction: along the loop started from
+`adaptUnionInit`, the invariant `j < e, e'` holds while `j < M` (it is kept because the rules are
+admissible, `1 ≤ ν`), so `h > 0`; without it the loop would stall with `h = 0`.  If at least one
+rule is truncated, also `u ≤ M` (the invariant of `adaptUnionRun_eq`). -/
 noncomputable def adaptUnionStep (νf νc : ℕ → ℕ → ℕ) (M : ℕ)
     (q : ℕ × (ℕ × ℕ × ℕ) × (ℕ × ℕ × ℕ)) : Measure (ℕ × (ℕ × ℕ × ℕ) × (ℕ × ℕ × ℕ)) :=
   if M ≤ q.1 then Measure.dirac q else
@@ -784,45 +808,46 @@ noncomputable def adaptTauRun (ν : ℕ → ℕ → ℕ) (M : ℕ) : ℕ → ℕ
   | 0 => Measure.dirac
   | k + 1 => fun s => (adaptTauStep lam δ ν M s).bind (adaptTauRun ν M k)
 
-/-- Zero base intervals: `adaptRun ν j 0 p = δ_p`. -/
+/-- Zero base intervals: `adaptRun ν j 0 p = δ_p` (Giles 2015, §8 and §5.6, Algorithm 3). -/
 lemma adaptRun_zero (ν : ℕ → ℕ → ℕ) (j : ℕ) (p : ℕ × ℕ × ℕ) :
     adaptRun lam δ ν j 0 p = Measure.dirac p :=
   rfl
 
-/-- One more base interval:
+/-- One more base interval (Giles 2015, §8 and §5.6, Algorithm 3):
 `adaptRun ν j (r + 1) p = (adaptRun ν j r p).bind (adaptSubStep (j + r))`. -/
 lemma adaptRun_succ (ν : ℕ → ℕ → ℕ) (j r : ℕ) (p : ℕ × ℕ × ℕ) :
     adaptRun lam δ ν j (r + 1) p = (adaptRun lam δ ν j r p).bind (adaptSubStep lam δ ν (j + r)) :=
   rfl
 
-/-- Zero base intervals of the coupled simulation. -/
+/-- Zero base intervals of the coupled simulation (Giles 2015, §8 and §5.6, Algorithm 3). -/
 lemma adaptCoupledRun_zero (νf νc : ℕ → ℕ → ℕ) (j : ℕ) (s : (ℕ × ℕ × ℕ) × (ℕ × ℕ × ℕ)) :
     adaptCoupledRun lam δ νf νc j 0 s = Measure.dirac s :=
   rfl
 
-/-- One more base interval of the coupled simulation. -/
+/-- One more base interval of the coupled simulation (Giles 2015, §8 and §5.6, Algorithm 3). -/
 lemma adaptCoupledRun_succ (νf νc : ℕ → ℕ → ℕ) (j r : ℕ) (s : (ℕ × ℕ × ℕ) × (ℕ × ℕ × ℕ)) :
     adaptCoupledRun lam δ νf νc j (r + 1) s =
       (adaptCoupledRun lam δ νf νc j r s).bind (adaptCoupledStep lam δ νf νc (j + r)) :=
   rfl
 
-/-- Zero iterations of the union-grid loop. -/
+/-- Zero iterations of the union-grid loop (Giles 2015, §8 and §5.6, Algorithm 3). -/
 lemma adaptUnionRun_zero (νf νc : ℕ → ℕ → ℕ) (M : ℕ) (q : ℕ × (ℕ × ℕ × ℕ) × (ℕ × ℕ × ℕ)) :
     adaptUnionRun lam δ νf νc M 0 q = Measure.dirac q :=
   rfl
 
-/-- One iteration of the union-grid loop, then `K` more. -/
+/-- One iteration of the union-grid loop, then `K` more (Giles 2015, §8 and §5.6, Algorithm 3). -/
 lemma adaptUnionRun_succ (νf νc : ℕ → ℕ → ℕ) (M K : ℕ) (q : ℕ × (ℕ × ℕ × ℕ) × (ℕ × ℕ × ℕ)) :
     adaptUnionRun lam δ νf νc M (K + 1) q =
       (adaptUnionStep lam δ νf νc M q).bind (adaptUnionRun lam δ νf νc M K) :=
   rfl
 
-/-- Zero steps of the single-level scheme. -/
+/-- Zero steps of the single-level adaptive scheme (Giles 2015, §8 and §5.6, Algorithm 3). -/
 lemma adaptTauRun_zero (ν : ℕ → ℕ → ℕ) (M : ℕ) (s : ℕ × ℕ) :
     adaptTauRun lam δ ν M 0 s = Measure.dirac s :=
   rfl
 
-/-- One step of the single-level scheme, then `k` more. -/
+/-- One step of the single-level adaptive scheme, then `k` more (Giles 2015, §8 and §5.6,
+Algorithm 3). -/
 lemma adaptTauRun_succ (ν : ℕ → ℕ → ℕ) (M k : ℕ) (s : ℕ × ℕ) :
     adaptTauRun lam δ ν M (k + 1) s = (adaptTauStep lam δ ν M s).bind (adaptTauRun lam δ ν M k) :=
   rfl
@@ -881,7 +906,8 @@ lemma adaptRun_step (ν : ℕ → ℕ → ℕ) (j m x a e : ℕ) (he : e = j + m
     rw [he']
     simp only [add_assoc]
 
-/-- Running a path alone for `n + r` base intervals is running it for `n`, then for `r` more. -/
+/-- Running a path alone for `n + r` base intervals is running it for `n`, then for `r` more
+(Giles 2015, §8 and §5.6, Algorithm 3). -/
 lemma adaptRun_add (ν : ℕ → ℕ → ℕ) (j n : ℕ) (p : ℕ × ℕ × ℕ) :
     ∀ r, adaptRun lam δ ν j (n + r) p = (adaptRun lam δ ν j n p).bind (adaptRun lam δ ν (j + n) r)
   | 0 => by
@@ -894,7 +920,8 @@ lemma adaptRun_add (ν : ℕ → ℕ → ℕ) (j n : ℕ) (p : ℕ × ℕ × ℕ
       funext q
       rw [adaptRun_succ, Nat.add_assoc]
 
-/-- The single-level scheme stops at `M`: from the pair `(M, x)` it stays there. -/
+/-- The single-level adaptive scheme stops at `M`: from the pair `(M, x)` it stays there
+(Giles 2015, §8 and §5.6, Algorithm 3: "`t^c := min(t^c + h^c, T)`"). -/
 lemma adaptTauRun_stop (ν : ℕ → ℕ → ℕ) (M : ℕ) :
     ∀ k x, adaptTauRun lam δ ν M k (M, x) = Measure.dirac (M, x)
   | 0, x => adaptTauRun_zero lam δ ν M (M, x)
@@ -942,11 +969,17 @@ lemma adaptRun_eq_adaptTauRun (ν : ℕ → ℕ → ℕ) {M : ℕ} (hν1 : ∀ t
       exact ih d' (by omega) (t + (m + 1)) (x + i) K' (by omega) (by omega)
 
 /-- **One path simulated on the base grid has the law of its single-level adaptive scheme**
-(Giles 2015, §8, p. 55, l. 2375, and §5.6, p. 44, l. 1922).  If the rule makes, before `M`, steps of
-at least one base interval that end at or before `M` (`1 ≤ ν(t, x)`, `t + ν(t, x) ≤ M` for
-`t < M`, e.g. `ν(t, x) = min(n(x), M − t)` with `n ≥ 1`), then the state at `T = Mδ` of the path
-updated on every base interval with its propensity frozen at the start of its step has the law of
-the state after `M` steps of the adaptive scheme `adaptTauRun` (which stops at `M`). -/
+(Giles 2015, §8, p. 55, ll. 2372–2375: tau-leaping, "approximating the reaction rate as being
+constant throughout the timestep", "gives the discrete equation `x_{n+1} = x_n + P(hλ(x_n))`";
+§5.6, p. 44, ll. 1920–1922: "an adaptive timestep of the form `h_ℓ = 2^{−ℓ} H(Ŝ_n)`"; §8, p. 56,
+ll. 2445–2446: "with Poisson variates for each time interval").  If the rule is truncated, i.e.
+makes, before `M`, steps of at least one base interval that end at or before `M` (`1 ≤ ν(t, x)`,
+`t + ν(t, x) ≤ M` for `t < M`, e.g. `ν(t, x) = min(n(x), M − t)` with `n ≥ 1`, as
+`t^c := min(t^c + h^c, T)` in Algorithm 3), then the state at `T = Mδ` of the path updated on every
+base interval with its propensity frozen at the start of its step has the law of the state after
+`M` steps of the adaptive scheme `adaptTauRun` (which stops at `M`).  Both hypotheses are needed
+in general (for `λ > 0`): with `ν = 0` the scheme stalls, and a step beyond `M` is cut at `M` on the
+base grid but not in `adaptTauRun`. -/
 theorem adaptRun_law (ν : ℕ → ℕ → ℕ) {M : ℕ} (hν1 : ∀ t < M, ∀ x, 1 ≤ ν t x)
     (hνM : ∀ t < M, ∀ x, t + ν t x ≤ M) (x₀ : ℕ) :
     (adaptRun lam δ ν 0 M (adaptStart ν 0 x₀)).map (fun p => p.1) =
@@ -954,7 +987,7 @@ theorem adaptRun_law (ν : ℕ → ℕ → ℕ) {M : ℕ} (hν1 : ∀ t < M, ∀
   adaptRun_eq_adaptTauRun lam δ ν hν1 hνM M 0 x₀ M (Nat.zero_add M) le_rfl
 
 /-- The fine component of the coupled step is the fine path's own step: the split gives it a
-`P(δλ(a))` count (`coupledIncr_fst`; Giles 2015, §8, p. 55). -/
+`P(δλ(a))` count (`coupledIncr_fst`; Giles 2015, §8, pp. 55–56). -/
 lemma adaptCoupledStep_fst (νf νc : ℕ → ℕ → ℕ) (j : ℕ) (s : (ℕ × ℕ × ℕ) × (ℕ × ℕ × ℕ)) :
     (adaptCoupledStep lam δ νf νc j s).map Prod.fst = adaptSubStep lam δ νf j s.1 := by
   rw [adaptCoupledStep, Measure.map_map measurable_fst Measurable.of_discrete, adaptSubStep,
@@ -963,7 +996,7 @@ lemma adaptCoupledStep_fst (νf νc : ℕ → ℕ → ℕ) (j : ℕ) (s : (ℕ �
   rfl
 
 /-- The coarse component of the coupled step is the coarse path's own step (`coupledIncr_snd`;
-Giles 2015, §8, p. 55). -/
+Giles 2015, §8, pp. 55–56). -/
 lemma adaptCoupledStep_snd (νf νc : ℕ → ℕ → ℕ) (j : ℕ) (s : (ℕ × ℕ × ℕ) × (ℕ × ℕ × ℕ)) :
     (adaptCoupledStep lam δ νf νc j s).map Prod.snd = adaptSubStep lam δ νc j s.2 := by
   rw [adaptCoupledStep, Measure.map_map measurable_snd Measurable.of_discrete, adaptSubStep,
@@ -995,8 +1028,8 @@ lemma adaptCoupledRun_snd (νf νc : ℕ → ℕ → ℕ) (j : ℕ) :
 
 /-! #### The Anderson–Higham split is additive over sub-intervals -/
 
-/-- The Anderson–Higham split for `a ≤ b` (Giles 2015, §8, p. 55, ll. 2393–2407): `P₁ ~ P(a)` for
-the path with the smaller rate and `P₁ + P₂`, `P₂ ~ P(b − a)`, for the other one. -/
+/-- The Anderson–Higham split for `a ≤ b` (Giles 2015, §8, pp. 55–56, ll. 2393–2407): `P₁ ~ P(a)`
+for the path with the smaller rate and `P₁ + P₂`, `P₂ ~ P(b − a)`, for the other one. -/
 lemma coupledIncr_of_le {a b : ℝ≥0} (hab : a ≤ b) :
     coupledIncr a b =
       (poissonMeasure a).bind fun i => (poissonMeasure (b - a)).map fun k => (i, i + k) := by
@@ -1014,7 +1047,7 @@ lemma coupledIncr_of_le {a b : ℝ≥0} (hab : a ≤ b) :
       Measure.map_dirac' Measurable.of_discrete]
     simp [couplePair]
 
-/-- The Anderson–Higham split for `b ≤ a` (Giles 2015, §8, p. 55), the mirror image of
+/-- The Anderson–Higham split for `b ≤ a` (Giles 2015, §8, pp. 55–56), the mirror image of
 `coupledIncr_of_le`. -/
 lemma coupledIncr_of_ge {a b : ℝ≥0} (hba : b ≤ a) :
     coupledIncr a b =
@@ -1080,7 +1113,7 @@ lemma poisson_pair_bind_map_add {γ : Type*} [MeasurableSpace γ] (m₁ m₂ d�
   rw [Measure.map_map Measurable.of_discrete Measurable.of_discrete]
   rfl
 
-/-- **The Anderson–Higham split is additive over sub-intervals** (Giles 2015, §8, p. 55,
+/-- **The Anderson–Higham split is additive over sub-intervals** (Giles 2015, §8, pp. 55–56,
 ll. 2387–2407: "for any `t₁, t₂ > 0`, the sum of two independent Poisson variates `P(t₁)`,
 `P(t₂)` is equivalent in distribution to `P(t₁ + t₂)`", and the split "`P₁ = P(h min(λ(x_n),
 λ(x^c_n)))`, `P₂ = P(h|λ(x_n) − λ(x^c_n)|)`").  With the rates `α`, `β` frozen, the split over a
@@ -1153,14 +1186,14 @@ lemma adaptCoupledRun_within (νf νc : ℕ → ℕ → ℕ) (j m x a e y c e' :
       · congr 3 <;> push_cast <;> ring
 
 /-- **On a union sub-interval the base-interval simulation is one Anderson–Higham split** (Giles
-2015, §8, p. 56, ll. 2442–2446: "Poisson variates for each time interval", coupled as on p. 55,
+2015, §8, p. 56, ll. 2442–2446: "Poisson variates for each time interval", coupled as on pp. 55–56,
 ll. 2393–2407).  If no step of the fine path `(x, a, e)` or of the coarse path `(y, c, e')` ends
 before base time `j + m + 1` (`j + m + 1 ≤ e, e'`), the coupled simulation over the `m + 1` base
 intervals `j, …, j + m` is one split `coupledIncr ((m + 1)δλ(a)) ((m + 1)δλ(c))` of the frozen
 propensities, the fine count going to the fine path and the coarse count to the coarse path, each
 of which ends its step at `j + m + 1` if it is due to.  So simulating on the base intervals is
 simulating on the union sub-intervals, as in Algorithm 3. -/
-theorem adaptCoupledRun_union (νf νc : ℕ → ℕ → ℕ) (j m x a e y c e' : ℕ)
+lemma adaptCoupledRun_union (νf νc : ℕ → ℕ → ℕ) (j m x a e y c e' : ℕ)
     (he : j + m + 1 ≤ e) (he' : j + m + 1 ≤ e') :
     adaptCoupledRun lam δ νf νc j (m + 1) ((x, a, e), (y, c, e')) =
       (coupledIncr (((m + 1 : ℕ) : ℝ≥0) * δ * lam a) (((m + 1 : ℕ) : ℝ≥0) * δ * lam c)).map
@@ -1178,7 +1211,7 @@ theorem adaptCoupledRun_union (νf νc : ℕ → ℕ → ℕ) (j m x a e y c e' 
   · congr 3 <;> push_cast <;> ring
 
 /-- Running the coupled simulation for `n + r` base intervals is running it for `n`, then for `r`
-more. -/
+more (Giles 2015, §8 and §5.6, Algorithm 3). -/
 lemma adaptCoupledRun_add (νf νc : ℕ → ℕ → ℕ) (j n : ℕ) (s : (ℕ × ℕ × ℕ) × (ℕ × ℕ × ℕ)) :
     ∀ r, adaptCoupledRun lam δ νf νc j (n + r) s =
       (adaptCoupledRun lam δ νf νc j n s).bind (adaptCoupledRun lam δ νf νc (j + n) r)
@@ -1192,7 +1225,8 @@ lemma adaptCoupledRun_add (νf νc : ℕ → ℕ → ℕ) (j n : ℕ) (s : (ℕ 
       funext q
       rw [adaptCoupledRun_succ, Nat.add_assoc]
 
-/-- The union-grid loop stops at `M`: from a state at a base time `≥ M` it stays there. -/
+/-- The union-grid loop stops at `M`: from a state at a base time `≥ M` it stays there (Giles 2015,
+§8 and §5.6, Algorithm 3: "while `(t < T)` do"). -/
 lemma adaptUnionRun_stop (νf νc : ℕ → ℕ → ℕ) (M : ℕ) :
     ∀ K (q : ℕ × (ℕ × ℕ × ℕ) × (ℕ × ℕ × ℕ)), M ≤ q.1 →
       adaptUnionRun lam δ νf νc M K q = Measure.dirac q
@@ -1201,29 +1235,45 @@ lemma adaptUnionRun_stop (νf νc : ℕ → ℕ → ℕ) (M : ℕ) :
       rw [adaptUnionRun_succ, adaptUnionStep, if_pos hq,
         Measure.dirac_bind Measurable.of_discrete, adaptUnionRun_stop νf νc M K q hq]
 
-/-- After a union sub-interval ending at `u < M` (`u ≤ e ≤ M`), the current step of a path ends
-after `u` and not after `M`, when the rule makes steps of at least one base interval that end at or
-before `M` (the invariant of the union-grid loop, Giles 2015, §5.6, Algorithm 3). -/
-lemma tauAdvance_end {ν : ℕ → ℕ → ℕ} {M : ℕ} (hν1 : ∀ t < M, ∀ x, 1 ≤ ν t x)
-    (hνM : ∀ t < M, ∀ x, t + ν t x ≤ M) {u x a e : ℕ} (hu : u < M) (hue : u ≤ e)
-    (heM : e ≤ M) (i : ℕ) :
-    u < (tauAdvance ν u (x, a, e) i).2.2 ∧ (tauAdvance ν u (x, a, e) i).2.2 ≤ M := by
+/-- After a union sub-interval ending at `u < M` with `u ≤ e`, the current step of a path ends after
+`u`, when its rule is admissible (steps of at least one base interval before `M`; an invariant of
+the union-grid loop, Giles 2015, §5.6, Algorithm 3). -/
+lemma tauAdvance_end_gt {ν : ℕ → ℕ → ℕ} {M : ℕ} (hν1 : ∀ t < M, ∀ x, 1 ≤ ν t x)
+    {u x a e : ℕ} (hu : u < M) (hue : u ≤ e) (i : ℕ) :
+    u < (tauAdvance ν u (x, a, e) i).2.2 := by
   by_cases h : u = e
   · simp only [tauAdvance, if_pos h]
-    exact ⟨by have := hν1 u hu (x + i); omega, hνM u hu (x + i)⟩
+    have := hν1 u hu (x + i)
+    omega
   · simp only [tauAdvance, if_neg h]
-    exact ⟨by omega, heM⟩
+    omega
 
-/-- **The union-grid loop is the base-interval simulation** (Giles 2015, §8 and §5.6, Algorithm 3),
-by induction on the remaining time `d = M − j`: from base time `j < M`, with both current steps
-ending in `(j, M]`, one iteration of the loop is the base-interval simulation up to the next union
-point `u = min(e, e')` (`adaptCoupledRun_union`), after which both steps again end in `(u, M]`
-(`tauAdvance_end`).  At `M` both have stopped. -/
+/-- After a union sub-interval ending at `u < M`, the current step of a path still ends at or before
+`M` if it did before, when its rule is truncated (steps before `M` end at or before `M`, as
+`t^c := min(t^c + h^c, T)` in Giles 2015, §5.6, Algorithm 3). -/
+lemma tauAdvance_end_le {ν : ℕ → ℕ → ℕ} {M : ℕ} (hνM : ∀ t < M, ∀ x, t + ν t x ≤ M)
+    {u x a e : ℕ} (hu : u < M) (heM : e ≤ M) (i : ℕ) :
+    (tauAdvance ν u (x, a, e) i).2.2 ≤ M := by
+  by_cases h : u = e
+  · simp only [tauAdvance, if_pos h]
+    exact hνM u hu (x + i)
+  · simp only [tauAdvance, if_neg h]
+    exact heM
+
+/-- **The union-grid loop is the base-interval simulation**, general form (Giles 2015, §8 and §5.6,
+Algorithm 3), by induction on the remaining time `d = M − j`.  The invariant at base time `j < M`:
+both current steps end after `j`, and the step of a path whose rule is truncated ends at or before
+`M`.  Since at least one rule is truncated (`hT`), the next union point `u = min(e, e')` lies in
+`(j, M]`, one iteration of the loop is the base-interval simulation up to `u`
+(`adaptCoupledRun_union`), and the invariant holds again at `u` (`tauAdvance_end_gt`, which needs
+both rules admissible, and `tauAdvance_end_le`).  At `M` both have stopped. -/
 lemma adaptUnionRun_eq (νf νc : ℕ → ℕ → ℕ) {M : ℕ} (hf1 : ∀ t < M, ∀ x, 1 ≤ νf t x)
-    (hfM : ∀ t < M, ∀ x, t + νf t x ≤ M) (hc1 : ∀ t < M, ∀ x, 1 ≤ νc t x)
-    (hcM : ∀ t < M, ∀ x, t + νc t x ≤ M) (d : ℕ) :
+    (hc1 : ∀ t < M, ∀ x, 1 ≤ νc t x)
+    (hT : (∀ t < M, ∀ x, t + νf t x ≤ M) ∨ ∀ t < M, ∀ x, t + νc t x ≤ M) (d : ℕ) :
     ∀ (j : ℕ) (s : (ℕ × ℕ × ℕ) × (ℕ × ℕ × ℕ)) (K : ℕ), j + d = M →
-      (j < M → j < s.1.2.2 ∧ s.1.2.2 ≤ M ∧ j < s.2.2.2 ∧ s.2.2.2 ≤ M) → d ≤ K →
+      (j < M → j < s.1.2.2 ∧ j < s.2.2.2 ∧
+        ((∀ t < M, ∀ x, t + νf t x ≤ M) → s.1.2.2 ≤ M) ∧
+        ((∀ t < M, ∀ x, t + νc t x ≤ M) → s.2.2.2 ≤ M)) → d ≤ K →
       (adaptUnionRun lam δ νf νc M K (j, s)).map Prod.snd =
         adaptCoupledRun lam δ νf νc j d s := by
   induction d using Nat.strong_induction_on with
@@ -1234,8 +1284,12 @@ lemma adaptUnionRun_eq (νf νc : ℕ → ℕ → ℕ) {M : ℕ} (hf1 : ∀ t < 
         Measure.map_dirac' measurable_snd, adaptCoupledRun_zero]
     · have hj : j < M := by omega
       obtain ⟨⟨x, a, e⟩, ⟨y, c, e'⟩⟩ := s
-      obtain ⟨hje, heM, hje', he'M⟩ := hinv hj
-      simp only at hje heM hje' he'M
+      obtain ⟨hje, hje', heM, he'M⟩ := hinv hj
+      simp only at hje hje' heM he'M
+      have huM : min e e' ≤ M := by
+        rcases hT with hT | hT
+        · exact (min_le_left e e').trans (heM hT)
+        · exact (min_le_right e e').trans (he'M hT)
       obtain ⟨m, hm⟩ : ∃ m, min e e' = j + m + 1 :=
         ⟨min e e' - j - 1, by have := lt_min hje hje'; omega⟩
       have hme : j + m + 1 ≤ e := hm ▸ min_le_left e e'
@@ -1256,92 +1310,107 @@ lemma adaptUnionRun_eq (νf νc : ℕ → ℕ → ℕ) {M : ℕ} (hf1 : ∀ t < 
       congr 1
       funext ij
       refine ih d' (by omega) (j + m + 1) _ K' (by omega) (fun hu => ?_) (by omega)
-      have h1 := tauAdvance_end hf1 hfM (x := x) (a := a) hu hme heM ij.1
-      have h2 := tauAdvance_end hc1 hcM (x := y) (a := c) hu hme' he'M ij.2
-      exact ⟨h1.1, h1.2, h2.1, h2.2⟩
+      exact ⟨tauAdvance_end_gt hf1 hu hme ij.1, tauAdvance_end_gt hc1 hu hme' ij.2,
+        fun hT => tauAdvance_end_le hT hu (heM hT) ij.1,
+        fun hT => tauAdvance_end_le hT hu (he'M hT) ij.2⟩
 
-/-- The initial state of the union-grid loop (Giles 2015, §5.6, Algorithm 3: "`t := 0`,
-`t^c := 0`, `t^f := 0`"): base time `0`, both paths at `x₀` and at the start of their first
-step. -/
+/-- The initial state of the union-grid loop (Giles 2015, §5.6, p. 45, ll. 1940–1942, Algorithm 3:
+"`t := 0`, `t^c := 0`, `t^f := 0`"): base time `0`, both paths at `x₀` and at the start of their
+first step. -/
 def adaptUnionInit (νf νc : ℕ → ℕ → ℕ) (x₀ : ℕ) : ℕ × (ℕ × ℕ × ℕ) × (ℕ × ℕ × ℕ) :=
   (0, adaptStart νf 0 x₀, adaptStart νc 0 x₀)
 
-/-- The union-grid loop run for `M` iterations from the start is the base-interval simulation over
-`[0, M]` (Giles 2015, §8 and §5.6). -/
-lemma adaptUnionRun_init (νf νc : ℕ → ℕ → ℕ) {M : ℕ} (hf1 : ∀ t < M, ∀ x, 1 ≤ νf t x)
-    (hfM : ∀ t < M, ∀ x, t + νf t x ≤ M) (hc1 : ∀ t < M, ∀ x, 1 ≤ νc t x)
-    (hcM : ∀ t < M, ∀ x, t + νc t x ≤ M) (x₀ : ℕ) :
+/-- **The union-grid loop is the simulation with one Anderson–Higham split per base interval**
+(Giles 2015, §5.6, p. 44, ll. 1926–1929: "The underlying Brownian path needs to be sampled at a set
+of times which are the union of the simulation times used by the coarse and fine path. The
+independent Brownian increments can be simulated for each time interval, and summed to give `W(t)`
+at the required times"; §8, p. 56, ll. 2444–2446: "the construction is exactly the same as
+illustrated in Figure 5.9, but with Poisson variates for each time interval instead of Brownian
+increments").  Let both rules be admissible (`1 ≤ ν(t, x)` for `t < M`: steps of at least one
+base interval) and at least one of them truncated (`t + ν(t, x) ≤ M` for `t < M`, as
+`t^c := min(t^c + h^c, T)` in Algorithm 3).  Then the pair of path states after `M` iterations of
+the union-grid loop (`adaptUnionStep`, one split per union sub-interval; each iteration advances by
+at least one base interval) has the law of the pair after the `M` base intervals of the simulation
+`adaptCoupledRun` that draws one split `coupledIncr (δλ(a)) (δλ(c))` per base interval: the counts
+of the union sub-intervals are the sums of the counts of their base intervals
+(`coupledIncr_bind_map_add`).  Admissibility keeps the loop from stalling, and without a truncated
+rule the last union point could lie beyond `M`. -/
+theorem adaptUnion_baseGrid (νf νc : ℕ → ℕ → ℕ) {M : ℕ} (hf1 : ∀ t < M, ∀ x, 1 ≤ νf t x)
+    (hc1 : ∀ t < M, ∀ x, 1 ≤ νc t x)
+    (hT : (∀ t < M, ∀ x, t + νf t x ≤ M) ∨ ∀ t < M, ∀ x, t + νc t x ≤ M) (x₀ : ℕ) :
     (adaptUnionRun lam δ νf νc M M (adaptUnionInit νf νc x₀)).map Prod.snd =
       adaptCoupledRun lam δ νf νc 0 M (adaptStart νf 0 x₀, adaptStart νc 0 x₀) := by
-  refine adaptUnionRun_eq lam δ νf νc hf1 hfM hc1 hcM M 0 _ M (Nat.zero_add M)
-    (fun h0 => ?_) le_rfl
+  refine adaptUnionRun_eq lam δ νf νc hf1 hc1 hT M 0 _ M (Nat.zero_add M) (fun h0 => ?_) le_rfl
   simp only [adaptStart]
-  exact ⟨by have := hf1 0 h0 x₀; omega, hfM 0 h0 x₀, by have := hc1 0 h0 x₀; omega,
-    hcM 0 h0 x₀⟩
+  exact ⟨by have := hf1 0 h0 x₀; omega, by have := hc1 0 h0 x₀; omega, fun h => h 0 h0 x₀,
+    fun h => h 0 h0 x₀⟩
 
 /-- **The fine path of adaptive tau-leaping MLMC has the law of its single-level scheme** (Giles
 2015, §8, p. 56, ll. 2442–2447: "The non-nested adaptive timestepping approach described in
 Section 5.6 for SDEs is equally applicable in this setting. … the construction is exactly the same
 as illustrated in Figure 5.9, but with Poisson variates for each time interval instead of Brownian
 increments. This adaptive timestepping can be very helpful in cases in which propensities vary
-greatly in time"; §5.6, p. 44, ll. 1917–1930: "a completely independent adaptation on each level
+greatly in time"; §5.6, p. 44, ll. 1919–1920: "a completely independent adaptation on each level
 of refinement").  Let the fine and the coarse path have independent adaptation rules `νf`, `νc` (in
 units of a base spacing `δ`, depending on the time and the state at the start of a step, as
-`h_ℓ = 2^{−ℓ} H(Ŝ_n)` does), each making, before `T = Mδ`, steps of at least one base interval that
-end at or before `M` (e.g. `ν(t, x) = min(n(x), M − t)` with `n ≥ 1`, the truncation of
-Algorithm 3).  In the union-grid loop (`adaptUnionStep`: on each union sub-interval one
-Anderson–Higham split of the propensities frozen at the starts of the two current steps), after `M`
-iterations (when `T` is reached) the fine state has the law of the fine single-level adaptive
-tau-leaping scheme `adaptTauRun λ δ νf` at `T`, whatever the coarse rule.  The propensity
+`h_ℓ = 2^{−ℓ} H(Ŝ_n)` does).  Let the fine rule be truncated: before `T = Mδ` it makes steps of at
+least one base interval that end at or before `M` (e.g. `ν(t, x) = min(n(x), M − t)` with `n ≥ 1`,
+the truncation `t^f := min(t^f + h^f, T)` of Algorithm 3); let the coarse rule be admissible: before
+`M` its steps have at least one base interval (its steps may overshoot `M`; the loop still stops at
+`M`).  In the union-grid loop (`adaptUnionStep`: on each union sub-interval one Anderson–Higham
+split of the propensities frozen at the starts of the two current steps), after `M` iterations
+(when `T` is reached) the fine state has the law of the fine single-level adaptive tau-leaping
+scheme `adaptTauRun λ δ νf` at `T`, whatever the admissible coarse rule.  The propensity
 `λ : ℕ → [0, ∞)` is arbitrary (state dependent, not necessarily bounded).  Deviations: step sizes
 are multiples of `δ`, and the laws compared are those of the state at `T` (payoffs of the terminal
 state). -/
 theorem adaptUnion_fine (νf νc : ℕ → ℕ → ℕ) {M : ℕ} (hf1 : ∀ t < M, ∀ x, 1 ≤ νf t x)
-    (hfM : ∀ t < M, ∀ x, t + νf t x ≤ M) (hc1 : ∀ t < M, ∀ x, 1 ≤ νc t x)
-    (hcM : ∀ t < M, ∀ x, t + νc t x ≤ M) (x₀ : ℕ) :
+    (hfM : ∀ t < M, ∀ x, t + νf t x ≤ M) (hc1 : ∀ t < M, ∀ x, 1 ≤ νc t x) (x₀ : ℕ) :
     (adaptUnionRun lam δ νf νc M M (adaptUnionInit νf νc x₀)).map (fun q => q.2.1.1) =
       (adaptTauRun lam δ νf M M (0, x₀)).map Prod.snd := by
   rw [show (fun q : ℕ × (ℕ × ℕ × ℕ) × (ℕ × ℕ × ℕ) => q.2.1.1) =
       ((fun p : ℕ × ℕ × ℕ => p.1) ∘ Prod.fst) ∘ Prod.snd from rfl,
     ← Measure.map_map Measurable.of_discrete measurable_snd,
-    adaptUnionRun_init lam δ νf νc hf1 hfM hc1 hcM,
+    adaptUnion_baseGrid lam δ νf νc hf1 hc1 (Or.inl hfM),
     ← Measure.map_map Measurable.of_discrete measurable_fst, adaptCoupledRun_fst]
   exact adaptRun_law lam δ νf hf1 hfM x₀
 
 /-- **The coarse path of adaptive tau-leaping MLMC has the law of its single-level scheme** (Giles
-2015, §8, p. 56, ll. 2442–2447, and §5.6, p. 44, ll. 1917–1930; as `adaptUnion_fine`).  Under the
-same hypotheses, after `M` iterations of the union-grid loop the coarse state has the law of the
-coarse single-level adaptive tau-leaping scheme `adaptTauRun λ δ νc` at `T = Mδ`, whatever the fine
-rule. -/
+2015, §8, p. 56, ll. 2444–2446: "the construction is exactly the same as illustrated in Figure 5.9,
+but with Poisson variates for each time interval instead of Brownian increments"; §5.6, p. 44,
+ll. 1919–1920: "a completely independent adaptation on each level of refinement"; the mirror image
+of `adaptUnion_fine`).  If the coarse rule is truncated (before `T = Mδ`, steps of at least one
+base interval that end at or before `M`) and the fine rule admissible (steps of at least one base
+interval before `M`), then after `M` iterations of the union-grid loop the coarse state has the law
+of the coarse single-level adaptive tau-leaping scheme `adaptTauRun λ δ νc` at `T`, whatever the
+admissible fine rule. -/
 theorem adaptUnion_coarse (νf νc : ℕ → ℕ → ℕ) {M : ℕ} (hf1 : ∀ t < M, ∀ x, 1 ≤ νf t x)
-    (hfM : ∀ t < M, ∀ x, t + νf t x ≤ M) (hc1 : ∀ t < M, ∀ x, 1 ≤ νc t x)
-    (hcM : ∀ t < M, ∀ x, t + νc t x ≤ M) (x₀ : ℕ) :
+    (hc1 : ∀ t < M, ∀ x, 1 ≤ νc t x) (hcM : ∀ t < M, ∀ x, t + νc t x ≤ M) (x₀ : ℕ) :
     (adaptUnionRun lam δ νf νc M M (adaptUnionInit νf νc x₀)).map (fun q => q.2.2.1) =
       (adaptTauRun lam δ νc M M (0, x₀)).map Prod.snd := by
   rw [show (fun q : ℕ × (ℕ × ℕ × ℕ) × (ℕ × ℕ × ℕ) => q.2.2.1) =
       ((fun p : ℕ × ℕ × ℕ => p.1) ∘ Prod.snd) ∘ Prod.snd from rfl,
     ← Measure.map_map Measurable.of_discrete measurable_snd,
-    adaptUnionRun_init lam δ νf νc hf1 hfM hc1 hcM,
+    adaptUnion_baseGrid lam δ νf νc hf1 hc1 (Or.inr hcM),
     ← Measure.map_map Measurable.of_discrete measurable_snd, adaptCoupledRun_snd]
   exact adaptRun_law lam δ νc hc1 hcM x₀
 
 /-- **(2.4) for adaptive tau-leaping with state-dependent propensities** (Giles 2015, §2.1, p. 8,
-l. 378: "Provided we maintain the identity `E[P^f_ℓ] = E[P^c_ℓ]` (2.4) so that the expectation on
-level `ℓ` is the same for the two approximations"; §8, p. 56, ll. 2442–2447; §5.6, p. 44,
-ll. 1924–1926: "This results in timesteps which are not naturally nested. It may appear that this
+ll. 378–382: "Provided we maintain the identity `E[P^f_ℓ] = E[P^c_ℓ]` (2.4) so that the expectation
+on level `ℓ` is the same for the two approximations"; §8, p. 56, ll. 2442–2447; §5.6, p. 44,
+ll. 1923–1925: "This results in timesteps which are not naturally nested. It may appear that this
 would cause difficulties in the MLMC implementation, but Figure 5.9 tries to illustrate that it
 does not").  The level-`ℓ` path, with its rule `ν`, is simulated as the coarse path of a
 level-`(ℓ + 1)` sample (union-grid loop with the fine rule `ν'`) and as the fine path of a
 level-`ℓ` sample (union-grid loop with the coarse rule `ν''`), on the same base spacing `δ` (e.g.
-that of the finest level).  If all three rules make, before `T = Mδ`, steps of at least one base
-interval that end at or before `M`, then the two level-`ℓ` states at `T` have the same law; so for
-every payoff `Φ` of the terminal state, `P^c_ℓ = Φ(x^c_T)` is integrable iff `P^f_ℓ = Φ(x_T)` is,
-and `E[P^c_ℓ] = E[P^f_ℓ]`. -/
-theorem adaptUnion_2_4 {ν : ℕ → ℕ → ℕ} (ν' ν'' : ℕ → ℕ → ℕ) {M : ℕ}
+that of the finest level).  If the level-`ℓ` rule is truncated (before `T = Mδ`, steps of at least
+one base interval that end at or before `M`) and the rules of the neighbouring levels are
+admissible (steps of at least one base interval before `M`), then the two level-`ℓ` states at `T`
+have the same law; so for every payoff `Φ` of the terminal state, `P^c_ℓ = Φ(x^c_T)` is
+integrable iff `P^f_ℓ = Φ(x_T)` is, and `E[P^c_ℓ] = E[P^f_ℓ]`. -/
+theorem adaptUnion_2_4 (ν ν' ν'' : ℕ → ℕ → ℕ) {M : ℕ}
     (h1 : ∀ t < M, ∀ x, 1 ≤ ν t x) (hM : ∀ t < M, ∀ x, t + ν t x ≤ M)
-    (h1' : ∀ t < M, ∀ x, 1 ≤ ν' t x) (hM' : ∀ t < M, ∀ x, t + ν' t x ≤ M)
-    (h1'' : ∀ t < M, ∀ x, 1 ≤ ν'' t x) (hM'' : ∀ t < M, ∀ x, t + ν'' t x ≤ M)
-    (x₀ : ℕ) (Φ : ℕ → ℝ) :
+    (h1' : ∀ t < M, ∀ x, 1 ≤ ν' t x) (h1'' : ∀ t < M, ∀ x, 1 ≤ ν'' t x) (x₀ : ℕ) (Φ : ℕ → ℝ) :
     (adaptUnionRun lam δ ν' ν M M (adaptUnionInit ν' ν x₀)).map (fun q => q.2.2.1) =
         (adaptUnionRun lam δ ν ν'' M M (adaptUnionInit ν ν'' x₀)).map (fun q => q.2.1.1) ∧
       (Integrable (fun q => Φ q.2.2.1) (adaptUnionRun lam δ ν' ν M M (adaptUnionInit ν' ν x₀)) ↔
@@ -1351,7 +1420,7 @@ theorem adaptUnion_2_4 {ν : ℕ → ℕ → ℕ} (ν' ν'' : ℕ → ℕ → �
         ∫ q, Φ q.2.1.1 ∂(adaptUnionRun lam δ ν ν'' M M (adaptUnionInit ν ν'' x₀)) := by
   have hlaw : (adaptUnionRun lam δ ν' ν M M (adaptUnionInit ν' ν x₀)).map (fun q => q.2.2.1) =
       (adaptUnionRun lam δ ν ν'' M M (adaptUnionInit ν ν'' x₀)).map (fun q => q.2.1.1) := by
-    rw [adaptUnion_coarse lam δ ν' ν h1' hM' h1 hM, adaptUnion_fine lam δ ν ν'' h1 hM h1'' hM'']
+    rw [adaptUnion_coarse lam δ ν' ν h1' h1 hM, adaptUnion_fine lam δ ν ν'' h1 hM h1'']
   refine ⟨hlaw, ?_, ?_⟩
   · show Integrable (Φ ∘ fun q : ℕ × (ℕ × ℕ × ℕ) × (ℕ × ℕ × ℕ) => q.2.2.1) _ ↔
       Integrable (Φ ∘ fun q : ℕ × (ℕ × ℕ × ℕ) × (ℕ × ℕ × ℕ) => q.2.1.1) _

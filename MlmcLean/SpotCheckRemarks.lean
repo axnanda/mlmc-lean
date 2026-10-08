@@ -1,6 +1,7 @@
 import MlmcLean.InverseNormal
 import MlmcLean.SDEExtras
 import MlmcLean.ML2RTheorem
+import MlmcLean.GBMWeakOrder
 
 /-!
 # Small items from the spot checks of Giles 2015 (§§2.3–10.2) and Haas–Giles 2025 (§2.1)
@@ -27,8 +28,10 @@ MLMC framework for efficient simulations on FPGAs*, arXiv:2502.07123 (2025)
   an independent block `z_ℓ`) and `nested_vector_inputs_mlmc` (truncated vectors of independent
   variables): the coarse payoff on the truncated fine input has the law of the coarse level's
   payoff, hence (2.4) and the telescoping sum.
-* **§9.1, standard nested Monte Carlo** (p. 57, l. 2462–2474): `nested_mc_cost_upper` and
-  `nested_mc_cost_lower`: with bias `c/M` and variance `v/N` the cost `N M` is `Θ(ε⁻³)`.
+* **§9.1, standard nested Monte Carlo** (p. 57, l. 2462–2474): `nested_mc_cost_upper` (the
+  explicit `M = max(1, ⌈2c/ε⌉)`, `N = max(1, ⌈2v/ε²⌉)` reach the mean square error `ε²` at cost
+  `N M ≤ (2v + 1)(2c + 1)ε⁻³`) and `nested_mc_cost_lower` (every `N, M` that reach it cost at
+  least `c v ε⁻³`): with bias `c/M` and variance `v/N` the cost `N M` is `Θ(ε⁻³)`.
 * **§10.1, contracting SDEs** (p. 61, l. 2738–2743): for the Ornstein–Uhlenbeck SDE the
   Euler–Maruyama chain `X_{n+1} = (1 − κh)X_n + σ√h Z_n` has the unique invariant law
   `N(0, σ²/(κ(2 − κh)))` for `0 < κh < 2` (`ouEM_invariant`), which tends to `N(0, σ²/(2κ))` as
@@ -38,10 +41,15 @@ MLMC framework for efficient simulations on FPGAs*, arXiv:2502.07123 (2025)
   `I` uniform on `{0, …, I_max}`, `Φ⁻¹(U)` tends in distribution to `N(0, 1)`; the printed
   `U = (I + ½)/I_max` exceeds `1` at `I = I_max`.
 * **Haas–Giles 2025, §2.1** (p. 3, l. 159–164): for GBM, Euler–Maruyama and the Lipschitz payoff
-  `g(x) = x`, `s₀²σ⁴T²e^{−4|r|T}/4 · 2^{−ℓ} ≤ V_{ℓ+1} ≤ 6C(T)T 2^{−(ℓ+1)}`
-  (`gbm_em_identity_variance_two_sided`), so `V_ℓC_ℓ` with `C_ℓ = 2^ℓ` stays between two positive
-  constants and does not tend to `0` (`gbm_em_identity_variance_cost`): the paper's "the former"
-  (`V_ℓC_ℓ` decreasing with level) does not apply to the Euler–Maruyama scheme.
+  `g(x) = x`, `s₀²σ⁴T²e^{−4|r|T}/4 · 2^{−ℓ} ≤ V_{ℓ+1} ≤ 6C(T)T 2^{−(ℓ+1)}` if `|r|T ≤ 2^ℓ`
+  (`gbm_em_identity_variance_two_sided`) and `V_{ℓ+1} ≥ s₀²(σ²T 2^{−(ℓ+1)})^{2^{ℓ+1}}` at every
+  level (`gbm_em_identity_variance_ge_pow`), so `V_ℓC_ℓ` with `C_ℓ = 2^ℓ` stays between two positive
+  constants at all levels (`gbm_em_identity_variance_cost`).  So the paper's case "`V_ℓC_ℓ`
+  decreases with level", read as the geometric decay (`β > γ`) that gives the cost
+  `≈ ε⁻²V_0C_0`, does not hold for the Euler–Maruyama scheme: `V_ℓC_ℓ` does not tend to `0`.  It
+  can increase with `ℓ` (`r = 0.05`, `σ = 0.2`, `T = 1`) or decrease towards a positive limit
+  (`r = −0.5`, `σ = 0.2`, `T = 1`: monotonically for `ℓ ≤ 13`); either way the cost (8) is of
+  order `ε⁻²(L + 1)²`.
 
 Not in this file: the §7.1 (p. 49) corollary "no deterministic `K` with `|P − P_ℓ| ≤ K h_ℓ²` almost
 surely" for the elliptic example itself is already `not_ae_abs_ellipticP_sub_le`
@@ -52,10 +60,13 @@ continuous); the limit statement uses exactly the paper's `g` and assumes no ato
 `P_{ℓ−1}` at `x`.  §7.1: the Dirichlet scheme is on the grid `j = 0, …, J`; the instability
 needs `J ≥ J₀(λ)` (with one interior node the step is `u_1 ↦ (1 − 2λ)u_1`, stable up to `λ = 1`).
 §9.1: the nested estimator is modelled by its outer samples `P_M` with the bias and variance
-rates as hypotheses (for smooth `f`, `nested_bias_rate` gives the bias rate for `M = 2^ℓ`).
+rates as hypotheses (for smooth `f`, `nested_bias_rate` of `MlmcLean.NestedMLMC` gives the bias
+rate for `M = 2^ℓ`).
 §10.1: only the discretised chain is treated; that `σ²/(2κ)` is the variance of the stationary
 law of the SDE is not proved (SDE theory).  §10.2: `I_max` is the index `n` of the sequence.
-HG §2.1: the lower bound is proved for the levels with `|r|T ≤ 2^ℓ` (all levels if `r = 0`).
+HG §2.1: the explicit lower bound `∝ 2^{−ℓ}` is proved for the levels with `|r|T ≤ 2^ℓ` (all
+levels if `r = 0`; numerically it holds at every level); at the finitely many other levels the
+variance is still positive, which is all the cost statement needs.
 -/
 
 open MeasureTheory ProbabilityTheory Filter Topology Finset
@@ -223,16 +234,16 @@ theorem variance_smoothCDF_correction_le {Pf Pc : Ω → ℝ} (hPf : AEStronglyM
 l. 1987–1993: "where `g(x)` is a continuous function with `g(x) = 0` for `x < −1`, and `g(x) = 1`
 for `x > 1` … As `δ → 0`, `g(x/δ) → H(x)`, and the accuracy improves but the variance of the
 multilevel estimator increases").  For every such `g` (continuous, hence bounded), if `P_ℓ` and
-`P_{ℓ−1}` (`Pf`, `Pc`) have no atom at `x`, then the corrections are square integrable and as
-`δ → 0⁺` the variance of `g((x − P_ℓ)/δ) − g((x − P_{ℓ−1})/δ)` tends to the variance of the
-indicator correction `1_{P_ℓ < x} − 1_{P_{ℓ−1} < x}` of the unsmoothed CDF, the correction of
-the discontinuous payoff `H(x − P)`.  (The Lipschitz bound of `variance_smoothCDF_correction_le`
-blows up like `δ⁻²`.) -/
-theorem tendsto_variance_smoothCDF_correction {Pf Pc : Ω → ℝ} (hPf : Measurable Pf)
-    (hPc : Measurable Pc) {g : ℝ → ℝ} (hg : Continuous g) (hg0 : ∀ y < -1, g y = 0)
+`P_{ℓ−1}` (`Pf`, `Pc`, a.e. measurable) have no atom at `x`, then the corrections are square
+integrable for `δ > 0` and as `δ → 0⁺` the variance of `g((x − P_ℓ)/δ) − g((x − P_{ℓ−1})/δ)`
+tends to the variance of the indicator correction `1_{P_ℓ < x} − 1_{P_{ℓ−1} < x}` of the
+unsmoothed CDF, the correction of the discontinuous payoff `H(x − P)`.  (The Lipschitz bound of
+`variance_smoothCDF_correction_le` blows up like `δ⁻²`.) -/
+theorem tendsto_variance_smoothCDF_correction {Pf Pc : Ω → ℝ} (hPf : AEMeasurable Pf μ)
+    (hPc : AEMeasurable Pc μ) {g : ℝ → ℝ} (hg : Continuous g) (hg0 : ∀ y < -1, g y = 0)
     (hg1 : ∀ y > 1, g y = 1) (x : ℝ) (hxf : μ {ω | Pf ω = x} = 0)
     (hxc : μ {ω | Pc ω = x} = 0) :
-    (∀ δ, MemLp (fun ω => g ((x - Pf ω) / δ) - g ((x - Pc ω) / δ)) 2 μ) ∧
+    (∀ δ, 0 < δ → MemLp (fun ω => g ((x - Pf ω) / δ) - g ((x - Pc ω) / δ)) 2 μ) ∧
     MemLp (fun ω => (if Pf ω < x then (1 : ℝ) else 0) - (if Pc ω < x then (1 : ℝ) else 0)) 2 μ ∧
     Tendsto (fun δ => variance (fun ω => g ((x - Pf ω) / δ) - g ((x - Pc ω) / δ)) μ) (𝓝[>] 0)
       (𝓝 (variance (fun ω => (if Pf ω < x then (1 : ℝ) else 0) -
@@ -254,13 +265,15 @@ theorem tendsto_variance_smoothCDF_correction {Pf Pc : Ω → ℝ} (hPf : Measur
   set Y : ℝ → Ω → ℝ := fun δ ω => g ((x - Pf ω) / δ) - g ((x - Pc ω) / δ) with hYdef
   set Y₀ : Ω → ℝ := fun ω => (if Pf ω < x then (1 : ℝ) else 0) -
     (if Pc ω < x then (1 : ℝ) else 0) with hY₀
-  have hYm : ∀ δ, Measurable (Y δ) := fun δ =>
-    (hg.measurable.comp ((measurable_const.sub hPf).div_const δ)).sub
-      (hg.measurable.comp ((measurable_const.sub hPc).div_const δ))
-  have hY₀m : Measurable Y₀ :=
-    (Measurable.ite (measurableSet_lt hPf measurable_const) measurable_const
-      measurable_const).sub
-      (Measurable.ite (measurableSet_lt hPc measurable_const) measurable_const measurable_const)
+  have hYm : ∀ δ, AEStronglyMeasurable (Y δ) μ := fun δ =>
+    ((hg.measurable.comp_aemeasurable ((aemeasurable_const.sub hPf).div_const δ)).sub
+      (hg.measurable.comp_aemeasurable ((aemeasurable_const.sub hPc).div_const δ))
+      ).aestronglyMeasurable
+  have hH : Measurable fun y : ℝ => if y < x then (1 : ℝ) else 0 :=
+    Measurable.ite (measurableSet_Iio : MeasurableSet {y : ℝ | y < x}) measurable_const
+      measurable_const
+  have hY₀m : AEStronglyMeasurable Y₀ μ :=
+    ((hH.comp_aemeasurable hPf).sub (hH.comp_aemeasurable hPc)).aestronglyMeasurable
   have hYB : ∀ δ ω, |Y δ ω| ≤ 2 * B := fun δ ω => by
     refine (abs_sub _ _).trans ?_
     linarith [hgB ((x - Pf ω) / δ), hgB ((x - Pc ω) / δ)]
@@ -269,10 +282,10 @@ theorem tendsto_variance_smoothCDF_correction {Pf Pc : Ω → ℝ} (hPf : Measur
     split_ifs <;> norm_num
   have hmem : ∀ δ, MemLp (Y δ) 2 μ := fun δ =>
     memLp_of_bounded (a := -(2 * B)) (b := 2 * B) (Eventually.of_forall fun ω =>
-      abs_le.1 (hYB δ ω)) (hYm δ).aestronglyMeasurable 2
+      abs_le.1 (hYB δ ω)) (hYm δ) 2
   have hmem₀ : MemLp Y₀ 2 μ :=
     memLp_of_bounded (a := -2) (b := 2) (Eventually.of_forall fun ω => abs_le.1 (hY₀B ω))
-      hY₀m.aestronglyMeasurable 2
+      hY₀m 2
   -- pointwise convergence off the atoms
   have hlim : ∀ᵐ ω ∂μ, Tendsto (fun δ => Y δ ω) (𝓝[>] 0) (𝓝 (Y₀ ω)) := by
     have hf : ∀ᵐ ω ∂μ, Pf ω ≠ x := measure_eq_zero_iff_ae_notMem.1 hxf
@@ -285,12 +298,12 @@ theorem tendsto_variance_smoothCDF_correction {Pf Pc : Ω → ℝ} (hPf : Measur
     simp only [hYdef, hY₀, d1, d2, sub_pos]
   have hI1 : Tendsto (fun δ => ∫ ω, Y δ ω ∂μ) (𝓝[>] 0) (𝓝 (∫ ω, Y₀ ω ∂μ)) :=
     tendsto_integral_filter_of_dominated_convergence (fun _ => 2 * B)
-      (Eventually.of_forall fun δ => (hYm δ).aestronglyMeasurable)
+      (Eventually.of_forall fun δ => hYm δ)
       (Eventually.of_forall fun δ => Eventually.of_forall fun ω =>
         (Real.norm_eq_abs _).trans_le (hYB δ ω)) (integrable_const _) hlim
   have hI2 : Tendsto (fun δ => ∫ ω, Y δ ω ^ 2 ∂μ) (𝓝[>] 0) (𝓝 (∫ ω, Y₀ ω ^ 2 ∂μ)) :=
     tendsto_integral_filter_of_dominated_convergence (fun _ => (2 * B) ^ 2)
-      (Eventually.of_forall fun δ => ((hYm δ).pow_const 2).aestronglyMeasurable)
+      (Eventually.of_forall fun δ => (hYm δ).pow 2)
       (Eventually.of_forall fun δ => Eventually.of_forall fun ω => by
         rw [Real.norm_eq_abs, abs_pow]
         exact pow_le_pow_left₀ (abs_nonneg _) (hYB δ ω) 2) (integrable_const _)
@@ -298,7 +311,7 @@ theorem tendsto_variance_smoothCDF_correction {Pf Pc : Ω → ℝ} (hPf : Measur
   have e : ∀ δ, variance (Y δ) μ = ∫ ω, Y δ ω ^ 2 ∂μ - (∫ ω, Y δ ω ∂μ) ^ 2 := fun δ => by
     rw [variance_eq_sub (hmem δ)]
     rfl
-  refine ⟨hmem, hmem₀, ?_⟩
+  refine ⟨fun δ _ => hmem δ, hmem₀, ?_⟩
   rw [variance_eq_sub hmem₀]
   exact (hI2.sub (hI1.pow 2)).congr fun δ => (e δ).symm
 
@@ -554,39 +567,74 @@ theorem nested_inputs_mlmc {Z : ℕ → Type*} [∀ ℓ, MeasurableSpace (Z ℓ)
     fun ℓ => integral_comp_of_measurePreserving (hproj ℓ) (hP ℓ).aestronglyMeasurable,
     nested_proj_telescoping hproj hP⟩
 
+/-- Truncating a finite product of probability measures to its first `m` coordinates is measure
+preserving (for the truncated Karhunen–Loève inputs of Giles 2015, §7.2, p. 53): the map
+`(ξ_i)_{i<n} ↦ (ξ_i)_{i<m}` sends `⊗_{i<n} η_i` to `⊗_{i<m} η_i` for `m ≤ n`. -/
+lemma measurePreserving_truncFin {E : Type*} [MeasurableSpace E] (η : ℕ → Measure E)
+    [∀ i, IsProbabilityMeasure (η i)] {m n : ℕ} (hmn : m ≤ n) :
+    MeasurePreserving (fun (ξ : Fin n → E) (i : Fin m) => ξ (Fin.castLE hmn i))
+      (Measure.pi fun i : Fin n => η i) (Measure.pi fun i : Fin m => η i) := by
+  classical
+  have hmeas : Measurable fun (ξ : Fin n → E) (i : Fin m) => ξ (Fin.castLE hmn i) :=
+    measurable_pi_lambda _ fun i => measurable_pi_apply _
+  refine ⟨hmeas, (Measure.pi_eq fun s hs => ?_).symm⟩
+  set F : ℕ → ℝ≥0∞ := fun k => η k (if h : k < m then s ⟨k, h⟩ else Set.univ) with hF
+  have hpre : (fun (ξ : Fin n → E) (i : Fin m) => ξ (Fin.castLE hmn i)) ⁻¹' Set.univ.pi s =
+      Set.univ.pi fun j : Fin n => if h : (j : ℕ) < m then s ⟨j, h⟩ else Set.univ := by
+    ext ξ
+    simp only [Set.mem_preimage, Set.mem_pi, Set.mem_univ, true_implies]
+    constructor
+    · intro hξ j
+      split_ifs with h
+      · exact hξ ⟨j, h⟩
+      · exact Set.mem_univ _
+    · intro hξ i
+      have := hξ (Fin.castLE hmn i)
+      rw [dif_pos (show ((Fin.castLE hmn i : Fin n) : ℕ) < m from i.isLt)] at this
+      exact this
+  rw [Measure.map_apply hmeas (MeasurableSet.univ_pi hs), hpre, Measure.pi_pi]
+  have e1 : ∏ j : Fin n, η j (if h : (j : ℕ) < m then s ⟨j, h⟩ else Set.univ) =
+      ∏ k ∈ range n, F k := Fin.prod_univ_eq_prod_range F n
+  have e2 : ∏ i : Fin m, η i (s i) = ∏ k ∈ range m, F k := by
+    rw [← Fin.prod_univ_eq_prod_range F m]
+    refine Finset.prod_congr rfl fun i _ => ?_
+    simp only [hF, dif_pos i.isLt, Fin.eta]
+  have e3 : ∏ k ∈ Ico m n, F k = 1 := Finset.prod_eq_one fun k hk => by
+    simp only [hF, dif_neg (not_lt.2 (Finset.mem_Ico.1 hk).1), measure_univ]
+  rw [e1, e2, ← Finset.prod_range_mul_prod_Ico F hmn, e3, mul_one]
+
 /-- **Truncated vectors of independent inputs give (2.4)** (Giles 2015, §7.2, p. 53,
 l. 2263–2273: "Using the Karhunen-Loève generation, the expansion is truncated after `K_ℓ` terms,
 with `K_ℓ` increasing with level … `log κ` is generated using a row-vector of independent unit
 Normal random variables `ξ` … giving `ξ_ℓ = (ξ_{ℓ−1}, z_ℓ)`").  Let the level-`ℓ` input be the
-vector `ξ_ℓ = (ξ_i)_{i < K_ℓ}` of independent variables with laws `η_i` (`η_i = N(0, 1)` in the
-paper), with `K_ℓ ≤ K_{ℓ+1}`, and let the coarse payoff of a level-`(ℓ + 1)` sample be `P_ℓ` of its
-first `K_ℓ` coordinates (`Finset.restrict₂`).  Then, for integrable `P_ℓ`, the coarse payoff has
-the law of the level-`ℓ` payoff, (2.4) holds, and the telescoping sum holds.  The truncation of
-a finite product of probability measures is measure preserving (`isProjectiveMeasureFamily_pi`). -/
+vector `ξ_ℓ = (ξ_i)_{i < K_ℓ}` (`Fin (K ℓ) → E`) of independent variables with laws `η_i`
+(`η_i = N(0, 1)` in the paper), with `K_ℓ ≤ K_{ℓ+1}`, and let the coarse payoff of a
+level-`(ℓ + 1)` sample be `P_ℓ` of its first `K_ℓ` coordinates, `(ξ_i)_{i < K_ℓ}`
+(`ξ ∘ Fin.castLE`).  Then, for integrable `P_ℓ`, the coarse payoff has the law of the level-`ℓ`
+payoff, (2.4) holds, and the telescoping sum holds.  The truncation of a finite product of
+probability measures is measure preserving (`measurePreserving_truncFin`). -/
 theorem nested_vector_inputs_mlmc {E : Type*} [MeasurableSpace E] (η : ℕ → Measure E)
     [∀ i, IsProbabilityMeasure (η i)] {K : ℕ → ℕ} (hK : ∀ ℓ, K ℓ ≤ K (ℓ + 1))
-    {P : ∀ ℓ, (∀ _ : range (K ℓ), E) → ℝ}
-    (hP : ∀ ℓ, Integrable (P ℓ) (Measure.pi fun i : range (K ℓ) => η i)) :
-    (∀ ℓ, (Measure.pi fun i : range (K (ℓ + 1)) => η i).map
-        (fun ξ => P ℓ (Finset.restrict₂ (π := fun _ => E) (range_subset_range.2 (hK ℓ)) ξ)) =
-      (Measure.pi fun i : range (K ℓ) => η i).map (P ℓ)) ∧
-    (∀ ℓ, ∫ ξ, P ℓ (Finset.restrict₂ (π := fun _ => E) (range_subset_range.2 (hK ℓ)) ξ)
-        ∂(Measure.pi fun i : range (K (ℓ + 1)) => η i) =
-      ∫ ξ, P ℓ ξ ∂(Measure.pi fun i : range (K ℓ) => η i)) ∧
-    ∀ L, ∫ ξ, P 0 ξ ∂(Measure.pi fun i : range (K 0) => η i) +
-      ∑ ℓ ∈ range L, ∫ ξ, (P (ℓ + 1) ξ -
-          P ℓ (Finset.restrict₂ (π := fun _ => E) (range_subset_range.2 (hK ℓ)) ξ))
-        ∂(Measure.pi fun i : range (K (ℓ + 1)) => η i) =
-      ∫ ξ, P L ξ ∂(Measure.pi fun i : range (K L) => η i) := by
+    {P : ∀ ℓ, (Fin (K ℓ) → E) → ℝ}
+    (hP : ∀ ℓ, Integrable (P ℓ) (Measure.pi fun i : Fin (K ℓ) => η i)) :
+    (∀ ℓ, (Measure.pi fun i : Fin (K (ℓ + 1)) => η i).map
+        (fun ξ => P ℓ (fun i => ξ (Fin.castLE (hK ℓ) i))) =
+      (Measure.pi fun i : Fin (K ℓ) => η i).map (P ℓ)) ∧
+    (∀ ℓ, ∫ ξ, P ℓ (fun i => ξ (Fin.castLE (hK ℓ) i))
+        ∂(Measure.pi fun i : Fin (K (ℓ + 1)) => η i) =
+      ∫ ξ, P ℓ ξ ∂(Measure.pi fun i : Fin (K ℓ) => η i)) ∧
+    ∀ L, ∫ ξ, P 0 ξ ∂(Measure.pi fun i : Fin (K 0) => η i) +
+      ∑ ℓ ∈ range L, ∫ ξ, (P (ℓ + 1) ξ - P ℓ (fun i => ξ (Fin.castLE (hK ℓ) i)))
+        ∂(Measure.pi fun i : Fin (K (ℓ + 1)) => η i) =
+      ∫ ξ, P L ξ ∂(Measure.pi fun i : Fin (K L) => η i) := by
   have hproj : ∀ ℓ, MeasurePreserving
-      (Finset.restrict₂ (π := fun _ => E) (range_subset_range.2 (hK ℓ)))
-      (Measure.pi fun i : range (K (ℓ + 1)) => η i) (Measure.pi fun i : range (K ℓ) => η i) :=
-    fun ℓ => ⟨Finset.measurable_restrict₂ _,
-      (isProjectiveMeasureFamily_pi η _ _ (range_subset_range.2 (hK ℓ))).symm⟩
-  exact ⟨nested_proj_map_eq (X := fun ℓ => ∀ _ : range (K ℓ), E) hproj
+      (fun (ξ : Fin (K (ℓ + 1)) → E) (i : Fin (K ℓ)) => ξ (Fin.castLE (hK ℓ) i))
+      (Measure.pi fun i : Fin (K (ℓ + 1)) => η i) (Measure.pi fun i : Fin (K ℓ) => η i) :=
+    fun ℓ => measurePreserving_truncFin η (hK ℓ)
+  exact ⟨nested_proj_map_eq (X := fun ℓ => Fin (K ℓ) → E) hproj
       fun ℓ => (hP ℓ).aemeasurable,
     fun ℓ => integral_comp_of_measurePreserving (hproj ℓ) (hP ℓ).aestronglyMeasurable,
-    nested_proj_telescoping (X := fun ℓ => ∀ _ : range (K ℓ), E) hproj hP⟩
+    nested_proj_telescoping (X := fun ℓ => Fin (K ℓ) → E) hproj hP⟩
 
 end nestedInputs
 
@@ -621,25 +669,27 @@ cost").
 Let `P_M` be an outer sample with `M` inner samples (`f(M⁻¹∑_m g(Z, W_m))` as a function of the
 input of law `ν`), measurable and square integrable, with bias `|E[P_M] − E[P]| ≤ c/M` and
 variance `V[P_M] ≤ v` for all `M ≥ 1`, and let `Y` be the mean of `N` independent samples of
-`P_M`, at cost `N M`.  Then there is `C > 0` such that for every `0 < ε ≤ 1` some `N, M ≥ 1` give an
-integrable squared error with `E[(Y − E[P])²] ≤ ε²` at cost `N M ≤ C ε⁻³`
-(`M = max(1, ⌈2c/ε⌉)`, `N = max(1, ⌈2v/ε²⌉)`).  For twice differentiable `f` the bias rate is
-`nested_bias_rate` (for `M = 2^ℓ`); the paper does not write out the order `ε⁻³`. -/
+`P_M`, at cost `N M`.  Then for every `0 < ε ≤ 1` the explicit choice `M = max(1, ⌈2c/ε⌉)`,
+`N = max(1, ⌈2v/ε²⌉)` gives `N, M ≥ 1`, an integrable squared error with `E[(Y − E[P])²] ≤ ε²`,
+and the cost `N M ≤ (2v + 1)(2c + 1) ε⁻³`.  For twice differentiable `f` the bias rate is
+`nested_bias_rate` of `MlmcLean.NestedMLMC` (for `M = 2^ℓ`); the paper does not write out the
+order `ε⁻³`. -/
 theorem nested_mc_cost_upper [IsProbabilityMeasure μ] (ω : ℕ → Ω → Ω₀)
     (hω : ∀ n, MeasurePreserving (ω n) μ ν) (hind : iIndepFun ω μ) {PM : ℕ → Ω₀ → ℝ}
-    (hPMm : ∀ M, Measurable (PM M)) (hPM : ∀ M, MemLp (PM M) 2 ν) {EP c v : ℝ}
-    (hbias : ∀ M : ℕ, 0 < M → |∫ y, PM M y ∂ν - EP| ≤ c / M)
+    (hPMm : ∀ M : ℕ, 0 < M → Measurable (PM M)) (hPM : ∀ M : ℕ, 0 < M → MemLp (PM M) 2 ν)
+    {EP c v : ℝ} (hbias : ∀ M : ℕ, 0 < M → |∫ y, PM M y ∂ν - EP| ≤ c / M)
     (hvar : ∀ M : ℕ, 0 < M → variance (PM M) ν ≤ v) :
-    ∃ C : ℝ, 0 < C ∧ ∀ ε : ℝ, 0 < ε → ε ≤ 1 → ∃ N M : ℕ, 0 < N ∧ 0 < M ∧
+    ∀ ε : ℝ, 0 < ε → ε ≤ 1 → ∃ N M : ℕ, N = max 1 ⌈2 * v / ε ^ 2⌉₊ ∧
+      M = max 1 ⌈2 * c / ε⌉₊ ∧ 0 < N ∧ 0 < M ∧
       Integrable (fun x => ((N : ℝ)⁻¹ * ∑ n ∈ range N, PM M (ω n x) - EP) ^ 2) μ ∧
       ∫ x, ((N : ℝ)⁻¹ * ∑ n ∈ range N, PM M (ω n x) - EP) ^ 2 ∂μ ≤ ε ^ 2 ∧
-      (N : ℝ) * M ≤ C * ε ^ (-3 : ℝ) := by
+      (N : ℝ) * M ≤ (2 * v + 1) * (2 * c + 1) * ε ^ (-3 : ℝ) := by
   have hc : 0 ≤ c := by
     have h := hbias 1 one_pos
     rw [Nat.cast_one, div_one] at h
     exact (abs_nonneg _).trans h
   have hv : 0 ≤ v := (variance_nonneg _ _).trans (hvar 1 one_pos)
-  refine ⟨(2 * v + 1) * (2 * c + 1), by positivity, fun ε hε hε1 => ?_⟩
+  intro ε hε hε1
   set M : ℕ := max 1 ⌈2 * c / ε⌉₊ with hM
   set N : ℕ := max 1 ⌈2 * v / ε ^ 2⌉₊ with hN
   have hM0 : 0 < M := lt_of_lt_of_le one_pos (le_max_left _ _)
@@ -658,8 +708,8 @@ theorem nested_mc_cost_upper [IsProbabilityMeasure μ] (ω : ℕ → Ω → Ω�
     rw [hN, Nat.cast_max, Nat.cast_one]
     exact max_le (by linarith [div_nonneg (mul_nonneg zero_le_two hv) hε2.le])
       (Nat.ceil_lt_add_one (by positivity)).le
-  obtain ⟨hint, hmse⟩ := nested_mc_mse ω hω hind (hPMm M) (hPM M) hN0 EP
-  refine ⟨N, M, hN0, hM0, hint, ?_, ?_⟩
+  obtain ⟨hint, hmse⟩ := nested_mc_mse ω hω hind (hPMm M hM0) (hPM M hM0) hN0 EP
+  refine ⟨N, M, rfl, rfl, hN0, hM0, hint, ?_, ?_⟩
   · rw [hmse]
     have h1 : variance (PM M) ν / N ≤ ε ^ 2 / 2 := by
       rw [div_le_iff₀ hNr]
@@ -1190,16 +1240,6 @@ lemma sq_covariance_div_le_variance {Ω : Type*} [MeasurableSpace Ω] {μ : Meas
     ring
   linarith
 
-/-- `E[1 + rh + σ√h Z] = 1 + rh` for `Z ~ N(0, 1)` (one Euler–Maruyama step of GBM, Giles 2015,
-§5.1). -/
-lemma integral_gbmEMFactor_gaussian (r σ h : ℝ) :
-    ∫ x, gbmEMFactor r σ h x ∂gaussianReal 0 1 = 1 + r * h := by
-  have e : (fun x => gbmEMFactor r σ h x) = fun x => (1 + r * h) + σ * Real.sqrt h * x :=
-    funext fun x => by rw [gbmEMFactor]
-  rw [e, integral_add (integrable_const _) (integrable_id_gaussian.const_mul _),
-    integral_const_mul, integral_id_gaussianReal, integral_const]
-  simp
-
 /-- `E[(1 + rh + σ√h Z) Z] = σ√h` for `Z ~ N(0, 1)` (one Euler–Maruyama step of GBM, Giles 2015,
 §5.1). -/
 lemma integral_gbmEMFactor_mul_id (r σ h : ℝ) :
@@ -1253,17 +1293,46 @@ lemma integral_gbm_fine_mul_pair (r σ T s₀ : ℝ) (ℓ : ℕ) {k : ℕ} (hk :
   rw [integral_const_mul, key]
   have e1 : (fun w : Fin 2 → ℝ => A (w 0) * A (w 1) * (w 0 * w 1)) =
       fun w => (A (w 0) * w 0) * (A (w 1) * w 1) := funext fun w => by ring
+  have h1 : ∫ x, gbmEMFactor r σ (T / 2 ^ (ℓ + 1)) x ∂gaussianReal 0 1 =
+      1 + r * (T / 2 ^ (ℓ + 1)) := by
+    simpa only [pow_one] using integral_gbmEMFactor_pow_one r σ (T / 2 ^ (ℓ + 1))
   rw [e1, integral_pair_mul (f := fun x => A x * x) (g := fun x => A x * x)
     (hAm.mul measurable_id) (hAm.mul measurable_id), integral_pair_mul hAm hAm]
-  simp only [hA, integral_gbmEMFactor_mul_id, integral_gbmEMFactor_gaussian]
+  simp only [hA, integral_gbmEMFactor_mul_id, h1]
   ring
+
+/-- The coarse Euler–Maruyama factor of a pair of fine increments is uncorrelated with their
+product (Haas–Giles 2025, §2.1; Giles 2015, §5.1): for `(w₀, w₁) ~ N(0,1)^{⊗2}`,
+`E[(1 + rh + σ√h (w₀ + w₁)/√2) w₀w₁] = 0`, as the factor is affine in `w₀ + w₁`. -/
+lemma integral_gbmEMFactor_pairSum_mul (r σ h : ℝ) :
+    ∫ w, gbmEMFactor r σ h ((w 0 + w 1) / Real.sqrt 2) * (w 0 * w 1)
+      ∂(Measure.infinitePi fun _ : Fin 2 => gaussianReal 0 1) = 0 := by
+  set c₀ : ℝ := 1 + r * h with hc₀
+  set c₁ : ℝ := σ * Real.sqrt h / Real.sqrt 2 with hc₁
+  -- `E[B(w)·w₀w₁] = c₀ E[w₀]E[w₁] + c₁ E[w₀²]E[w₁] + c₁ E[w₀]E[w₁²] = 0`
+  have e1 : (fun w : Fin 2 → ℝ => gbmEMFactor r σ h ((w 0 + w 1) / Real.sqrt 2) * (w 0 * w 1)) =
+      fun w => (c₀ * (w 0 * w 1) + c₁ * (w 0 ^ 2 * w 1)) + c₁ * (w 0 * w 1 ^ 2) :=
+    funext fun w => by
+      simp only [hc₀, hc₁, gbmEMFactor]
+      ring
+  have hid : Measurable fun x : ℝ => x := measurable_id
+  have hsq : Measurable fun x : ℝ => x ^ 2 := measurable_id.pow_const 2
+  have i1 := integrable_pair_mul hid hid integrable_id_gaussian integrable_id_gaussian
+  have i2 := integrable_pair_mul hsq hid integrable_sq_gaussian integrable_id_gaussian
+  have i3 := integrable_pair_mul hid hsq integrable_id_gaussian integrable_sq_gaussian
+  have j12 : Integrable (fun w : Fin 2 → ℝ => c₀ * (w 0 * w 1) + c₁ * (w 0 ^ 2 * w 1))
+      (Measure.infinitePi fun _ : Fin 2 => gaussianReal 0 1) :=
+    (i1.const_mul c₀).add (i2.const_mul c₁)
+  rw [e1, integral_add j12 (i3.const_mul c₁),
+    integral_add (i1.const_mul c₀) (i2.const_mul c₁), integral_const_mul, integral_const_mul,
+    integral_const_mul, integral_pair_mul hid hid, integral_pair_mul hsq hid,
+    integral_pair_mul hid hsq]
+  simp [integral_id_gaussianReal]
 
 /-- The coarse GBM path is uncorrelated with each product of paired increments (Haas–Giles 2025,
 §2.1): `E[Ŝ^c_ℓ Z_{2k}Z_{2k+1}] = 0`, as the coarse step is affine in `Z_{2k} + Z_{2k+1}`. -/
 lemma integral_gbm_coarse_mul_pair (r σ T s₀ : ℝ) (ℓ : ℕ) {k : ℕ} (hk : k < 2 ^ ℓ) :
     ∫ z, gbmEM r σ T s₀ ℓ (pairAvg z) * (z (2 * k) * z (2 * k + 1)) ∂stdNormalSeq = 0 := by
-  set c₀ : ℝ := 1 + r * (T / 2 ^ ℓ) with hc₀
-  set c₁ : ℝ := σ * Real.sqrt (T / 2 ^ ℓ) / Real.sqrt 2 with hc₁
   set B : (Fin 2 → ℝ) → ℝ := fun w => gbmEMFactor r σ (T / 2 ^ ℓ) ((w 0 + w 1) / Real.sqrt 2)
     with hB
   have hBm : Measurable B :=
@@ -1279,25 +1348,34 @@ lemma integral_gbm_coarse_mul_pair (r σ T s₀ : ℝ) (ℓ : ℕ) {k : ℕ} (hk
     ((measurable_pi_apply 0).mul (measurable_pi_apply 1)) hk
   simp_rw [e]
   rw [integral_const_mul, key]
-  -- `E[B(w)·w₀w₁] = c₀ E[w₀]E[w₁] + c₁ E[w₀²]E[w₁] + c₁ E[w₀]E[w₁²] = 0`
-  have e1 : (fun w : Fin 2 → ℝ => B w * (w 0 * w 1)) =
-      fun w => (c₀ * (w 0 * w 1) + c₁ * (w 0 ^ 2 * w 1)) + c₁ * (w 0 * w 1 ^ 2) :=
-    funext fun w => by
-      simp only [hB, hc₀, hc₁, gbmEMFactor]
-      ring
-  have hid : Measurable fun x : ℝ => x := measurable_id
-  have hsq : Measurable fun x : ℝ => x ^ 2 := measurable_id.pow_const 2
-  have i1 := integrable_pair_mul hid hid integrable_id_gaussian integrable_id_gaussian
-  have i2 := integrable_pair_mul hsq hid integrable_sq_gaussian integrable_id_gaussian
-  have i3 := integrable_pair_mul hid hsq integrable_id_gaussian integrable_sq_gaussian
-  have j12 : Integrable (fun w : Fin 2 → ℝ => c₀ * (w 0 * w 1) + c₁ * (w 0 ^ 2 * w 1))
-      (Measure.infinitePi fun _ : Fin 2 => gaussianReal 0 1) :=
-    (i1.const_mul c₀).add (i2.const_mul c₁)
-  rw [e1, integral_add j12 (i3.const_mul c₁),
-    integral_add (i1.const_mul c₀) (i2.const_mul c₁), integral_const_mul, integral_const_mul,
-    integral_const_mul, integral_pair_mul hid hid, integral_pair_mul hsq hid,
-    integral_pair_mul hid hsq]
-  simp [integral_id_gaussianReal]
+  simp only [hB, integral_gbmEMFactor_pairSum_mul, zero_mul, mul_zero]
+
+/-- The mean of a product over the independent pairs of increments (Giles 2015, §5.1):
+`E[∏_{j<n} Φ(z_{2j}, z_{2j+1})] = E[Φ]^n`, the mean on the right under `N(0,1)^{⊗2}`. -/
+lemma integral_prod_pairBlocks {Φ : (Fin 2 → ℝ) → ℝ} (hΦ : Measurable Φ) (n : ℕ) :
+    ∫ z, ∏ j ∈ range n, Φ (fun i : Fin 2 => z (2 * j + i)) ∂stdNormalSeq =
+      (∫ w, Φ w ∂(Measure.infinitePi fun _ : Fin 2 => gaussianReal 0 1)) ^ n := by
+  have hind : iIndepFun (fun j (z : ℕ → ℝ) => Φ (fun i : Fin 2 => z (2 * j + i)))
+      stdNormalSeq := iIndepFun_pairBlocks.comp (fun _ => Φ) fun _ => hΦ
+  have hlaw : ∀ j, ∫ z, Φ (fun i : Fin 2 => z (2 * j + i)) ∂stdNormalSeq =
+      ∫ w, Φ w ∂(Measure.infinitePi fun _ : Fin 2 => gaussianReal 0 1) := fun j => by
+    rw [← map_pairBlock j, integral_map
+      (measurable_pi_lambda _ fun i => measurable_pi_apply _).aemeasurable
+      hΦ.aestronglyMeasurable]
+  rw [integral_prod_of_iIndepFun hind fun j => hΦ.comp
+    (measurable_pi_lambda _ fun i => measurable_pi_apply _), Finset.prod_congr rfl
+    fun j _ => hlaw j, Finset.prod_const, card_range]
+
+/-- A product over the independent pairs of increments of an integrable function of a pair is
+integrable (Giles 2015, §5.1). -/
+lemma integrable_prod_pairBlocks {Φ : (Fin 2 → ℝ) → ℝ} (hΦ : Measurable Φ)
+    (hi : Integrable Φ (Measure.infinitePi fun _ : Fin 2 => gaussianReal 0 1)) (n : ℕ) :
+    Integrable (fun z => ∏ j ∈ range n, Φ (fun i : Fin 2 => z (2 * j + i))) stdNormalSeq :=
+  integrable_prod_of_iIndepFun (X := fun j (z : ℕ → ℝ) => Φ (fun i : Fin 2 => z (2 * j + i)))
+    (iIndepFun_pairBlocks.comp (fun _ => Φ) fun _ => hΦ)
+    (fun _ => hΦ.comp (measurable_pi_lambda _ fun _ => measurable_pi_apply _))
+    (fun j => (MeasurePreserving.integrable_comp_of_integrable
+      ⟨measurable_pi_lambda _ fun _ => measurable_pi_apply _, map_pairBlock j⟩ hi)) _
 
 /-- `e^{−2x} ≤ 1 − x` for `0 ≤ x ≤ ½` (for the lower bound of the GBM correction variance,
 Haas–Giles 2025, §2.1). -/
@@ -1330,7 +1408,13 @@ the rate `β = 1` at which the cost `C_ℓ = 2^ℓ` grows.  Lower bound: with
 (`integral_gbm_fine_mul_pair`, `integral_gbm_coarse_mul_pair`), and
 `(1 + rh)^{4(2^ℓ−1)} ≥ e^{−4|r|T}` for `|r|h ≤ ½`.  (Checked against the exact variance for
 `|r| ≤ 3`, `σ ≤ 2`, `T ≤ 3`, `ℓ ≤ 13`; for `r = 0` and `ℓ = 0` the bound before the last step is
-the exact variance.) -/
+the exact variance.)  The hypothesis `|r|T ≤ 2^ℓ` is a restriction of the proof (the last step
+needs `|r|h ≤ ½`; at `1 + rh = 0` the covariance with `G` vanishes): numerically the lower bound
+holds at every level (exact variance for `r ∈ [−40, 40]` in steps of `½`,
+`σ ∈ {0.01, 0.1, 0.5, 1, 3}`, `T ∈ {0.1, 1, 3, 10}`, `ℓ ≤ 7`, `|r|T > 2^ℓ`: ratio `≥ 148`).  At
+every level `gbm_em_identity_variance_ge_pow` gives the weaker bound
+`V[D] ≥ s₀²(σ²h)^{2^{ℓ+1}}` (`> 0` if `s₀σ ≠ 0` and `T > 0`), which is all
+`gbm_em_identity_variance_cost` needs. -/
 theorem gbm_em_identity_variance_two_sided (r σ s₀ : ℝ) {T : ℝ} (hT : 0 ≤ T) {ℓ : ℕ}
     (hℓ : |r| * T ≤ 2 ^ ℓ) :
     MemLp (fun z => gbmEM r σ T s₀ (ℓ + 1) z - gbmEM r σ T s₀ ℓ (pairAvg z)) 2 stdNormalSeq ∧
@@ -1481,66 +1565,200 @@ theorem gbm_em_identity_variance_two_sided (r σ s₀ : ℝ) {T : ℝ} (hT : 0 �
         field_simp
         ring
 
-/-- **`V_ℓC_ℓ` stays between two positive constants, so "the former" does not apply** (Haas–Giles
-2025, §2.1, p. 3, l. 159–164: "if the factor `V_ℓC_ℓ` decreases (resp. increases) with level then
-the total cost of MLMC is approximately `ε^{−2}V_0C_0` … for Lipschitz payoffs for the
-Euler-Maruyama scheme the variance `V_ℓ` decreases exponentially with level, the former leads to
-the MLMC estimation being cheaper than the standard Monte Carlo estimation").  For GBM with
-`s₀ ≠ 0`, `σ ≠ 0`, `T > 0`, the Lipschitz payoff `g(x) = x` and the cost `C_{ℓ+1} = 2^{ℓ+1}` of a
-level-`(ℓ + 1)` sample, the corrections are square integrable, there are `c > 0`, `C` and `ℓ₀` with
-`c ≤ V_{ℓ+1}C_{ℓ+1} ≤ C` for all `ℓ ≥ ℓ₀` (`gbm_em_identity_variance_two_sided`), and
-`V_ℓC_ℓ` does not tend to `0`.  So for Euler–Maruyama (`β = γ = 1`) `V_ℓC_ℓ` is not decreasing to
-zero, "the former" case does not apply, and (8) gives a cost of order `ε^{−2}(L + 1)²`, not
-`≈ ε^{−2}V_0C_0` (numerically, for `r = 0.05`, `σ = 0.2`, `T = 1`, `s₀ = 100`,
-`V_{ℓ+1}C_{ℓ+1}` even increases with `ℓ`, from `8.5` at `ℓ = 0` to `9.20` at `ℓ = 15`).  The
+/-- The GBM correction variance is positive at every level (Haas–Giles 2025, §2.1): for GBM,
+Euler–Maruyama and the payoff `g(x) = x`, `T ≥ 0` and every `ℓ`,
+`V[Ŝ^f_{ℓ+1} − Ŝ^c_ℓ] ≥ s₀²(σ²h)^{2^{ℓ+1}}`, `h = T 2^{−(ℓ+1)}`, which is `> 0` if `s₀σ ≠ 0` and
+`T > 0`.  The test variable is the product `Y = ∏_{i<2^{ℓ+1}} z_i = ∏_{k<2^ℓ} z_{2k}z_{2k+1}` of
+all fine increments: `E[Y] = 0`, `V[Y] = 1`, `E[Ŝ^f Y] = s₀(σ²h)^{2^ℓ}` (each fine factor
+contributes `E[(1 + rh + σ√h Z)Z] = σ√h`) and `E[Ŝ^c Y] = 0` (`integral_gbmEMFactor_pairSum_mul`),
+so `V[D] ≥ cov(D, Y)²/V[Y]` (`sq_covariance_div_le_variance`).  Unlike the covariance with
+`∑_k z_{2k}z_{2k+1}` in `gbm_em_identity_variance_two_sided`, this one never vanishes (also not
+at `1 + rh = 0`), but the bound is super-exponentially small in `ℓ`. -/
+lemma gbm_em_identity_variance_ge_pow (r σ s₀ : ℝ) {T : ℝ} (hT : 0 ≤ T) (ℓ : ℕ) :
+    s₀ ^ 2 * (σ ^ 2 * (T / 2 ^ (ℓ + 1))) ^ 2 ^ (ℓ + 1) ≤
+      variance (fun z => gbmEM r σ T s₀ (ℓ + 1) z - gbmEM r σ T s₀ ℓ (pairAvg z))
+        stdNormalSeq := by
+  set h : ℝ := T / 2 ^ (ℓ + 1) with hh
+  have hh0 : 0 ≤ h := by rw [hh]; positivity
+  have hn0 : 2 ^ ℓ ≠ 0 := by positivity
+  have hid : Measurable fun x : ℝ => x := measurable_id
+  have hsq : Measurable fun x : ℝ => x ^ 2 := measurable_id.pow_const 2
+  have hχm : Measurable fun w : Fin 2 → ℝ => w 0 * w 1 :=
+    (measurable_pi_apply 0).mul (measurable_pi_apply 1)
+  have hWm : ∀ j : ℕ, Measurable fun (z : ℕ → ℝ) (i : Fin 2) => z (2 * j + i) := fun _ =>
+    measurable_pi_lambda _ fun _ => measurable_pi_apply _
+  have hχ2m : Measurable fun w : Fin 2 → ℝ => w 0 ^ 2 * w 1 ^ 2 :=
+    ((measurable_pi_apply 0).pow_const 2).mul ((measurable_pi_apply 1).pow_const 2)
+  -- the test variable `Y = ∏_{j<2^ℓ} z_{2j} z_{2j+1}`
+  obtain ⟨Y, hYdef⟩ : ∃ Y : (ℕ → ℝ) → ℝ, Y = fun z => ∏ j ∈ range (2 ^ ℓ),
+      (fun w : Fin 2 → ℝ => w 0 * w 1) (fun i : Fin 2 => z (2 * j + i)) := ⟨_, rfl⟩
+  have hYm : Measurable Y := by
+    rw [hYdef]
+    exact Finset.measurable_prod _ fun j _ => hχm.comp (hWm j)
+  have hY2 : (fun z => Y z ^ 2) = fun z => ∏ j ∈ range (2 ^ ℓ),
+      (fun w : Fin 2 → ℝ => w 0 ^ 2 * w 1 ^ 2) (fun i : Fin 2 => z (2 * j + i)) :=
+    funext fun z => by
+      rw [hYdef, ← Finset.prod_pow]
+      refine Finset.prod_congr rfl fun j _ => ?_
+      ring
+  have hYL2 : MemLp Y 2 stdNormalSeq := by
+    refine (memLp_two_iff_integrable_sq hYm.aestronglyMeasurable).2 ?_
+    rw [hY2]
+    exact integrable_prod_pairBlocks hχ2m
+      (integrable_pair_mul hsq hsq integrable_sq_gaussian integrable_sq_gaussian) _
+  have hEY : ∫ z, Y z ∂stdNormalSeq = 0 := by
+    rw [hYdef, integral_prod_pairBlocks hχm, integral_pair_mul hid hid, integral_id_gaussianReal,
+      zero_mul, zero_pow hn0]
+  have hVY : variance Y stdNormalSeq = 1 := by
+    rw [variance_eq_sub hYL2, hEY]
+    simp only [Pi.pow_apply]
+    rw [hY2, integral_prod_pairBlocks hχ2m, integral_pair_mul hsq hsq, integral_sq_gaussian]
+    norm_num
+  -- `cov(D, Y) = E[Ŝ^f Y] − E[Ŝ^c Y] = s₀ (σ²h)^{2^ℓ} − 0`
+  have hD : MemLp (fun z => gbmEM r σ T s₀ (ℓ + 1) z - gbmEM r σ T s₀ ℓ (pairAvg z)) 2
+      stdNormalSeq :=
+    (memLp_gbmEM r σ T s₀ (ℓ + 1)).sub
+      ((memLp_gbmEM r σ T s₀ ℓ).comp_measurePreserving measurePreserving_pairAvg)
+  have hF : Integrable (fun z => gbmEM r σ T s₀ (ℓ + 1) z * Y z) stdNormalSeq :=
+    (memLp_gbmEM r σ T s₀ (ℓ + 1)).integrable_mul hYL2
+  have hC : Integrable (fun z => gbmEM r σ T s₀ ℓ (pairAvg z) * Y z) stdNormalSeq :=
+    ((memLp_gbmEM r σ T s₀ ℓ).comp_measurePreserving measurePreserving_pairAvg).integrable_mul
+      hYL2
+  have hfine : ∫ z, gbmEM r σ T s₀ (ℓ + 1) z * Y z ∂stdNormalSeq = s₀ * (σ ^ 2 * h) ^ 2 ^ ℓ := by
+    have e : (fun z => gbmEM r σ T s₀ (ℓ + 1) z * Y z) = fun z => s₀ * ∏ j ∈ range (2 ^ ℓ),
+        (fun w : Fin 2 → ℝ => (gbmEMFactor r σ h (w 0) * w 0) * (gbmEMFactor r σ h (w 1) * w 1))
+          (fun i : Fin 2 => z (2 * j + i)) := funext fun z => by
+      rw [gbmEM_succ_eq_pairs, hYdef, mul_assoc, ← Finset.prod_mul_distrib]
+      congr 1
+      refine Finset.prod_congr rfl fun j _ => ?_
+      ring
+    have hm : Measurable fun w : Fin 2 → ℝ =>
+        (gbmEMFactor r σ h (w 0) * w 0) * (gbmEMFactor r σ h (w 1) * w 1) :=
+      (((measurable_gbmEMFactor r σ h).comp (measurable_pi_apply 0)).mul
+        (measurable_pi_apply 0)).mul
+        (((measurable_gbmEMFactor r σ h).comp (measurable_pi_apply 1)).mul
+          (measurable_pi_apply 1))
+    rw [e, integral_const_mul, integral_prod_pairBlocks hm,
+      integral_pair_mul (f := fun x => gbmEMFactor r σ h x * x)
+        (g := fun x => gbmEMFactor r σ h x * x) ((measurable_gbmEMFactor r σ h).mul hid)
+        ((measurable_gbmEMFactor r σ h).mul hid), integral_gbmEMFactor_mul_id, ← sq, mul_pow,
+      Real.sq_sqrt hh0]
+  have hcoarse : ∫ z, gbmEM r σ T s₀ ℓ (pairAvg z) * Y z ∂stdNormalSeq = 0 := by
+    have e : (fun z => gbmEM r σ T s₀ ℓ (pairAvg z) * Y z) = fun z => s₀ * ∏ j ∈ range (2 ^ ℓ),
+        (fun w : Fin 2 → ℝ =>
+          gbmEMFactor r σ (T / 2 ^ ℓ) ((w 0 + w 1) / Real.sqrt 2) * (w 0 * w 1))
+          (fun i : Fin 2 => z (2 * j + i)) := funext fun z => by
+      rw [gbmEM_pairAvg_eq_pairs, hYdef, mul_assoc, ← Finset.prod_mul_distrib]
+    have hm : Measurable fun w : Fin 2 → ℝ =>
+        gbmEMFactor r σ (T / 2 ^ ℓ) ((w 0 + w 1) / Real.sqrt 2) * (w 0 * w 1) :=
+      ((measurable_gbmEMFactor r σ _).comp
+        (((measurable_pi_apply 0).add (measurable_pi_apply 1)).div_const _)).mul hχm
+    rw [e, integral_const_mul, integral_prod_pairBlocks hm, integral_gbmEMFactor_pairSum_mul,
+      zero_pow hn0, mul_zero]
+  have hcov : covariance (fun z => gbmEM r σ T s₀ (ℓ + 1) z - gbmEM r σ T s₀ ℓ (pairAvg z)) Y
+      stdNormalSeq = s₀ * (σ ^ 2 * h) ^ 2 ^ ℓ := by
+    rw [covariance_eq_sub hD hYL2, hEY, mul_zero, sub_zero]
+    have e : ((fun z => gbmEM r σ T s₀ (ℓ + 1) z - gbmEM r σ T s₀ ℓ (pairAvg z)) * Y) =
+        fun z => gbmEM r σ T s₀ (ℓ + 1) z * Y z - gbmEM r σ T s₀ ℓ (pairAvg z) * Y z :=
+      funext fun z => by
+        simp only [Pi.mul_apply]
+        ring
+    rw [e, integral_sub hF hC, hfine, hcoarse, sub_zero]
+  have hlow := sq_covariance_div_le_variance hD hYL2 (by rw [hVY]; exact one_pos)
+  rw [hcov, hVY, div_one] at hlow
+  calc s₀ ^ 2 * (σ ^ 2 * h) ^ 2 ^ (ℓ + 1) = (s₀ * (σ ^ 2 * h) ^ 2 ^ ℓ) ^ 2 := by
+        rw [mul_pow s₀, ← pow_mul, ← pow_succ]
+    _ ≤ _ := hlow
+
+/-- **`V_ℓC_ℓ` stays between two positive constants: the paper's case "`V_ℓC_ℓ` decreases with
+level" does not hold** (Haas–Giles 2025, §2.1, p. 3, l. 159–164: "if the factor `V_ℓC_ℓ`
+decreases (resp. increases) with level then the total cost of MLMC is approximately
+`ε^{−2}V_0C_0` … for Lipschitz payoffs for the Euler-Maruyama scheme the variance `V_ℓ` decreases
+exponentially with level, the former leads to the MLMC estimation being cheaper than the standard
+Monte Carlo estimation").  For GBM with `s₀ ≠ 0`, `σ ≠ 0`, `T > 0`, the Lipschitz payoff
+`g(x) = x` and the cost `C_{ℓ+1} = 2^{ℓ+1}` of a level-`(ℓ + 1)` sample, the corrections are
+square integrable, and there are `c > 0` and `C` with `c ≤ V_{ℓ+1}C_{ℓ+1} ≤ C` for every level
+`ℓ` (`gbm_em_identity_variance_two_sided` for `|r|T ≤ 2^ℓ`, `gbm_em_identity_variance_ge_pow`
+for the finitely many other levels); in particular `V_ℓC_ℓ` does not tend to `0`.  So the case
+"`V_ℓC_ℓ` decreases with level", in the sense that gives the cost `≈ ε^{−2}V_0C_0` (geometric
+decay of `V_ℓC_ℓ`, `β > γ`), does not hold for Euler–Maruyama (`β = γ = 1`), and the cost (8)
+`ε^{−2}(∑_ℓ √(V_ℓC_ℓ))²` is of order `ε^{−2}(L + 1)²`.  Numerically `V_ℓC_ℓ` can be monotone
+either way: for `r = 0.05`, `σ = 0.2`, `T = 1`, `s₀ = 100`, `V_{ℓ+1}C_{ℓ+1}` increases with `ℓ`,
+from `8.5` at `ℓ = 0` to `9.20` at `ℓ = 15`; for `r = −0.5`, `σ = 0.2`, `T = 1`, `s₀ = 1` it
+decreases for `ℓ = 0, …, 13` (from `0.0058` to `3.07·10^{−4}`) towards a positive limit.  The
 paper's conclusion, that MLMC is cheaper than standard Monte Carlo, still holds asymptotically
 (`gbm_mlmc_theorem1`), but not for the reason it gives. -/
 theorem gbm_em_identity_variance_cost (r σ s₀ : ℝ) {T : ℝ} (hT : 0 < T) (hs₀ : s₀ ≠ 0)
     (hσ : σ ≠ 0) :
     (∀ ℓ : ℕ, MemLp (fun z => gbmEM r σ T s₀ (ℓ + 1) z - gbmEM r σ T s₀ ℓ (pairAvg z)) 2
       stdNormalSeq) ∧
-    ∃ c C : ℝ, 0 < c ∧ ∃ ℓ₀ : ℕ, (∀ ℓ ≥ ℓ₀,
+    ∃ c C : ℝ, 0 < c ∧ (∀ ℓ : ℕ,
       c ≤ 2 ^ (ℓ + 1) * variance (fun z => gbmEM r σ T s₀ (ℓ + 1) z -
         gbmEM r σ T s₀ ℓ (pairAvg z)) stdNormalSeq ∧
       2 ^ (ℓ + 1) * variance (fun z => gbmEM r σ T s₀ (ℓ + 1) z -
         gbmEM r σ T s₀ ℓ (pairAvg z)) stdNormalSeq ≤ C) ∧
     ¬ Tendsto (fun ℓ : ℕ => (2 : ℝ) ^ (ℓ + 1) * variance (fun z => gbmEM r σ T s₀ (ℓ + 1) z -
         gbmEM r σ T s₀ ℓ (pairAvg z)) stdNormalSeq) atTop (𝓝 0) := by
+  set f : ℕ → ℝ := fun ℓ => 2 ^ (ℓ + 1) * variance (fun z => gbmEM r σ T s₀ (ℓ + 1) z -
+    gbmEM r σ T s₀ ℓ (pairAvg z)) stdNormalSeq with hf
+  have hs0 : 0 < s₀ ^ 2 := by positivity
+  have hσ0 : 0 < σ ^ 2 := by positivity
+  -- `V_{ℓ+1} > 0` at every level
+  have hfpos : ∀ ℓ, 0 < f ℓ := fun ℓ => by
+    have h := gbm_em_identity_variance_ge_pow r σ s₀ hT.le ℓ
+    have hp : 0 < s₀ ^ 2 * (σ ^ 2 * (T / 2 ^ (ℓ + 1))) ^ 2 ^ (ℓ + 1) := by positivity
+    simp only [hf]
+    positivity [hp.trans_le h]
+  -- the upper bound at every level
+  have hup : ∀ ℓ, f ℓ ≤ 6 * (gbmStrongConst r σ T s₀ * T) := fun ℓ => by
+    have h := gbm_correction_variance_le r σ s₀ hT.le (g := fun x => x) (K := 1)
+      (fun x y => by rw [one_mul]) ℓ
+    rw [one_pow, mul_one] at h
+    have h2 : (0 : ℝ) < 2 ^ (ℓ + 1) := by positivity
+    calc f ℓ ≤ 2 ^ (ℓ + 1) * (6 * (gbmStrongConst r σ T s₀ * T) * ((2 : ℝ) ^ (ℓ + 1))⁻¹) :=
+          mul_le_mul_of_nonneg_left h h2.le
+      _ = _ := by field_simp
+  -- the lower bound `c₁` for `|r|T ≤ 2^ℓ`, i.e. for `ℓ ≥ ℓ₀`
   obtain ⟨ℓ₀, hℓ₀⟩ := pow_unbounded_of_one_lt (|r| * T) (one_lt_two : (1 : ℝ) < 2)
-  set c : ℝ := s₀ ^ 2 * σ ^ 4 * T ^ 2 * Real.exp (-(4 * |r| * T)) / 2 with hc
-  have hc0 : 0 < c := by
-    have : 0 < s₀ ^ 2 := by positivity
+  set c₁ : ℝ := s₀ ^ 2 * σ ^ 4 * T ^ 2 * Real.exp (-(4 * |r| * T)) / 2 with hc₁
+  have hc₁0 : 0 < c₁ := by
     have : 0 < σ ^ 4 := by positivity
     positivity
-  have hbd : ∀ ℓ ≥ ℓ₀,
-      c ≤ 2 ^ (ℓ + 1) * variance (fun z => gbmEM r σ T s₀ (ℓ + 1) z -
-        gbmEM r σ T s₀ ℓ (pairAvg z)) stdNormalSeq ∧
-      2 ^ (ℓ + 1) * variance (fun z => gbmEM r σ T s₀ (ℓ + 1) z -
-        gbmEM r σ T s₀ ℓ (pairAvg z)) stdNormalSeq ≤ 6 * (gbmStrongConst r σ T s₀ * T) := by
-    intro ℓ hℓ
+  have hlo : ∀ ℓ ≥ ℓ₀, c₁ ≤ f ℓ := fun ℓ hℓ => by
     have hpow : (2 : ℝ) ^ ℓ₀ ≤ 2 ^ ℓ := pow_le_pow_right₀ one_le_two hℓ
-    obtain ⟨-, hlo, hhi⟩ := gbm_em_identity_variance_two_sided r σ s₀ hT.le
+    obtain ⟨-, hlo, -⟩ := gbm_em_identity_variance_two_sided r σ s₀ hT.le
       (hℓ₀.le.trans hpow)
     have h2 : (0 : ℝ) < 2 ^ (ℓ + 1) := by positivity
-    constructor
-    · calc c = 2 ^ (ℓ + 1) * (s₀ ^ 2 * σ ^ 4 * T ^ 2 * Real.exp (-(4 * |r| * T)) / 4 *
-            ((2 : ℝ) ^ ℓ)⁻¹) := by
-            rw [hc, pow_succ]
-            field_simp
-            ring
-        _ ≤ _ := mul_le_mul_of_nonneg_left hlo h2.le
-    · calc _ ≤ 2 ^ (ℓ + 1) * (6 * (gbmStrongConst r σ T s₀ * T) * ((2 : ℝ) ^ (ℓ + 1))⁻¹) :=
-            mul_le_mul_of_nonneg_left hhi h2.le
-        _ = _ := by field_simp
+    calc c₁ = 2 ^ (ℓ + 1) * (s₀ ^ 2 * σ ^ 4 * T ^ 2 * Real.exp (-(4 * |r| * T)) / 4 *
+          ((2 : ℝ) ^ ℓ)⁻¹) := by
+          rw [hc₁, pow_succ]
+          field_simp
+          ring
+      _ ≤ f ℓ := mul_le_mul_of_nonneg_left hlo h2.le
+  -- a positive lower bound `c₂` on the finitely many levels `ℓ < ℓ₀`
+  have hfin : ∀ m : ℕ, ∃ c₂ : ℝ, 0 < c₂ ∧ ∀ ℓ < m, c₂ ≤ f ℓ := fun m => by
+    induction m with
+    | zero => exact ⟨1, one_pos, fun ℓ hℓ => absurd hℓ (Nat.not_lt_zero ℓ)⟩
+    | succ m ih =>
+      obtain ⟨c₂, hc₂, hle⟩ := ih
+      refine ⟨min c₂ (f m), lt_min hc₂ (hfpos m), fun ℓ hℓ => ?_⟩
+      rcases Nat.lt_succ_iff_lt_or_eq.1 hℓ with h | h
+      · exact (min_le_left _ _).trans (hle ℓ h)
+      · rw [h]
+        exact min_le_right _ _
+  obtain ⟨c₂, hc₂, hle₂⟩ := hfin ℓ₀
+  have hbd : ∀ ℓ, min c₁ c₂ ≤ f ℓ := fun ℓ => by
+    rcases lt_or_ge ℓ ℓ₀ with h | h
+    · exact (min_le_right _ _).trans (hle₂ ℓ h)
+    · exact (min_le_left _ _).trans (hlo ℓ h)
   refine ⟨fun ℓ => (memLp_gbmEM r σ T s₀ (ℓ + 1)).sub
     ((memLp_gbmEM r σ T s₀ ℓ).comp_measurePreserving measurePreserving_pairAvg),
-    c, 6 * (gbmStrongConst r σ T s₀ * T), hc0, ℓ₀, hbd, fun hlim => ?_⟩
-  have hev := (hlim.eventually (gt_mem_nhds hc0))
+    min c₁ c₂, 6 * (gbmStrongConst r σ T s₀ * T), lt_min hc₁0 hc₂,
+    fun ℓ => ⟨hbd ℓ, hup ℓ⟩, fun hlim => ?_⟩
+  have hev := hlim.eventually (gt_mem_nhds (lt_min hc₁0 hc₂))
   rw [eventually_atTop] at hev
   obtain ⟨N, hN⟩ := hev
-  have h1 := hN (max N ℓ₀) (le_max_left _ _)
-  have h2 := (hbd (max N ℓ₀) (le_max_right _ _)).1
-  linarith
+  exact absurd (hbd N) (not_le.2 (hN N le_rfl))
 
 end gbmVariance
 

@@ -1,6 +1,5 @@
 import MlmcLean.GBMMilstein
 import MlmcLean.AsymptoticNormal
-import MlmcLean.ErrorAnalysis
 import MlmcLean.LUTAsymptotics
 import Mathlib.Analysis.PSeries
 import Mathlib.Algebra.Order.Field.GeomSum
@@ -34,7 +33,12 @@ values), `parabolicPath` the scheme started from `u⁰ = 0`, and `parabolicP ℓ
 (u^N_j)²` the grid quadrature of `∫₀¹ u²(x, ¼) dx` (the trapezoidal rule, since
 `u_0 = u_J = 0`).  The coarse sample of the level-`(ℓ+1)` correction is `parabolicP ℓ` at
 `pairAvg (pairAvg z)`, whose `p`-th entry is `(z_{4p} + z_{4p+1} + z_{4p+2} + z_{4p+3})/2`: its
-Brownian increments are the sums of four fine ones (`parabolic_coupling`).
+Brownian increments are the sums of four fine ones (`parabolic_coupling`).  §7.1 does not spell
+out the coupling ("The multilevel implementation is again very easy"); this is the standard one
+of §5.1 ("summing the Brownian increments for the fine path timesteps to obtain the Brownian
+increments for the coarse timesteps"), with four fine steps per coarse step as `k_ℓ = 4k_{ℓ+1}`.
+`parabolicStep λ J w` is the special case `dirichletHeatStep λ J (fun _ => w)` (spatially constant
+noise) of the scheme of `MlmcLean.SpotCheckRemarks`, which is not imported here.
 
 **Results.**
 * Diagonalisation (`parabolicPath_eq_sum`): `u^n_j = ∑_{m=1}^{J−1} A^n_m sin(πmj/J)`, where each
@@ -45,8 +49,9 @@ Brownian increments are the sums of four fine ones (`parabolic_coupling`).
   `∑_j (u^n_j)² = (J/2) ∑_m (A^n_m)²`; `integral_parabolicP`: the exact mean of `P_ℓ`.
 * The variance rate `β = 4` (`parabolic_variance_rate`):
   `E[(P_{ℓ+1} − P^c_ℓ)²] ≤ 1.5·10⁶ · 16^{−(ℓ+1)}`, with the correction square integrable.
-* The limit (`parabolic_mean_tendsto`): `E[P_ℓ] → ∑_{m odd} 400(1 − e^{−π²m²/2})/(π⁴m⁴)`
-  (`parabolicLimit`), the value of `E ∫₀¹ u²(x, ¼) dx` for the SPDE.
+* The limit (`parabolic_mean_tendsto`): `E[P_ℓ] → ∑_{m odd} 400(1 − e^{−π²m²/2})/(π⁴m⁴)`, the
+  explicit series `parabolicLimit` (which equals `E ∫₀¹ u²(x, ¼) dx` for the SPDE by the Itô
+  isometry; that identification is not formalised, see the deviations below).
 * The weak rate `α = 2` (`parabolic_weak_rate`): `|E[P_{ℓ+1}] − E[P_ℓ]| ≤ 1225 · 4^{−(ℓ+1)}` and
   `|E[P_ℓ] − parabolicLimit| ≤ 409 · 4^{−ℓ}`.
 * Theorem 1 end to end (`parabolic_mlmc_theorem1`): mean square error `< ε²` at cost `O(ε⁻²)`,
@@ -236,9 +241,12 @@ lemma sum_sineCoef_mul_sineMode {J j : ℕ} (hj : j ∈ Ico 1 J) :
   rw [Finset.sum_ite_eq' (Ico 1 J) j (fun _ => (J : ℝ) / 2), if_pos hj]
   field_simp
 
-/-- **The projection of the constant vector in closed form** (Giles 2015, §7.1): for
-`0 < m < 2J`, `c_m = (2/J) ∑_{0<i<J} sin(πmi/J) = (1 − cos πm)/J · cot(πm/(2J))`, that is
-`(2/J) cot(πm/(2J))` for odd `m` and `0` for even `m`. -/
+/-- **The projection of the constant vector in closed form** (Giles 2015, §7.1, p. 51, the noise
+term of the scheme "`u^{n+1}_j = u^n_j + k/h² (u^n_{j+1} − 2u^n_j + u^n_{j−1}) + 10ΔW^n`", which is
+the same at every grid point): for `0 < m < 2J`,
+`c_m = (2/J) ∑_{0<i<J} sin(πmi/J) = (1 − cos πm)/J · cot(πm/(2J))`, that is
+`(2/J) cot(πm/(2J))` for odd `m` and `0` for even `m`.  So only the odd modes are forced, and for
+fixed odd `m`, `c_m → 4/(πm) = 2∫₀¹ sin(πmx) dx` (the sine coefficient of `1`) as `J → ∞`. -/
 theorem sineCoef_eq {J m : ℕ} (hm : 0 < m) (hm2 : m < 2 * J) :
     sineCoef J m = (1 - Real.cos (π * m)) / J *
       (Real.cos (π * m / (2 * J)) / Real.sin (π * m / (2 * J))) := by
@@ -291,7 +299,9 @@ lemma sineEig_quarter (J m : ℕ) : sineEig (1 / 4) J m = Real.cos (π * m / (2 
   ring
 
 /-- The sine vectors are eigenvectors of the explicit step (Giles 2015, §7.1, p. 51): at every
-node `j > 0`, `v_j + λ(v_{j+1} − 2v_j + v_{j−1}) = μ_m v_j` for `v_j = sin(πmj/J)`. -/
+node `j > 0`, `v_j + λ(v_{j+1} − 2v_j + v_{j−1}) = μ_m v_j` for `v_j = sin(πmj/J)`.  (The same
+identity, for `dirichletHeatStep` with zero noise, is `dirichletHeatStep_sin` in
+`MlmcLean.SpotCheckRemarks`, which is not imported here.) -/
 lemma sineMode_step (lam : ℝ) {J j : ℕ} (hj : 0 < j) (m : ℕ) :
     sineMode J m j + lam * (sineMode J m (j + 1) - 2 * sineMode J m j + sineMode J m (j - 1)) =
       sineEig lam J m * sineMode J m j := by
@@ -318,12 +328,14 @@ lemma sineMode_step (lam : ℝ) {J j : ℕ} (hj : 0 < j) (m : ℕ) :
 
 /-! ### The scheme and its diagonalisation -/
 
-/-- One step of the explicit scheme of Giles 2015, §7.1 (p. 51, l. 2186–2194:
+/-- One step of the explicit scheme of Giles 2015, §7.1 (p. 51, l. 2179–2194:
 "`u^{n+1}_j = u^n_j + k/h² (u^n_{j+1} − 2u^n_j + u^n_{j−1}) + 10ΔW^n`", "boundary data
 `u(0, t) = u(1, t) = 0`") on the grid `j = 0, …, J`: the interior nodes `0 < j < J` get
 `u_j + λ(u_{j+1} − 2u_j + u_{j−1}) + w` with `λ = k/h²` and the noise `w` (the same at every node,
 `10ΔW^n` in the paper); the boundary nodes keep their values.  Values at `j > J` are carried
-along and never used. -/
+along and never used.  This is the special case of spatially constant noise of
+`dirichletHeatStep` in `MlmcLean.SpotCheckRemarks` (not imported here):
+`parabolicStep λ J w = dirichletHeatStep λ J (fun _ => w)`, by the same defining expression. -/
 def parabolicStep (lam : ℝ) (J : ℕ) (w : ℝ) (u : ℕ → ℝ) (j : ℕ) : ℝ :=
   if 0 < j ∧ j < J then u j + lam * (u (j + 1) - 2 * u j + u (j - 1)) + w else u j
 
@@ -393,7 +405,7 @@ theorem parabolicPath_eq_sum (lam : ℝ) (J : ℕ) (dW : ℕ → ℝ) (n : ℕ) 
       rw [ih hj]
       simp only [h0, mul_zero]
 
-/-- **The grid quadrature of `u²` in the sine modes** (Giles 2015, §7.1, p. 51: "the output
+/-- **The grid quadrature of `u²` in the sine modes** (Giles 2015, §7.1, p. 51: "The output
 functional is chosen to be `P = ∫₀¹ u²(x, 0.25)`"): `∑_{j=0}^{J} (u^n_j)² = (J/2) ∑_{m=1}^{J−1}
 (A^n_m)²` (discrete Parseval identity), so `h ∑_j (u^n_j)² = ½ ∑_m (A^n_m)²` with `h = 1/J`. -/
 theorem sum_sq_parabolicPath (lam : ℝ) (J : ℕ) (dW : ℕ → ℝ) (n : ℕ) :
@@ -452,7 +464,9 @@ lemma hasLaw_linComb_stdNormalSeq (α : ℕ → ℝ) (n : ℕ) :
   have h := hasLaw_finsetSum_gaussianReal (m := fun _ => 0) hX hind (range n)
   simpa using h
 
-/-- `N(0, v)` is the image of `N(0, 1)` under `x ↦ √v x`. -/
+/-- `N(0, v)` is the image of `N(0, 1)` under `x ↦ √v x` (for the Gaussian moments used in Giles
+2015, §7.1).  This is `gaussianReal_map_sqrt_mul` of `MlmcLean.AdaptiveGrids` read backwards;
+that module is not imported here, so the one-line proof is repeated. -/
 lemma gaussianReal_zero_eq_map_sqrt_mul (v : ℝ≥0) :
     gaussianReal 0 v = (gaussianReal 0 1).map (fun x => Real.sqrt v * x) := by
   rw [gaussianReal_map_const_mul, mul_zero, mul_one]
@@ -488,7 +502,9 @@ lemma integral_pow_four_of_hasLaw_gaussianReal {X : Ω → ℝ} {v : ℝ≥0}
   rw [integral_const_mul, integral_pow_four_gaussian]
   ring
 
-/-- A measurable `X ∼ N(0, v)` has finite moments of every order. -/
+/-- A measurable `X ∼ N(0, v)` has finite moments of every order (for Giles 2015, §7.1).  This
+generalises `memLp_of_map_eq_gaussianReal` of `MlmcLean.EulerSuperlinear` (the case `v = 1`, not
+imported here) to every variance. -/
 lemma memLp_of_hasLaw_gaussianReal {X : Ω → ℝ} (hXm : Measurable X) {v : ℝ≥0}
     (hX : HasLaw X (gaussianReal 0 v) P) (p : ℝ≥0) : MemLp X p P :=
   (memLp_id_gaussianReal p).comp_measurePreserving ⟨hXm, hX.map_eq⟩
@@ -833,8 +849,9 @@ lemma sum_sq_mul_pow_le (κ μ : ℝ) (h0 : 0 ≤ μ) (h1 : μ < 1) (n : ℕ) :
         mul_le_mul_of_nonneg_left (hg.trans h2) (sq_nonneg κ)
     _ = κ ^ 2 / (1 - μ) := by ring
 
-/-- **The coefficient recursion over one coarse step** (Giles 2015, §7.1: "the coarse path uses the
-sums of the four fine Brownian increments").  Let the fine coefficients after `4r` fine steps be
+/-- **The coefficient recursion over one coarse step** (Giles 2015, §7.1 with §5.1: the coarse path
+is driven by the sums of four fine Brownian increments, since `k_ℓ = 4k_{ℓ+1}`; see
+`parabolic_coupling`).  Let the fine coefficients after `4r` fine steps be
 `s c_f μ_f^{4r−1−i}` and the coarse ones after `r` coarse steps `s c_c μ_c^{r−1−⌊i/4⌋}`, with
 `a = μ_f⁴`, `a + t ≤ 1`, `t > 0`, and the coarse coefficients bounded by `G` in `ℓ²`.  Then their
 difference satisfies `∑_{i<4r} (…)² ≤ ((a − μ_c)² G/t + ∑_{q<4} (s c_f μ_f^{3−q} − s c_c)²)/t`. -/
@@ -1274,9 +1291,11 @@ lemma memLp_parabolicP (ℓ : ℕ) : MemLp (parabolicP ℓ) 2 stdNormalSeq := by
   rw [parabolicP_fun_eq]
   exact (memLp_finsetSum _ fun m _ => memLp_sq_linComb _ _).const_mul _
 
-/-- **The exact mean of the level-`ℓ` output** (Giles 2015, §7.1, p. 51): with `J = 2^{ℓ+1}` and
-`N = 4^{ℓ+1}`, `E[P_ℓ] = ½ ∑_{m=1}^{J−1} ∑_{i<N} (10/(2J) · c_m μ_m^{N−1−i})²`, the sum of the
-variances of the mode amplitudes. -/
+/-- **The exact mean of the level-`ℓ` output** (Giles 2015, §7.1, p. 51: "The output functional
+is chosen to be `P = ∫₀¹ u²(x, 0.25)`. … The level `ℓ` approximation uses `h_ℓ = 2^{−(ℓ+1)}`,
+`k_ℓ = ¼ h_ℓ²`"): with `J = 2^{ℓ+1}` and `N = 4^{ℓ+1}`,
+`E[P_ℓ] = ½ ∑_{m=1}^{J−1} ∑_{i<N} (10/(2J) · c_m μ_m^{N−1−i})²`, the sum of the variances of the
+mode amplitudes (each mode amplitude is a centred Gaussian). -/
 theorem integral_parabolicP (ℓ : ℕ) :
     ∫ z, parabolicP ℓ z ∂stdNormalSeq = 1 / 2 * ∑ m ∈ Ico 1 (2 ^ (ℓ + 1)),
       ∑ i ∈ range (4 ^ (ℓ + 1)), (10 / (2 * ((2 ^ (ℓ + 1) : ℕ) : ℝ)) * sineCoef (2 ^ (ℓ + 1)) m *
@@ -1287,16 +1306,20 @@ theorem integral_parabolicP (ℓ : ℕ) :
   refine Finset.sum_congr rfl fun m _ => ?_
   rw [integral_sq_of_hasLaw_gaussianReal (hasLaw_linComb_stdNormalSeq _ _), coe_sum_toNNReal_sq]
 
-/-- **The coupling of the paper** (Giles 2015, §7.1 with §5.1: the coarse path uses the sums of
-the fine Brownian increments, here four, since `k_ℓ = 4 k_{ℓ+1}`).  The coarse inputs
-`pairAvg (pairAvg z)` are again independent standard normals, and the coarse Brownian increment
-of level `ℓ`, `z'_p/2^{ℓ+2}`, is the sum of the four fine increments `z_{4p+q}/2^{ℓ+3}` of level
-`ℓ + 1`. -/
-theorem parabolic_coupling (ℓ : ℕ) :
+/-- **The coupling of the paper** (Giles 2015, §5.1, p. 29: "The multilevel coupling is achieved by
+using the same underlying driving Brownian path for the coarse and fine paths; this is
+accomplished by summing the Brownian increments for the fine path timesteps to obtain the
+Brownian increments for the coarse timesteps"; §7.1, p. 51, only says "The multilevel
+implementation is again very easy", so the coupling of the SPDE example is implicit and taken
+from §5.1 and (2.4)).  The coarse inputs `pairAvg (pairAvg z)` are again independent standard
+normals, and for every level `ℓ` the coarse Brownian increment `z'_p/2^{ℓ+2}` of level `ℓ` is the
+sum of the four fine increments `z_{4p+q}/2^{ℓ+3}` of level `ℓ + 1` (four fine steps per coarse
+step, since `k_ℓ = 4 k_{ℓ+1}`). -/
+theorem parabolic_coupling :
     MeasurePreserving (fun z => pairAvg (pairAvg z)) stdNormalSeq stdNormalSeq ∧
-      ∀ (z : ℕ → ℝ) (p : ℕ), pairAvg (pairAvg z) p / 2 ^ (ℓ + 2) =
+      ∀ (ℓ : ℕ) (z : ℕ → ℝ) (p : ℕ), pairAvg (pairAvg z) p / 2 ^ (ℓ + 2) =
         ∑ q ∈ range 4, z (4 * p + q) / 2 ^ (ℓ + 3) := by
-  refine ⟨measurePreserving_pairAvg.comp measurePreserving_pairAvg, fun z p => ?_⟩
+  refine ⟨measurePreserving_pairAvg.comp measurePreserving_pairAvg, fun ℓ z p => ?_⟩
   rw [pairAvg_pairAvg_apply]
   simp only [Finset.sum_range_succ, Finset.sum_range_zero, zero_add, add_zero]
   rw [pow_succ]
@@ -1504,7 +1527,8 @@ lemma parabolic_series_term_le (m : ℕ) :
         rw [div_mul_div_comm]
         ring
 
-/-- **The value `P` of the parabolic example** (Giles 2015, §7.1, p. 51: "`P = ∫₀¹ u²(x, 0.25)`"):
+/-- **The target value `P = lim E[P_ℓ]` of the parabolic example** (Giles 2015, §7.1, p. 51:
+"`P = ∫₀¹ u²(x, 0.25)`"): the explicit series
 `∑_{k≥0} 400 (1 − e^{−π²(2k+1)²/2}) / (π⁴ (2k+1)⁴)`, the limit of `E[P_ℓ]`
 (`parabolic_mean_tendsto`).  For the SPDE `du = u_xx dt + 10 dW` with zero boundary and initial
 data, the mild solution is `u = ∑_m a_m(t) sin(mπx)` with `a_m(t) = 10 ĉ_m ∫₀ᵗ e^{−m²π²(t−s)} dW_s`,
@@ -1514,9 +1538,11 @@ identification needs stochastic integration and is not formalised. -/
 noncomputable def parabolicLimit : ℝ :=
   ∑' k : ℕ, 400 * (1 - Real.exp (-(π ^ 2 * (2 * k + 1) ^ 2 / 2))) / (π ^ 4 * (2 * k + 1) ^ 4)
 
-/-- **The level means converge to the value of the SPDE output** (Giles 2015, §7.1, p. 51:
+/-- **The level means converge to the explicit series `parabolicLimit`** (Giles 2015, §7.1, p. 51:
 "`P = ∫₀¹ u²(x, 0.25)`"; the weak convergence of the scheme): `E[P_ℓ] → parabolicLimit =
-∑_{m odd} 400 (1 − e^{−π²m²/2})/(π⁴m⁴)` as `ℓ → ∞`.  The proof takes the limit of each mode
+∑_{m odd} 400 (1 − e^{−π²m²/2})/(π⁴m⁴)` as `ℓ → ∞`.  This series equals `E ∫₀¹ u²(x, ¼) dx` for
+the SPDE by the Itô isometry (see `parabolicLimit`); that identification is not formalised, so
+the statement is the convergence to the series only.  The proof takes the limit of each mode
 (`parabolic_mode_mean_tendsto`: `J sin(πm/(2J)) → πm/2` and
 `cos(πm/(2J))^{4J²} → e^{−π²m²/2}`) and dominates the modes by `50/m⁴` (Tannery's theorem). -/
 theorem parabolic_mean_tendsto :
@@ -1618,7 +1644,7 @@ theorem parabolic_weak_rate :
     (∀ ℓ, |∫ z, parabolicP (ℓ + 1) z ∂stdNormalSeq - ∫ z, parabolicP ℓ z ∂stdNormalSeq| ≤
       1225 / 4 ^ (ℓ + 1)) ∧
     ∀ ℓ, |∫ z, parabolicP ℓ z ∂stdNormalSeq - parabolicLimit| ≤ 409 / 4 ^ ℓ := by
-  have hpp := (parabolic_coupling 0).1
+  have hpp := parabolic_coupling.1
   have hstep : ∀ ℓ, |∫ z, parabolicP (ℓ + 1) z ∂stdNormalSeq -
       ∫ z, parabolicP ℓ z ∂stdNormalSeq| ≤ 1225 / 4 ^ (ℓ + 1) := by
     intro ℓ
@@ -1682,7 +1708,7 @@ theorem parabolic_mlmc_theorem1 :
           ∂(Measure.infinitePi fun _ : ℕ × ℕ => stdNormalSeq) < ε ^ 2 ∧
         ∑ ℓ ∈ range (L + 1), (N ℓ : ℝ) * (2 ^ (ℓ + 1) * 4 ^ (ℓ + 1)) ≤ c₄ * ε ^ (-2 : ℝ) := by
   obtain ⟨hPf, -, hbias⟩ := parabolic_weak_rate
-  have hpp := (parabolic_coupling 0).1
+  have hpp := parabolic_coupling.1
   obtain ⟨-, hind, hω⟩ := exists_iid_inputs stdNormalSeq
   have hPcm : ∀ ℓ, Measurable (fun z => parabolicP ℓ (pairAvg (pairAvg z))) := fun ℓ =>
     (measurable_parabolicP ℓ).comp hpp.measurable

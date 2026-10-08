@@ -19,32 +19,41 @@ treatment we would get `β = 1.5`, and hence an overall complexity which is `O(�
 for a smooth `f` (`nested_sde_bias_rate`, `nested_sde_variance_rate`, `nested_sde_mlmc_complexity`)
 and `MlmcLean/SDEExtensions.lean` for several kinks and curved pieces without time steps
 (`nested_kinks_variance_rate`, `nested_kinks_mlmc_complexity`).  This file combines them for
-`f = f₀ + ∑_{i ∈ ι} c_i max(· − k_i, 0)` with finitely many kinks `k_i` and `f₀` differentiable
-with a Lipschitz derivative (every continuous `f` that is `C^{1,1}` on each closed interval between
-consecutive kinks has this form, `c_i` being the jump of `f′` at `k_i`):
+`f = f₀ + ∑_{i ∈ ι} c_i max(· − k_i, 0)` with finitely many kinks `k_i`:
 
-* **Linearity in `f`** (`nestedSdeDelta_succ_kinks`): the correction `Y_{ℓ+1}` of `f` is the
-  correction of `f₀` plus `∑_i c_i` times the correction of the hinge `max(· − k_i, 0)`.
-* **`α = 1`** (`nested_kinks_sde_bias_rate`): the smooth part has bias `O(2^{−ℓ})`
-  (`nested_sde_bias_le_of_weak`, a variant of `nested_sde_bias_rate` that, like the kink results,
-  assumes no measurability or moment of the exact inner quantity `g`), and so has each hinge
-  (`nested_kink_sde_bias_rate`).
-* **`β = 3/2`** (`nested_kinks_sde_variance_rate`): the smooth part of `Y_{ℓ+1}` is `O(2^{−ℓ})` in
-  `L²` (`nested_sde_variance_rate`), each hinge part `O(2^{−3ℓ/4})`
-  (`nested_kink_sde_variance_rate`), and `(a + ∑_i b_i)² ≤ (|ι| + 1)(a² + ∑_i b_i²)`
-  (`sq_add_sum_le`).
-* **The complexity `O(ε^{−2.5})`** (`nested_kinks_sde_mlmc_complexity`): Theorem 1
-  (`giles_theorem1_corrections`) with `α = 1`, `β = 3/2`, `γ = 2`.
+* **Linearity in `f`** (`nestedSdeDelta_succ_kinks`, `nested_sde_bias_kinks_add`,
+  `nested_sde_variance_kinks_add`): the correction `Y_{ℓ+1}` and the bias integrand of `f` are
+  those of `f₀` plus `∑_i c_i` times those of the hinge `max(· − k_i, 0)`, so the rates add (with
+  `(a + ∑_i b_i)² ≤ (|ι| + 1)(a² + ∑_i b_i²)`, `sq_add_sum_le`), and Theorem 1 then follows from
+  the two rates (`nested_sde_mlmc_complexity_of_rates`).
+* **Curved pieces**, `f₀` differentiable with a Lipschitz derivative (every continuous `f` that is
+  `C^{1,1}` on each closed interval between consecutive kinks has this form, `c_i` being the jump
+  of `f′` at `k_i`): `α = 1` (`nested_kinks_sde_bias_rate`; the smooth part by
+  `nested_sde_bias_le_of_weak`, a variant of `nested_sde_bias_rate` that, like the kink results,
+  assumes no measurability or moment of the exact inner quantity `g`), `β = 3/2`
+  (`nested_kinks_sde_variance_rate`; the smooth part is `O(2^{−ℓ})` in `L²` by
+  `nested_sde_variance_rate`) and the complexity `O(ε^{−2.5})`
+  (`nested_kinks_sde_mlmc_complexity`).
+* **Piecewise linear `f`**, `f₀` affine and at least one kink: the same three results under the
+  hypotheses of the one-kink results (`nested_piecewise_linear_sde_bias_rate`,
+  `nested_piecewise_linear_sde_variance_rate`, `nested_piecewise_linear_sde_mlmc_complexity`),
+  which they extend to several kinks.
 
 Hypotheses (this formalisation's; the paper states none for this case, and the orders of the time
-discretisation are not formalised): the union of those of the smooth and the one-kink results.
-Bounded fourth moments `E[g_ℓ(Z, W)⁴] ≤ m₄` and first order strong convergence in `L⁴`,
-`(2^ℓ)⁴ E[(g_{ℓ+1}(Z, W) − g_ℓ(Z, W))⁴] ≤ cₛ` (for the curved part, as in
-`nested_sde_variance_rate`; it implies the strong order `¼` in `L²` that the kinks need,
-`strong_quarter_of_strong_four`); bounded centred conditional fourth moments
-`E_W[(g_ℓ(z, W) − E_W[g_ℓ(z, W)])⁴] ≤ κ₄` for `ν`-a.e. `z`; first order weak convergence uniformly
-in the outer sample, `2^ℓ |E_W[g_ℓ(z, W)] − E_W[g(z, W)]| ≤ c_w`; and a small-ball bound
-`ν{|E_W[g(Z, W)] − k_i| ≤ t} ≤ c_{d,i} t` at each kink, for the exact conditional mean only.
+discretisation are not formalised).  For a piecewise linear `f`, those of the one-kink results:
+bounded centred conditional fourth moments `E_W[(g_ℓ(z, W) − E_W[g_ℓ(z, W)])⁴] ≤ κ₄` for `ν`-a.e.
+`z` (so the conditional mean may be unbounded); first order weak convergence uniformly in the outer
+sample, `2^ℓ |E_W[g_ℓ(z, W)] − E_W[g(z, W)]| ≤ c_w`; strong order `¼` in `L²`,
+`2^{ℓ/2} E[(g_{ℓ+1}(Z, W) − g_ℓ(Z, W))²] ≤ cₛ`, which the strong order `½` of the Euler–Maruyama
+scheme implies; `E[g₀(Z, W)²] < ∞` for the complexity; and a small-ball bound
+`ν{|E_W[g(Z, W)] − k_i| ≤ t} ≤ c_{d,i} t` at each kink, for the exact conditional mean only.  With
+curved pieces, those of the smooth results are added for the curved part: joint fourth moments
+`E[g_ℓ(Z, W)⁴] ≤ m₄`, and first order strong convergence in `L⁴`,
+`(2^ℓ)⁴ E[(g_{ℓ+1}(Z, W) − g_ℓ(Z, W))⁴] ≤ cₛ`, the Milstein-level hypothesis of
+`nested_sde_variance_rate`, which implies the strong order `¼` in `L²`
+(`strong_quarter_of_strong_four`).  These are strictly stronger: they exclude the Euler–Maruyama
+scheme and an outer state with `E[g⁴] = ∞` (e.g. Student-`t` with three degrees of freedom), so
+the results with curved pieces do not contain the piecewise linear ones, even for `f₀` affine.
 Deviation: `f` is given through the decomposition above rather than as a continuous, piecewise
 differentiable function.
 
@@ -53,7 +62,7 @@ have `β₁ = β₂ = 1.5` and so the complexity would remain `O(ε⁻²)`").  T
 (`nested_mimc_kink_rates_false`), and Theorem 2 with the corrected rates gives only
 `O(ε⁻² |log ε|⁴)` (`nested_mimc_kink_complexity`).  For the counterexample itself
 (`kinkInnerApprox`) the cost `O(ε⁻²)` is nevertheless reached, by the MIMC estimator on the index
-set made of the two axes (`nested_mimc_kink_axes_complexity`): its mixed corrections have mean
+set made of the two axes (`kinkInnerApprox_mimc_axes_complexity`): its mixed corrections have mean
 zero, so `E[P_{(a,b)}]` is additive in `(a, b)` (`kinkExample_mean_additive`) and the axes
 estimator has the bias of the full box; on the axes the variances decay faster than the costs grow
 (`kinkExample_axis_one`: `β₁ = 3/2`; `kinkExample_axis_two`: `β₂ = 2`; `γ₁ = γ₂ = 1`); grouping
@@ -162,17 +171,22 @@ lemma strong_quarter_of_strong_four {gh : ℕ → 𝒵 → 𝒲 → ℝ}
 
 /-- **`α = 1` for a smooth `f` with `2^ℓ` timesteps, without measurability of the exact `g`**
 (Giles 2015, §9.2, p. 59, l. 2574–2576: "When using the Milstein discretisation (giving first order
-weak and strong convergence) this would still give `α = 1`").  As `nested_sde_bias_rate`, but, as
-in `nested_kink_sde_bias_rate`, the exact inner quantity `g` enters only through its conditional
-mean `E_W[g(z, W)]`, the a.e. limit of the `E_W[g_ℓ(z, W)]` by the weak-error hypothesis
-(`aemeasurable_condMean_of_weak`): no measurability or moment of `g` is assumed.  Let `f′` be
-`K`-Lipschitz, `E[g_ℓ(Z, W)⁴] ≤ m₄` and `2^ℓ |E_W[g_ℓ(z, W)] − E_W[g(z, W)]| ≤ c_w` for `ν`-a.e.
-`z`.  Then `P_ℓ − f(E_W[g(Z, W)])` is integrable and
-`2^ℓ |E[P_ℓ − f(E_W[g(Z, W)])]| ≤ (K/2)(1 + 16 m₄) + c_w (|f′(0)| + K (1 + m₄)) + (K/2) c_w²`:
-the inner sampling error (`nested_bias_rate`) plus the discretisation error, by the Taylor bound
+weak and strong convergence) this would still give `α = 1`").  Let `f` be differentiable with a
+`K`-Lipschitz derivative `f′`, let level `ℓ` use `2^ℓ` inner samples of the level-`ℓ` approximation
+`g_ℓ` of the inner quantity `g` (`nestedSdeP`), and assume `E[g_ℓ(Z, W)⁴] ≤ m₄` and first order
+weak convergence uniformly in the outer sample, `2^ℓ |E_W[g_ℓ(z, W)] − E_W[g(z, W)]| ≤ c_w` for
+`ν`-a.e. `z` (this formalisation's hypotheses, standing in for the weak order of the Milstein
+scheme, which is not formalised).  Then `P_ℓ − f(E_W[g(Z, W)])` is integrable and
+`2^ℓ |E[P_ℓ − f(E_W[g(Z, W)])]| ≤ (K/2)(1 + 16 m₄) + c_w (|f′(0)| + K (1 + m₄)) + (K/2) c_w²`.
+Compared with `nested_sde_bias_rate`, no measurability or moment of the exact `g` is assumed (as in
+`nested_kink_sde_bias_rate`, `g` enters only through its conditional mean `E_W[g(z, W)]`, the a.e.
+limit of the `E_W[g_ℓ(z, W)]` by the weak-error hypothesis, `aemeasurable_condMean_of_weak`), the
+bound is an explicit constant (`E_Z|f′(E_W[g(Z, W)])|` is replaced by `|f′(0)| + K (1 + m₄)`), and
+the integrability of the bias integrand is proved.  Proof: the inner sampling error
+(`nested_bias_rate`) plus the discretisation error, by the Taylor bound
 `|f(G) − f(G_ℓ)| ≤ |f′(G_ℓ)| |G − G_ℓ| + (K/2)(G − G_ℓ)²` (`abs_taylor_first_le`) at the
 approximate conditional mean `G_ℓ`, with `E|G_ℓ| ≤ E|g_ℓ(Z, W)| ≤ 1 + m₄`. -/
-lemma nested_sde_bias_le_of_weak {f f' : ℝ → ℝ} {K : ℝ} (hf : ∀ x, HasDerivAt f (f' x) x)
+theorem nested_sde_bias_le_of_weak {f f' : ℝ → ℝ} {K : ℝ} (hf : ∀ x, HasDerivAt f (f' x) x)
     (hf' : ∀ x y, x ≤ y → |f' y - f' x| ≤ K * (y - x)) {gh : ℕ → 𝒵 → 𝒲 → ℝ}
     (hgh : ∀ ℓ, Measurable (Function.uncurry (gh ℓ)))
     (hgh4 : ∀ ℓ, Integrable (fun p : 𝒵 × 𝒲 => gh ℓ p.1 p.2 ^ 4) (ν.prod ρ)) {m₄ : ℝ}
@@ -337,50 +351,27 @@ lemma nested_sde_bias_le_of_weak {f f' : ℝ → ℝ} {K : ℝ} (hf : ∀ x, Has
         add_le_add hb1 hb2
     _ = _ := by ring
 
-/-- **`α = 1` for an `f` with several kinks and curved pieces, with `2^ℓ` timesteps** (Giles 2015,
-§9.2, p. 60, l. 2687–2690: "if the function `f` is continuous and piecewise differentiable, rather
-than being twice differentiable, then in the MLMC treatment we would get `β = 1.5`, and hence an
-overall complexity which is `O(ε^{−2.5})`", which is Theorem 1 with `α = 1`, `β = 1.5`, `γ = 2`).
-Let `f = f₀ + ∑_{i ∈ ι} c_i max(· − k_i, 0)` with finitely many kinks `k_i` and `f₀` differentiable
-with a `K`-Lipschitz derivative, and let level `ℓ` use `2^ℓ` inner samples of the level-`ℓ`
-approximation `g_ℓ` of the inner quantity `g` (`nestedSdeP`).  Hypotheses (this formalisation's;
-the paper states none for this case, and the weak order of the time discretisation is not
-formalised): `E[g_ℓ(Z, W)⁴] ≤ m₄`; the centred conditional fourth moments are bounded,
-`E_W[(g_ℓ(z, W) − E_W[g_ℓ(z, W)])⁴] ≤ κ₄` for `ν`-a.e. `z`; first order weak convergence uniformly
-in the outer sample, `2^ℓ |E_W[g_ℓ(z, W)] − E_W[g(z, W)]| ≤ c_w`; and the small-ball bounds
-`ν{|E_W[g(Z, W)] − k_i| ≤ t} ≤ c_{d,i} t` at each kink, for the exact conditional mean only.  Then
-`P_ℓ − f(E_W[g(Z, W)])` is integrable and
-`2^ℓ |E[P_ℓ − f(E_W[g(Z, W)])]| ≤ (K/2)(1 + 16 m₄) + c_w (|f₀′(0)| + K (1 + m₄)) + (K/2) c_w² +
-∑_i |c_i| (4 c_{d,i} (1 + 80 κ₄)(1 + c_w) + c_w)`.
-Proof: the bias is linear in `f` (as `nestedP_kinks`, `nestedTarget_kinks`); the curved part has
-bias `O(2^{−ℓ})` (`nested_sde_bias_le_of_weak`) and so has each hinge
-(`nested_kink_sde_bias_rate`).  No measurability or moment of the exact `g` is assumed: it enters
-only through its conditional mean, the a.e. limit of the `E_W[g_ℓ(z, W)]`.  Deviation: `f` is
-given through the decomposition above rather than as a continuous, piecewise differentiable
-function; with `f₀` affine and one kink this is `nested_kink_sde_bias_rate` (up to the
-constant). -/
-theorem nested_kinks_sde_bias_rate {ι : Type*} [Fintype ι] {f f₀ f₀' : ℝ → ℝ} {K : ℝ}
-    {c k c_d : ι → ℝ} (hf : ∀ x, f x = f₀ x + ∑ i, c i * max (x - k i) 0)
-    (hf₀ : ∀ x, HasDerivAt f₀ (f₀' x) x) (hf₀' : ∀ x y, x ≤ y → |f₀' y - f₀' x| ≤ K * (y - x))
-    {gh : ℕ → 𝒵 → 𝒲 → ℝ} (hgh : ∀ ℓ, Measurable (Function.uncurry (gh ℓ)))
-    (hgh4 : ∀ ℓ, Integrable (fun p : 𝒵 × 𝒲 => gh ℓ p.1 p.2 ^ 4) (ν.prod ρ)) {m₄ κ₄ : ℝ}
-    (hm₄ : ∀ ℓ, ∫ p, gh ℓ p.1 p.2 ^ 4 ∂(ν.prod ρ) ≤ m₄)
-    (hcent : ∀ ℓ, ∀ᵐ z ∂ν, ∫ v, (gh ℓ z v - ∫ u, gh ℓ z u ∂ρ) ^ 4 ∂ρ ≤ κ₄)
-    {g : 𝒵 → 𝒲 → ℝ} {c_w : ℝ}
-    (hw : ∀ ℓ, ∀ᵐ z ∂ν, (2 : ℝ) ^ ℓ * |∫ v, gh ℓ z v ∂ρ - ∫ v, g z v ∂ρ| ≤ c_w)
-    (hball : ∀ i, ∀ t : ℝ, 0 < t →
-      ν {z | |∫ v, g z v ∂ρ - k i| ≤ t} ≤ ENNReal.ofReal (c_d i * t)) (ℓ : ℕ) :
+/-! #### Linearity in `f` -/
+
+omit [IsProbabilityMeasure ν] [IsProbabilityMeasure ρ] in
+/-- **The bias is linear in `f`** (Giles 2015, §9.2, p. 60, l. 2687–2690, for an `f` with several
+kinks): if `f = f₀ + ∑_i c_i max(· − k_i, 0)` and the bias integrands `P_ℓ − f(E_W[g(Z, W)])`
+(`nestedSdeP`, `nestedTarget`) of `f₀` and of each hinge `max(· − k_i, 0)` are integrable with
+`2^ℓ |E[·]|` at most `b₀` and `b_i`, then that of `f` is integrable and
+`2^ℓ |E[P_ℓ − f(E_W[g(Z, W)])]| ≤ b₀ + ∑_i |c_i| b_i`. -/
+lemma nested_sde_bias_kinks_add {ι : Type*} [Fintype ι] {f f₀ : ℝ → ℝ} {c k : ι → ℝ}
+    (hf : ∀ x, f x = f₀ x + ∑ i, c i * max (x - k i) 0) {gh : ℕ → 𝒵 → 𝒲 → ℝ}
+    {g : 𝒵 → 𝒲 → ℝ} {ℓ : ℕ} {b₀ : ℝ} {b : ι → ℝ}
+    (h₀ : Integrable (fun p => nestedSdeP f₀ gh ℓ p - nestedTarget f₀ g ρ p) (nestedLaw ν ρ) ∧
+      (2 : ℝ) ^ ℓ * |∫ p, (nestedSdeP f₀ gh ℓ p - nestedTarget f₀ g ρ p) ∂(nestedLaw ν ρ)| ≤ b₀)
+    (hi : ∀ i, Integrable (fun p => nestedSdeP (fun x => max (x - k i) 0) gh ℓ p -
+        nestedTarget (fun x => max (x - k i) 0) g ρ p) (nestedLaw ν ρ) ∧
+      (2 : ℝ) ^ ℓ * |∫ p, (nestedSdeP (fun x => max (x - k i) 0) gh ℓ p -
+        nestedTarget (fun x => max (x - k i) 0) g ρ p) ∂(nestedLaw ν ρ)| ≤ b i) :
     Integrable (fun p => nestedSdeP f gh ℓ p - nestedTarget f g ρ p) (nestedLaw ν ρ) ∧
       (2 : ℝ) ^ ℓ * |∫ p, (nestedSdeP f gh ℓ p - nestedTarget f g ρ p) ∂(nestedLaw ν ρ)| ≤
-        K / 2 * (1 + 16 * m₄) + c_w * (|f₀' 0| + K * (1 + m₄)) + K / 2 * c_w ^ 2 +
-          ∑ i, |c i| * (4 * c_d i * (1 + 80 * κ₄) * (1 + c_w) + c_w) := by
-  have hhinge : ∀ i, ∀ x, (fun x => max (x - k i) 0) x = 0 + 0 * x + 1 * max (x - k i) 0 :=
-    fun i x => by ring
-  have hfib : ∀ ℓ, ∀ᵐ z ∂ν, Integrable (fun v => gh ℓ z v ^ 4) ρ ∧
-      ∫ v, (gh ℓ z v - ∫ u, gh ℓ z u ∂ρ) ^ 4 ∂ρ ≤ κ₄ := fun ℓ =>
-    ((hgh4 ℓ).prod_right_ae.and (hcent ℓ)).mono fun z hz => hz
-  obtain ⟨i0, b0⟩ := nested_sde_bias_le_of_weak ν ρ hf₀ hf₀' hgh hgh4 hm₄ hw ℓ
-  have hi := fun i => nested_kink_sde_bias_rate ν ρ (hhinge i) hgh hfib hw (hball i) ℓ
+        b₀ + ∑ i, |c i| * b i := by
+  obtain ⟨i0, b0⟩ := h₀
   set D₀ : 𝒵 × (ℕ → 𝒲) → ℝ := fun p => nestedSdeP f₀ gh ℓ p - nestedTarget f₀ g ρ p
   set D : ι → 𝒵 × (ℕ → 𝒲) → ℝ := fun i p =>
     nestedSdeP (fun x => max (x - k i) 0) gh ℓ p - nestedTarget (fun x => max (x - k i) 0) g ρ p
@@ -404,12 +395,9 @@ theorem nested_kinks_sde_bias_rate {ι : Type*} [Fintype ι] {f f₀ f₀' : ℝ
       integral_finsetSum _ fun i _ => ((hi i).1).const_mul (c i)]
     simp only [integral_const_mul]
     rfl
-  have hbi : ∀ i, (2 : ℝ) ^ ℓ * |c i * ∫ p, D i p ∂(nestedLaw ν ρ)| ≤
-      |c i| * (4 * c_d i * (1 + 80 * κ₄) * (1 + c_w) + c_w) := fun i => by
-    have h := (hi i).2
-    rw [abs_one, abs_zero, zero_add, mul_one, one_mul] at h
+  have hbi : ∀ i, (2 : ℝ) ^ ℓ * |c i * ∫ p, D i p ∂(nestedLaw ν ρ)| ≤ |c i| * b i := fun i => by
     rw [abs_mul, mul_left_comm]
-    exact mul_le_mul_of_nonneg_left h (abs_nonneg _)
+    exact mul_le_mul_of_nonneg_left (hi i).2 (abs_nonneg _)
   have h2l0 : (0 : ℝ) ≤ 2 ^ ℓ := by positivity
   rw [e]
   calc (2 : ℝ) ^ ℓ * |∫ p, D₀ p ∂(nestedLaw ν ρ) + ∑ i, c i * ∫ p, D i p ∂(nestedLaw ν ρ)|
@@ -420,58 +408,28 @@ theorem nested_kinks_sde_bias_rate {ι : Type*} [Fintype ι] {f f₀ f₀' : ℝ
     _ = (2 : ℝ) ^ ℓ * |∫ p, D₀ p ∂(nestedLaw ν ρ)| +
           ∑ i, (2 : ℝ) ^ ℓ * |c i * ∫ p, D i p ∂(nestedLaw ν ρ)| := by
         rw [mul_add, Finset.mul_sum]
-    _ ≤ K / 2 * (1 + 16 * m₄) + c_w * (|f₀' 0| + K * (1 + m₄)) + K / 2 * c_w ^ 2 +
-          ∑ i, |c i| * (4 * c_d i * (1 + 80 * κ₄) * (1 + c_w) + c_w) :=
-        add_le_add b0 (Finset.sum_le_sum fun i _ => hbi i)
+    _ ≤ b₀ + ∑ i, |c i| * b i := add_le_add b0 (Finset.sum_le_sum fun i _ => hbi i)
 
-/-- **`β = 3/2` for an `f` with several kinks and curved pieces, with `2^ℓ` timesteps** (Giles 2015,
-§9.2, p. 60, l. 2687–2690: "if the function `f` is continuous and piecewise differentiable, rather
-than being twice differentiable, then in the MLMC treatment we would get `β = 1.5`").  Let
-`f = f₀ + ∑_{i ∈ ι} c_i max(· − k_i, 0)` with finitely many kinks `k_i` and `f₀` differentiable with
-a `K`-Lipschitz derivative, and let level `ℓ + 1` use the correction `Y_{ℓ+1}` with `2^{ℓ+1}` inner
-samples of `g_{ℓ+1}` and twice `2^ℓ` of `g_ℓ` (`nestedSdeDelta`).  Hypotheses (this formalisation's;
-the paper states none for this case, and the orders of the time discretisation are not formalised):
-`E[g_ℓ(Z, W)⁴] ≤ m₄`; first order strong convergence in `L⁴`,
-`(2^ℓ)⁴ E[(g_{ℓ+1}(Z, W) − g_ℓ(Z, W))⁴] ≤ cₛ` (as in `nested_sde_variance_rate`); bounded centred
-conditional fourth moments `E_W[(g_ℓ(z, W) − E_W[g_ℓ(z, W)])⁴] ≤ κ₄` for `ν`-a.e. `z`; first order
-weak convergence uniformly in the outer sample, `2^ℓ |E_W[g_ℓ(z, W)] − E_W[g(z, W)]| ≤ c_w`; and the
-small-ball bounds `ν{|E_W[g(Z, W)] − k_i| ≤ t} ≤ c_{d,i} t`.  Then `Y_{ℓ+1}` is square-integrable
-and `2^{3ℓ/2} E[Y_{ℓ+1}²] ≤ (|ι| + 1)(B₀ + ∑_i c_i² B_i)` with
-`B₀ = 3 (K/8)² 224 m₄ + (3/2)(8(|f₀′(0)|⁴ + K⁴ m₄) + (1 + K²/2) cₛ)` and
-`B_i = 6 c_{d,i} (1 + 16 κ₄)(1 + c_w) + (3/2)((9/4) c_w² + (1 + cₛ)/2)`, i.e. `V_ℓ = O(2^{−3ℓ/2})`.
-Proof: `Y_{ℓ+1}` is linear in `f` (`nestedSdeDelta_succ_kinks`); its curved part is `O(2^{−ℓ})` in
-`L²` (`nested_sde_variance_rate`, `β = 2`), each hinge part `O(2^{−3ℓ/4})`
-(`nested_kink_sde_variance_rate`, with the strong order `¼` in `L²` from
-`strong_quarter_of_strong_four`), and `(a + ∑_i b_i)² ≤ (|ι| + 1)(a² + ∑_i b_i²)`
-(`sq_add_sum_le`).  Deviation: `f` is given through the decomposition above rather than as a
-continuous, piecewise differentiable function. -/
-theorem nested_kinks_sde_variance_rate {ι : Type*} [Fintype ι] {f f₀ f₀' : ℝ → ℝ} {K : ℝ}
-    {c k c_d : ι → ℝ} (hf : ∀ x, f x = f₀ x + ∑ i, c i * max (x - k i) 0)
-    (hf₀ : ∀ x, HasDerivAt f₀ (f₀' x) x) (hf₀' : ∀ x y, x ≤ y → |f₀' y - f₀' x| ≤ K * (y - x))
-    {gh : ℕ → 𝒵 → 𝒲 → ℝ} (hgh : ∀ ℓ, Measurable (Function.uncurry (gh ℓ)))
-    (hgh4 : ∀ ℓ, Integrable (fun p : 𝒵 × 𝒲 => gh ℓ p.1 p.2 ^ 4) (ν.prod ρ)) {m₄ κ₄ cₛ : ℝ}
-    (hm₄ : ∀ ℓ, ∫ p, gh ℓ p.1 p.2 ^ 4 ∂(ν.prod ρ) ≤ m₄)
-    (hcent : ∀ ℓ, ∀ᵐ z ∂ν, ∫ v, (gh ℓ z v - ∫ u, gh ℓ z u ∂ρ) ^ 4 ∂ρ ≤ κ₄)
-    (hs : ∀ ℓ, ((2 : ℝ) ^ ℓ) ^ 4 *
-      ∫ p, (gh (ℓ + 1) p.1 p.2 - gh ℓ p.1 p.2) ^ 4 ∂(ν.prod ρ) ≤ cₛ)
-    {g : 𝒵 → 𝒲 → ℝ} {c_w : ℝ}
-    (hw : ∀ ℓ, ∀ᵐ z ∂ν, (2 : ℝ) ^ ℓ * |∫ v, gh ℓ z v ∂ρ - ∫ v, g z v ∂ρ| ≤ c_w)
-    (hball : ∀ i, ∀ t : ℝ, 0 < t →
-      ν {z | |∫ v, g z v ∂ρ - k i| ≤ t} ≤ ENNReal.ofReal (c_d i * t)) (ℓ : ℕ) :
+omit [IsProbabilityMeasure ν] [IsProbabilityMeasure ρ] in
+/-- **The correction is linear in `f`, and so are its `L²` rates** (Giles 2015, §9.2, p. 60,
+l. 2687–2690, for an `f` with several kinks): if `f = f₀ + ∑_i c_i max(· − k_i, 0)` and the
+corrections `Y_{ℓ+1}` (`nestedSdeDelta`) of `f₀` and of each hinge `max(· − k_i, 0)` are
+square-integrable with `2^{3ℓ/2} E[Y_{ℓ+1}²]` at most `B₀` and `B_i`, then that of `f` is
+square-integrable and `2^{3ℓ/2} E[Y_{ℓ+1}²] ≤ (|ι| + 1)(B₀ + ∑_i c_i² B_i)`, by
+`nestedSdeDelta_succ_kinks` and `(a + ∑_i b_i)² ≤ (|ι| + 1)(a² + ∑_i b_i²)` (`sq_add_sum_le`). -/
+lemma nested_sde_variance_kinks_add {ι : Type*} [Fintype ι] {f f₀ : ℝ → ℝ} {c k : ι → ℝ}
+    (hf : ∀ x, f x = f₀ x + ∑ i, c i * max (x - k i) 0) {gh : ℕ → 𝒵 → 𝒲 → ℝ} {ℓ : ℕ}
+    {B₀ : ℝ} {B : ι → ℝ}
+    (h₀ : MemLp (nestedSdeDelta f₀ gh (ℓ + 1)) 2 (nestedLaw ν ρ) ∧
+      (2 : ℝ) ^ ((3 / 2 : ℝ) * ℓ) * ∫ p, nestedSdeDelta f₀ gh (ℓ + 1) p ^ 2 ∂(nestedLaw ν ρ) ≤
+        B₀)
+    (hi : ∀ i, MemLp (nestedSdeDelta (fun x => max (x - k i) 0) gh (ℓ + 1)) 2 (nestedLaw ν ρ) ∧
+      (2 : ℝ) ^ ((3 / 2 : ℝ) * ℓ) *
+        ∫ p, nestedSdeDelta (fun x => max (x - k i) 0) gh (ℓ + 1) p ^ 2 ∂(nestedLaw ν ρ) ≤ B i) :
     MemLp (nestedSdeDelta f gh (ℓ + 1)) 2 (nestedLaw ν ρ) ∧
       (2 : ℝ) ^ ((3 / 2 : ℝ) * ℓ) * ∫ p, nestedSdeDelta f gh (ℓ + 1) p ^ 2 ∂(nestedLaw ν ρ) ≤
-        (Fintype.card ι + 1) * (3 * ((K / 8) ^ 2 * (224 * m₄)) +
-          3 / 2 * (8 * (|f₀' 0| ^ 4 + K ^ 4 * m₄) + (1 + K ^ 2 / 2) * cₛ) +
-          ∑ i, c i ^ 2 * (6 * c_d i * (1 + 16 * κ₄) * (1 + c_w) +
-            3 / 2 * (9 / 4 * c_w ^ 2 + (1 + cₛ) / 2))) := by
-  have hhinge : ∀ i, ∀ x, (fun x => max (x - k i) 0) x = 0 + 0 * x + 1 * max (x - k i) 0 :=
-    fun i x => by ring
-  have hfib : ∀ ℓ, ∀ᵐ z ∂ν, Integrable (fun v => gh ℓ z v ^ 4) ρ ∧
-      ∫ v, (gh ℓ z v - ∫ u, gh ℓ z u ∂ρ) ^ 4 ∂ρ ≤ κ₄ := fun ℓ =>
-    ((hgh4 ℓ).prod_right_ae.and (hcent ℓ)).mono fun z hz => hz
-  have hs2 := strong_quarter_of_strong_four ν ρ hgh hgh4 hs
-  obtain ⟨h0m, h0b⟩ := nested_sde_variance_rate ν ρ hf₀ hf₀' hgh hgh4 hm₄ hs ℓ
-  have hi := fun i => nested_kink_sde_variance_rate ν ρ (hhinge i) hgh hfib hw (hball i) hs2 ℓ
+        (Fintype.card ι + 1) * (B₀ + ∑ i, c i ^ 2 * B i) := by
+  obtain ⟨h0m, hb0⟩ := h₀
   set Y₀ := nestedSdeDelta f₀ gh (ℓ + 1)
   set Y : ι → 𝒵 × (ℕ → 𝒲) → ℝ := fun i => nestedSdeDelta (fun x => max (x - k i) 0) gh (ℓ + 1)
   have hY : ∀ p, nestedSdeDelta f gh (ℓ + 1) p = Y₀ p + ∑ i, c i * Y i p :=
@@ -503,28 +461,12 @@ theorem nested_kinks_sde_variance_rate {ι : Type*} [Fintype ι] {f f₀ f₀' :
     rw [integral_const_mul, integral_add i0 iS,
       integral_finsetSum _ fun i _ => (ii i).const_mul _] at h
     simpa only [integral_const_mul] using h
-  -- the rates of the two parts
-  set r : ℝ := (2 : ℝ) ^ ((3 / 2 : ℝ) * ℓ) with hr
+  set r : ℝ := (2 : ℝ) ^ ((3 / 2 : ℝ) * ℓ)
   have hr0 : 0 ≤ r := by positivity
-  have hr4 : r ≤ ((2 : ℝ) ^ ℓ) ^ 2 := by
-    rw [hr, ← pow_mul, ← Real.rpow_natCast]
-    refine Real.rpow_le_rpow_of_exponent_le one_le_two ?_
-    push_cast
-    nlinarith [Nat.cast_nonneg (α := ℝ) ℓ]
-  have hb0 : r * ∫ p, Y₀ p ^ 2 ∂(nestedLaw ν ρ) ≤ 3 * ((K / 8) ^ 2 * (224 * m₄)) +
-      3 / 2 * (8 * (|f₀' 0| ^ 4 + K ^ 4 * m₄) + (1 + K ^ 2 / 2) * cₛ) := by
-    have hY0 : 0 ≤ ∫ p, Y₀ p ^ 2 ∂(nestedLaw ν ρ) := integral_nonneg fun p => sq_nonneg _
-    exact (mul_le_mul_of_nonneg_right hr4 hY0).trans h0b
-  have hbi : ∀ i, r * (c i ^ 2 * ∫ p, Y i p ^ 2 ∂(nestedLaw ν ρ)) ≤
-      c i ^ 2 * (6 * c_d i * (1 + 16 * κ₄) * (1 + c_w) +
-        3 / 2 * (9 / 4 * c_w ^ 2 + (1 + cₛ) / 2)) := fun i => by
-    have h := (hi i).2
-    simp only [one_pow, mul_one, abs_zero, abs_one, zero_add] at h
+  have hbi : ∀ i, r * (c i ^ 2 * ∫ p, Y i p ^ 2 ∂(nestedLaw ν ρ)) ≤ c i ^ 2 * B i := fun i =>
     calc r * (c i ^ 2 * ∫ p, Y i p ^ 2 ∂(nestedLaw ν ρ))
         = c i ^ 2 * (r * ∫ p, Y i p ^ 2 ∂(nestedLaw ν ρ)) := by ring
-      _ ≤ c i ^ 2 * (6 * c_d i * (1 + 16 * κ₄) * (1 + c_w) +
-          3 / 2 * (9 / 4 * c_w ^ 2 + (1 + cₛ) / 2)) :=
-          mul_le_mul_of_nonneg_left h (sq_nonneg _)
+      _ ≤ c i ^ 2 * B i := mul_le_mul_of_nonneg_left (hi i).2 (sq_nonneg _)
   have hcard : (0 : ℝ) ≤ Fintype.card ι + 1 := by positivity
   calc r * ∫ p, nestedSdeDelta f gh (ℓ + 1) p ^ 2 ∂(nestedLaw ν ρ)
       ≤ r * ((Fintype.card ι + 1 : ℝ) * (∫ p, Y₀ p ^ 2 ∂(nestedLaw ν ρ) +
@@ -535,43 +477,27 @@ theorem nested_kinks_sde_variance_rate {ι : Type*} [Fintype ι] {f f₀ f₀' :
           ring
     _ ≤ _ := mul_le_mul_of_nonneg_left (add_le_add hb0 (Finset.sum_le_sum fun i _ => hbi i)) hcard
 
-/-- **MLMC for nested simulation with `2^ℓ` timesteps and an `f` with several kinks and curved
-pieces has complexity `O(ε^{−2.5})`** (Giles 2015, §9.2, p. 60, l. 2687–2690: "Following the
-analysis in (Bujok et al. 2013), if the function `f` is continuous and piecewise differentiable,
-rather than being twice differentiable, then in the MLMC treatment we would get `β = 1.5`, and
-hence an overall complexity which is `O(ε^{−2.5})`").  Let `f = f₀ + ∑_{i ∈ ι} c_i max(· − k_i, 0)`
-with finitely many kinks `k_i` and `f₀` differentiable with a `K`-Lipschitz derivative, and let
-level `ℓ` use `2^ℓ` inner samples of the level-`ℓ` approximation `g_ℓ` (`nestedSdeP`,
-`nestedSdeDelta`), under the hypotheses of `nested_kinks_sde_bias_rate` and
-`nested_kinks_sde_variance_rate` (this formalisation's: `E[g_ℓ(Z, W)⁴] ≤ m₄`, first order strong
-convergence in `L⁴`, bounded centred conditional fourth moments, first order weak convergence
-uniformly in the outer sample, and a small-ball bound for the exact conditional mean `E_W[g(Z, W)]`
-at each kink).  Let the inputs `ω^{(ℓ,n)}` be independent with law `ν ⊗ ρ^{⊗ℕ}` and let the
-level-`ℓ` cost have mean `C_ℓ ≤ c₃ 4^ℓ` (twice as many timesteps and twice as many inner samples per
-level).  Then there is `c₄ > 0` such that for every `0 < ε < e⁻¹` there are `L` and `N_ℓ ≥ 1` for
-which the squared error of the MLMC estimator of `E_Z[f(E_W[g(Z, W)])]` is integrable, its mean
-(the mean square error) is `< ε²`, and the expected cost is `≤ c₄ ε^{−2.5}`: Theorem 1
-(`giles_theorem1_corrections`) with `α = 1` (`nested_kinks_sde_bias_rate`), `β = 3/2`
-(`nested_kinks_sde_variance_rate`) and `γ = 2`, so `ε^{−2−(γ−β)/α} = ε^{−2.5}`.  That `μ` is a
-probability measure follows from the independence of the inputs.  This extends
-`nested_kink_sde_mlmc_complexity` (one kink, `f` piecewise linear) to finitely many kinks and
-curved pieces, and `nested_kinks_mlmc_complexity` (exact inner samples, `γ = 1`, `O(ε⁻²)`) to
-discretised inner samples.  Deviation: `f` is given through the decomposition above rather than as
-a continuous, piecewise differentiable function. -/
-theorem nested_kinks_sde_mlmc_complexity {Ω : Type*} [MeasurableSpace Ω] {μ : Measure Ω}
-    {ι : Type*} [Fintype ι] {f f₀ f₀' : ℝ → ℝ} {K : ℝ}
-    {c k c_d : ι → ℝ} (hf : ∀ x, f x = f₀ x + ∑ i, c i * max (x - k i) 0)
-    (hf₀ : ∀ x, HasDerivAt f₀ (f₀' x) x) (hf₀' : ∀ x y, x ≤ y → |f₀' y - f₀' x| ≤ K * (y - x))
-    {gh : ℕ → 𝒵 → 𝒲 → ℝ} (hgh : ∀ ℓ, Measurable (Function.uncurry (gh ℓ)))
-    (hgh4 : ∀ ℓ, Integrable (fun p : 𝒵 × 𝒲 => gh ℓ p.1 p.2 ^ 4) (ν.prod ρ)) {m₄ κ₄ cₛ : ℝ}
-    (hm₄ : ∀ ℓ, ∫ p, gh ℓ p.1 p.2 ^ 4 ∂(ν.prod ρ) ≤ m₄)
-    (hcent : ∀ ℓ, ∀ᵐ z ∂ν, ∫ v, (gh ℓ z v - ∫ u, gh ℓ z u ∂ρ) ^ 4 ∂ρ ≤ κ₄)
-    (hs : ∀ ℓ, ((2 : ℝ) ^ ℓ) ^ 4 *
-      ∫ p, (gh (ℓ + 1) p.1 p.2 - gh ℓ p.1 p.2) ^ 4 ∂(ν.prod ρ) ≤ cₛ)
-    {g : 𝒵 → 𝒲 → ℝ} {c_w : ℝ}
-    (hw : ∀ ℓ, ∀ᵐ z ∂ν, (2 : ℝ) ^ ℓ * |∫ v, gh ℓ z v ∂ρ - ∫ v, g z v ∂ρ| ≤ c_w)
-    (hball : ∀ i, ∀ t : ℝ, 0 < t →
-      ν {z | |∫ v, g z v ∂ρ - k i| ≤ t} ≤ ENNReal.ofReal (c_d i * t))
+/-- **Theorem 1 for nested simulation with `2^ℓ` timesteps, from the rates `α = 1` and `β = 3/2`**
+(Giles 2015, §9.2, p. 60, l. 2687–2690: "we would get `β = 1.5`, and hence an overall complexity
+which is `O(ε^{−2.5})`"; Theorem 1 of §2.1 with `γ = 2`).  If `P₀ ∈ L²`, the bias integrands
+`P_ℓ − f(E_W[g(Z, W)])` are integrable with `2^ℓ |E[·]| ≤ B₁`, the corrections `Y_{ℓ+1}`
+(`nestedSdeDelta`) are square-integrable with `2^{3ℓ/2} E[Y_{ℓ+1}²] ≤ B₂`, and the inner
+approximations converge weakly uniformly in the outer sample (so that `E_W[g(Z, W)]` is
+a.e.-measurable, `aemeasurable_condMean_of_weak`), then for independent inputs of law
+`ν ⊗ ρ^{⊗ℕ}` and level costs of mean `C_ℓ ≤ c₃ 4^ℓ` there is `c₄ > 0` such that for every
+`0 < ε < e⁻¹` there are `L` and `N_ℓ ≥ 1` for which the squared error of the MLMC estimator of
+`E_Z[f(E_W[g(Z, W)])]` is integrable, its mean is `< ε²` and the expected cost is
+`≤ c₄ ε^{−2.5}` (`giles_theorem1_corrections`, with `ε^{−2−(γ−β)/α} = ε^{−2.5}`). -/
+lemma nested_sde_mlmc_complexity_of_rates {Ω : Type*} [MeasurableSpace Ω] {μ : Measure Ω}
+    {f : ℝ → ℝ} (hfm : Measurable f) {gh : ℕ → 𝒵 → 𝒲 → ℝ}
+    (hgh : ∀ ℓ, Measurable (Function.uncurry (gh ℓ))) {g : 𝒵 → 𝒲 → ℝ} {c_w : ℝ}
+    (hw : ∀ ℓ, ∀ᵐ z ∂ν, (2 : ℝ) ^ ℓ * |∫ v, gh ℓ z v ∂ρ - ∫ v, g z v ∂ρ| ≤ c_w) {B₁ B₂ : ℝ}
+    (hP0 : MemLp (nestedSdeP f gh 0) 2 (nestedLaw ν ρ))
+    (hbias : ∀ ℓ, Integrable (fun p => nestedSdeP f gh ℓ p - nestedTarget f g ρ p)
+        (nestedLaw ν ρ) ∧
+      (2 : ℝ) ^ ℓ * |∫ p, (nestedSdeP f gh ℓ p - nestedTarget f g ρ p) ∂(nestedLaw ν ρ)| ≤ B₁)
+    (hvar : ∀ ℓ, MemLp (nestedSdeDelta f gh (ℓ + 1)) 2 (nestedLaw ν ρ) ∧
+      (2 : ℝ) ^ ((3 / 2 : ℝ) * ℓ) * ∫ p, nestedSdeDelta f gh (ℓ + 1) p ^ 2 ∂(nestedLaw ν ρ) ≤ B₂)
     (ω : ℕ × ℕ → Ω → 𝒵 × (ℕ → 𝒲)) (hω : ∀ p, MeasurePreserving (ω p) μ (nestedLaw ν ρ))
     (hind : iIndepFun ω μ) (cost : ℕ → ℕ → Ω → ℝ) (C : ℕ → ℝ) {c₃ : ℝ} (hc₃ : 0 < c₃)
     (hcost : ∀ ℓ n, Integrable (cost ℓ n) μ) (hcostC : ∀ ℓ n, μ[cost ℓ n] = C ℓ)
@@ -584,41 +510,27 @@ theorem nested_kinks_sde_mlmc_complexity {Ω : Type*} [MeasurableSpace Ω] {μ :
           ∫ z, f (∫ v, g z v ∂ρ) ∂ν) ^ 2] < ε ^ 2 ∧
         μ[totalCost cost L N] ≤ c₄ * ε ^ (-2.5 : ℝ) := by
   have hμ : IsProbabilityMeasure μ := hind.isProbabilityMeasure
-  have hfm : Measurable f := (continuous_kinks hf hf₀).measurable
-  have hbias := fun ℓ =>
-    nested_kinks_sde_bias_rate ν ρ hf hf₀ hf₀' hgh hgh4 hm₄ hcent hw hball ℓ
-  -- integrability: every `P_ℓ ∈ L²`, then `f(E_W[g])` through the bias integrand of level `0`
-  have hPl2 : ∀ ℓ, MemLp (nestedSdeP f gh ℓ) 2 (nestedLaw ν ρ) := fun ℓ =>
-    (memLp_nestedP_kinks ν ρ hf hf₀ hf₀' (hgh ℓ) (hgh4 ℓ)).1 ℓ
-  have hPl : ∀ ℓ, Integrable (nestedSdeP f gh ℓ) (nestedLaw ν ρ) := fun ℓ =>
-    (hPl2 ℓ).integrable one_le_two
+  -- integrability: `f(E_W[g])` and every `P_ℓ` through the bias integrands
   have hP : Integrable (nestedTarget f g ρ) (nestedLaw ν ρ) :=
-    ((hPl 0).sub (hbias 0).1).congr (Eventually.of_forall fun p => by simp)
+    ((hP0.integrable one_le_two).sub (hbias 0).1).congr (Eventually.of_forall fun p => by simp)
+  have hPl : ∀ ℓ, Integrable (nestedSdeP f gh ℓ) (nestedLaw ν ρ) := fun ℓ =>
+    ((hbias ℓ).1.add hP).congr (Eventually.of_forall fun p => by simp)
   have hGm : AEMeasurable (fun z => ∫ v, g z v ∂ρ) ν := aemeasurable_condMean_of_weak ν ρ hgh hw
   have hfst : MeasurePreserving (Prod.fst : 𝒵 × (ℕ → 𝒲) → 𝒵) (nestedLaw ν ρ) ν :=
     measurePreserving_fst
   have hΔm : ∀ ℓ, Measurable (nestedSdeDelta f gh ℓ) := measurable_nestedSdeDelta hfm hgh
   have hΔ : ∀ ℓ, MemLp (nestedSdeDelta f gh ℓ) 2 (nestedLaw ν ρ) := fun ℓ => by
     cases ℓ with
-    | zero => exact hPl2 0
-    | succ ℓ =>
-      exact (nested_kinks_sde_variance_rate ν ρ hf hf₀ hf₀' hgh hgh4 hm₄ hcent hs hw hball ℓ).1
+    | zero => exact hP0
+    | succ ℓ => exact (hvar ℓ).1
   -- (i) the bias, `α = 1`
-  obtain ⟨B₁, hB₁⟩ : ∃ B, B =
-      K / 2 * (1 + 16 * m₄) + c_w * (|f₀' 0| + K * (1 + m₄)) + K / 2 * c_w ^ 2 +
-        ∑ i, |c i| * (4 * c_d i * (1 + 80 * κ₄) * (1 + c_w) + c_w) := ⟨_, rfl⟩
   have h_i : ∀ ℓ : ℕ, |∫ y, nestedSdeP f gh ℓ y - nestedTarget f g ρ y ∂(nestedLaw ν ρ)| ≤
       (|B₁| + 1) * (2 : ℝ) ^ (-((1 : ℝ) * (ℓ : ℝ))) := fun ℓ => by
     have hb := (hbias ℓ).2
-    rw [← hB₁] at hb
     rw [one_mul, Real.rpow_neg (by norm_num : (0 : ℝ) ≤ 2), Real.rpow_natCast 2 ℓ,
       ← div_eq_mul_inv, le_div_iff₀ (by positivity), mul_comm]
     linarith [le_abs_self B₁]
   -- (iii) the variance, `β = 3/2`
-  obtain ⟨B₂, hB₂⟩ : ∃ B, B = (Fintype.card ι + 1 : ℝ) * (3 * ((K / 8) ^ 2 * (224 * m₄)) +
-      3 / 2 * (8 * (|f₀' 0| ^ 4 + K ^ 4 * m₄) + (1 + K ^ 2 / 2) * cₛ) +
-      ∑ i, c i ^ 2 * (6 * c_d i * (1 + 16 * κ₄) * (1 + c_w) +
-        3 / 2 * (9 / 4 * c_w ^ 2 + (1 + cₛ) / 2))) := ⟨_, rfl⟩
   have h_iii : ∀ ℓ : ℕ, variance (nestedSdeDelta f gh ℓ) (nestedLaw ν ρ) ≤
       (variance (nestedSdeDelta f gh 0) (nestedLaw ν ρ) + 3 * |B₂| + 1) *
         (2 : ℝ) ^ (-((3 / 2 : ℝ) * (ℓ : ℝ))) := fun ℓ => by
@@ -633,9 +545,7 @@ theorem nested_kinks_sde_mlmc_complexity {Ω : Type*} [MeasurableSpace Ω] {μ :
           ∫ p, nestedSdeDelta f gh (ℓ + 1) p ^ 2 ∂(nestedLaw ν ρ) := by
         simpa only [Pi.pow_apply] using
           variance_le_expectation_sq (hΔm (ℓ + 1)).aestronglyMeasurable
-      have hr :=
-        (nested_kinks_sde_variance_rate ν ρ hf hf₀ hf₀' hgh hgh4 hm₄ hcent hs hw hball ℓ).2
-      rw [← hB₂] at hr
+      have hr := (hvar ℓ).2
       -- `2^{3(ℓ+1)/2} = 2^{3/2} 2^{3ℓ/2} ≤ 3 · 2^{3ℓ/2}`
       have h32 : (2 : ℝ) ^ ((3 / 2 : ℝ) * ((ℓ + 1 : ℕ) : ℝ)) ≤
           3 * (2 : ℝ) ^ ((3 / 2 : ℝ) * (ℓ : ℝ)) := by
@@ -688,7 +598,389 @@ theorem nested_kinks_sde_mlmc_complexity {Ω : Type*} [MeasurableSpace Ω] {μ :
   exact ⟨L, N, hN, ((memLp_finsetSum _ fun ℓ _ => memLp_blockMean hω hΔ ℓ (N ℓ)).sub
     (memLp_const _)).integrable_sq, hmse, hcost'⟩
 
+/-! #### Curved pieces -/
+
+/-- **`α = 1` for an `f` with several kinks and curved pieces, with `2^ℓ` timesteps** (Giles 2015,
+§9.2, p. 60, l. 2687–2690: "if the function `f` is continuous and piecewise differentiable, rather
+than being twice differentiable, then in the MLMC treatment we would get `β = 1.5`, and hence an
+overall complexity which is `O(ε^{−2.5})`", which is Theorem 1 with `α = 1`, `β = 1.5`, `γ = 2`).
+Let `f = f₀ + ∑_{i ∈ ι} c_i max(· − k_i, 0)` with finitely many kinks `k_i` and `f₀` differentiable
+with a `K`-Lipschitz derivative, and let level `ℓ` use `2^ℓ` inner samples of the level-`ℓ`
+approximation `g_ℓ` of the inner quantity `g` (`nestedSdeP`).  Hypotheses (this formalisation's;
+the paper states none for this case, and the weak order of the time discretisation is not
+formalised): `E[g_ℓ(Z, W)⁴] ≤ m₄`; the centred conditional fourth moments are bounded,
+`E_W[(g_ℓ(z, W) − E_W[g_ℓ(z, W)])⁴] ≤ κ₄` for `ν`-a.e. `z`; first order weak convergence uniformly
+in the outer sample, `2^ℓ |E_W[g_ℓ(z, W)] − E_W[g(z, W)]| ≤ c_w`; and the small-ball bounds
+`ν{|E_W[g(Z, W)] − k_i| ≤ t} ≤ c_{d,i} t` at each kink, for the exact conditional mean only.  (By
+the others, `hm₄` holds with `m₄ = 8κ₄ + 64(E[g₀(Z, W)⁴] + 16 c_w⁴)`, and `hgh4 ℓ` for `ℓ ≥ 1`
+adds to them only the integrability of `g_ℓ(z, ·)⁴` for `ν`-a.e. `z`; they are kept to name the
+constant `m₄`.)  Then `P_ℓ − f(E_W[g(Z, W)])` is integrable and
+`2^ℓ |E[P_ℓ − f(E_W[g(Z, W)])]| ≤ (K/2)(1 + 16 m₄) + c_w (|f₀′(0)| + K (1 + m₄)) + (K/2) c_w² +
+∑_i |c_i| (4 c_{d,i} (1 + 80 κ₄)(1 + c_w) + c_w)`.
+Proof: the bias is linear in `f` (`nested_sde_bias_kinks_add`); the curved part has bias
+`O(2^{−ℓ})` (`nested_sde_bias_le_of_weak`) and so has each hinge (`nested_kink_sde_bias_rate`).
+No measurability or moment of the exact `g` is assumed: it enters only through its conditional
+mean, the a.e. limit of the `E_W[g_ℓ(z, W)]`.  For `f₀` affine (`K = 0`) and one kink the bound
+is that of `nested_kink_sde_bias_rate`, but the hypotheses are stronger: the joint fourth moments
+(`hgh4`) exclude an outer state with `E[g⁴] = ∞` (e.g. Student-`t` with three degrees of freedom),
+which the one-kink result allows; `nested_piecewise_linear_sde_bias_rate` covers a piecewise
+linear `f` with several kinks under the one-kink hypotheses.  Deviation: `f` is given through the
+decomposition above rather than as a continuous, piecewise differentiable function. -/
+theorem nested_kinks_sde_bias_rate {ι : Type*} [Fintype ι] {f f₀ f₀' : ℝ → ℝ} {K : ℝ}
+    {c k c_d : ι → ℝ} (hf : ∀ x, f x = f₀ x + ∑ i, c i * max (x - k i) 0)
+    (hf₀ : ∀ x, HasDerivAt f₀ (f₀' x) x) (hf₀' : ∀ x y, x ≤ y → |f₀' y - f₀' x| ≤ K * (y - x))
+    {gh : ℕ → 𝒵 → 𝒲 → ℝ} (hgh : ∀ ℓ, Measurable (Function.uncurry (gh ℓ)))
+    (hgh4 : ∀ ℓ, Integrable (fun p : 𝒵 × 𝒲 => gh ℓ p.1 p.2 ^ 4) (ν.prod ρ)) {m₄ κ₄ : ℝ}
+    (hm₄ : ∀ ℓ, ∫ p, gh ℓ p.1 p.2 ^ 4 ∂(ν.prod ρ) ≤ m₄)
+    (hcent : ∀ ℓ, ∀ᵐ z ∂ν, ∫ v, (gh ℓ z v - ∫ u, gh ℓ z u ∂ρ) ^ 4 ∂ρ ≤ κ₄)
+    {g : 𝒵 → 𝒲 → ℝ} {c_w : ℝ}
+    (hw : ∀ ℓ, ∀ᵐ z ∂ν, (2 : ℝ) ^ ℓ * |∫ v, gh ℓ z v ∂ρ - ∫ v, g z v ∂ρ| ≤ c_w)
+    (hball : ∀ i, ∀ t : ℝ, 0 < t →
+      ν {z | |∫ v, g z v ∂ρ - k i| ≤ t} ≤ ENNReal.ofReal (c_d i * t)) (ℓ : ℕ) :
+    Integrable (fun p => nestedSdeP f gh ℓ p - nestedTarget f g ρ p) (nestedLaw ν ρ) ∧
+      (2 : ℝ) ^ ℓ * |∫ p, (nestedSdeP f gh ℓ p - nestedTarget f g ρ p) ∂(nestedLaw ν ρ)| ≤
+        K / 2 * (1 + 16 * m₄) + c_w * (|f₀' 0| + K * (1 + m₄)) + K / 2 * c_w ^ 2 +
+          ∑ i, |c i| * (4 * c_d i * (1 + 80 * κ₄) * (1 + c_w) + c_w) := by
+  have hhinge : ∀ i, ∀ x, (fun x => max (x - k i) 0) x = 0 + 0 * x + 1 * max (x - k i) 0 :=
+    fun i x => by ring
+  have hfib : ∀ ℓ, ∀ᵐ z ∂ν, Integrable (fun v => gh ℓ z v ^ 4) ρ ∧
+      ∫ v, (gh ℓ z v - ∫ u, gh ℓ z u ∂ρ) ^ 4 ∂ρ ≤ κ₄ := fun ℓ =>
+    ((hgh4 ℓ).prod_right_ae.and (hcent ℓ)).mono fun z hz => hz
+  have hi : ∀ i, Integrable (fun p => nestedSdeP (fun x => max (x - k i) 0) gh ℓ p -
+        nestedTarget (fun x => max (x - k i) 0) g ρ p) (nestedLaw ν ρ) ∧
+      (2 : ℝ) ^ ℓ * |∫ p, (nestedSdeP (fun x => max (x - k i) 0) gh ℓ p -
+        nestedTarget (fun x => max (x - k i) 0) g ρ p) ∂(nestedLaw ν ρ)| ≤
+          4 * c_d i * (1 + 80 * κ₄) * (1 + c_w) + c_w := fun i => by
+    obtain ⟨h1, h2⟩ := nested_kink_sde_bias_rate ν ρ (hhinge i) hgh hfib hw (hball i) ℓ
+    rw [abs_one, abs_zero, zero_add, mul_one, one_mul] at h2
+    exact ⟨h1, h2⟩
+  exact nested_sde_bias_kinks_add ν ρ hf (nested_sde_bias_le_of_weak ν ρ hf₀ hf₀' hgh hgh4 hm₄ hw ℓ)
+    hi
+
+/-- **`β = 3/2` for an `f` with several kinks and curved pieces, with `2^ℓ` timesteps** (Giles 2015,
+§9.2, p. 60, l. 2687–2690: "if the function `f` is continuous and piecewise differentiable, rather
+than being twice differentiable, then in the MLMC treatment we would get `β = 1.5`").  Let
+`f = f₀ + ∑_{i ∈ ι} c_i max(· − k_i, 0)` with finitely many kinks `k_i` and `f₀` differentiable with
+a `K`-Lipschitz derivative, and let level `ℓ + 1` use the correction `Y_{ℓ+1}` with `2^{ℓ+1}` inner
+samples of `g_{ℓ+1}` and twice `2^ℓ` of `g_ℓ` (`nestedSdeDelta`).  Hypotheses (this formalisation's;
+the paper states none for this case, and the orders of the time discretisation are not formalised):
+`E[g_ℓ(Z, W)⁴] ≤ m₄`; first order strong convergence in `L⁴`,
+`(2^ℓ)⁴ E[(g_{ℓ+1}(Z, W) − g_ℓ(Z, W))⁴] ≤ cₛ`; bounded centred conditional fourth moments
+`E_W[(g_ℓ(z, W) − E_W[g_ℓ(z, W)])⁴] ≤ κ₄` for `ν`-a.e. `z`; first order weak convergence uniformly
+in the outer sample, `2^ℓ |E_W[g_ℓ(z, W)] − E_W[g(z, W)]| ≤ c_w`; and the small-ball bounds
+`ν{|E_W[g(Z, W)] − k_i| ≤ t} ≤ c_{d,i} t`.  (`hm₄` and `hgh4` are as in
+`nested_kinks_sde_bias_rate`.)  Then `Y_{ℓ+1}` is square-integrable and
+`2^{3ℓ/2} E[Y_{ℓ+1}²] ≤ (|ι| + 1)(B₀ + ∑_i c_i² B_i)` with
+`B₀ = 3 (K/8)² 224 m₄ + (3/2)(8(|f₀′(0)|⁴ + K⁴ m₄) + (1 + K²/2) cₛ)` and
+`B_i = 6 c_{d,i} (1 + 16 κ₄)(1 + c_w) + (3/2)((9/4) c_w² + (1 + cₛ)/2)`, i.e. `V_ℓ = O(2^{−3ℓ/2})`.
+Proof: `Y_{ℓ+1}` is linear in `f` (`nested_sde_variance_kinks_add`); its curved part is
+`O(2^{−ℓ})` in `L²` (`nested_sde_variance_rate`, `β = 2`), each hinge part `O(2^{−3ℓ/4})`
+(`nested_kink_sde_variance_rate`, with the strong order `¼` in `L²` from
+`strong_quarter_of_strong_four`).  The hypothesis `hs` is the Milstein-level one of
+`nested_sde_variance_rate`, where it gives `β = 2` for the curved part; it is stronger than
+`β = 3/2` needs (the hinges need only the strong order `¼` in `L²`, which it implies with a large
+margin, and for the curved part the averaging over `2^ℓ` inner samples would let a lower strong
+order do; not formalised), and it excludes the Euler–Maruyama scheme (strong order `½`).  So, even
+for `f₀` affine
+and one kink, the hypotheses are stronger than those of `nested_kink_sde_variance_rate` (also by
+the joint fourth moments `hgh4`); `nested_piecewise_linear_sde_variance_rate` covers a piecewise
+linear `f` with several kinks under the one-kink hypotheses.  Deviation: `f` is given through the
+decomposition above rather than as a continuous, piecewise differentiable function. -/
+theorem nested_kinks_sde_variance_rate {ι : Type*} [Fintype ι] {f f₀ f₀' : ℝ → ℝ} {K : ℝ}
+    {c k c_d : ι → ℝ} (hf : ∀ x, f x = f₀ x + ∑ i, c i * max (x - k i) 0)
+    (hf₀ : ∀ x, HasDerivAt f₀ (f₀' x) x) (hf₀' : ∀ x y, x ≤ y → |f₀' y - f₀' x| ≤ K * (y - x))
+    {gh : ℕ → 𝒵 → 𝒲 → ℝ} (hgh : ∀ ℓ, Measurable (Function.uncurry (gh ℓ)))
+    (hgh4 : ∀ ℓ, Integrable (fun p : 𝒵 × 𝒲 => gh ℓ p.1 p.2 ^ 4) (ν.prod ρ)) {m₄ κ₄ cₛ : ℝ}
+    (hm₄ : ∀ ℓ, ∫ p, gh ℓ p.1 p.2 ^ 4 ∂(ν.prod ρ) ≤ m₄)
+    (hcent : ∀ ℓ, ∀ᵐ z ∂ν, ∫ v, (gh ℓ z v - ∫ u, gh ℓ z u ∂ρ) ^ 4 ∂ρ ≤ κ₄)
+    (hs : ∀ ℓ, ((2 : ℝ) ^ ℓ) ^ 4 *
+      ∫ p, (gh (ℓ + 1) p.1 p.2 - gh ℓ p.1 p.2) ^ 4 ∂(ν.prod ρ) ≤ cₛ)
+    {g : 𝒵 → 𝒲 → ℝ} {c_w : ℝ}
+    (hw : ∀ ℓ, ∀ᵐ z ∂ν, (2 : ℝ) ^ ℓ * |∫ v, gh ℓ z v ∂ρ - ∫ v, g z v ∂ρ| ≤ c_w)
+    (hball : ∀ i, ∀ t : ℝ, 0 < t →
+      ν {z | |∫ v, g z v ∂ρ - k i| ≤ t} ≤ ENNReal.ofReal (c_d i * t)) (ℓ : ℕ) :
+    MemLp (nestedSdeDelta f gh (ℓ + 1)) 2 (nestedLaw ν ρ) ∧
+      (2 : ℝ) ^ ((3 / 2 : ℝ) * ℓ) * ∫ p, nestedSdeDelta f gh (ℓ + 1) p ^ 2 ∂(nestedLaw ν ρ) ≤
+        (Fintype.card ι + 1) * (3 * ((K / 8) ^ 2 * (224 * m₄)) +
+          3 / 2 * (8 * (|f₀' 0| ^ 4 + K ^ 4 * m₄) + (1 + K ^ 2 / 2) * cₛ) +
+          ∑ i, c i ^ 2 * (6 * c_d i * (1 + 16 * κ₄) * (1 + c_w) +
+            3 / 2 * (9 / 4 * c_w ^ 2 + (1 + cₛ) / 2))) := by
+  have hhinge : ∀ i, ∀ x, (fun x => max (x - k i) 0) x = 0 + 0 * x + 1 * max (x - k i) 0 :=
+    fun i x => by ring
+  have hfib : ∀ ℓ, ∀ᵐ z ∂ν, Integrable (fun v => gh ℓ z v ^ 4) ρ ∧
+      ∫ v, (gh ℓ z v - ∫ u, gh ℓ z u ∂ρ) ^ 4 ∂ρ ≤ κ₄ := fun ℓ =>
+    ((hgh4 ℓ).prod_right_ae.and (hcent ℓ)).mono fun z hz => hz
+  have hs2 := strong_quarter_of_strong_four ν ρ hgh hgh4 hs
+  -- the curved part: `(2^ℓ)² E[Y(f₀)²] ≤ B₀` and `2^{3ℓ/2} ≤ (2^ℓ)²`
+  have h0 : MemLp (nestedSdeDelta f₀ gh (ℓ + 1)) 2 (nestedLaw ν ρ) ∧
+      (2 : ℝ) ^ ((3 / 2 : ℝ) * ℓ) * ∫ p, nestedSdeDelta f₀ gh (ℓ + 1) p ^ 2 ∂(nestedLaw ν ρ) ≤
+        3 * ((K / 8) ^ 2 * (224 * m₄)) +
+          3 / 2 * (8 * (|f₀' 0| ^ 4 + K ^ 4 * m₄) + (1 + K ^ 2 / 2) * cₛ) := by
+    obtain ⟨h0m, h0b⟩ := nested_sde_variance_rate ν ρ hf₀ hf₀' hgh hgh4 hm₄ hs ℓ
+    have hr4 : (2 : ℝ) ^ ((3 / 2 : ℝ) * ℓ) ≤ ((2 : ℝ) ^ ℓ) ^ 2 := by
+      rw [← pow_mul, ← Real.rpow_natCast]
+      refine Real.rpow_le_rpow_of_exponent_le one_le_two ?_
+      push_cast
+      nlinarith [Nat.cast_nonneg (α := ℝ) ℓ]
+    have hY0 : 0 ≤ ∫ p, nestedSdeDelta f₀ gh (ℓ + 1) p ^ 2 ∂(nestedLaw ν ρ) :=
+      integral_nonneg fun p => sq_nonneg _
+    exact ⟨h0m, (mul_le_mul_of_nonneg_right hr4 hY0).trans h0b⟩
+  -- the hinges
+  have hi : ∀ i, MemLp (nestedSdeDelta (fun x => max (x - k i) 0) gh (ℓ + 1)) 2 (nestedLaw ν ρ) ∧
+      (2 : ℝ) ^ ((3 / 2 : ℝ) * ℓ) *
+        ∫ p, nestedSdeDelta (fun x => max (x - k i) 0) gh (ℓ + 1) p ^ 2 ∂(nestedLaw ν ρ) ≤
+          6 * c_d i * (1 + 16 * κ₄) * (1 + c_w) + 3 / 2 * (9 / 4 * c_w ^ 2 + (1 + cₛ) / 2) :=
+    fun i => by
+      obtain ⟨h1, h2⟩ := nested_kink_sde_variance_rate ν ρ (hhinge i) hgh hfib hw (hball i) hs2 ℓ
+      simp only [one_pow, mul_one, abs_zero, abs_one, zero_add] at h2
+      exact ⟨h1, h2⟩
+  exact nested_sde_variance_kinks_add ν ρ hf h0 hi
+
+/-- **MLMC for nested simulation with `2^ℓ` timesteps and an `f` with several kinks and curved
+pieces has complexity `O(ε^{−2.5})`** (Giles 2015, §9.2, p. 60, l. 2687–2690: "Following the
+analysis in (Bujok et al. 2013), if the function `f` is continuous and piecewise differentiable,
+rather than being twice differentiable, then in the MLMC treatment we would get `β = 1.5`, and
+hence an overall complexity which is `O(ε^{−2.5})`").  Let `f = f₀ + ∑_{i ∈ ι} c_i max(· − k_i, 0)`
+with finitely many kinks `k_i` and `f₀` differentiable with a `K`-Lipschitz derivative, and let
+level `ℓ` use `2^ℓ` inner samples of the level-`ℓ` approximation `g_ℓ` (`nestedSdeP`,
+`nestedSdeDelta`), under the hypotheses of `nested_kinks_sde_bias_rate` and
+`nested_kinks_sde_variance_rate` (this formalisation's: `E[g_ℓ(Z, W)⁴] ≤ m₄`, first order strong
+convergence in `L⁴`, bounded centred conditional fourth moments, first order weak convergence
+uniformly in the outer sample, and a small-ball bound for the exact conditional mean `E_W[g(Z, W)]`
+at each kink).  Let the inputs `ω^{(ℓ,n)}` be independent with law `ν ⊗ ρ^{⊗ℕ}` and let the
+level-`ℓ` cost have mean `C_ℓ ≤ c₃ 4^ℓ` (twice as many timesteps and twice as many inner samples per
+level).  Then there is `c₄ > 0` such that for every `0 < ε < e⁻¹` there are `L` and `N_ℓ ≥ 1` for
+which the squared error of the MLMC estimator of `E_Z[f(E_W[g(Z, W)])]` is integrable, its mean
+(the mean square error) is `< ε²`, and the expected cost is `≤ c₄ ε^{−2.5}`: Theorem 1
+(`nested_sde_mlmc_complexity_of_rates`) with `α = 1` (`nested_kinks_sde_bias_rate`), `β = 3/2`
+(`nested_kinks_sde_variance_rate`) and `γ = 2`, so `ε^{−2−(γ−β)/α} = ε^{−2.5}`.  That `μ` is a
+probability measure follows from the independence of the inputs.  This combines
+`nested_sde_mlmc_complexity` (smooth `f`) and `nested_kink_sde_mlmc_complexity` (one kink, `f`
+piecewise linear), and is the analogue with discretised inner samples (`γ = 2`) of
+`nested_kinks_mlmc_complexity` (exact inner samples, `γ = 1`, `O(ε⁻²)`).  It does not contain the
+one-kink result: even for `f₀` affine, its hypotheses are stronger (joint fourth moments and first
+order strong convergence in `L⁴`, which exclude the Euler–Maruyama scheme and an outer state with
+`E[g⁴] = ∞`); `nested_piecewise_linear_sde_mlmc_complexity` covers a piecewise linear `f` with
+several kinks under the one-kink hypotheses.  Deviation: `f` is given through the decomposition
+above rather than as a continuous, piecewise differentiable function. -/
+theorem nested_kinks_sde_mlmc_complexity {Ω : Type*} [MeasurableSpace Ω] {μ : Measure Ω}
+    {ι : Type*} [Fintype ι] {f f₀ f₀' : ℝ → ℝ} {K : ℝ}
+    {c k c_d : ι → ℝ} (hf : ∀ x, f x = f₀ x + ∑ i, c i * max (x - k i) 0)
+    (hf₀ : ∀ x, HasDerivAt f₀ (f₀' x) x) (hf₀' : ∀ x y, x ≤ y → |f₀' y - f₀' x| ≤ K * (y - x))
+    {gh : ℕ → 𝒵 → 𝒲 → ℝ} (hgh : ∀ ℓ, Measurable (Function.uncurry (gh ℓ)))
+    (hgh4 : ∀ ℓ, Integrable (fun p : 𝒵 × 𝒲 => gh ℓ p.1 p.2 ^ 4) (ν.prod ρ)) {m₄ κ₄ cₛ : ℝ}
+    (hm₄ : ∀ ℓ, ∫ p, gh ℓ p.1 p.2 ^ 4 ∂(ν.prod ρ) ≤ m₄)
+    (hcent : ∀ ℓ, ∀ᵐ z ∂ν, ∫ v, (gh ℓ z v - ∫ u, gh ℓ z u ∂ρ) ^ 4 ∂ρ ≤ κ₄)
+    (hs : ∀ ℓ, ((2 : ℝ) ^ ℓ) ^ 4 *
+      ∫ p, (gh (ℓ + 1) p.1 p.2 - gh ℓ p.1 p.2) ^ 4 ∂(ν.prod ρ) ≤ cₛ)
+    {g : 𝒵 → 𝒲 → ℝ} {c_w : ℝ}
+    (hw : ∀ ℓ, ∀ᵐ z ∂ν, (2 : ℝ) ^ ℓ * |∫ v, gh ℓ z v ∂ρ - ∫ v, g z v ∂ρ| ≤ c_w)
+    (hball : ∀ i, ∀ t : ℝ, 0 < t →
+      ν {z | |∫ v, g z v ∂ρ - k i| ≤ t} ≤ ENNReal.ofReal (c_d i * t))
+    (ω : ℕ × ℕ → Ω → 𝒵 × (ℕ → 𝒲)) (hω : ∀ p, MeasurePreserving (ω p) μ (nestedLaw ν ρ))
+    (hind : iIndepFun ω μ) (cost : ℕ → ℕ → Ω → ℝ) (C : ℕ → ℝ) {c₃ : ℝ} (hc₃ : 0 < c₃)
+    (hcost : ∀ ℓ n, Integrable (cost ℓ n) μ) (hcostC : ∀ ℓ n, μ[cost ℓ n] = C ℓ)
+    (hC : ∀ ℓ : ℕ, C ℓ ≤ c₃ * 4 ^ ℓ) :
+    ∃ c₄ : ℝ, 0 < c₄ ∧ ∀ ε : ℝ, 0 < ε → ε < Real.exp (-1) →
+      ∃ (L : ℕ) (N : ℕ → ℕ), (∀ ℓ, 0 < N ℓ) ∧
+        Integrable (fun x => (∑ ℓ ∈ range (L + 1), blockMean (nestedSdeDelta f gh) ω ℓ (N ℓ) x -
+          ∫ z, f (∫ v, g z v ∂ρ) ∂ν) ^ 2) μ ∧
+        μ[fun x => (∑ ℓ ∈ range (L + 1), blockMean (nestedSdeDelta f gh) ω ℓ (N ℓ) x -
+          ∫ z, f (∫ v, g z v ∂ρ) ∂ν) ^ 2] < ε ^ 2 ∧
+        μ[totalCost cost L N] ≤ c₄ * ε ^ (-2.5 : ℝ) :=
+  nested_sde_mlmc_complexity_of_rates ν ρ (continuous_kinks hf hf₀).measurable hgh hw
+    ((memLp_nestedP_kinks ν ρ hf hf₀ hf₀' (hgh 0) (hgh4 0)).1 0)
+    (nested_kinks_sde_bias_rate ν ρ hf hf₀ hf₀' hgh hgh4 hm₄ hcent hw hball)
+    (nested_kinks_sde_variance_rate ν ρ hf hf₀ hf₀' hgh hgh4 hm₄ hcent hs hw hball)
+    ω hω hind cost C hc₃ hcost hcostC hC
+
+/-! #### A piecewise linear `f` under the one-kink hypotheses -/
+
+/-- **`α = 1` for a piecewise linear `f` with several kinks, with `2^ℓ` timesteps** (Giles 2015,
+§9.2, p. 60, l. 2687–2690: "if the function `f` is continuous and piecewise differentiable, rather
+than being twice differentiable, then in the MLMC treatment we would get `β = 1.5`, and hence an
+overall complexity which is `O(ε^{−2.5})`", which is Theorem 1 with `α = 1`, `β = 1.5`, `γ = 2`).
+Let `f(x) = a₀ + a₁x + ∑_{i ∈ ι} c_i max(x − k_i, 0)` with finitely many kinks `k_i`, at least one
+(`ι` nonempty), and let level `ℓ` use `2^ℓ` inner samples of the level-`ℓ` approximation `g_ℓ` of
+the inner quantity `g` (`nestedSdeP`).  Hypotheses: those of `nested_kink_sde_bias_rate`, with a
+small ball at each kink (this formalisation's; the paper states none for this case, and the weak
+order of the time discretisation is not formalised): the centred conditional fourth moments are
+bounded, `E_W[(g_ℓ(z, W) − E_W[g_ℓ(z, W)])⁴] ≤ κ₄` for `ν`-a.e. `z` (with `g_ℓ(z, ·)⁴`
+integrable), so the conditional mean may be unbounded and `E[g_ℓ(Z, W)⁴]` may be infinite; first
+order weak convergence uniformly in the outer sample, `2^ℓ |E_W[g_ℓ(z, W)] − E_W[g(z, W)]| ≤ c_w`;
+and `ν{|E_W[g(Z, W)] − k_i| ≤ t} ≤ c_{d,i} t` at each kink, for the exact conditional mean only.
+Then `P_ℓ − f(E_W[g(Z, W)])` is integrable and
+`2^ℓ |E[P_ℓ − f(E_W[g(Z, W)])]| ≤ |a₁| c_w + ∑_i |c_i| (4 c_{d,i} (1 + 80 κ₄)(1 + c_w) + c_w)`;
+with one kink this is the bound of `nested_kink_sde_bias_rate`, which it extends to several kinks.
+Proof: the bias is linear in `f` (`nested_sde_bias_kinks_add`), and `nested_kink_sde_bias_rate`
+applies to the affine part (as a kink with coefficient `0` at one of the `k_i`) and to each hinge.
+Deviation: `f` is piecewise linear rather than continuous and piecewise differentiable (see
+`nested_kinks_sde_bias_rate` for curved pieces, under stronger hypotheses). -/
+theorem nested_piecewise_linear_sde_bias_rate {ι : Type*} [Fintype ι] [Nonempty ι] {f : ℝ → ℝ}
+    {a₀ a₁ : ℝ} {c k c_d : ι → ℝ} (hf : ∀ x, f x = a₀ + a₁ * x + ∑ i, c i * max (x - k i) 0)
+    {gh : ℕ → 𝒵 → 𝒲 → ℝ} (hgh : ∀ ℓ, Measurable (Function.uncurry (gh ℓ))) {κ₄ : ℝ}
+    (hfib : ∀ ℓ, ∀ᵐ z ∂ν, Integrable (fun v => gh ℓ z v ^ 4) ρ ∧
+      ∫ v, (gh ℓ z v - ∫ u, gh ℓ z u ∂ρ) ^ 4 ∂ρ ≤ κ₄)
+    {g : 𝒵 → 𝒲 → ℝ} {c_w : ℝ}
+    (hw : ∀ ℓ, ∀ᵐ z ∂ν, (2 : ℝ) ^ ℓ * |∫ v, gh ℓ z v ∂ρ - ∫ v, g z v ∂ρ| ≤ c_w)
+    (hball : ∀ i, ∀ t : ℝ, 0 < t →
+      ν {z | |∫ v, g z v ∂ρ - k i| ≤ t} ≤ ENNReal.ofReal (c_d i * t)) (ℓ : ℕ) :
+    Integrable (fun p => nestedSdeP f gh ℓ p - nestedTarget f g ρ p) (nestedLaw ν ρ) ∧
+      (2 : ℝ) ^ ℓ * |∫ p, (nestedSdeP f gh ℓ p - nestedTarget f g ρ p) ∂(nestedLaw ν ρ)| ≤
+        |a₁| * c_w + ∑ i, |c i| * (4 * c_d i * (1 + 80 * κ₄) * (1 + c_w) + c_w) := by
+  obtain ⟨i₀⟩ := ‹Nonempty ι›
+  have hF : ∀ x, (fun x => a₀ + a₁ * x) x = a₀ + a₁ * x + 0 * max (x - k i₀) 0 :=
+    fun x => by ring
+  have hhinge : ∀ i, ∀ x, (fun x => max (x - k i) 0) x = 0 + 0 * x + 1 * max (x - k i) 0 :=
+    fun i x => by ring
+  have h0 : Integrable (fun p => nestedSdeP (fun x => a₀ + a₁ * x) gh ℓ p -
+        nestedTarget (fun x => a₀ + a₁ * x) g ρ p) (nestedLaw ν ρ) ∧
+      (2 : ℝ) ^ ℓ * |∫ p, (nestedSdeP (fun x => a₀ + a₁ * x) gh ℓ p -
+        nestedTarget (fun x => a₀ + a₁ * x) g ρ p) ∂(nestedLaw ν ρ)| ≤ |a₁| * c_w := by
+    obtain ⟨h1, h2⟩ := nested_kink_sde_bias_rate ν ρ hF hgh hfib hw (hball i₀) ℓ
+    refine ⟨h1, h2.trans (le_of_eq ?_)⟩
+    rw [abs_zero, add_zero]
+    ring
+  have hi : ∀ i, Integrable (fun p => nestedSdeP (fun x => max (x - k i) 0) gh ℓ p -
+        nestedTarget (fun x => max (x - k i) 0) g ρ p) (nestedLaw ν ρ) ∧
+      (2 : ℝ) ^ ℓ * |∫ p, (nestedSdeP (fun x => max (x - k i) 0) gh ℓ p -
+        nestedTarget (fun x => max (x - k i) 0) g ρ p) ∂(nestedLaw ν ρ)| ≤
+          4 * c_d i * (1 + 80 * κ₄) * (1 + c_w) + c_w := fun i => by
+    obtain ⟨h1, h2⟩ := nested_kink_sde_bias_rate ν ρ (hhinge i) hgh hfib hw (hball i) ℓ
+    rw [abs_one, abs_zero, zero_add, mul_one, one_mul] at h2
+    exact ⟨h1, h2⟩
+  exact nested_sde_bias_kinks_add ν ρ (f₀ := fun x => a₀ + a₁ * x) hf h0 hi
+
+/-- **`β = 3/2` for a piecewise linear `f` with several kinks, with `2^ℓ` timesteps** (Giles 2015,
+§9.2, p. 60, l. 2687–2690: "if the function `f` is continuous and piecewise differentiable, rather
+than being twice differentiable, then in the MLMC treatment we would get `β = 1.5`").  Let
+`f(x) = a₀ + a₁x + ∑_{i ∈ ι} c_i max(x − k_i, 0)` with finitely many kinks `k_i`, at least one, and
+let level `ℓ + 1` use the correction `Y_{ℓ+1}` with `2^{ℓ+1}` inner samples of `g_{ℓ+1}` and twice
+`2^ℓ` of `g_ℓ` (`nestedSdeDelta`).  Hypotheses: those of `nested_kink_sde_variance_rate`, with a
+small ball at each kink (this formalisation's; the paper states none for this case, and the orders
+of the time discretisation are not formalised): bounded centred conditional fourth moments
+`E_W[(g_ℓ(z, W) − E_W[g_ℓ(z, W)])⁴] ≤ κ₄` for `ν`-a.e. `z`; first order weak convergence uniformly
+in the outer sample, `2^ℓ |E_W[g_ℓ(z, W)] − E_W[g(z, W)]| ≤ c_w`; strong convergence of order `¼`
+in `L²`, `2^{ℓ/2} E[(g_{ℓ+1}(Z, W) − g_ℓ(Z, W))²] ≤ cₛ`, which the strong order `½` of the
+Euler–Maruyama scheme already implies; and `ν{|E_W[g(Z, W)] − k_i| ≤ t} ≤ c_{d,i} t` at each kink.
+Then `Y_{ℓ+1}` is square-integrable and
+`2^{3ℓ/2} E[Y_{ℓ+1}²] ≤ (|ι| + 1)((3/2) a₁² ((9/4) c_w² + cₛ) +
+∑_i c_i² (6 c_{d,i} (1 + 16 κ₄)(1 + c_w) + (3/2)((9/4) c_w² + cₛ)))`, i.e. `V_ℓ = O(2^{−3ℓ/2})`.
+This extends `nested_kink_sde_variance_rate` to several kinks: with one kink the hypotheses are the
+same and the constant is at most twice its constant (`(|a₁| + |c|)² ≤ 2(a₁² + c²)`).
+Proof: `Y_{ℓ+1}` is linear in `f`
+(`nested_sde_variance_kinks_add`), and `nested_kink_sde_variance_rate` applies to the affine part
+(as a kink with coefficient `0` at one of the `k_i`) and to each hinge.  Deviation: `f` is
+piecewise linear rather than continuous and piecewise differentiable (see
+`nested_kinks_sde_variance_rate` for curved pieces, under stronger hypotheses). -/
+theorem nested_piecewise_linear_sde_variance_rate {ι : Type*} [Fintype ι] [Nonempty ι]
+    {f : ℝ → ℝ} {a₀ a₁ : ℝ} {c k c_d : ι → ℝ}
+    (hf : ∀ x, f x = a₀ + a₁ * x + ∑ i, c i * max (x - k i) 0)
+    {gh : ℕ → 𝒵 → 𝒲 → ℝ} (hgh : ∀ ℓ, Measurable (Function.uncurry (gh ℓ))) {κ₄ : ℝ}
+    (hfib : ∀ ℓ, ∀ᵐ z ∂ν, Integrable (fun v => gh ℓ z v ^ 4) ρ ∧
+      ∫ v, (gh ℓ z v - ∫ u, gh ℓ z u ∂ρ) ^ 4 ∂ρ ≤ κ₄)
+    {g : 𝒵 → 𝒲 → ℝ} {c_w cₛ : ℝ}
+    (hw : ∀ ℓ, ∀ᵐ z ∂ν, (2 : ℝ) ^ ℓ * |∫ v, gh ℓ z v ∂ρ - ∫ v, g z v ∂ρ| ≤ c_w)
+    (hball : ∀ i, ∀ t : ℝ, 0 < t →
+      ν {z | |∫ v, g z v ∂ρ - k i| ≤ t} ≤ ENNReal.ofReal (c_d i * t))
+    (hs : ∀ ℓ : ℕ, (2 : ℝ) ^ ((1 / 2 : ℝ) * ℓ) *
+      ∫ p, (gh (ℓ + 1) p.1 p.2 - gh ℓ p.1 p.2) ^ 2 ∂(ν.prod ρ) ≤ cₛ) (ℓ : ℕ) :
+    MemLp (nestedSdeDelta f gh (ℓ + 1)) 2 (nestedLaw ν ρ) ∧
+      (2 : ℝ) ^ ((3 / 2 : ℝ) * ℓ) * ∫ p, nestedSdeDelta f gh (ℓ + 1) p ^ 2 ∂(nestedLaw ν ρ) ≤
+        (Fintype.card ι + 1) * (3 / 2 * a₁ ^ 2 * (9 / 4 * c_w ^ 2 + cₛ) +
+          ∑ i, c i ^ 2 * (6 * c_d i * (1 + 16 * κ₄) * (1 + c_w) +
+            3 / 2 * (9 / 4 * c_w ^ 2 + cₛ))) := by
+  obtain ⟨i₀⟩ := ‹Nonempty ι›
+  have hF : ∀ x, (fun x => a₀ + a₁ * x) x = a₀ + a₁ * x + 0 * max (x - k i₀) 0 :=
+    fun x => by ring
+  have hhinge : ∀ i, ∀ x, (fun x => max (x - k i) 0) x = 0 + 0 * x + 1 * max (x - k i) 0 :=
+    fun i x => by ring
+  have h0 : MemLp (nestedSdeDelta (fun x => a₀ + a₁ * x) gh (ℓ + 1)) 2 (nestedLaw ν ρ) ∧
+      (2 : ℝ) ^ ((3 / 2 : ℝ) * ℓ) * ∫ p, nestedSdeDelta (fun x => a₀ + a₁ * x) gh (ℓ + 1) p ^ 2
+        ∂(nestedLaw ν ρ) ≤ 3 / 2 * a₁ ^ 2 * (9 / 4 * c_w ^ 2 + cₛ) := by
+    obtain ⟨h1, h2⟩ := nested_kink_sde_variance_rate ν ρ hF hgh hfib hw (hball i₀) hs ℓ
+    refine ⟨h1, h2.trans (le_of_eq ?_)⟩
+    rw [abs_zero, add_zero, sq_abs]
+    ring
+  have hi : ∀ i, MemLp (nestedSdeDelta (fun x => max (x - k i) 0) gh (ℓ + 1)) 2 (nestedLaw ν ρ) ∧
+      (2 : ℝ) ^ ((3 / 2 : ℝ) * ℓ) *
+        ∫ p, nestedSdeDelta (fun x => max (x - k i) 0) gh (ℓ + 1) p ^ 2 ∂(nestedLaw ν ρ) ≤
+          6 * c_d i * (1 + 16 * κ₄) * (1 + c_w) + 3 / 2 * (9 / 4 * c_w ^ 2 + cₛ) := fun i => by
+    obtain ⟨h1, h2⟩ := nested_kink_sde_variance_rate ν ρ (hhinge i) hgh hfib hw (hball i) hs ℓ
+    refine ⟨h1, h2.trans (le_of_eq ?_)⟩
+    rw [abs_zero, abs_one, zero_add]
+    ring
+  exact nested_sde_variance_kinks_add ν ρ (f₀ := fun x => a₀ + a₁ * x) hf h0 hi
+
+/-- **MLMC for nested simulation with `2^ℓ` timesteps and a piecewise linear `f` with several
+kinks has complexity `O(ε^{−2.5})`** (Giles 2015, §9.2, p. 60, l. 2687–2690: "Following the
+analysis in (Bujok et al. 2013), if the function `f` is continuous and piecewise differentiable,
+rather than being twice differentiable, then in the MLMC treatment we would get `β = 1.5`, and
+hence an overall complexity which is `O(ε^{−2.5})`").  Let `f(x) = a₀ + a₁x + ∑_{i ∈ ι} c_i
+max(x − k_i, 0)` with finitely many kinks `k_i`, at least one, and let level `ℓ` use `2^ℓ` inner
+samples of the level-`ℓ` approximation `g_ℓ` (`nestedSdeP`, `nestedSdeDelta`), under the hypotheses
+of `nested_kink_sde_mlmc_complexity` with a small ball at each kink (this formalisation's: bounded
+centred conditional fourth moments, first order weak convergence uniformly in the outer sample,
+strong convergence of order `¼` in `L²`, implied by the Euler–Maruyama scheme, the small-ball bound
+for the exact conditional mean `E_W[g(Z, W)]` at each kink, and `E[g₀(Z, W)²] < ∞`).  Let the inputs
+`ω^{(ℓ,n)}` be independent with law `ν ⊗ ρ^{⊗ℕ}` and let the level-`ℓ` cost have mean
+`C_ℓ ≤ c₃ 4^ℓ`.  Then there is `c₄ > 0` such that for every `0 < ε < e⁻¹` there are `L` and
+`N_ℓ ≥ 1` for which the squared error of the MLMC estimator of `E_Z[f(E_W[g(Z, W)])]` is
+integrable, its mean is `< ε²`, and the expected cost is `≤ c₄ ε^{−2.5}`: Theorem 1
+(`nested_sde_mlmc_complexity_of_rates`) with `α = 1` (`nested_piecewise_linear_sde_bias_rate`),
+`β = 3/2` (`nested_piecewise_linear_sde_variance_rate`) and `γ = 2`; `P₀ ∈ L²` because each piece
+of `f` is Lipschitz (`memLp_two_kink_comp`).  That `μ` is a probability measure follows from the
+independence of the inputs.  This extends `nested_kink_sde_mlmc_complexity` to several kinks.
+Deviation: `f` is piecewise linear rather than continuous and piecewise differentiable (see
+`nested_kinks_sde_mlmc_complexity` for curved pieces, under stronger hypotheses). -/
+theorem nested_piecewise_linear_sde_mlmc_complexity {Ω : Type*} [MeasurableSpace Ω]
+    {μ : Measure Ω} {ι : Type*} [Fintype ι] [Nonempty ι] {f : ℝ → ℝ} {a₀ a₁ : ℝ}
+    {c k c_d : ι → ℝ} (hf : ∀ x, f x = a₀ + a₁ * x + ∑ i, c i * max (x - k i) 0)
+    {gh : ℕ → 𝒵 → 𝒲 → ℝ} (hgh : ∀ ℓ, Measurable (Function.uncurry (gh ℓ))) {κ₄ : ℝ}
+    (hfib : ∀ ℓ, ∀ᵐ z ∂ν, Integrable (fun v => gh ℓ z v ^ 4) ρ ∧
+      ∫ v, (gh ℓ z v - ∫ u, gh ℓ z u ∂ρ) ^ 4 ∂ρ ≤ κ₄)
+    (hg0 : Integrable (fun p : 𝒵 × 𝒲 => gh 0 p.1 p.2 ^ 2) (ν.prod ρ))
+    {g : 𝒵 → 𝒲 → ℝ} {c_w cₛ : ℝ}
+    (hw : ∀ ℓ, ∀ᵐ z ∂ν, (2 : ℝ) ^ ℓ * |∫ v, gh ℓ z v ∂ρ - ∫ v, g z v ∂ρ| ≤ c_w)
+    (hball : ∀ i, ∀ t : ℝ, 0 < t →
+      ν {z | |∫ v, g z v ∂ρ - k i| ≤ t} ≤ ENNReal.ofReal (c_d i * t))
+    (hs : ∀ ℓ : ℕ, (2 : ℝ) ^ ((1 / 2 : ℝ) * ℓ) *
+      ∫ p, (gh (ℓ + 1) p.1 p.2 - gh ℓ p.1 p.2) ^ 2 ∂(ν.prod ρ) ≤ cₛ)
+    (ω : ℕ × ℕ → Ω → 𝒵 × (ℕ → 𝒲)) (hω : ∀ p, MeasurePreserving (ω p) μ (nestedLaw ν ρ))
+    (hind : iIndepFun ω μ) (cost : ℕ → ℕ → Ω → ℝ) (C : ℕ → ℝ) {c₃ : ℝ} (hc₃ : 0 < c₃)
+    (hcost : ∀ ℓ n, Integrable (cost ℓ n) μ) (hcostC : ∀ ℓ n, μ[cost ℓ n] = C ℓ)
+    (hC : ∀ ℓ : ℕ, C ℓ ≤ c₃ * 4 ^ ℓ) :
+    ∃ c₄ : ℝ, 0 < c₄ ∧ ∀ ε : ℝ, 0 < ε → ε < Real.exp (-1) →
+      ∃ (L : ℕ) (N : ℕ → ℕ), (∀ ℓ, 0 < N ℓ) ∧
+        Integrable (fun x => (∑ ℓ ∈ range (L + 1), blockMean (nestedSdeDelta f gh) ω ℓ (N ℓ) x -
+          ∫ z, f (∫ v, g z v ∂ρ) ∂ν) ^ 2) μ ∧
+        μ[fun x => (∑ ℓ ∈ range (L + 1), blockMean (nestedSdeDelta f gh) ω ℓ (N ℓ) x -
+          ∫ z, f (∫ v, g z v ∂ρ) ∂ν) ^ 2] < ε ^ 2 ∧
+        μ[totalCost cost L N] ≤ c₄ * ε ^ (-2.5 : ℝ) := by
+  obtain ⟨i₀⟩ := ‹Nonempty ι›
+  have hF : ∀ x, (fun x => a₀ + a₁ * x) x = a₀ + a₁ * x + 0 * max (x - k i₀) 0 :=
+    fun x => by ring
+  have hhinge : ∀ i, ∀ x, (fun x => max (x - k i) 0) x = 0 + 0 * x + 1 * max (x - k i) 0 :=
+    fun i x => by ring
+  have hfc : Continuous f := by
+    rw [show f = fun x => a₀ + a₁ * x + ∑ i, c i * max (x - k i) 0 from funext hf]
+    fun_prop
+  -- `P₀ ∈ L²`: each piece of `f` is Lipschitz and `E[g₀(Z, W)²] < ∞`
+  have hX := measurable_innerMean (hgh 0) (2 ^ 0) measurable_id
+  have hX2 := (integral_innerMean_sq_le ν ρ (hgh 0) hg0 (M := 2 ^ 0) (by positivity)).1
+  have hP0 : MemLp (nestedSdeP f gh 0) 2 (nestedLaw ν ρ) := by
+    have h := (memLp_two_kink_comp hF hX hX2).add (memLp_finsetSum Finset.univ fun i _ =>
+      (memLp_two_kink_comp (hhinge i) hX hX2).const_mul (c i))
+    convert h using 1
+    funext p
+    exact hf _
+  exact nested_sde_mlmc_complexity_of_rates ν ρ hfc.measurable hgh hw hP0
+    (nested_piecewise_linear_sde_bias_rate ν ρ hf hgh hfib hw hball)
+    (nested_piecewise_linear_sde_variance_rate ν ρ hf hgh hfib hw hball hs)
+    ω hω hind cost C hc₃ hcost hcostC hC
+
 end KinksSde
+
 
 /-! ### §9.2: MIMC on the two axes for the kink example -/
 
@@ -870,8 +1162,10 @@ standard MLMC").  For the example of `MlmcLean/NestedKinkSde.lean` (`kinkInnerAp
 MIMC rates `β₁ = β₂ = 1.5` are false (`nested_mimc_kink_rates_false`) and for which Theorem 2 on
 the full index sets gives only `O(ε⁻² |log ε|⁴)` (`nested_mimc_kink_complexity`), the MIMC
 estimator on the index set made of the two axes, `{(a, 0) : a ≤ L} ∪ {(0, b) : 1 ≤ b ≤ L}`, with
-the six-term corrections `Y_ℓ` (`nestedMimcDelta`) averaged over `N_ℓ` independent inputs of law
-`ν ⊗ ρ^{⊗ℕ}` and a level-`ℓ` cost of mean `C_ℓ ≤ c₃ 2^{ℓ₁+ℓ₂}`, attains the cost `O(ε⁻²)`: there is
+the MIMC corrections `Y_ℓ` (`nestedMimcDelta`; on the axes, `Y_{(a,0)}` is the §9.1 antithetic
+correction of `g₀` and `Y_{(0,b)} = f(g_b(Z, W⁰)) − f(g_{b−1}(Z, W⁰))` the difference of
+single-sample values) averaged over `N_ℓ` independent inputs of law `ν ⊗ ρ^{⊗ℕ}` and a level-`ℓ`
+cost of mean `C_ℓ ≤ c₃ 2^{ℓ₁+ℓ₂}`, attains the cost `O(ε⁻²)`: there is
 `c₄ > 0` such that for every `0 < ε < e⁻¹` there are `L` and `N_ℓ ≥ 1` for which the squared error
 of the estimator of `E_Z[f(E_W[g(Z, W)])]` is integrable, its mean is `< ε²` and the expected cost
 is `≤ c₄ ε⁻²`.  Proof: the mixed corrections of the example have mean zero (`integral_kinkMimc`),
@@ -884,11 +1178,13 @@ independence of the groups coming from `indepFun_sum_blockMean`.  Deviation: the
 for a general continuous, piecewise differentiable `f` and full MIMC; here it is proved for this
 one example and on the index set of the two axes (the sample sizes constructed satisfy
 `N_{(k,0)} = N_{(0,k)}`).  It relies on the vanishing means of the mixed corrections, which is
-special to the example (the weak error of `g_ℓ` does not depend on the outer sample); in general
-the omitted mixed corrections contribute a bias that does not vanish as `L → ∞` (numerically,
-e.g. `≈ −4.3 · 10⁻⁴` for `f(x) = max(x, 0)`, `Z` uniform on `[−1, 1]`, `g = Z + s(W)/8` and
-`g₀ = g + Z/8`; not formalised). -/
-theorem nested_mimc_kink_axes_complexity {Ω : Type*} [MeasurableSpace Ω] {μ : Measure Ω}
+special to the example (the weak error of `g_ℓ` does not depend on the outer sample).  In general
+the omitted mixed corrections leave a bias that does not vanish as `L → ∞`: for `f(x) = max(x, 0)`,
+`Z` uniform on `[−1, 1]`, `g = Z + s(W)/8` and `g_ℓ = g + 2^{−ℓ} Z/8` (first order weak
+convergence uniformly in `Z`, with `c_w = 1/8`), their means add up to
+`E f(E_W g) − E f(E_W g₀) − E f(g) + E f(g₀) = 1/4 − 9/32 − 65/256 + 41/144 = −1/2304`, so the
+axes estimator has the limiting bias `1/2304 ≈ 4.3 · 10⁻⁴` (computed exactly; not formalised). -/
+theorem kinkInnerApprox_mimc_axes_complexity {Ω : Type*} [MeasurableSpace Ω] {μ : Measure Ω}
     (ω : (Fin 2 → ℕ) × ℕ → Ω → ℝ × (ℕ → Bool))
     (hω : ∀ p, MeasurePreserving (ω p) μ (nestedLaw kinkOuter kinkCoin)) (hind : iIndepFun ω μ)
     (cost : (Fin 2 → ℕ) → ℕ → Ω → ℝ) (C : (Fin 2 → ℕ) → ℝ) {c₃ : ℝ} (hc₃ : 0 < c₃)
