@@ -159,6 +159,10 @@
 --   path is a Brownian motion with the same running maximum (§5.3), payoffs with several kinks (§9.1)
 -- * `MlmcLean.ContractingLevels` — Giles §10.1: contracting SDEs with level-dependent steps and
 --   horizons, the multilevel variance decays, MLMC for the limit of the discretised chains
+-- * `MlmcLean.AdaptiveGrids` — Giles §5.6, §8: path-dependent (adaptive) steps on a fixed base grid,
+--   conditional laws of the increments, (2.4) and Theorem 1 for non-nested grids, Algorithm 3
+-- * `MlmcLean.LatticeRuleD` — Giles §2.7, §3.5: randomly shifted rank-1 lattice rules in d
+--   dimensions (variance as a dual-lattice sum) and MLQMC complexity with level-dependent dimension
 import MlmcLean.Allocation
 import MlmcLean.Estimator
 import MlmcLean.LevelDiff
@@ -237,3 +241,5 @@ import MlmcLean.JumpProcesses
 import MlmcLean.EstimatorRemarks
 import MlmcLean.SDEExtensions
 import MlmcLean.ContractingLevels
+import MlmcLean.AdaptiveGrids
+import MlmcLean.LatticeRuleD
