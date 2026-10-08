@@ -140,3 +140,24 @@ limit field; the SSA coupling for several reactions and unbounded propensities; 
 of the parabolic limit with the SPDE functional, the variance rate of adaptive tau-leaping, the
 simplex optimality, the kurtosis upper bound, and whether MIMC reaches `O(ε⁻²)` for a general
 piecewise linear `f`.
+
+**Follow-up (round 24).** From the out-of-scope table and the round-23 notes, round 24 formalised:
+the small-jump truncation of §6.2 for the terminal value of a pure-jump Lévy process, with (2.4),
+the correction variance from the intermediate range of jump sizes, the `L²` limit and the bias as
+`δ_ℓ → 0`, the expected cost and Theorem 1 for `δ_ℓ = 2^{−ℓ}`, with a one-sided stable-like example
+(`LevyTruncation.lean`); the untruncated Karhunen–Loève field, with Mercer's expansion as
+hypotheses: almost sure convergence, the Gaussian law, covariance and joint Gaussianity, the moments
+of the diffusivity and that it is unbounded (`KarhunenLoeveLimit.lean`); sensitivities for GBM: the
+pathwise delta of the call, with the digital option's rates and costs as upper bounds, and the
+digital delta from the conditional-expectation payoffs, unbiased and with (2.4)
+(`GBMSensitivities.lean`); and, from the round-23 read-back, an `IsProbabilityMeasure` conjunct of
+`variance_ssaCorrection_exact_le`.  Still open: the digital option's weak order `α = 1` (hence the
+paper's `O(ε^{−2.5})`) and, for the conditional-expectation estimator, the endpoints `β = 3/2`,
+`α = 1`; the splitting variance "the same, to leading order"; the variance rate of the digital-delta
+corrections and sensitivities for general SDEs; Mercer's theorem, the identification of the joint
+law of the limit field with a multivariate Gaussian, the regularity of `κ` and the moments of
+`max_x κ` and `1/min_x κ`; the Brownian replacement of the small jumps, the Lévy–Khintchine law of
+the truncation limit and path-dependent Lévy payoffs; the SSA coupling for several reactions and
+unbounded propensities; the identification of the parabolic limit with the SPDE functional, the
+variance rate of adaptive tau-leaping, the simplex optimality, the kurtosis upper bound, and whether
+MIMC reaches `O(ε⁻²)` for a general piecewise linear `f`.
