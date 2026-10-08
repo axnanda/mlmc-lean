@@ -10,7 +10,9 @@ expected cost of a level-`ℓ` sample; §1.3 (p. 4), the Lagrange-multiplier all
 is exponential in `N_ℓ − N_{ℓ−1}`, it is appropriate to choose `N_ℓ` to increase linearly with
 level.  A very similar approach can also be used for contracting SDEs which converge to a limiting
 distribution.  For these, the level `ℓ` path will perform a simulation for the time interval
-`[−T_ℓ, 0]`, using timestep `h_ℓ`."
+`[−T_ℓ, 0]`, using timestep `h_ℓ`."  (The first sentence is said of the Markov-chain lengths
+`N_ℓ`; for the SDE the analogue is `T_ℓ = N_ℓ h_ℓ` linear in `ℓ`, so the number of steps is
+`N_ℓ ≍ (ℓ + 1) 2^ℓ`.)
 
 **Why a logarithmic factor.**  For the contracting SDEs of §10.1 with `h_ℓ = h₀ 2^{−ℓ}` and `T_ℓ`
 growing linearly in `ℓ`, a level-`ℓ` sample takes `N_ℓ = T_ℓ/h_ℓ ≍ (ℓ + 1) 2^ℓ` steps, which is
@@ -51,18 +53,24 @@ and for `γ < 2α` the cost is `O(ε⁻²)` (`giles_theorem1_log_of_lt`).
 * `mlmc_complexity_core_log` — the deterministic core;
 * `giles_theorem1_log_cost_sum`, `giles_theorem1_log` — Theorem 1 with condition iv'), on a
   probability space (cost written as `∑ N_ℓ C_ℓ`, and random costs);
-* `giles_theorem1_log_of_lt` — for `β > γ` and `γ < 2α`, the cost `O(ε⁻²)`;
+* `giles_theorem1_log_uniform` — the same with one constant `c₄`, depending only on
+  `α, β, γ, κ, c₁, c₂, c₃`, for all probability spaces and data;
+* `giles_theorem1_log_of_lt` — for `β > γ` and `γ < 2α`, the cost `O(ε⁻²)`, for every real `κ`;
 * `mlmc_cost_lower_log` — matching lower bounds when conditions i), iii), iv') hold with equality;
-* `giles_theorem1_fineCoarse_log` — Theorem 1 with condition iv') for different fine and coarse
+* `giles_theorem1_corrections_log`, `giles_theorem1_fineCoarse_log` — Theorem 1 with condition
+  iv') for any level corrections satisfying condition ii), and for different fine and coarse
   approximations satisfying (2.4), with independent inputs;
 * `contracting_levels_mlmc_log` — §10.1: the contracting SDE of `contracting_levels_mlmc` at cost
   `O(ε⁻² |log ε|³)` (`α = 1/2`, `β = γ = 1`, logarithmic exponent `1`), instead of `O(ε^{−2−2η})`.
 
+In the last section, as in `MlmcLean/ContractingLevels.lean`, `κ` is the dissipativity constant of
+the drift; everywhere else it is the exponent of `ℓ + 1` in condition iv').
+
 **Deviations.**  The extension is not in the paper.  Giles' hypothesis `β > 0` is not used and is
-dropped.  `κ ≥ 0` is needed: for `κ < 0`, `β > γ`, `V_ℓ = c₂ 2^{−βℓ}` and
-`C_ℓ = c₃ (ℓ + 1)^κ 2^{γℓ}`, every allocation with variance `≤ ε²` has `N₀ ≥ V₀ ε⁻²` and so costs
-at least `c₂ c₃ ε⁻²` (as in the first bound of `mlmc_cost_lower_log`), which is not
-`O(ε⁻² |log ε|^κ)`.
+dropped.  `κ ≥ 0` is needed (except in `giles_theorem1_log_of_lt`): for `κ < 0`, `β > γ`,
+`V_ℓ = c₂ 2^{−βℓ}` and `C_ℓ = c₃ (ℓ + 1)^κ 2^{γℓ}`, every allocation with variance `≤ ε²` has
+`N₀ ≥ V₀ ε⁻²` and so costs at least `c₂ c₃ ε⁻²` (as in the first bound of `mlmc_cost_lower_log`),
+which is not `O(ε⁻² |log ε|^κ)`.
 -/
 
 open MeasureTheory ProbabilityTheory Filter Topology Finset
@@ -174,6 +182,81 @@ theorem mlmc_complexity_core_log {α β γ κ c₁ c₂ c₃ : ℝ} (hα : 0 < �
         rw [complexityBoundLog_eq hκ]
         ring
 
+/-! ### Two estimates for powers of `ℓ + 1` -/
+
+/-- A power of `ℓ + 1` grows more slowly than any exponential (for the case `β > γ`, `γ < 2α` of
+Giles 2015, §2.1, Theorem 1, with the cost factor `(ℓ + 1)^κ`): for every real `κ` and `η > 0`
+there is `A > 0` with `(ℓ + 1)^κ ≤ A 2^{ηℓ}` for all `ℓ`, namely `A = 1` if `κ ≤ 0` (then
+`(ℓ + 1)^κ ≤ 1 ≤ 2^{ηℓ}`) and `A = (1 + (2^δ − 1)⁻¹)^κ`, `δ = η/(κ + 1)`, if `κ ≥ 0`
+(`succ_le_two_rpow`). -/
+lemma succ_rpow_le_two_rpow (κ : ℝ) {η : ℝ} (hη : 0 < η) :
+    ∃ A : ℝ, 0 < A ∧ ∀ ℓ : ℕ, ((ℓ : ℝ) + 1) ^ κ ≤ A * (2 : ℝ) ^ (η * (ℓ : ℝ)) := by
+  rcases le_total κ 0 with hκ | hκ
+  · -- `κ ≤ 0`: `(ℓ + 1)^κ ≤ 1 ≤ 2^{ηℓ}`
+    refine ⟨1, one_pos, fun ℓ => ?_⟩
+    have h1 : ((ℓ : ℝ) + 1) ^ κ ≤ 1 := Real.rpow_le_one_of_one_le_of_nonpos
+      (le_add_of_nonneg_left (Nat.cast_nonneg ℓ)) hκ
+    have h2 : (1 : ℝ) ≤ (2 : ℝ) ^ (η * (ℓ : ℝ)) := Real.one_le_rpow one_le_two (by positivity)
+    linarith
+  have hδ : 0 < η / (κ + 1) := div_pos hη (by linarith)
+  have hq : 1 < (2 : ℝ) ^ (η / (κ + 1)) := Real.one_lt_rpow (by norm_num) hδ
+  have hA0 : 0 < 1 + ((2 : ℝ) ^ (η / (κ + 1)) - 1)⁻¹ := by
+    have : 0 < (2 : ℝ) ^ (η / (κ + 1)) - 1 := by linarith
+    positivity
+  refine ⟨(1 + ((2 : ℝ) ^ (η / (κ + 1)) - 1)⁻¹) ^ κ, Real.rpow_pos_of_pos hA0 κ, fun ℓ => ?_⟩
+  have h1 := succ_le_two_rpow hδ ℓ
+  have hexp : η / (κ + 1) * (ℓ : ℝ) * κ ≤ η * (ℓ : ℝ) := by
+    have e : η / (κ + 1) * (ℓ : ℝ) * κ = η * (ℓ : ℝ) * (κ / (κ + 1)) := by ring
+    rw [e]
+    exact mul_le_of_le_one_right (by positivity) ((div_le_one (by linarith)).2 (by linarith))
+  calc ((ℓ : ℝ) + 1) ^ κ
+      ≤ ((1 + ((2 : ℝ) ^ (η / (κ + 1)) - 1)⁻¹) * (2 : ℝ) ^ (η / (κ + 1) * (ℓ : ℝ))) ^ κ :=
+        Real.rpow_le_rpow (by positivity) h1 hκ
+    _ = (1 + ((2 : ℝ) ^ (η / (κ + 1)) - 1)⁻¹) ^ κ * (2 : ℝ) ^ (η / (κ + 1) * (ℓ : ℝ) * κ) := by
+        rw [Real.mul_rpow hA0.le (by positivity), ← Real.rpow_mul (by norm_num)]
+    _ ≤ (1 + ((2 : ℝ) ^ (η / (κ + 1)) - 1)⁻¹) ^ κ * (2 : ℝ) ^ (η * (ℓ : ℝ)) :=
+        mul_le_mul_of_nonneg_left (Real.rpow_le_rpow_of_exponent_le (by norm_num) hexp)
+          (Real.rpow_nonneg hA0.le κ)
+
+/-- A Bernoulli-type lower bound for a sum of powers (for the lower bounds of the extension of
+Giles 2015, §2.1, Theorem 1): `n^{p+1}/(p + 1) ≤ ∑_{j<n} (j + 1)^p` for `p ≥ 0`.  Induction on `n`
+with Bernoulli's inequality `(n/(n + 1))^{p+1} ≥ 1 − (p + 1)/(n + 1)`
+(`one_add_mul_self_le_rpow_one_add`). -/
+lemma rpow_div_le_sum_succ_rpow {p : ℝ} (hp : 0 ≤ p) (n : ℕ) :
+    (n : ℝ) ^ (p + 1) / (p + 1) ≤ ∑ j ∈ range n, ((j : ℝ) + 1) ^ p := by
+  have hp1 : 0 < p + 1 := by linarith
+  induction n with
+  | zero =>
+    rw [Finset.sum_range_zero, Nat.cast_zero, Real.zero_rpow hp1.ne', zero_div]
+  | succ n ih =>
+    rw [Finset.sum_range_succ, Nat.cast_succ]
+    have hn1 : (0 : ℝ) < (n : ℝ) + 1 := by positivity
+    -- Bernoulli: `1 − (p + 1)/(n + 1) ≤ (n/(n + 1))^{p+1}`
+    have hs : (-1 : ℝ) ≤ -1 / ((n : ℝ) + 1) := by
+      rw [neg_div, neg_le_neg_iff, div_le_one hn1]
+      linarith [(Nat.cast_nonneg n : (0 : ℝ) ≤ n)]
+    have hb := one_add_mul_self_le_rpow_one_add hs (by linarith : (1 : ℝ) ≤ p + 1)
+    have e1 : 1 + -1 / ((n : ℝ) + 1) = (n : ℝ) / ((n : ℝ) + 1) := by
+      field_simp
+      ring
+    rw [e1, Real.div_rpow (Nat.cast_nonneg n) hn1.le] at hb
+    have hq : 0 < ((n : ℝ) + 1) ^ (p + 1) := Real.rpow_pos_of_pos hn1 _
+    rw [le_div_iff₀ hq] at hb
+    -- `(n + 1)^{p+1} ≤ n^{p+1} + (p + 1)(n + 1)^p`
+    have key : ((n : ℝ) + 1) ^ (p + 1) ≤ (n : ℝ) ^ (p + 1) + (p + 1) * ((n : ℝ) + 1) ^ p := by
+      have e3 : (1 + (p + 1) * (-1 / ((n : ℝ) + 1))) * ((n : ℝ) + 1) ^ (p + 1) =
+          ((n : ℝ) + 1) ^ (p + 1) - (p + 1) * ((n : ℝ) + 1) ^ p := by
+        rw [Real.rpow_add_one hn1.ne' p]
+        field_simp
+        ring
+      linarith
+    calc ((n : ℝ) + 1) ^ (p + 1) / (p + 1)
+        ≤ ((n : ℝ) ^ (p + 1) + (p + 1) * ((n : ℝ) + 1) ^ p) / (p + 1) :=
+          div_le_div_of_nonneg_right key hp1.le
+      _ = (n : ℝ) ^ (p + 1) / (p + 1) + ((n : ℝ) + 1) ^ p := by
+          field_simp
+      _ ≤ ∑ j ∈ range n, ((j : ℝ) + 1) ^ p + ((n : ℝ) + 1) ^ p := by linarith
+
 /-! ### Theorem 1 with the cost factor `(ℓ + 1)^κ` on a probability space -/
 
 section prob
@@ -248,10 +331,63 @@ theorem giles_theorem1_log_cost_sum
         Finset.sum_le_sum fun ℓ _ => mul_le_mul_of_nonneg_left (h_iv ℓ) (Nat.cast_nonneg _)
     _ ≤ c₄ * complexityBoundLog α β γ κ ε := hcost
 
+universe u
+
+/-- **Giles' Theorem 1 with a polylogarithmic factor and a constant that depends only on
+`α, β, γ, κ, c₁, c₂, c₃`** (Giles 2015, §2.1, Theorem 1, pp. 6–7: "then there exists a positive
+constant `c₄` such that for any `ε < e⁻¹` there are values `L` and `N_ℓ` for which the multilevel
+estimator … has a mean-square-error with bound `MSE < ε²`", with condition iv) relaxed to
+`C_ℓ ≤ c₃ (ℓ + 1)^κ 2^{γℓ}`; the analogue of `giles_theorem1_uniform`).  Let
+`α, γ, c₁, c₂, c₃ > 0`, `κ ≥ 0` and `β` with `α ≥ ½ min(β, γ)`.  Then one `c₄ > 0` serves every
+probability space and every `P`, `Pℓ`, `Y`, `Cost`, `V`, `C` that satisfy the hypotheses of
+`giles_theorem1_log` with these constants: for every `0 < ε < e⁻¹` there are `L` and `N ℓ ≥ 1`
+for which `Y = ∑_{ℓ=0}^{L} Y ℓ (N ℓ)` has `E[(Y − E[P])²] < ε²` and the cost
+`C = ∑_{ℓ=0}^{L} Cost ℓ (N ℓ)` has `E[C] ≤ c₄ · complexityBoundLog α β γ κ ε`.  The constant is
+that of `mlmc_complexity_core_log`.  Not stated in the paper; Giles' hypothesis `β > 0` is
+dropped. -/
+theorem giles_theorem1_log_uniform {α β γ κ c₁ c₂ c₃ : ℝ} (hα : 0 < α) (hγ : 0 < γ)
+    (hκ : 0 ≤ κ) (hc₁ : 0 < c₁) (hc₂ : 0 < c₂) (hc₃ : 0 < c₃) (hαβγ : min β γ / 2 ≤ α) :
+    ∃ c₄ : ℝ, 0 < c₄ ∧
+      ∀ {Ω : Type u} [MeasurableSpace Ω] (μ : Measure Ω) [IsProbabilityMeasure μ]
+        (P : Ω → ℝ) (Pℓ : ℕ → Ω → ℝ) (Y : ℕ → ℕ → Ω → ℝ) (Cost : ℕ → ℕ → Ω → ℝ)
+        (V C : ℕ → ℝ),
+        Integrable P μ → (∀ ℓ, Integrable (Pℓ ℓ) μ) →
+        (∀ ℓ n, 0 < n → MemLp (Y ℓ n) 2 μ) →
+        (∀ N : ℕ → ℕ, (∀ ℓ, 0 < N ℓ) →
+          Pairwise fun i j => IndepFun (Y i (N i)) (Y j (N j)) μ) →
+        (∀ ℓ n, 0 < n → Integrable (Cost ℓ n) μ) →
+        (∀ ℓ (n : ℕ), 0 < n → μ[Cost ℓ n] = n * C ℓ) →
+        (∀ ℓ : ℕ, |μ[fun ω => Pℓ ℓ ω - P ω]| ≤ c₁ * (2 : ℝ) ^ (-(α * (ℓ : ℝ)))) →
+        (∀ n, 0 < n → μ[Y 0 n] = μ[Pℓ 0]) →
+        (∀ ℓ n, 0 < n → μ[Y (ℓ + 1) n] = μ[fun ω => Pℓ (ℓ + 1) ω - Pℓ ℓ ω]) →
+        (∀ ℓ n, 0 < n → variance (Y ℓ n) μ = V ℓ / n) →
+        (∀ ℓ, V ℓ ≤ c₂ * (2 : ℝ) ^ (-(β * (ℓ : ℝ)))) →
+        (∀ ℓ, C ℓ ≤ c₃ * ((ℓ : ℝ) + 1) ^ κ * (2 : ℝ) ^ (γ * (ℓ : ℝ))) →
+        ∀ ε : ℝ, 0 < ε → ε < Real.exp (-1) →
+          ∃ (L : ℕ) (N : ℕ → ℕ), (∀ ℓ, 0 < N ℓ) ∧
+            μ[fun ω => (∑ ℓ ∈ range (L + 1), Y ℓ (N ℓ) ω - μ[P]) ^ 2] < ε ^ 2 ∧
+            μ[fun ω => ∑ ℓ ∈ range (L + 1), Cost ℓ (N ℓ) ω] ≤
+              c₄ * complexityBoundLog α β γ κ ε := by
+  obtain ⟨c₄, hc₄, hcore⟩ := mlmc_complexity_core_log (β := β) hα hγ hκ hc₁ hc₂ hc₃ hαβγ
+  refine ⟨c₄, hc₄, ?_⟩
+  intro Ω _ μ _ P Pℓ Y Cost V C hP hPℓ hY hind hCost_int hCost_mean h_i h_ii₀ h_ii h_var h_iii
+    h_iv ε hε hε1
+  obtain ⟨L, N, hN, hmse, hcost⟩ := hcore ε hε hε1
+  refine ⟨L, N, hN,
+    mse_lt_of_core_bound P Pℓ Y V hN hmse hP hPℓ hY hind h_i h_ii₀ h_ii h_var h_iii, ?_⟩
+  -- `E[C] = ∑ N_ℓ C_ℓ`, then condition iv') termwise
+  rw [integral_finsetSum _ fun ℓ _ => hCost_int ℓ (N ℓ) (hN ℓ)]
+  calc ∑ ℓ ∈ range (L + 1), μ[Cost ℓ (N ℓ)] = ∑ ℓ ∈ range (L + 1), (N ℓ : ℝ) * C ℓ :=
+        Finset.sum_congr rfl fun ℓ _ => hCost_mean ℓ (N ℓ) (hN ℓ)
+    _ ≤ ∑ ℓ ∈ range (L + 1), (N ℓ : ℝ) * (c₃ * ((ℓ : ℝ) + 1) ^ κ * (2 : ℝ) ^ (γ * (ℓ : ℝ))) :=
+        Finset.sum_le_sum fun ℓ _ => mul_le_mul_of_nonneg_left (h_iv ℓ) (Nat.cast_nonneg _)
+    _ ≤ c₄ * complexityBoundLog α β γ κ ε := hcost
+
 /-- **Giles' Theorem 1 with a polylogarithmic factor in the cost** (Giles 2015, §2.1, Theorem 1,
 with its condition "iv) `C_ℓ ≤ c₃ 2^{γℓ}`" relaxed to `C_ℓ ≤ c₃ (ℓ + 1)^κ 2^{γℓ}`: the extension
 needed for §10.1, p. 61, where "it is appropriate to choose `N_ℓ` to increase linearly with level"
-and a level-`ℓ` sample of a contracting SDE costs of order `ℓ 2^ℓ`).
+(said of the Markov-chain lengths; for the SDE the analogue is `T_ℓ = N_ℓ h_ℓ` linear in `ℓ`, so
+`N_ℓ ≍ (ℓ + 1) 2^ℓ`) and a level-`ℓ` sample of a contracting SDE costs of order `(ℓ + 1) 2^ℓ`).
 Let `P` be an integrable random variable and `Pℓ ℓ` its integrable level-`ℓ` approximation.
 Suppose there are square-integrable estimators `Y ℓ n` based on `n ≥ 1` Monte Carlo samples,
 pairwise independent across levels for every choice of sample sizes `N ≥ 1`, whose samples at
@@ -273,8 +409,9 @@ is not stated in the paper.  Its exponents cannot be lowered (`mlmc_cost_lower_l
 for `β > γ` and `γ < 2α` the cost is `O(ε⁻²)` (`giles_theorem1_log_of_lt`).  Giles' hypothesis
 `β > 0` is not needed and is dropped.  `κ ≥ 0` is needed: for `κ < 0` and `β > γ` the bound fails
 when `V_ℓ = c₂ 2^{−βℓ}` and `C_ℓ = c₃ (ℓ + 1)^κ 2^{γℓ}`, since a variance `≤ ε²` needs
-`N₀ ≥ V₀ ε⁻²` and so costs at least `c₂ c₃ ε⁻²` (as in `mlmc_cost_lower_log`).  The constant `c₄`
-depends only on `α, β, γ, κ, c₁, c₂, c₃` (`mlmc_complexity_core_log`). -/
+`N₀ ≥ V₀ ε⁻²` and so costs at least `c₂ c₃ ε⁻²` (as in `mlmc_cost_lower_log`).  A constant `c₄`
+that depends only on `α, β, γ, κ, c₁, c₂, c₃` and serves all probability spaces and data is given
+by `giles_theorem1_log_uniform`, from which this theorem is derived. -/
 theorem giles_theorem1_log
     (P : Ω → ℝ) (Pℓ : ℕ → Ω → ℝ) (Y : ℕ → ℕ → Ω → ℝ) (Cost : ℕ → ℕ → Ω → ℝ) (V C : ℕ → ℝ)
     {α β γ κ c₁ c₂ c₃ : ℝ} (hα : 0 < α) (hγ : 0 < γ) (hκ : 0 ≤ κ)
@@ -296,43 +433,9 @@ theorem giles_theorem1_log
         μ[fun ω => (∑ ℓ ∈ range (L + 1), Y ℓ (N ℓ) ω - μ[P]) ^ 2] < ε ^ 2 ∧
         μ[fun ω => ∑ ℓ ∈ range (L + 1), Cost ℓ (N ℓ) ω] ≤
           c₄ * complexityBoundLog α β γ κ ε := by
-  obtain ⟨c₄, hc₄, h⟩ := giles_theorem1_log_cost_sum P Pℓ Y V C hα hγ hκ hc₁ hc₂ hc₃ hαβγ hP
-    hPℓ hY hind h_i h_ii₀ h_ii h_var h_iii h_iv
-  refine ⟨c₄, hc₄, fun ε hε hε1 => ?_⟩
-  obtain ⟨L, N, hN, hmse, hcost⟩ := h ε hε hε1
-  refine ⟨L, N, hN, hmse, ?_⟩
-  have hE : μ[fun ω => ∑ ℓ ∈ range (L + 1), Cost ℓ (N ℓ) ω] =
-      ∑ ℓ ∈ range (L + 1), (N ℓ : ℝ) * C ℓ := by
-    rw [integral_finsetSum _ fun ℓ _ => hCost_int ℓ (N ℓ) (hN ℓ)]
-    exact Finset.sum_congr rfl fun ℓ _ => hCost_mean ℓ (N ℓ) (hN ℓ)
-  rw [hE]
-  exact hcost
-
-/-- A power of `ℓ + 1` grows more slowly than any exponential (for the case `β > γ`, `γ < 2α` of
-Giles 2015, §2.1, Theorem 1, with the cost factor `(ℓ + 1)^κ`): for `κ ≥ 0` and `η > 0` there is
-`A > 0` with `(ℓ + 1)^κ ≤ A 2^{ηℓ}` for all `ℓ`, namely `A = (1 + (2^δ − 1)⁻¹)^κ`,
-`δ = η/(κ + 1)` (`succ_le_two_rpow`). -/
-lemma succ_rpow_le_two_rpow {κ η : ℝ} (hκ : 0 ≤ κ) (hη : 0 < η) :
-    ∃ A : ℝ, 0 < A ∧ ∀ ℓ : ℕ, ((ℓ : ℝ) + 1) ^ κ ≤ A * (2 : ℝ) ^ (η * (ℓ : ℝ)) := by
-  have hδ : 0 < η / (κ + 1) := div_pos hη (by linarith)
-  have hq : 1 < (2 : ℝ) ^ (η / (κ + 1)) := Real.one_lt_rpow (by norm_num) hδ
-  have hA0 : 0 < 1 + ((2 : ℝ) ^ (η / (κ + 1)) - 1)⁻¹ := by
-    have : 0 < (2 : ℝ) ^ (η / (κ + 1)) - 1 := by linarith
-    positivity
-  refine ⟨(1 + ((2 : ℝ) ^ (η / (κ + 1)) - 1)⁻¹) ^ κ, Real.rpow_pos_of_pos hA0 κ, fun ℓ => ?_⟩
-  have h1 := succ_le_two_rpow hδ ℓ
-  have hexp : η / (κ + 1) * (ℓ : ℝ) * κ ≤ η * (ℓ : ℝ) := by
-    have e : η / (κ + 1) * (ℓ : ℝ) * κ = η * (ℓ : ℝ) * (κ / (κ + 1)) := by ring
-    rw [e]
-    exact mul_le_of_le_one_right (by positivity) ((div_le_one (by linarith)).2 (by linarith))
-  calc ((ℓ : ℝ) + 1) ^ κ
-      ≤ ((1 + ((2 : ℝ) ^ (η / (κ + 1)) - 1)⁻¹) * (2 : ℝ) ^ (η / (κ + 1) * (ℓ : ℝ))) ^ κ :=
-        Real.rpow_le_rpow (by positivity) h1 hκ
-    _ = (1 + ((2 : ℝ) ^ (η / (κ + 1)) - 1)⁻¹) ^ κ * (2 : ℝ) ^ (η / (κ + 1) * (ℓ : ℝ) * κ) := by
-        rw [Real.mul_rpow hA0.le (by positivity), ← Real.rpow_mul (by norm_num)]
-    _ ≤ (1 + ((2 : ℝ) ^ (η / (κ + 1)) - 1)⁻¹) ^ κ * (2 : ℝ) ^ (η * (ℓ : ℝ)) :=
-        mul_le_mul_of_nonneg_left (Real.rpow_le_rpow_of_exponent_le (by norm_num) hexp)
-          (Real.rpow_nonneg hA0.le κ)
+  obtain ⟨c₄, hc₄, h⟩ := giles_theorem1_log_uniform (β := β) hα hγ hκ hc₁ hc₂ hc₃ hαβγ
+  exact ⟨c₄, hc₄, h μ P Pℓ Y Cost V C hP hPℓ hY hind hCost_int hCost_mean h_i h_ii₀ h_ii h_var
+    h_iii h_iv⟩
 
 /-- **No logarithmic factor when `β > γ` and `γ < 2α`** (Giles 2015, §2.1, Theorem 1, case
 `β > γ`: "the dominant computational cost is on the coarsest levels where `C_ℓ = O(1)` and
@@ -403,45 +506,6 @@ theorem giles_theorem1_log_of_lt
 end prob
 
 /-! ### The exponents cannot be lowered -/
-
-/-- A Bernoulli-type lower bound for a sum of powers (for the lower bounds of the extension of
-Giles 2015, §2.1, Theorem 1): `n^{p+1}/(p + 1) ≤ ∑_{j<n} (j + 1)^p` for `p ≥ 0`.  Induction on `n`
-with Bernoulli's inequality `(n/(n + 1))^{p+1} ≥ 1 − (p + 1)/(n + 1)`
-(`one_add_mul_self_le_rpow_one_add`). -/
-lemma rpow_div_le_sum_succ_rpow {p : ℝ} (hp : 0 ≤ p) (n : ℕ) :
-    (n : ℝ) ^ (p + 1) / (p + 1) ≤ ∑ j ∈ range n, ((j : ℝ) + 1) ^ p := by
-  have hp1 : 0 < p + 1 := by linarith
-  induction n with
-  | zero =>
-    rw [Finset.sum_range_zero, Nat.cast_zero, Real.zero_rpow hp1.ne', zero_div]
-  | succ n ih =>
-    rw [Finset.sum_range_succ, Nat.cast_succ]
-    have hn1 : (0 : ℝ) < (n : ℝ) + 1 := by positivity
-    -- Bernoulli: `1 − (p + 1)/(n + 1) ≤ (n/(n + 1))^{p+1}`
-    have hs : (-1 : ℝ) ≤ -1 / ((n : ℝ) + 1) := by
-      rw [neg_div, neg_le_neg_iff, div_le_one hn1]
-      linarith [(Nat.cast_nonneg n : (0 : ℝ) ≤ n)]
-    have hb := one_add_mul_self_le_rpow_one_add hs (by linarith : (1 : ℝ) ≤ p + 1)
-    have e1 : 1 + -1 / ((n : ℝ) + 1) = (n : ℝ) / ((n : ℝ) + 1) := by
-      field_simp
-      ring
-    rw [e1, Real.div_rpow (Nat.cast_nonneg n) hn1.le] at hb
-    have hq : 0 < ((n : ℝ) + 1) ^ (p + 1) := Real.rpow_pos_of_pos hn1 _
-    rw [le_div_iff₀ hq] at hb
-    -- `(n + 1)^{p+1} ≤ n^{p+1} + (p + 1)(n + 1)^p`
-    have key : ((n : ℝ) + 1) ^ (p + 1) ≤ (n : ℝ) ^ (p + 1) + (p + 1) * ((n : ℝ) + 1) ^ p := by
-      have e3 : (1 + (p + 1) * (-1 / ((n : ℝ) + 1))) * ((n : ℝ) + 1) ^ (p + 1) =
-          ((n : ℝ) + 1) ^ (p + 1) - (p + 1) * ((n : ℝ) + 1) ^ p := by
-        rw [Real.rpow_add_one hn1.ne' p]
-        field_simp
-        ring
-      linarith
-    calc ((n : ℝ) + 1) ^ (p + 1) / (p + 1)
-        ≤ ((n : ℝ) ^ (p + 1) + (p + 1) * ((n : ℝ) + 1) ^ p) / (p + 1) :=
-          div_le_div_of_nonneg_right key hp1.le
-      _ = (n : ℝ) ^ (p + 1) / (p + 1) + ((n : ℝ) + 1) ^ p := by
-          field_simp
-      _ ≤ ∑ j ∈ range n, ((j : ℝ) + 1) ^ p + ((n : ℝ) + 1) ^ p := by linarith
 
 /-- **Lower bounds for the cost: the exponents of `giles_theorem1_log` are sharp** (for the
 extension of Giles 2015, §2.1, Theorem 1, to the costs `C_ℓ ≤ c₃ (ℓ + 1)^κ 2^{γℓ}`; not stated in
