@@ -437,7 +437,8 @@ Lean statement or to the reason it is not formalised. The deviations of the new 
   need a small-ball bound at every kink.
 * **Contracting levels (`ContractingLevels.lean`, round 19).** One dimension, Lipschitz payoffs, the
   target is the limit of the means of the discretised chains; the cost per sample grows like
-  `ℓ 2^ℓ`, so the complexity is `O(ε^{−2−η})` for every `η > 0`.
+  `ℓ 2^ℓ`, so the complexity is `O(ε^{−2−η})` for every `η > 0` (round 20: `O(ε⁻²|log ε|³)`,
+  `contracting_levels_mlmc_log`).
 * **Adaptive grids (`AdaptiveGrids.lean`, round 20).** Step sizes are multiples of a fixed base
   spacing `δ` (for `h_ℓ = 2^{−ℓ}H(Ŝ_n)`: `H` with values in `2^{−m₀}Tℕ`), so the union grid lies in a
   base grid and only i.i.d. base increments are needed; real-valued step sizes would need Brownian
@@ -447,6 +448,10 @@ Lean statement or to the reason it is not formalised. The deviations of the new 
   decay of the dual-lattice sums for `N = 2^m` points (the existence of good generating vectors is
   not formalised); the generating vector may depend on `N`, and for `d ≥ 2` it must.  Parseval's
   identity on `𝕋^d` is re-proved, since Mathlib's `AddCircleMulti` is not in this project's build.
+* **Theorem 1 with a polylogarithmic cost (`Theorem1Log.lean`, round 20).** An extension the paper
+  does not state, needed for §10.1: condition iv) becomes `C_ℓ ≤ c₃(ℓ+1)^κ 2^{γℓ}` with `κ ≥ 0`
+  (needed except in `giles_theorem1_log_of_lt`); Giles' `β > 0` is dropped.  The §10.1 corollary
+  keeps the deviations of `ContractingLevels.lean`.
 
 ### Corrections to the papers recorded elsewhere, collected
 
