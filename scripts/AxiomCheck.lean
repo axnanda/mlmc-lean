@@ -925,6 +925,15 @@ import MlmcLean
 #print axioms MLMC.mlqmcLattice_complexity_of_lt
 #print axioms MLMC.mlqmcLattice_complexity_lt_two
 #print axioms MLMC.mlqmcLattice_complexity_rate
+#print axioms MLMC.mlmc_complexity_core_log
+#print axioms MLMC.giles_theorem1_log_cost_sum
+#print axioms MLMC.giles_theorem1_log_uniform
+#print axioms MLMC.giles_theorem1_log
+#print axioms MLMC.giles_theorem1_log_of_lt
+#print axioms MLMC.mlmc_cost_lower_log
+#print axioms MLMC.giles_theorem1_corrections_log
+#print axioms MLMC.giles_theorem1_fineCoarse_log
+#print axioms MLMC.contracting_levels_mlmc_log
 -- helper lemmas that the prove2.me generator promotes to nodes
 #print axioms MLMC.sqrt_Vb_mul_Cb
 #print axioms MLMC.two_rpow_levelL_le

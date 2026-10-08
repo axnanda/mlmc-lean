@@ -163,6 +163,8 @@
 --   conditional laws of the increments, (2.4) and Theorem 1 for non-nested grids, Algorithm 3
 -- * `MlmcLean.LatticeRuleD` — Giles §2.7, §3.5: randomly shifted rank-1 lattice rules in d
 --   dimensions (variance as a dual-lattice sum) and MLQMC complexity with level-dependent dimension
+-- * `MlmcLean.Theorem1Log` — Theorem 1 with costs C_ℓ ≤ c₃(ℓ+1)^κ 2^{γℓ}, sharp polylogarithmic
+--   bounds, and the contracting SDEs of §10.1 at cost O(ε⁻²|log ε|³)
 import MlmcLean.Allocation
 import MlmcLean.Estimator
 import MlmcLean.LevelDiff
@@ -243,3 +245,4 @@ import MlmcLean.SDEExtensions
 import MlmcLean.ContractingLevels
 import MlmcLean.AdaptiveGrids
 import MlmcLean.LatticeRuleD
+import MlmcLean.Theorem1Log

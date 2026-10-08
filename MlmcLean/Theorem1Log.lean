@@ -336,8 +336,8 @@ universe u
 /-- **Giles' Theorem 1 with a polylogarithmic factor and a constant that depends only on
 `α, β, γ, κ, c₁, c₂, c₃`** (Giles 2015, §2.1, Theorem 1, pp. 6–7: "then there exists a positive
 constant `c₄` such that for any `ε < e⁻¹` there are values `L` and `N_ℓ` for which the multilevel
-estimator … has a mean-square-error with bound `MSE < ε²`", with condition iv) relaxed to
-`C_ℓ ≤ c₃ (ℓ + 1)^κ 2^{γℓ}`; the analogue of `giles_theorem1_uniform`).  Let
+estimator … has a mean-square-error with bound `MSE ≡ E[(Y − E[P])²] < ε²`", with condition iv)
+relaxed to `C_ℓ ≤ c₃ (ℓ + 1)^κ 2^{γℓ}`; the analogue of `giles_theorem1_uniform`).  Let
 `α, γ, c₁, c₂, c₃ > 0`, `κ ≥ 0` and `β` with `α ≥ ½ min(β, γ)`.  Then one `c₄ > 0` serves every
 probability space and every `P`, `Pℓ`, `Y`, `Cost`, `V`, `C` that satisfy the hypotheses of
 `giles_theorem1_log` with these constants: for every `0 < ε < e⁻¹` there are `L` and `N ℓ ≥ 1`
@@ -437,20 +437,23 @@ theorem giles_theorem1_log
   exact ⟨c₄, hc₄, h μ P Pℓ Y Cost V C hP hPℓ hY hind hCost_int hCost_mean h_i h_ii₀ h_ii h_var
     h_iii h_iv⟩
 
-/-- **No logarithmic factor when `β > γ` and `γ < 2α`** (Giles 2015, §2.1, Theorem 1, case
+/-- **No logarithmic factor when `β > γ` and `γ < 2α`** (Giles 2015, §2.1, Theorem 1, p. 7, case
 `β > γ`: "the dominant computational cost is on the coarsest levels where `C_ℓ = O(1)` and
 `O(ε⁻²)` samples are required to achieve the desired accuracy", with condition iv) relaxed to
-`C_ℓ ≤ c₃ (ℓ + 1)^κ 2^{γℓ}`).  Under the hypotheses of `giles_theorem1_log_cost_sum`, if `γ < β`
-and `γ < 2α` there is `c₄ > 0` such that for every `0 < ε < e⁻¹` there are `L` and `N_ℓ ≥ 1` with
-`MSE < ε²` and `∑_{ℓ ≤ L} N_ℓ C_ℓ ≤ c₄ ε⁻²`: the factor `|log ε|^κ` of `giles_theorem1_log` in the
-case `β > γ` is needed only at the boundary `γ = 2α` (`mlmc_cost_lower_log`).  Proof:
+`C_ℓ ≤ c₃ (ℓ + 1)^κ 2^{γℓ}`).  Under the hypotheses of `giles_theorem1_log_cost_sum`, for any real
+`κ` (here `κ ≥ 0` is not needed), if `γ < β` and `γ < 2α` there is `c₄ > 0` such that for every
+`0 < ε < e⁻¹` there are `L` and `N_ℓ ≥ 1` with `MSE < ε²` and `∑_{ℓ ≤ L} N_ℓ C_ℓ ≤ c₄ ε⁻²`: the
+factor `|log ε|^κ` of `giles_theorem1_log` in the case `β > γ` is needed only at the boundary
+`γ = 2α` (`mlmc_cost_lower_log`).  The cost is stated only as `∑_ℓ N_ℓ C_ℓ`, as in
+`giles_theorem1_log_cost_sum`; for random costs `Cost ℓ n` with `E[Cost ℓ n] = n C_ℓ` this sum is
+`E[∑_ℓ Cost ℓ (N ℓ)]` by linearity (`integral_finsetSum`, as in `giles_theorem1_log`).  Proof:
 `(ℓ + 1)^κ ≤ A 2^{ηℓ}` with `η = ½ min(β − γ, 2α − γ)` (`succ_rpow_le_two_rpow`), and Theorem 1
 (`giles_theorem1_cost_sum`) with the rate `γ + η`, which satisfies `γ + η < β` and
 `γ + η < 2α`.  Not stated in the paper; the hypotheses `α ≥ ½ min(β, γ)` and `β > 0` of Theorem 1
 follow from `γ < 2α` and `0 < γ < β`. -/
 theorem giles_theorem1_log_of_lt
     (P : Ω → ℝ) (Pℓ : ℕ → Ω → ℝ) (Y : ℕ → ℕ → Ω → ℝ) (V C : ℕ → ℝ)
-    {α β γ κ c₁ c₂ c₃ : ℝ} (hα : 0 < α) (hγ : 0 < γ) (hκ : 0 ≤ κ)
+    {α β γ κ c₁ c₂ c₃ : ℝ} (hα : 0 < α) (hγ : 0 < γ)
     (hc₁ : 0 < c₁) (hc₂ : 0 < c₂) (hc₃ : 0 < c₃) (hγβ : γ < β) (hγα : γ < 2 * α)
     (hP : Integrable P μ) (hPℓ : ∀ ℓ, Integrable (Pℓ ℓ) μ)
     (hY : ∀ ℓ n, 0 < n → MemLp (Y ℓ n) 2 μ)
@@ -476,7 +479,7 @@ theorem giles_theorem1_log_of_lt
   have hη2 : min (β - γ) (2 * α - γ) / 2 < 2 * α - γ := by
     have := min_le_right (β - γ) (2 * α - γ)
     linarith
-  obtain ⟨A, hA, hpoly⟩ := succ_rpow_le_two_rpow hκ hη
+  obtain ⟨A, hA, hpoly⟩ := succ_rpow_le_two_rpow κ hη
   have hmin : min β (γ + min (β - γ) (2 * α - γ) / 2) / 2 ≤ α := by
     have := min_le_right β (γ + min (β - γ) (2 * α - γ) / 2)
     linarith
@@ -509,18 +512,24 @@ end prob
 
 /-- **Lower bounds for the cost: the exponents of `giles_theorem1_log` are sharp** (for the
 extension of Giles 2015, §2.1, Theorem 1, to the costs `C_ℓ ≤ c₃ (ℓ + 1)^κ 2^{γℓ}`; not stated in
-the paper).
+the paper; for `κ = 0` these are the lower-bound remarks after Theorem 1, Giles p. 7, quoted
+below).
 Consider the model in which conditions i), iii) and iv') hold with equality: the bias `c₁ 2^{−αℓ}`,
 the variances `V_ℓ = c₂ 2^{−βℓ}` and the costs `C_ℓ = c₃ (ℓ + 1)^κ 2^{γℓ}`, with
 `α, c₁, c₂, c₃ > 0` and `κ ≥ 0`; by Giles (2.1) and (2.3) the multilevel estimator with finest
 level `L` and `N_ℓ ≥ 1` samples on level `ℓ` has `MSE = (c₁ 2^{−αL})² + ∑_{ℓ ≤ L} V_ℓ/N_ℓ`.  If
 this is `≤ ε²` with `0 < ε < c₁`, then its cost `∑_{ℓ ≤ L} N_ℓ C_ℓ` is at least
-* `c₂ c₃ ε⁻²` (the coarsest level needs `N₀ ≥ V₀ ε⁻²`);
+* `c₂ c₃ ε⁻²` (the coarsest level needs `N₀ ≥ V₀ ε⁻²`; p. 7, case `β > γ`: "`O(ε⁻²)` samples are
+  required to achieve the desired accuracy");
 * `c₂ c₃ (1 + κ/2)⁻² ε⁻² (log₂(c₁/ε)/α)^{2+κ}` if `β = γ` (Cauchy–Schwarz, `cost_lower_bound`,
-  `∑_{ℓ ≤ L} (ℓ + 1)^{κ/2} ≥ (L + 1)^{1+κ/2}/(1 + κ/2)` and `L ≥ log₂(c₁/ε)/α`);
+  `∑_{ℓ ≤ L} (ℓ + 1)^{κ/2} ≥ (L + 1)^{1+κ/2}/(1 + κ/2)` and `L ≥ log₂(c₁/ε)/α`; p. 7: "the
+  `(log ε)²` term corresponds to the `L²` factor in the corresponding discussion at the end of
+  Section 1.3");
 * `c₂ c₃ ε⁻² (c₁/ε)^{(γ−β)/α} (log₂(c₁/ε)/α)^κ` if `β ≤ γ` (the finest level needs
   `N_L ≥ V_L ε⁻²`);
-* `c₃ (c₁/ε)^{γ/α} (log₂(c₁/ε)/α)^κ` if `γ ≥ 0` (one sample on the finest level).
+* `c₃ (c₁/ε)^{γ/α} (log₂(c₁/ε)/α)^κ` if `γ ≥ 0` (one sample on the finest level; p. 7: "the total
+  cost is `O(C_L)`, corresponding to `O(1)` samples on the finest level which is the best that can
+  be achieved").
 As `log₂(c₁/ε) ~ |log ε|/log 2` for `ε → 0`, these are the bounds `complexityBoundLog` of
 `giles_theorem1_log` up to constants for `β = γ` and for `β < γ`, and for `β > γ` with `γ = 2α`
 (the last bound, `(c₁/ε)^{γ/α} = (c₁/ε)²`); for `β > γ` and `γ < 2α` the first bound matches
@@ -683,12 +692,79 @@ theorem mlmc_cost_lower_log {α β γ κ c₁ c₂ c₃ ε : ℝ} (hα : 0 < α)
       _ ≤ (N L : ℝ) * C L := le_mul_of_one_le_left (hC L).le hNL1
       _ ≤ ∑ ℓ ∈ range (L + 1), (N ℓ : ℝ) * C ℓ := hlev L hL
 
-/-! ### Different fine and coarse approximations (Giles 2015, §2.1, (2.4)) -/
+/-! ### Other level corrections and different fine and coarse approximations (Giles 2015, §2.1) -/
 
 section corrections
 
 variable {Ω₀ : Type*} [MeasurableSpace Ω₀] {ν : Measure Ω₀}
 variable {Ω : Type*} [MeasurableSpace Ω] {μ : Measure Ω}
+
+/-- **Theorem 1 with a polylogarithmic factor for any level corrections satisfying condition ii)**
+(Giles 2015, §2.1, Theorem 1 and p. 8: "the multilevel theorem allows for the use of other
+estimators, provided they satisfy the restriction of condition ii) which ensures that
+`E[Y] = E[P_L]`", with condition iv) relaxed to `C_ℓ ≤ c₃ (ℓ + 1)^κ 2^{γℓ}`).  Let the inputs
+`ω (ℓ, n)` be mutually independent with law `ν`, and let `Δ_ℓ` be measurable, square-integrable
+level corrections with `E[Δ_ℓ] = E[P_ℓ − P_{ℓ−1}]` (`P_{−1} ≡ 0`).  Let `cost ℓ n` be the cost of
+the `n`-th level-`ℓ` sample, with mean `C ℓ`.  Under (i) `|E[P_ℓ − P]| ≤ c₁ 2^{−αℓ}`,
+(iii) `V[Δ_ℓ] ≤ c₂ 2^{−βℓ}` and (iv') `C_ℓ ≤ c₃ (ℓ + 1)^κ 2^{γℓ}` with `α, γ, c₁, c₂, c₃ > 0`,
+`κ ≥ 0` and `α ≥ ½ min(β, γ)`, there is `c₄ > 0` such that for every `0 < ε < e⁻¹` there are `L`
+and `N_ℓ ≥ 1` for which `Y = ∑_{ℓ=0}^{L} N_ℓ⁻¹ ∑_{n<N_ℓ} Δ_ℓ(ω^{(ℓ,n)})` has `MSE < ε²` and
+`E[C] ≤ c₄ · complexityBoundLog α β γ κ ε`.  As `giles_theorem1_corrections`, with
+`giles_theorem1_log` in place of `giles_theorem1`.  Not stated in the paper; Giles' hypothesis
+`β > 0` is dropped. -/
+theorem giles_theorem1_corrections_log [IsProbabilityMeasure μ] (P : Ω₀ → ℝ) (Pl : ℕ → Ω₀ → ℝ)
+    (Δ : ℕ → Ω₀ → ℝ) (ω : ℕ × ℕ → Ω → Ω₀) (cost : ℕ → ℕ → Ω → ℝ) (C : ℕ → ℝ)
+    {α β γ κ c₁ c₂ c₃ : ℝ} (hα : 0 < α) (hγ : 0 < γ) (hκ : 0 ≤ κ)
+    (hc₁ : 0 < c₁) (hc₂ : 0 < c₂) (hc₃ : 0 < c₃) (hαβγ : min β γ / 2 ≤ α)
+    (hω : ∀ p, MeasurePreserving (ω p) μ ν) (hind : iIndepFun ω μ)
+    (hP : Integrable P ν) (hPl : ∀ ℓ, Integrable (Pl ℓ) ν)
+    (hΔm : ∀ ℓ, Measurable (Δ ℓ)) (hΔ : ∀ ℓ, MemLp (Δ ℓ) 2 ν)
+    (hcost : ∀ ℓ n, Integrable (cost ℓ n) μ) (hcostC : ∀ ℓ n, μ[cost ℓ n] = C ℓ)
+    (h_i : ∀ ℓ : ℕ, |∫ y, Pl ℓ y - P y ∂ν| ≤ c₁ * (2 : ℝ) ^ (-(α * (ℓ : ℝ))))
+    (h_ii : ∀ ℓ, ∫ y, Δ ℓ y ∂ν = ∫ y, levelDiff Pl ℓ y ∂ν)
+    (h_iii : ∀ ℓ, variance (Δ ℓ) ν ≤ c₂ * (2 : ℝ) ^ (-(β * (ℓ : ℝ))))
+    (h_iv : ∀ ℓ, C ℓ ≤ c₃ * ((ℓ : ℝ) + 1) ^ κ * (2 : ℝ) ^ (γ * (ℓ : ℝ))) :
+    ∃ c₄ : ℝ, 0 < c₄ ∧ ∀ ε : ℝ, 0 < ε → ε < Real.exp (-1) →
+      ∃ (L : ℕ) (N : ℕ → ℕ), (∀ ℓ, 0 < N ℓ) ∧
+        μ[fun x => (∑ ℓ ∈ range (L + 1), blockMean Δ ω ℓ (N ℓ) x - ∫ y, P y ∂ν) ^ 2] < ε ^ 2 ∧
+        μ[totalCost cost L N] ≤ c₄ * complexityBoundLog α β γ κ ε := by
+  have : IsProbabilityMeasure ν := by
+    rw [← (hω (0, 0)).map_eq]
+    exact Measure.isProbabilityMeasure_map (hω (0, 0)).measurable.aemeasurable
+  -- transport `P` and `P_ℓ` to `Ω` along the input `ω (0, 0)`
+  have hφ := hω (0, 0)
+  have tr : ∀ f : Ω₀ → ℝ, Integrable f ν → ∫ x, f (ω (0, 0) x) ∂μ = ∫ y, f y ∂ν :=
+    fun f hf => integral_comp_of_measurePreserving hφ hf.aestronglyMeasurable
+  have hPμ : Integrable (fun x => P (ω (0, 0) x)) μ :=
+    (hφ.integrable_comp hP.aestronglyMeasurable).2 hP
+  have hPlμ : ∀ ℓ, Integrable (fun x => Pl ℓ (ω (0, 0) x)) μ :=
+    fun ℓ => (hφ.integrable_comp (hPl ℓ).aestronglyMeasurable).2 (hPl ℓ)
+  have hΔ1 : ∀ ℓ, Integrable (Δ ℓ) ν := fun ℓ => (hΔ ℓ).integrable one_le_two
+  obtain ⟨c₄, hc₄, h⟩ := giles_theorem1_log (μ := μ) (fun x => P (ω (0, 0) x))
+    (fun ℓ x => Pl ℓ (ω (0, 0) x)) (fun ℓ n => blockMean Δ ω ℓ n)
+    (fun ℓ n x => ∑ k ∈ range n, cost ℓ k x) (fun ℓ => variance (Δ ℓ) ν) C
+    hα hγ hκ hc₁ hc₂ hc₃ hαβγ hPμ hPlμ (fun ℓ n _ => memLp_blockMean hω hΔ ℓ n)
+    (fun N _ i j hij => indepFun_blockMean (fun p => (hω p).measurable) hind hΔm hij _ _)
+    (fun ℓ n _ => integrable_finsetSum _ fun k _ => hcost ℓ k)
+    (fun ℓ n _ => by
+      rw [integral_finsetSum _ fun k _ => hcost ℓ k]
+      simp [hcostC])
+    (fun ℓ => by
+      dsimp only
+      rw [tr (fun y => Pl ℓ y - P y) ((hPl ℓ).sub hP)]
+      exact h_i ℓ)
+    (fun n hn => by
+      rw [integral_blockMean hω hΔ1 0 hn, h_ii 0, tr (Pl 0) (hPl 0), levelDiff_zero])
+    (fun ℓ n hn => by
+      dsimp only
+      rw [integral_blockMean hω hΔ1 (ℓ + 1) hn, h_ii (ℓ + 1),
+        tr (fun y => Pl (ℓ + 1) y - Pl ℓ y) ((hPl (ℓ + 1)).sub (hPl ℓ)), levelDiff_succ])
+    (fun ℓ n hn => variance_blockMean hω hind hΔm hΔ ℓ hn) h_iii h_iv
+  refine ⟨c₄, hc₄, fun ε hε hε1 => ?_⟩
+  obtain ⟨L, N, hN, hmse, hcost'⟩ := h ε hε hε1
+  refine ⟨L, N, hN, ?_, hcost'⟩
+  rw [tr P hP] at hmse
+  exact hmse
 
 /-- **Theorem 1 with a polylogarithmic factor for different fine and coarse approximations**
 (Giles 2015, §2.1, p. 8, (2.4) and Theorem 1, with condition iv) relaxed to
@@ -701,9 +777,9 @@ an integrable cost of mean `C ℓ`, and let (i) `|E[P^f_ℓ − P]| ≤ c₁ 2^{
 (iii) `V[P^f_ℓ − P^c_{ℓ−1}] ≤ c₂ 2^{−βℓ}` and (iv') `C_ℓ ≤ c₃ (ℓ + 1)^κ 2^{γℓ}` with
 `α, γ, c₁, c₂, c₃ > 0`, `κ ≥ 0` and `α ≥ ½ min(β, γ)`.  Then there is `c₄ > 0` such that for every
 `0 < ε < e⁻¹` there are `L` and `N_ℓ ≥ 1` with `MSE < ε²` and expected cost
-`E[C] ≤ c₄ · complexityBoundLog α β γ κ ε`.  As `giles_theorem1_fineCoarse` (via
-`giles_theorem1_corrections`), with `giles_theorem1_log` in place of `giles_theorem1`; Giles'
-hypothesis `β > 0` is dropped. -/
+`E[C] ≤ c₄ · complexityBoundLog α β γ κ ε`.  As `giles_theorem1_fineCoarse`:
+`giles_theorem1_corrections_log` with the corrections `P^f_ℓ − P^c_{ℓ−1}`
+(`integral_fineCoarseDiff`).  Giles' hypothesis `β > 0` is dropped. -/
 theorem giles_theorem1_fineCoarse_log [IsProbabilityMeasure μ] (P : Ω₀ → ℝ)
     (Pf Pc : ℕ → Ω₀ → ℝ) (ω : ℕ × ℕ → Ω → Ω₀) (cost : ℕ → ℕ → Ω → ℝ) (C : ℕ → ℝ)
     {α β γ κ c₁ c₂ c₃ : ℝ} (hα : 0 < α) (hγ : 0 < γ) (hκ : 0 ≤ κ)
@@ -726,43 +802,9 @@ theorem giles_theorem1_fineCoarse_log [IsProbabilityMeasure μ] (P : Ω₀ → �
     exact Measure.isProbabilityMeasure_map (hω (0, 0)).measurable.aemeasurable
   have hPf1 : ∀ ℓ, Integrable (Pf ℓ) ν := fun ℓ => (hPf ℓ).integrable one_le_two
   have hPc1 : ∀ ℓ, Integrable (Pc ℓ) ν := fun ℓ => (hPc ℓ).integrable one_le_two
-  have hΔm := measurable_fineCoarseDiff hPfm hPcm
-  have hΔ := memLp_fineCoarseDiff hPf hPc
-  have hΔ1 : ∀ ℓ, Integrable (fineCoarseDiff Pf Pc ℓ) ν := fun ℓ => (hΔ ℓ).integrable one_le_two
-  have h_ii := integral_fineCoarseDiff hPf1 hPc1 h24
-  -- transport `P` and `P^f_ℓ` to `Ω` along the input `ω (0, 0)`
-  have hφ := hω (0, 0)
-  have tr : ∀ f : Ω₀ → ℝ, Integrable f ν → ∫ x, f (ω (0, 0) x) ∂μ = ∫ y, f y ∂ν :=
-    fun f hf => integral_comp_of_measurePreserving hφ hf.aestronglyMeasurable
-  have hPμ : Integrable (fun x => P (ω (0, 0) x)) μ :=
-    (hφ.integrable_comp hP.aestronglyMeasurable).2 hP
-  have hPfμ : ∀ ℓ, Integrable (fun x => Pf ℓ (ω (0, 0) x)) μ :=
-    fun ℓ => (hφ.integrable_comp (hPf1 ℓ).aestronglyMeasurable).2 (hPf1 ℓ)
-  obtain ⟨c₄, hc₄, h⟩ := giles_theorem1_log (μ := μ) (fun x => P (ω (0, 0) x))
-    (fun ℓ x => Pf ℓ (ω (0, 0) x)) (fun ℓ n => blockMean (fineCoarseDiff Pf Pc) ω ℓ n)
-    (fun ℓ n x => ∑ k ∈ range n, cost ℓ k x) (fun ℓ => variance (fineCoarseDiff Pf Pc ℓ) ν) C
-    hα hγ hκ hc₁ hc₂ hc₃ hαβγ hPμ hPfμ (fun ℓ n _ => memLp_blockMean hω hΔ ℓ n)
-    (fun N _ i j hij => indepFun_blockMean (fun p => (hω p).measurable) hind hΔm hij _ _)
-    (fun ℓ n _ => integrable_finsetSum _ fun k _ => hcost ℓ k)
-    (fun ℓ n _ => by
-      rw [integral_finsetSum _ fun k _ => hcost ℓ k]
-      simp [hcostC])
-    (fun ℓ => by
-      dsimp only
-      rw [tr (fun y => Pf ℓ y - P y) ((hPf1 ℓ).sub hP)]
-      exact h_i ℓ)
-    (fun n hn => by
-      rw [integral_blockMean hω hΔ1 0 hn, h_ii 0, tr (Pf 0) (hPf1 0), levelDiff_zero])
-    (fun ℓ n hn => by
-      dsimp only
-      rw [integral_blockMean hω hΔ1 (ℓ + 1) hn, h_ii (ℓ + 1),
-        tr (fun y => Pf (ℓ + 1) y - Pf ℓ y) ((hPf1 (ℓ + 1)).sub (hPf1 ℓ)), levelDiff_succ])
-    (fun ℓ n hn => variance_blockMean hω hind hΔm hΔ ℓ hn) h_iii h_iv
-  refine ⟨c₄, hc₄, fun ε hε hε1 => ?_⟩
-  obtain ⟨L, N, hN, hmse, hcost'⟩ := h ε hε hε1
-  refine ⟨L, N, hN, ?_, hcost'⟩
-  rw [tr P hP] at hmse
-  exact hmse
+  exact giles_theorem1_corrections_log P Pf (fineCoarseDiff Pf Pc) ω cost C hα hγ hκ hc₁ hc₂ hc₃
+    hαβγ hω hind hP hPf1 (measurable_fineCoarseDiff hPfm hPcm) (memLp_fineCoarseDiff hPf hPc)
+    hcost hcostC h_i (integral_fineCoarseDiff hPf1 hPc1 h24) h_iii h_iv
 
 end corrections
 
@@ -776,12 +818,15 @@ variable {a b : ℝ → ℝ} {Ka Kb : ℝ≥0} {κ δ : ℝ}
 `O(ε⁻² |log ε|³)`** (Giles 2015, §10.1, p. 61: "A very similar approach can also be used for
 contracting SDEs which converge to a limiting distribution.  For these, the level `ℓ` path will
 perform a simulation for the time interval `[−T_ℓ, 0]`, using timestep `h_ℓ`", with "it is
-appropriate to choose `N_ℓ` to increase linearly with level" and §2.1, Theorem 1).  A
-strengthening of `contracting_levels_mlmc`, with its hypotheses and without `η`: let `a` be
-`K_a`-Lipschitz and dissipative, `(x − y)(a(x) − a(y)) ≤ −κ (x − y)²`, let `b` be `K_b`-Lipschitz,
-let `h_ℓ = h₀ 2^{−ℓ}` with the margin `K_b² + K_a² h₀ + δ ≤ 2κ`, `δ > 0`, let level `ℓ` take `N_ℓ`
-steps with `2N_ℓ ≤ N_{ℓ+1}`, `T_ℓ = N_ℓ h_ℓ ≥ c ℓ`, `c δ ≥ 8 log 2` and `N_ℓ ≤ m (ℓ + 1) 2^ℓ`, with
-the coupling of `variance_contractLevels_le`, and let `f` be a `K_f`-Lipschitz payoff.  Then:
+appropriate to choose `N_ℓ` to increase linearly with level" (said of the Markov-chain lengths;
+for the SDE the analogue is `T_ℓ = N_ℓ h_ℓ` linear in `ℓ`, so `N_ℓ ≍ (ℓ + 1) 2^ℓ`) and §2.1,
+Theorem 1).  A strengthening of `contracting_levels_mlmc`, with its hypotheses and without `η`
+(here `κ` is the dissipativity constant, as in `contracting_levels_mlmc`; the logarithmic exponent
+passed to `giles_theorem1_fineCoarse_log` is `1`): let `a` be `K_a`-Lipschitz and dissipative,
+`(x − y)(a(x) − a(y)) ≤ −κ (x − y)²`, let `b` be `K_b`-Lipschitz, let `h_ℓ = h₀ 2^{−ℓ}` with the
+margin `K_b² + K_a² h₀ + δ ≤ 2κ`, `δ > 0`, let level `ℓ` take `N_ℓ` steps with `2N_ℓ ≤ N_{ℓ+1}`,
+`T_ℓ = N_ℓ h_ℓ ≥ c ℓ`, `c δ ≥ 8 log 2` and `N_ℓ ≤ m (ℓ + 1) 2^ℓ`, with the coupling of
+`variance_contractLevels_le`, and let `f` be a `K_f`-Lipschitz payoff.  Then:
 (1) for every `ℓ`, `f(X^{(ℓ)})` is integrable, the chain with step `h_ℓ` started at `x₀` `n` steps
 in the past converges almost surely as `n → ∞` to the stationary chain `contractLimit ℓ`, and
 `f(X^{h_ℓ}_∞)` is integrable;
