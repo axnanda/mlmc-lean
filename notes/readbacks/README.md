@@ -739,3 +739,42 @@ Findings and what was done:
   step** (`gbmMilEM`), the scheme of the conditional-expectation technique.  Documented.  Kept.
 - The read-back follow-up of round 23 (`variance_ssaCorrection_exact_le` now states that its input
   law is a probability measure) is in this round.
+
+**Twenty-fifth round (2026-10-08).** Blind read-backs of the 59 theorems added in round 25:
+`digital_condexp_extras_digital_shift.md` (R45: `GBMDigitalCondExpExtras` and `DigitalShiftQMC`;
+6 + 6 theorems), `tau_linear_growth_banach.md` (R46: `TauLeapingLinearGrowth` and
+`BanachTheorem1`; 9 + 7), `levy_extras.md` (R47: `LevyExtras`; 20) and `markov_no_weak_limit.md`
+(R48: `MarkovNoWeakLimit`; 11).  All 59 read back as true; none is vacuous and none holds only
+because of a junk value.  The R45 auditor measured `E[d²]/h^{3/2}` and the straddle probability of
+the splitting estimator by Monte Carlo, checked the telescoping identity by quadrature (15 digits)
+and the replicate identities by exact enumeration.  The R46 auditor computed the coupled tau-leaping
+chain exactly for four propensities (`E[(X^f − X^c)²]/h` stays bounded), checked the linear-birth
+mean to `10⁻¹²`, and proved in Lean that every law entering an infinite product is a probability
+measure (so no product measure is the zero measure).  The R47 auditor checked the closed forms by
+Monte Carlo, mpmath and sympy and the second moments of the Variance-Gamma corrections exactly.  The
+R48 auditor proved in Lean an instance in which all hypotheses and the conclusion of the statement
+negated by `hc_cannot_be_dropped` hold, so the negation is not cheap.
+Findings and what was done:
+
+- **The Brownian replacement of the small jumps has the rates of plain truncation**
+  (`levyGauss_limit`, `levyGauss_theorem1`): the strong error doubles and Dereich's improved bias
+  is not captured.  Documented in the module, the README and `PLAN.md`.  Kept.
+- **`Measure.infinitePi` is the zero measure unless every factor is a probability measure**, so the
+  Variance-Gamma and tau-leaping statements could have been trivially true; their hypotheses
+  (`C, G, M, T > 0`, resp. `κ, T > 0`; the tau-leaping laws) make every factor a probability
+  measure.  No change needed.
+- **Tau-leaping Theorem 1 assumes the weak rate** (`tauLeaping_mlmc_theorem1_lipschitz`,
+  `tauLeaping_mlmc_linearBirth`); only `tauLeaping_mlmc_linearBirth_mean` proves it.  Documented.
+  Kept.
+- **Strike `0` gives `O(h^q)` for every `q`** because the case is degenerate (the Milstein paths
+  keep the sign of `s₀`).  Documented.  Kept.
+- **`hc_cannot_be_dropped` negates a statement whose limit lives on the same probability space**;
+  the stronger "no weak limit on any space" is `markov_no_weak_limit` /
+  `not_tendstoInDistribution_fwdIter_halfStep`.  Documented.  Kept.
+- **Some hypotheses are stronger than needed**: `Measurable f` in `digitalShift_replicates` (as in
+  `randomShift_replicates`), `0 < c₁` in the tau-leaping Theorem 1, the positivity of `γ` and `c₃`
+  in `giles_theorem1_banach`; some constants are loose (`a + b` for `max(a, b)` in
+  `tauChain_moments_linear`).  Kept.
+- **The constant `√2` of `hasType2_prod_sqrt_two` is sharp** by the auditor's example; optimality is
+  not formalised (as documented).  `HasType2 (ℝ × ℝ) 1` is false, so the predicate is not
+  degenerate.  No change needed.
