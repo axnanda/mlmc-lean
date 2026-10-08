@@ -13,7 +13,7 @@ Reference: M.B. Giles, *Multilevel Monte Carlo methods*, Acta Numerica 24 (2015)
   Pillichshammer and Waterhouse 2007)", and "These theoretical developments are very encouraging,
   showing that under certain conditions they lead to multilevel methods with a complexity which is
   `O(ε^{−p})` with `p < 2`."
-* §3.5, pp. 26–27 (l. 1179–1199): the `N_ℓ` points are constructed "using well-established QMC
+* §3.5, pp. 26–27 (l. 1179–1206): the `N_ℓ` points are constructed "using well-established QMC
   techniques such as rank-1 lattices (Dick et al. 2007) … to provide a relatively uniform coverage
   of a unit hypercube integration region.  In the best cases, this results in the approximate
   numerical integration error being `O(N_ℓ⁻¹)` rather than the usual `O(N_ℓ^{−1/2})` error which
@@ -21,7 +21,11 @@ Reference: M.B. Giles, *Multilevel Monte Carlo methods*, Acta Numerica 24 (2015)
   which the set of points is gives [sic] a random shift (for rank-1 lattice rules) … Using 32 sets
   of points, each collectively randomised, yields 32 set averages for the quantity of interest,
   `Y_ℓ`, and from these 32 random independent values the variance of their average, `V_ℓ`, can be
-  estimated in the usual way."
+  estimated in the usual way. … Many QMC methods work naturally with `N_ℓ` as a power of 2."
+* §5.2, p. 35 (l. 1509–1524): the coarsest levels "are low-dimensional", so well suited to QMC
+  (Giles and Waterhouse 2009, "a rank-1 lattice rule … randomisation with 32 independent
+  offsets"); for a Lipschitz payoff "the computational complexity was reduced from `O(ε^{−2})` to
+  approximately `O(ε^{−1.5})`" (a numerical observation).
 
 `MlmcLean.QMC1D` treats one dimension.  This file treats randomly shifted rank-1 lattice rules in
 any dimension, on the unit torus `𝕋^d = (ℝ/ℤ)^d` (`UnitAddTorus d` for a finite index type `d`,
@@ -53,36 +57,47 @@ for the measure `volume` of `UnitAddTorus d` (`hasSum_sq_torusCoeff`,
   `Q(U)` is an unbiased, square-integrable estimate of `∫ f` with that variance;
   `rank1Lattice_cube_randomShift`: the same for a function `F` on the unit cube `[0, 1]^d`, the
   points `frac(i z/N + U)` and a shift `U` uniform on the cube;
-  `rank1Lattice_replicates`: `R` independent shifts (the paper's `R = 32`) give an unbiased
-  average with variance `∑_{L^⊥ \ {0}} |f̂(k)|²/R`, and an unbiased estimate of it.
+  `rank1Lattice_replicates`: `R` pairwise independent shifts (the paper's `R = 32`) give an
+  unbiased average with variance `∑_{L^⊥ \ {0}} |f̂(k)|²/R`, and an unbiased estimate of it.
 * `variance_rank1Lattice_le_variance`: the variance is at most `Var f = ∑_{k ≠ 0} |f̂(k)|²`, the
   variance of one Monte Carlo sample; `variance_rank1Lattice_re_torusChar`: for every lattice this
   is attained by `f(x) = cos(2π k·x)` with `k ∈ L^⊥ \ {0}` (then `Q = f`, of variance `1/2`, while
   the average of `N` independent samples has variance `1/(2N)`).
-* `variance_rank1Lattice_le_of_coeff_le`, `variance_rank1Lattice_le_sq_tsum`,
-  `variance_rank1Lattice_le_of_weighted`: bounds by the coefficients on `L^⊥ \ {0}` only: by
-  `∑_{L^⊥ \ {0}} w(k)²` when `|f̂(k)| ≤ w(k)` there, by `(∑_{L^⊥ \ {0}} |f̂(k)|)²` for absolutely
-  summable coefficients, and by `S/c` when `∑_k ρ(k)|f̂(k)|² = S` and `ρ ≥ c > 0` on `L^⊥ \ {0}`.
+* `variance_rank1Lattice_le_of_coeff_le`, `variance_rank1Lattice_le_sq_tsum`: bounds by the
+  coefficients on `L^⊥ \ {0}` only: by `∑_{L^⊥ \ {0}} w(k)²` when `|f̂(k)| ≤ w(k)` there, and by
+  `(∑_{L^⊥ \ {0}} |f̂(k)|)²` for absolutely summable coefficients.
+* `variance_rank1Lattice_le_of_weighted`: the bound `S/c` by the weighted norm
+  `S = ∑_k ρ(k)|f̂(k)|²`, a sum over all `k` (including `k = 0`), when the weight is `ρ ≥ c > 0` on
+  `L^⊥ \ {0}` (only the weight condition is restricted to `L^⊥ \ {0}`).
 * `abs_rank1Lattice_sub_integral_le`: for continuous `f` with absolutely summable Fourier
   coefficients, `|Q(u) − ∫ f| ≤ ∑_{k ∈ L^⊥ \ {0}} |f̂(k)|` for **every** shift `u`.
-* `mlqmcLattice_complexity`, `mlqmcLattice_complexity_lt_two`: the analogues of
-  `mlqmc_complexity` and `mlqmc_complexity_lt_two` of `MlmcLean.QMC1D` for MLQMC with one randomly
-  shifted rank-1 lattice per level in `d` dimensions, when the dual-lattice sums of the level
-  corrections are at most `(c₂ 2^{−bℓ}/N)²` (the paper's best case `O(N_ℓ⁻¹)`);
-  `mlqmcLattice_complexity_rate`: the same for sums at most `(c₂ 2^{−bℓ} N^{−r})²`, `r > 0`: cost
-  `O(ε^{−max(1/r, g/a)})` when `rg < b` (`mlqmc_complexity_core_rate`, the real-analysis core,
-  extends `mlqmc_complexity_core` from `r = 1` to every rate `r > 0`).
+* `mlqmcLattice_complexity`, `mlqmcLattice_complexity_of_lt`, `mlqmcLattice_complexity_lt_two`:
+  the analogues of `mlqmc_complexity`, `mlqmc_complexity_of_lt` and `mlqmc_complexity_lt_two` of
+  `MlmcLean.QMC1D` for MLQMC with one randomly shifted rank-1 lattice per level, where the level-`ℓ`
+  correction is a function on `𝕋^{d_ℓ}` and the dimension `d_ℓ` may grow with the level (as for
+  the `2^ℓ` Brownian increments of a path on level `ℓ`).  The set sizes are powers of two,
+  `N_ℓ = 2^{m_ℓ}`, and the dual-lattice sums of the level corrections for `2^m` points are assumed
+  to be at most `(c₂ 2^{−bℓ}/2^m)²` for every `m` (the paper's best case `O(N_ℓ⁻¹)`); the
+  generating vector may depend on the number of points, and for `d_ℓ ≥ 2` it has to (see
+  `mlqmcLattice_complexity`).  `mlqmcLattice_complexity_rate`: the same for sums at most
+  `(c₂ 2^{−bℓ} 2^{−rm})²`, `r > 0`: cost `O(ε^{−max(1/r, g/a)})` when `rg < b`
+  (`mlqmc_complexity_core_rate`, the real-analysis core, generalises the regime `g < b` of
+  `mlqmc_complexity_core` (`mlqmc_core_of_gt`) from `r = 1` to every rate `r > 0`; the regime
+  `a ≤ b`, `a < g` of `mlqmc_complexity_core` is covered only for `r = 1`).
 
 **Not formalised.**  The existence of good generating vectors (Korobov's construction, the
 component-by-component construction, extensible lattices), i.e. the decay of the dual-lattice sums
-for smooth periodic `f`, is out of scope: the MLQMC theorems assume it.  Sobol points and digital
-scrambling are not treated.
+for smooth periodic `f`, is out of scope: the MLQMC theorems assume it.  The MLQMC theorems choose
+the `N_ℓ` a priori; the greedy doubling of Algorithm 2 is treated in `MlmcLean.MLQMC`.  Sobol points
+and digital scrambling are not treated.
 -/
 
 open MeasureTheory ProbabilityTheory Finset
 open scoped ComplexConjugate
 
 namespace MLMC
+
+section Torus
 
 variable {d : Type*} [Fintype d]
 
@@ -585,20 +600,50 @@ theorem rank1Lattice_randomShift {Ω : Type*} [MeasurableSpace Ω] {μ : Measure
   rw [hU.variance_fun_comp hQ2.aestronglyMeasurable.aemeasurable]
   exact hasSum_variance_rank1Lattice hf z hN
 
+/-- Shifted QMC averages of a.e. equal integrands agree almost surely at a uniform shift. -/
+lemma shiftedQMC_comp_ae_eq {Ω : Type*} [MeasurableSpace Ω] {μ : Measure Ω}
+    {U : Ω → UnitAddTorus d} (hU : MeasurePreserving U μ volume) {f g : UnitAddTorus d → ℝ}
+    (hfg : f =ᵐ[volume] g) (x : ℕ → UnitAddTorus d) (N : ℕ) :
+    (fun ω => shiftedQMC f x N (U ω)) =ᵐ[μ] fun ω => shiftedQMC g x N (U ω) := by
+  have h : ∀ᵐ u ∂(volume : Measure (UnitAddTorus d)), ∀ i, f (x i + u) = g (x i + u) :=
+    ae_all_iff.2 fun i =>
+      (measurePreserving_add_left volume (x i)).quasiMeasurePreserving.ae_eq hfg
+  have h' : shiftedQMC f x N =ᵐ[volume] shiftedQMC g x N := by
+    filter_upwards [h] with u hu
+    unfold shiftedQMC
+    simp only [hu]
+  exact hU.quasiMeasurePreserving.ae_eq h'
+
+/-- Shifted QMC averages at independent uniform shifts are independent, for integrands that are
+only a.e. strongly measurable (a measurable version changes the averages only on a null set). -/
+lemma indepFun_shiftedQMC {Ω : Type*} [MeasurableSpace Ω] {μ : Measure Ω} {d' : Type*}
+    [Fintype d'] {U : Ω → UnitAddTorus d} {V : Ω → UnitAddTorus d'}
+    (hU : MeasurePreserving U μ volume) (hV : MeasurePreserving V μ volume)
+    (hUV : IndepFun U V μ) {f : UnitAddTorus d → ℝ} {g : UnitAddTorus d' → ℝ}
+    (hf : AEStronglyMeasurable f volume) (hg : AEStronglyMeasurable g volume)
+    (x : ℕ → UnitAddTorus d) (y : ℕ → UnitAddTorus d') (N M : ℕ) :
+    IndepFun (fun ω => shiftedQMC f x N (U ω)) (fun ω => shiftedQMC g y M (V ω)) μ :=
+  (hUV.comp (measurable_shiftedQMC hf.measurable_mk x N)
+    (measurable_shiftedQMC hg.measurable_mk y M)).congr
+    (shiftedQMC_comp_ae_eq hU hf.ae_eq_mk.symm x N) (shiftedQMC_comp_ae_eq hV hg.ae_eq_mk.symm y M)
+
 /-- **`R` independent random shifts: an unbiased average with variance
 `∑_{L^⊥ \ {0}} |f̂(k)|²/R`, and an unbiased variance estimate** (Giles 2015, §3.5, pp. 26–27:
 "Using 32 sets of points, each collectively randomised, yields 32 set averages for the quantity of
 interest, `Y_ℓ`, and from these 32 random independent values the variance of their average, `V_ℓ`,
-can be estimated in the usual way").  Let `U_0, U_1, …` be mutually independent shifts, each
-uniform on `𝕋^d` (as in `randomShift_replicates`), `f` measurable and square-integrable,
-`z ∈ ℤ^d`, `N ≥ 1` and `R ≥ 1` (the paper's `R = 32`).  For the set averages
-`Y_r = N⁻¹ ∑_{i<N} f(frac(i z/N + U_r))` and their average `Ȳ = R⁻¹ ∑_{r<R} Y_r`:
+can be estimated in the usual way").  Let `U_0, U_1, …` be pairwise independent shifts, each
+uniform on `𝕋^d`, `f` square-integrable, `z ∈ ℤ^d`, `N ≥ 1` and `R ≥ 1` (the paper's `R = 32`).
+For the set averages `Y_r = N⁻¹ ∑_{i<N} f(frac(i z/N + U_r))` and their average
+`Ȳ = R⁻¹ ∑_{r<R} Y_r`:
 * `E[Ȳ] = ∫_{𝕋^d} f`;
 * `V[Ȳ] = ∑_{k ∈ L^⊥ \ {0}} |f̂(k)|²/R`;
-* for `R ≥ 2`, `E[(R(R − 1))⁻¹ ∑_{r<R} (Y_r − Ȳ)²] = ∑_{k ∈ L^⊥ \ {0}} |f̂(k)|²/R`. -/
+* for `R ≥ 2`, `E[(R(R − 1))⁻¹ ∑_{r<R} (Y_r − Ȳ)²] = ∑_{k ∈ L^⊥ \ {0}} |f̂(k)|²/R`.
+Pairwise independence suffices (`variance_sample_mean`, `integral_sum_sq_sub_mean`), and `f` need
+not be measurable (`indepFun_shiftedQMC`), so these hypotheses are weaker than those of
+`randomShift_replicates` (mutually independent shifts, measurable `f`). -/
 theorem rank1Lattice_replicates {Ω : Type*} [MeasurableSpace Ω] {μ : Measure Ω}
     {U : ℕ → Ω → UnitAddTorus d} (hU : ∀ r, MeasurePreserving (U r) μ volume)
-    (hUind : iIndepFun U μ) (z : d → ℤ) {f : UnitAddTorus d → ℝ} (hfm : Measurable f)
+    (hUind : Pairwise fun i j => IndepFun (U i) (U j) μ) (z : d → ℤ) {f : UnitAddTorus d → ℝ}
     (hf : MemLp f 2 volume) {N R : ℕ} (hN : 0 < N) (hR : 0 < R) :
     ∫ ω, (R : ℝ)⁻¹ * ∑ r ∈ range R, shiftedQMC f (rank1Lattice z N) N (U r ω) ∂μ =
         ∫ y, f y ∧
@@ -612,13 +657,35 @@ theorem rank1Lattice_replicates {Ω : Type*} [MeasurableSpace Ω] {μ : Measure 
           (shiftedQMC f (rank1Lattice z N) N (U r ω) -
             (R : ℝ)⁻¹ * ∑ s ∈ range R, shiftedQMC f (rank1Lattice z N) N (U s ω)) ^ 2 ∂μ)) := by
   have := isProbabilityMeasure_of_measurePreserving_torus (hU 0)
-  obtain ⟨-, -, -, hmean, hvar, hest⟩ :=
-    randomShift_replicates hU hUind (rank1Lattice z N) hfm hf hN hR
+  have hQ2 := memLp_shiftedQMC hf (rank1Lattice z N) N
+  have hone := fun r => rank1Lattice_randomShift (hU r) z hf hN
+  have hY2 : ∀ r, MemLp (fun ω => shiftedQMC f (rank1Lattice z N) N (U r ω)) 2 μ :=
+    fun r => (hone r).2.1
+  have hmean : ∀ r, ∫ ω, shiftedQMC f (rank1Lattice z N) N (U r ω) ∂μ = ∫ y, f y :=
+    fun r => (hone r).2.2.1
+  have hvar : ∀ r, variance (fun ω => shiftedQMC f (rank1Lattice z N) N (U r ω)) μ =
+      variance (shiftedQMC f (rank1Lattice z N) N) volume := fun r =>
+    (hU r).variance_fun_comp hQ2.aestronglyMeasurable.aemeasurable
+  have hpair : Set.Pairwise ↑(range R) fun i j =>
+      IndepFun (fun ω => shiftedQMC f (rank1Lattice z N) N (U i ω))
+        (fun ω => shiftedQMC f (rank1Lattice z N) N (U j ω)) μ :=
+    fun i _ j _ hij => indepFun_shiftedQMC (hU i) (hU j) (hUind hij) hf.aestronglyMeasurable
+      hf.aestronglyMeasurable _ _ N N
   have h := (hasSum_variance_rank1Lattice hf z hN).div_const (R : ℝ)
-  refine ⟨hmean, ?_, fun hR2 => ?_⟩
-  · rw [hvar]
+  have hR' : (R : ℝ) ≠ 0 := Nat.cast_ne_zero.2 hR.ne'
+  refine ⟨?_, ?_, fun hR2 => ?_⟩
+  · rw [integral_const_mul, integral_finsetSum _ fun r _ => (hY2 r).integrable one_le_two]
+    simp only [hmean, sum_const, card_range, nsmul_eq_mul]
+    field_simp
+  · rw [variance_sample_mean _ R hR _ hY2 hvar hpair]
     exact h
-  · rw [hest hR2]
+  · have hR1 : (R : ℝ) - 1 ≠ 0 := by
+      have : (2 : ℝ) ≤ R := by exact_mod_cast hR2
+      linarith
+    have e : ((R : ℝ) * (R - 1))⁻¹ * ((R - 1) * variance (shiftedQMC f (rank1Lattice z N) N) volume)
+        = variance (shiftedQMC f (rank1Lattice z N) N) volume / R := by
+      field_simp
+    rw [integral_const_mul, integral_sum_sq_sub_mean _ hR hY2 hmean hvar hpair, e]
     exact h
 
 /-! ### Functions on the unit cube -/
@@ -649,24 +716,46 @@ lemma ae_fract_eq_cube :
   funext j
   exact Int.fract_eq_self.2 ⟨ht.1 j, lt_of_le_of_ne (ht.2 j) (ht1 j)⟩
 
+/-- The representative in `[0, 1)^d` of a point of `𝕋^d` carries the uniform measure of `𝕋^d` to
+the uniform measure of the unit cube `[0, 1]^d`. -/
+lemma measurePreserving_equivIco_cube :
+    MeasurePreserving (fun (y : UnitAddTorus d) (j : d) => (AddCircle.equivIco 1 0 (y j) : ℝ))
+      volume (volume.restrict (Set.Icc (0 : d → ℝ) 1)) := by
+  have hπ := measurePreserving_coe_cube (d := d)
+  have hm : Measurable fun (y : UnitAddTorus d) (j : d) => (AddCircle.equivIco 1 0 (y j) : ℝ) :=
+    measurable_pi_lambda _ fun j => measurable_subtype_coe.comp
+      ((AddCircle.measurableEquivIco 1 0).measurable.comp (measurable_pi_apply j))
+  refine ⟨hm, ?_⟩
+  have hcomp : ((fun (y : UnitAddTorus d) (j : d) => (AddCircle.equivIco 1 0 (y j) : ℝ)) ∘
+      fun t : d → ℝ => fun j => (t j : UnitAddCircle)) = fun t j => Int.fract (t j) := by
+    funext t j
+    show (AddCircle.equivIco 1 0 ((t j : ℝ) : UnitAddCircle) : ℝ) = Int.fract (t j)
+    rw [AddCircle.coe_equivIco_mk_apply, div_one, mul_one]
+  have hae : (fun t : d → ℝ => fun j => Int.fract (t j))
+      =ᵐ[volume.restrict (Set.Icc (0 : d → ℝ) 1)] id := ae_fract_eq_cube
+  rw [← hπ.map_eq, Measure.map_map hm hπ.measurable, hcomp, Measure.map_congr hae, Measure.map_id]
+
 /-- **The randomly shifted rank-1 lattice rule on the unit cube `[0, 1]^d`: unbiased, with variance
 `∑_{k ∈ L^⊥ \ {0}} |F̂(k)|²`** (Giles 2015, §3.5, p. 26: the points are constructed "using
 well-established QMC techniques such as rank-1 lattices (Dick et al. 2007) … to provide a
 relatively uniform coverage of a unit hypercube integration region"; "To regain a confidence
 interval one uses randomised QMC in which the set of points is gives [sic] a random shift (for
 rank-1 lattice rules)").  The unit-cube form of `rank1Lattice_randomShift`.  Let `F : ℝ^d → ℝ` be
-measurable and square-integrable on the unit cube `[0, 1]^d`, let the shift `U` be uniformly
-distributed on `[0, 1]^d`, `z ∈ ℤ^d` and `N ≥ 1`.  Then the randomly shifted lattice average
+square-integrable on the unit cube `[0, 1]^d` (no measurability beyond the a.e. strong
+measurability that is part of `MemLp`), let the shift `U` be uniformly distributed on `[0, 1]^d`,
+`z ∈ ℤ^d` and `N ≥ 1`.  Then the randomly shifted lattice average
 `N⁻¹ ∑_{i<N} F(frac(i z/N + U))` (fractional parts coordinatewise) has mean `∫_{[0,1]^d} F` and
 variance `∑_{k ∈ L^⊥ \ {0}} |F̂(k)|²`, where `F̂(k) = ∫_{[0,1]^d} e^{−2πi k·t} F(t) dt`.  Proof:
 `t ↦ t mod 1` carries the uniform measure of the cube to that of `𝕋^d`
 (`measurePreserving_coe_cube`), so the average is `Q(U mod 1)` for the function
-`f(y) = F(representative of y in [0, 1)^d)` on `𝕋^d`, which agrees with `F` almost everywhere on
-the cube (`ae_fract_eq_cube`); then `rank1Lattice_randomShift`. -/
+`f(y) = F(representative of y in [0, 1)^d)` on `𝕋^d`, which is square-integrable since the
+representative map carries the uniform measure of `𝕋^d` back to that of the cube
+(`measurePreserving_equivIco_cube`) and agrees with `F` almost everywhere on the cube
+(`ae_fract_eq_cube`); then `rank1Lattice_randomShift`. -/
 theorem rank1Lattice_cube_randomShift {Ω : Type*} [MeasurableSpace Ω] {μ : Measure Ω}
     {U : Ω → d → ℝ} (hU : MeasurePreserving U μ (volume.restrict (Set.Icc (0 : d → ℝ) 1)))
-    (z : d → ℤ) {F : (d → ℝ) → ℝ} (hFm : Measurable F)
-    (hF : MemLp F 2 (volume.restrict (Set.Icc (0 : d → ℝ) 1))) {N : ℕ} (hN : 0 < N) :
+    (z : d → ℤ) {F : (d → ℝ) → ℝ} (hF : MemLp F 2 (volume.restrict (Set.Icc (0 : d → ℝ) 1)))
+    {N : ℕ} (hN : 0 < N) :
     ∫ ω, (N : ℝ)⁻¹ * ∑ i ∈ range N, F (fun j => Int.fract ((i : ℝ) * z j / N + U ω j)) ∂μ =
         ∫ t in Set.Icc (0 : d → ℝ) 1, F t ∧
       HasSum ((dualLattice z N \ {0}).indicator fun k => ‖∫ t in Set.Icc (0 : d → ℝ) 1,
@@ -674,15 +763,12 @@ theorem rank1Lattice_cube_randomShift {Ω : Type*} [MeasurableSpace Ω] {μ : Me
         (variance (fun ω => (N : ℝ)⁻¹ * ∑ i ∈ range N,
           F (fun j => Int.fract ((i : ℝ) * z j / N + U ω j))) μ) := by
   have hπ := measurePreserving_coe_cube (d := d)
-  set rep : UnitAddTorus d → d → ℝ := fun y j => (AddCircle.equivIco 1 0 (y j) : ℝ) with hrep
-  have hrepm : Measurable rep := measurable_pi_lambda _ fun j =>
-    measurable_subtype_coe.comp ((AddCircle.measurableEquivIco 1 0).measurable.comp
-      (measurable_pi_apply j))
-  set f : UnitAddTorus d → ℝ := fun y => F (rep y) with hfdef
-  have hfm : Measurable f := hFm.comp hrepm
+  set f : UnitAddTorus d → ℝ := fun y => F (fun j => (AddCircle.equivIco 1 0 (y j) : ℝ))
+    with hfdef
+  have hf2 : MemLp f 2 volume := hF.comp_measurePreserving measurePreserving_equivIco_cube
   have hfπ : ∀ s : d → ℝ, f (fun j => (s j : UnitAddCircle)) = F (fun j => Int.fract (s j)) :=
     fun s => by
-      simp only [hfdef, hrep]
+      simp only [hfdef]
       congr 1
       funext j
       rw [AddCircle.coe_equivIco_mk_apply, div_one, mul_one]
@@ -702,10 +788,6 @@ theorem rank1Lattice_cube_randomShift {Ω : Type*} [MeasurableSpace Ω] {μ : Me
       (Set.Icc (0 : d → ℝ) 1)] F := by
     filter_upwards [hae] with t ht
     rw [hfπ, ht]
-  have hf2 : MemLp f 2 volume := by
-    rw [← hπ.map_eq, memLp_map_measure_iff (hπ.map_eq ▸ hfm.aestronglyMeasurable)
-      hπ.measurable.aemeasurable]
-    exact hF.ae_eq hfF.symm
   obtain ⟨-, -, hmean, hvar⟩ := rank1Lattice_randomShift (hπ.comp hU) z hf2 hN
   simp only [Function.comp_apply] at hmean hvar
   have hcoef : ∀ k : d → ℤ, torusCoeff (fun x => (f x : ℂ)) k = ∫ t in Set.Icc (0 : d → ℝ) 1,
@@ -713,7 +795,7 @@ theorem rank1Lattice_cube_randomShift {Ω : Type*} [MeasurableSpace Ω] {μ : Me
     unfold torusCoeff
     have hmeas : AEStronglyMeasurable (fun x : UnitAddTorus d => torusChar (-k) x * ((f x : ℝ) : ℂ))
         volume := (torusChar (-k)).continuous.aestronglyMeasurable.mul
-          (Complex.measurable_ofReal.comp hfm).aestronglyMeasurable
+          (Complex.continuous_ofReal.comp_aestronglyMeasurable hf2.aestronglyMeasurable)
     rw [← hπ.map_eq] at hmeas ⊢
     rw [integral_map hπ.measurable.aemeasurable hmeas]
     refine integral_congr_ae ?_
@@ -731,7 +813,7 @@ theorem rank1Lattice_cube_randomShift {Ω : Type*} [MeasurableSpace Ω] {μ : Me
     ring
   refine ⟨?_, ?_⟩
   · simp only [hest]
-    rw [hmean, ← integral_comp_of_measurePreserving hπ hfm.aestronglyMeasurable]
+    rw [hmean, ← integral_comp_of_measurePreserving hπ hf2.aestronglyMeasurable]
     exact integral_congr_ae hfF
   · simp only [hest]
     simpa only [hcoef] using hvar
@@ -848,11 +930,12 @@ theorem variance_rank1Lattice_le_sq_tsum {f : UnitAddTorus d → ℝ} (hf : MemL
   rw [e, sq]
   exact mul_le_mul_of_nonneg_left (hle k) (ha k)
 
-/-- **In a weighted space the variance is the weighted norm divided by the smallest weight on
-`L^⊥ \ {0}`** (Giles 2015, §1, p. 2: "In the best cases, the error may be `O(N⁻¹)`, up to
+/-- **In a weighted space the variance is at most the weighted norm divided by the smallest weight
+on `L^⊥ \ {0}`** (Giles 2015, §1, p. 2: "In the best cases, the error may be `O(N⁻¹)`, up to
 logarithmic terms").  Let `ρ ≥ 0` be weights with `∑_k ρ(k) |f̂(k)|² = S` (the squared norm of `f`
-in the weighted space) and `ρ(k) ≥ c > 0` for every `k ∈ L^⊥ \ {0}`.  Then the variance of the
-randomly shifted rank-1 lattice rule is at most `S/c`.  For the Korobov weights
+in the weighted space: a sum over all `k ∈ ℤ^d`, including `k = 0`) and `ρ(k) ≥ c > 0` for every
+`k ∈ L^⊥ \ {0}` (only this weight condition is restricted to `L^⊥ \ {0}`).  Then the variance of
+the randomly shifted rank-1 lattice rule is at most `S/c`.  For the Korobov weights
 `ρ(k) = ∏_j max(1, |k_j|)^{2α}` the best `c` is `ϱ^{2α}`, where
 `ϱ = min_{k ∈ L^⊥ \ {0}} ∏_j max(1, |k_j|)` is the Zaremba index of the generating vector (whose
 growth with `N` is not proved here). -/
@@ -941,19 +1024,24 @@ theorem abs_rank1Lattice_sub_integral_le {f : UnitAddTorus d → ℝ} (hf : Cont
     · rw [Set.indicator_of_notMem hk, Set.indicator_of_notMem hk, norm_zero]
   rwa [Complex.norm_real, Real.norm_eq_abs] at hle
 
-/-! ### MLQMC with rank-1 lattices in `d` dimensions -/
+end Torus
 
-/-- **The mean square error of the `d`-dimensional MLQMC estimator.**  With pairwise independent
-shifts `U_ℓ` uniform on `𝕋^d`, measurable square-integrable level corrections `f_ℓ`, generating
-vectors `z_ℓ`, `N_ℓ ≥ 1`, bias `|∑_{ℓ≤L} ∫ f_ℓ − I| ≤ B` and dual-lattice sums
-`∑_{k ∈ L_ℓ^⊥ \ {0}} |f̂_ℓ(k)|² ≤ v_ℓ`, the estimator
+/-! ### MLQMC with rank-1 lattices; the dimension may depend on the level -/
+
+/-- **The mean square error of the MLQMC estimator with randomly shifted rank-1 lattices.**  Let the
+level-`ℓ` correction `f_ℓ` be square-integrable on `𝕋^{d_ℓ}`, where the dimension `d_ℓ` may depend
+on `ℓ`; let the shifts `U_ℓ` be pairwise independent, `U_ℓ` uniform on `𝕋^{d_ℓ}`; let
+`z_ℓ ∈ ℤ^{d_ℓ}` and `N_ℓ ≥ 1`; and assume the bias bound `|∑_{ℓ≤L} ∫ f_ℓ − I| ≤ B` and the
+dual-lattice bounds `∑_{k ∈ L_ℓ^⊥ \ {0}} |f̂_ℓ(k)|² ≤ v_ℓ`.  Then the estimator
 `Y = ∑_{ℓ≤L} N_ℓ⁻¹ ∑_{i<N_ℓ} f_ℓ(frac(i z_ℓ/N_ℓ + U_ℓ))` has `E[(Y − I)²] ≤ B² + ∑_{ℓ≤L} v_ℓ`
-(`mse_eq_variance_add_sq_bias`, `IndepFun.variance_sum`, `rank1Lattice_randomShift`). -/
-lemma mlqmcLattice_mse_le {Ω : Type*} [MeasurableSpace Ω] {μ : Measure Ω}
-    {U : ℕ → Ω → UnitAddTorus d} (hU : ∀ ℓ, MeasurePreserving (U ℓ) μ volume)
-    (hUind : Pairwise fun i j => IndepFun (U i) (U j) μ) {f : ℕ → UnitAddTorus d → ℝ}
-    (hfm : ∀ ℓ, Measurable (f ℓ)) (hf : ∀ ℓ, MemLp (f ℓ) 2 volume) (z : ℕ → d → ℤ) {L : ℕ}
-    {N : ℕ → ℕ} (hN : ∀ ℓ, 0 < N ℓ) {I B : ℝ} {v : ℕ → ℝ}
+(`mse_eq_variance_add_sq_bias`, `IndepFun.variance_sum`, `rank1Lattice_randomShift`,
+`indepFun_shiftedQMC`). -/
+lemma mlqmcLattice_mse_le {Ω : Type*} [MeasurableSpace Ω] {μ : Measure Ω} {d : ℕ → Type*}
+    [∀ ℓ, Fintype (d ℓ)] {U : (ℓ : ℕ) → Ω → UnitAddTorus (d ℓ)}
+    (hU : ∀ ℓ, MeasurePreserving (U ℓ) μ volume)
+    (hUind : Pairwise fun i j => IndepFun (U i) (U j) μ)
+    {f : (ℓ : ℕ) → UnitAddTorus (d ℓ) → ℝ} (hf : ∀ ℓ, MemLp (f ℓ) 2 volume)
+    (z : (ℓ : ℕ) → d ℓ → ℤ) {L : ℕ} {N : ℕ → ℕ} (hN : ∀ ℓ, 0 < N ℓ) {I B : ℝ} {v : ℕ → ℝ}
     (hbias : |∑ ℓ ∈ range (L + 1), (∫ y, f ℓ y) - I| ≤ B)
     (hv : ∀ ℓ, ∑' k, (dualLattice (z ℓ) (N ℓ) \ {0}).indicator
       (fun k => ‖torusCoeff (fun x => (f ℓ x : ℂ)) k‖ ^ 2) k ≤ v ℓ) :
@@ -967,8 +1055,8 @@ lemma mlqmcLattice_mse_le {Ω : Type*} [MeasurableSpace Ω] {μ : Measure Ω}
   have hpair : Set.Pairwise ↑(range (L + 1)) fun i j =>
       IndepFun (fun ω => shiftedQMC (f i) (rank1Lattice (z i) (N i)) (N i) (U i ω))
         (fun ω => shiftedQMC (f j) (rank1Lattice (z j) (N j)) (N j) (U j ω)) μ :=
-    fun i _ j _ hij => (hUind hij).comp (measurable_shiftedQMC (hfm i) _ _)
-      (measurable_shiftedQMC (hfm j) _ _)
+    fun i _ j _ hij => indepFun_shiftedQMC (hU i) (hU j) (hUind hij) (hf i).aestronglyMeasurable
+      (hf j).aestronglyMeasurable _ _ _ _
   have hsumfun : (fun ω => ∑ ℓ ∈ range (L + 1),
       shiftedQMC (f ℓ) (rank1Lattice (z ℓ) (N ℓ)) (N ℓ) (U ℓ ω)) =
       ∑ ℓ ∈ range (L + 1), fun ω => shiftedQMC (f ℓ) (rank1Lattice (z ℓ) (N ℓ)) (N ℓ) (U ℓ ω) := by
@@ -995,37 +1083,75 @@ lemma mlqmcLattice_mse_le {Ω : Type*} [MeasurableSpace Ω] {μ : Measure Ω}
   rw [hdec]
   linarith
 
-/-- From a real-analysis complexity bound to the `d`-dimensional MLQMC estimator: if the
-allocation `(L, N_ℓ)` of `hcore` makes `(c₁ 2^{−aL})² + ∑_{ℓ≤L} vb(ℓ, N_ℓ) < ε²` at cost
-`≤ K ε^{−p}`, and the dual-lattice sums of the generating vectors `Z(ℓ, N)` are at most
-`vb(ℓ, N)`, the MLQMC estimator with this allocation has mean square error `< ε²` at the same cost
-bound (`mlqmcLattice_mse_le`). -/
-lemma mlqmcLattice_of_core {Ω : Type*} [MeasurableSpace Ω] {μ : Measure Ω}
-    {U : ℕ → Ω → UnitAddTorus d} (hU : ∀ ℓ, MeasurePreserving (U ℓ) μ volume)
-    (hUind : Pairwise fun i j => IndepFun (U i) (U j) μ) {f : ℕ → UnitAddTorus d → ℝ}
-    (hfm : ∀ ℓ, Measurable (f ℓ)) (hf : ∀ ℓ, MemLp (f ℓ) 2 volume) (Z : ℕ → ℕ → d → ℤ)
-    {C : ℕ → ℝ} {vb : ℕ → ℕ → ℝ} {I a g c₁ c₃ p : ℝ}
+/-- From a real-analysis complexity bound to the MLQMC estimator with set sizes that are powers of
+two.  Suppose that the allocation `(L, N_ℓ)` of `hcore`, with arbitrary integers `N_ℓ ≥ 1`, makes
+`(c₁ 2^{−aL})² + ∑_{ℓ≤L} vb(ℓ, N_ℓ) < ε²` at cost `∑_{ℓ≤L} N_ℓ c₃ 2^{gℓ} ≤ K ε^{−p}`, that
+`vb(ℓ, n)` decreases in `n ≥ 1`, and that the dual-lattice sums of the generating vectors
+`Z(ℓ, 2^m)` with `2^m` points are at most `vb(ℓ, 2^m)`.  Rounding each `N_ℓ` up to the least power
+of two `2^{⌈log₂ N_ℓ⌉} ≥ N_ℓ`, which is at most `2N_ℓ`, gives an MLQMC estimator with mean square
+error `< ε²` at cost `≤ 2K ε^{−p}` (`mlqmcLattice_mse_le`). -/
+lemma mlqmcLattice_of_core {Ω : Type*} [MeasurableSpace Ω] {μ : Measure Ω} {d : ℕ → Type*}
+    [∀ ℓ, Fintype (d ℓ)] {U : (ℓ : ℕ) → Ω → UnitAddTorus (d ℓ)}
+    (hU : ∀ ℓ, MeasurePreserving (U ℓ) μ volume)
+    (hUind : Pairwise fun i j => IndepFun (U i) (U j) μ)
+    {f : (ℓ : ℕ) → UnitAddTorus (d ℓ) → ℝ} (hf : ∀ ℓ, MemLp (f ℓ) 2 volume)
+    (Z : (ℓ : ℕ) → ℕ → d ℓ → ℤ) {C : ℕ → ℝ} {vb : ℕ → ℕ → ℝ} {I a g c₁ c₃ p : ℝ}
+    (hc₃ : 0 ≤ c₃)
     (hbias : ∀ L : ℕ, |∑ ℓ ∈ range (L + 1), (∫ y, f ℓ y) - I| ≤
       c₁ * (2 : ℝ) ^ (-(a * (L : ℝ))))
-    (hV : ∀ ℓ N : ℕ, 0 < N → ∑' k, (dualLattice (Z ℓ N) N \ {0}).indicator
-      (fun k => ‖torusCoeff (fun x => (f ℓ x : ℂ)) k‖ ^ 2) k ≤ vb ℓ N)
+    (hV : ∀ ℓ m : ℕ, ∑' k, (dualLattice (Z ℓ (2 ^ m)) (2 ^ m) \ {0}).indicator
+      (fun k => ‖torusCoeff (fun x => (f ℓ x : ℂ)) k‖ ^ 2) k ≤ vb ℓ (2 ^ m))
+    (hvb : ∀ ℓ n n' : ℕ, 0 < n → n ≤ n' → vb ℓ n' ≤ vb ℓ n)
     (hC : ∀ ℓ : ℕ, C ℓ ≤ c₃ * (2 : ℝ) ^ (g * (ℓ : ℝ)))
     (hcore : ∃ K : ℝ, 0 < K ∧ ∀ ε : ℝ, 0 < ε → ε < 1 → ∃ (L : ℕ) (N : ℕ → ℕ), (∀ ℓ, 0 < N ℓ) ∧
       (c₁ * (2 : ℝ) ^ (-(a * (L : ℝ)))) ^ 2 + ∑ ℓ ∈ range (L + 1), vb ℓ (N ℓ) < ε ^ 2 ∧
         ∑ ℓ ∈ range (L + 1), (N ℓ : ℝ) * (c₃ * (2 : ℝ) ^ (g * (ℓ : ℝ))) ≤ K * ε ^ (-p)) :
-    ∃ K : ℝ, 0 < K ∧ ∀ ε : ℝ, 0 < ε → ε < 1 → ∃ (L : ℕ) (N : ℕ → ℕ), (∀ ℓ, 0 < N ℓ) ∧
+    ∃ K : ℝ, 0 < K ∧ ∀ ε : ℝ, 0 < ε → ε < 1 → ∃ (L : ℕ) (N : ℕ → ℕ),
+      (∀ ℓ, ∃ m : ℕ, N ℓ = 2 ^ m) ∧
       ∫ ω, (∑ ℓ ∈ range (L + 1),
           shiftedQMC (f ℓ) (rank1Lattice (Z ℓ (N ℓ)) (N ℓ)) (N ℓ) (U ℓ ω) - I) ^ 2 ∂μ < ε ^ 2 ∧
       ∑ ℓ ∈ range (L + 1), (N ℓ : ℝ) * C ℓ ≤ K * ε ^ (-p) := by
   obtain ⟨K, hK, hcore⟩ := hcore
-  refine ⟨K, hK, fun ε hε hε1 => ?_⟩
+  refine ⟨2 * K, by positivity, fun ε hε hε1 => ?_⟩
   obtain ⟨L, N, hN, hmse, hcost⟩ := hcore ε hε hε1
-  refine ⟨L, N, hN, (mlqmcLattice_mse_le hU hUind hfm hf (fun ℓ => Z ℓ (N ℓ)) hN (hbias L)
-    (fun ℓ => hV ℓ (N ℓ) (hN ℓ))).trans_lt hmse, ?_⟩
-  calc ∑ ℓ ∈ range (L + 1), (N ℓ : ℝ) * C ℓ
-      ≤ ∑ ℓ ∈ range (L + 1), (N ℓ : ℝ) * (c₃ * (2 : ℝ) ^ (g * (ℓ : ℝ))) :=
+  -- round each `N ℓ` up to the least power of two `2 ^ ⌈log₂ N ℓ⌉ ≥ N ℓ`, at most doubling it
+  obtain ⟨m, hm⟩ : ∃ m : ℕ → ℕ, ∀ ℓ, N ℓ ≤ 2 ^ m ℓ ∧ 2 ^ m ℓ ≤ 2 * N ℓ :=
+    ⟨fun ℓ => Nat.clog 2 (N ℓ), fun ℓ => ⟨Nat.le_pow_clog one_lt_two (N ℓ), by
+      show 2 ^ Nat.clog 2 (N ℓ) ≤ 2 * N ℓ
+      calc 2 ^ Nat.clog 2 (N ℓ) ≤ 2 ^ (Nat.log 2 (N ℓ) + 1) := Nat.pow_le_pow_right two_pos
+            (Nat.clog_le_of_le_pow (Nat.lt_pow_succ_log_self one_lt_two (N ℓ)).le)
+        _ = 2 * 2 ^ Nat.log 2 (N ℓ) := pow_succ' 2 _
+        _ ≤ 2 * N ℓ := Nat.mul_le_mul_left 2 (Nat.pow_log_le_self 2 (hN ℓ).ne')⟩⟩
+  refine ⟨L, fun ℓ => 2 ^ m ℓ, fun ℓ => ⟨m ℓ, rfl⟩,
+    (mlqmcLattice_mse_le hU hUind hf (fun ℓ => Z ℓ (2 ^ m ℓ)) (fun ℓ => by positivity) (hbias L)
+      (fun ℓ => (hV ℓ (m ℓ)).trans (hvb ℓ _ _ (hN ℓ) (hm ℓ).1))).trans_lt hmse, ?_⟩
+  calc ∑ ℓ ∈ range (L + 1), ((2 ^ m ℓ : ℕ) : ℝ) * C ℓ
+      ≤ ∑ ℓ ∈ range (L + 1), ((2 ^ m ℓ : ℕ) : ℝ) * (c₃ * (2 : ℝ) ^ (g * (ℓ : ℝ))) :=
         sum_le_sum fun ℓ _ => mul_le_mul_of_nonneg_left (hC ℓ) (Nat.cast_nonneg _)
-    _ ≤ _ := hcost
+    _ ≤ ∑ ℓ ∈ range (L + 1), 2 * ((N ℓ : ℝ) * (c₃ * (2 : ℝ) ^ (g * (ℓ : ℝ)))) :=
+        sum_le_sum fun ℓ _ => by
+          have h2 : ((2 ^ m ℓ : ℕ) : ℝ) ≤ 2 * (N ℓ : ℝ) := by exact_mod_cast (hm ℓ).2
+          exact (mul_le_mul_of_nonneg_right h2 (mul_nonneg hc₃ (by positivity))).trans_eq
+            (mul_assoc _ _ _)
+    _ = 2 * ∑ ℓ ∈ range (L + 1), (N ℓ : ℝ) * (c₃ * (2 : ℝ) ^ (g * (ℓ : ℝ))) := by
+        rw [mul_sum]
+    _ ≤ 2 * (K * ε ^ (-p)) := by gcongr
+    _ = 2 * K * ε ^ (-p) := by ring
+
+/-- `n ↦ (c/n)²` decreases on the integers `n ≥ 1`, for `c ≥ 0`. -/
+lemma sq_div_natCast_le {c : ℝ} (hc : 0 ≤ c) {n n' : ℕ} (hn : 0 < n) (h : n ≤ n') :
+    (c / (n' : ℝ)) ^ 2 ≤ (c / (n : ℝ)) ^ 2 := by
+  have hn0 : (0 : ℝ) < n := Nat.cast_pos.2 hn
+  have h1 : (n : ℝ) ≤ n' := Nat.cast_le.2 h
+  exact pow_le_pow_left₀ (div_nonneg hc (hn0.le.trans h1)) (div_le_div_of_nonneg_left hc hn0 h1) 2
+
+/-- `n ↦ (c/n^r)²` decreases on the integers `n ≥ 1`, for `c ≥ 0` and `r ≥ 0`. -/
+lemma sq_div_natCast_rpow_le {c r : ℝ} (hc : 0 ≤ c) (hr : 0 ≤ r) {n n' : ℕ} (hn : 0 < n)
+    (h : n ≤ n') : (c / (n' : ℝ) ^ r) ^ 2 ≤ (c / (n : ℝ) ^ r) ^ 2 := by
+  have hn0 : (0 : ℝ) < n := Nat.cast_pos.2 hn
+  have h1 : (n : ℝ) ^ r ≤ (n' : ℝ) ^ r := Real.rpow_le_rpow hn0.le (Nat.cast_le.2 h) hr
+  have h2 : 0 < (n : ℝ) ^ r := Real.rpow_pos_of_pos hn0 r
+  exact pow_le_pow_left₀ (div_nonneg hc (h2.le.trans h1)) (div_le_div_of_nonneg_left hc h2 h1) 2
 
 /-- `(c 2^{−bℓ}/M)² ≤ (max(|c|, 1) 2^{−b'ℓ}/M)²` for `b' ≤ b` and `M ≥ 0`: the constants of the
 MLQMC theorems need not be assumed positive. -/
@@ -1042,10 +1168,13 @@ lemma sq_mul_two_rpow_div_le {c b b' M : ℝ} (hb : b' ≤ b) (hM : 0 ≤ M) (�
 /-- **MLQMC complexity for a QMC variance rate `N^{−2r}`, the real-analysis core** (Giles 2015,
 §2.7, p. 20: "under certain conditions they lead to multilevel methods with a complexity which is
 `O(ε^{−p})` with `p < 2`"; §3.5, p. 26: QMC error "In the best cases … `O(N_ℓ⁻¹)` rather than the
-usual `O(N_ℓ^{−1/2})`").  The generalisation of `mlqmc_complexity_core` (the case `r = 1`) to a
-level-`ℓ` variance `(c₂ 2^{−bℓ} N_ℓ^{−r})²` with `N_ℓ` points.  Let `a, r > 0`, `rg < b` (no sign
-conditions on `b`, `g`) and `c₁, c₂, c₃ > 0`, with a bias `c₁ 2^{−aL}` at finest level `L` and a
-cost `c₃ 2^{gℓ}` per point.  There is `K > 0` such that for every `0 < ε < 1` there are `L` and
+usual `O(N_ℓ^{−1/2})`").  It generalises the regime `g < b` of `mlqmc_complexity_core`
+(`mlqmc_core_of_gt`, a level-`ℓ` variance `(c₂ 2^{−bℓ}/N_ℓ)²`) from `r = 1` to a level-`ℓ`
+variance `(c₂ 2^{−bℓ} N_ℓ^{−r})²` with `N_ℓ` points and any rate `r > 0`; the regime `a ≤ b`,
+`a < g` of `mlqmc_complexity_core`, and more generally `rg ≥ b`, are not covered for `r ≠ 1` (for
+`r = 1` see `mlqmc_complexity_core_of_lt`).  Let `a, r > 0`, `rg < b` (no sign conditions on `b`,
+`g`) and `c₁, c₂, c₃ > 0`, with a bias `c₁ 2^{−aL}` at finest level `L` and a cost `c₃ 2^{gℓ}` per
+point.  There is `K > 0` such that for every `0 < ε < 1` there are `L` and
 `N_ℓ ≥ 1` with `(c₁ 2^{−aL})² + ∑_{ℓ≤L} (c₂ 2^{−bℓ} N_ℓ^{−r})² < ε²` and
 `∑_{ℓ≤L} N_ℓ c₃ 2^{gℓ} ≤ K ε^{−p}`, `p = max(1/r, g/a)`.  Proof: `L = levelL a c₁ (ε/2)` and
 `N_ℓ = ⌈A ε^{−1/r} 2^{−(2b+g)ℓ/(2r+1)}⌉`, `A = (2c₂/(1 − τ))^{1/r}`, `τ = 2^{(rg−b)/(2r+1)} < 1`
@@ -1184,77 +1313,154 @@ theorem mlqmc_complexity_core_rate {a b g r c₁ c₂ c₃ : ℝ} (ha : 0 < a) (
           c₃ * K₀ * ε ^ (-max (1 / r) (g / a)) := by gcongr
       _ = _ := by ring
 
-/-- **MLQMC with randomly shifted rank-1 lattice rules in `d` dimensions: mean square error `< ε²`
-at cost `O(ε^{−max(1, g/a)})`** (Giles 2015, §2.7, p. 20: "under certain conditions they lead to
-multilevel methods with a complexity which is `O(ε^{−p})` with `p < 2`"; §3.5, p. 26: "rank-1
+/-- `(c 2^{−bℓ}/2^m)² ≤ (max(|c|, 1) 2^{−b'ℓ}/2^m)²` for `b' ≤ b`, with `2^m` cast from `ℕ` on the
+right (the form in which `mlqmcLattice_of_core` uses the bounds). -/
+lemma sq_mul_two_rpow_div_two_pow_le {c b b' : ℝ} (hb : b' ≤ b) (ℓ m : ℕ) :
+    (c * (2 : ℝ) ^ (-(b * (ℓ : ℝ))) / 2 ^ m) ^ 2 ≤
+      (max |c| 1 * (2 : ℝ) ^ (-(b' * (ℓ : ℝ))) / ((2 ^ m : ℕ) : ℝ)) ^ 2 := by
+  rw [Nat.cast_pow, Nat.cast_ofNat]
+  exact sq_mul_two_rpow_div_le hb (by positivity) ℓ
+
+/-- `(c 2^{−bℓ}/(2^m)^r)² ≤ (max(|c|, 1) 2^{−bℓ}/(2^m)^r)²`, with `2^m` cast from `ℕ` on the right
+(the form in which `mlqmcLattice_of_core` uses the bounds). -/
+lemma sq_mul_two_rpow_div_two_pow_rpow_le {c b r : ℝ} (ℓ m : ℕ) :
+    (c * (2 : ℝ) ^ (-(b * (ℓ : ℝ))) / ((2 : ℝ) ^ m) ^ r) ^ 2 ≤
+      (max |c| 1 * (2 : ℝ) ^ (-(b * (ℓ : ℝ))) / ((2 ^ m : ℕ) : ℝ) ^ r) ^ 2 := by
+  rw [Nat.cast_pow, Nat.cast_ofNat]
+  exact sq_mul_two_rpow_div_le le_rfl (by positivity) ℓ
+
+/-- **MLQMC with randomly shifted rank-1 lattice rules: mean square error `< ε²` at cost
+`O(ε^{−max(1, g/a)})`** (Giles 2015, §2.7, p. 20: "under certain conditions they lead to
+multilevel methods with a complexity which is `O(ε^{−p})` with `p < 2`"; §3.5, pp. 26–27: "rank-1
 lattices (Dick et al. 2007)", "In the best cases, this results in the approximate numerical
-integration error being `O(N_ℓ⁻¹)` rather than the usual `O(N_ℓ^{−1/2})` error", randomised by "a
-random shift (for rank-1 lattice rules)").  The `d`-dimensional analogue of `mlqmc_complexity`:
-the level-`ℓ` correction is a function `f_ℓ` of `d` uniform inputs, i.e. on `𝕋^d`.  Assume
-* each `f_ℓ` is measurable and square-integrable on `𝕋^d`;
-* for every level `ℓ` and every `N ≥ 1` the generating vector `Z(ℓ, N) ∈ ℤ^d` makes the dual-lattice
-  sum `∑_{k ∈ L^⊥ \ {0}} |f̂_ℓ(k)|² ≤ (c₂ 2^{−bℓ}/N)²`, i.e. (by `hasSum_variance_rank1Lattice`)
-  the randomly shifted lattice rule with `N` points has root-mean-square error `≤ c₂ 2^{−bℓ}/N`
-  (the paper's best case `O(N_ℓ⁻¹)`, with level-dependent constants); this is an assumption,
-  since the existence of such generating vectors is not proved here;
-* the bias at finest level `L` is `|∑_{ℓ≤L} ∫_{𝕋^d} f_ℓ − I| ≤ c₁ 2^{−aL}`;
+integration error being `O(N_ℓ⁻¹)` rather than the usual `O(N_ℓ^{−1/2})` error", "a random shift
+(for rank-1 lattice rules)", "Many QMC methods work naturally with `N_ℓ` as a power of 2").  The
+`d`-dimensional analogue of `mlqmc_complexity`.  The level-`ℓ` correction is a function `f_ℓ` of
+`d_ℓ` uniform inputs, i.e. on `𝕋^{d_ℓ}`, and the dimension `d_ℓ` may depend on the level (as for
+the `2^ℓ` Brownian increments of a path on level `ℓ`; a fixed dimension is the case `d_ℓ = d`).
+Assume
+* each `f_ℓ` is square-integrable on `𝕋^{d_ℓ}`;
+* for every level `ℓ` and every `m ≥ 0`, the generating vector `Z(ℓ, 2^m) ∈ ℤ^{d_ℓ}` makes the
+  dual-lattice sum `∑_{k ∈ L^⊥ \ {0}} |f̂_ℓ(k)|² ≤ (c₂ 2^{−bℓ}/2^m)²`, i.e. (by
+  `hasSum_variance_rank1Lattice`) the randomly shifted lattice rule with `2^m` points has
+  root-mean-square error `≤ c₂ 2^{−bℓ}/2^m` (the paper's best case `O(N_ℓ⁻¹)`, with
+  level-dependent constants).  This is an assumption: the existence of such generating vectors is
+  not proved here.  It is needed only for powers of two, and `Z(ℓ, 2^m)` may depend on `m` (as the
+  truncations `z mod 2^m` of the generating vector of an extensible lattice do); for `d_ℓ ≥ 2` it
+  must, except in degenerate cases: a fixed `z` has nonzero `k` with `k·z = 0` (e.g. `z = (1, 3)`,
+  `k = (3, −1)`), which lie in every dual lattice, so the bound for all `m` would force
+  `f̂_ℓ(k) = 0` for all of them;
+* the bias at finest level `L` is `|∑_{ℓ≤L} ∫ f_ℓ − I| ≤ c₁ 2^{−aL}`;
 * a point on level `ℓ` costs `C_ℓ ≤ c₃ 2^{gℓ}`, with `a > 0` and either `b > g`, or `a ≤ b` and
   `a < g` (no sign conditions on `g` or on the constants);
-* the shifts `U_0, U_1, …` (one per level) are pairwise independent and uniform on `𝕋^d`.
-Then there is `K > 0` such that for every `0 < ε < 1` there are `L` and `N_ℓ ≥ 1` for which the
-MLQMC estimator `Y = ∑_{ℓ≤L} N_ℓ⁻¹ ∑_{i<N_ℓ} f_ℓ(frac(i Z(ℓ, N_ℓ)/N_ℓ + U_ℓ))` has
-`E[(Y − I)²] < ε²` and cost `∑_{ℓ≤L} N_ℓ C_ℓ ≤ K ε^{−max(1, g/a)}` (`mlqmc_complexity_core`), so
-`p = max(1, g/a) < 2` whenever `g < 2a`.  Each level uses one randomly shifted lattice; the `32`
-replicates of Algorithm 2 (`rank1Lattice_replicates`) change only the constant. -/
-theorem mlqmcLattice_complexity {Ω : Type*} [MeasurableSpace Ω] {μ : Measure Ω}
-    {U : ℕ → Ω → UnitAddTorus d} (hU : ∀ ℓ, MeasurePreserving (U ℓ) μ volume)
-    (hUind : Pairwise fun i j => IndepFun (U i) (U j) μ) {f : ℕ → UnitAddTorus d → ℝ}
-    (hfm : ∀ ℓ, Measurable (f ℓ)) (hf : ∀ ℓ, MemLp (f ℓ) 2 volume) (Z : ℕ → ℕ → d → ℤ)
-    {C : ℕ → ℝ} {I a b g c₁ c₂ c₃ : ℝ} (ha : 0 < a) (hgb : g < b ∨ (a ≤ b ∧ a < g))
+* the shifts `U_0, U_1, …` (one per level, `U_ℓ` uniform on `𝕋^{d_ℓ}`) are pairwise independent.
+Then there is `K > 0` such that for every `0 < ε < 1` there are `L` and powers of two
+`N_ℓ = 2^{m_ℓ}` for which the MLQMC estimator
+`Y = ∑_{ℓ≤L} N_ℓ⁻¹ ∑_{i<N_ℓ} f_ℓ(frac(i Z(ℓ, N_ℓ)/N_ℓ + U_ℓ))` has `E[(Y − I)²] < ε²` and cost
+`∑_{ℓ≤L} N_ℓ C_ℓ ≤ K ε^{−max(1, g/a)}`, so `p = max(1, g/a) < 2` whenever `g < 2a`.  Proof: the
+allocation of `mlqmc_complexity_core`, with each `N_ℓ` rounded up to a power of two, which at most
+doubles the cost (`mlqmcLattice_of_core`).  The `N_ℓ` are chosen a priori, not by the greedy
+doubling of Algorithm 2 (`MlmcLean.MLQMC`); each level uses one randomly shifted lattice, and the
+`32` replicates of Algorithm 2 (`rank1Lattice_replicates`) change only the constant. -/
+theorem mlqmcLattice_complexity {Ω : Type*} [MeasurableSpace Ω] {μ : Measure Ω} {d : ℕ → Type*}
+    [∀ ℓ, Fintype (d ℓ)] {U : (ℓ : ℕ) → Ω → UnitAddTorus (d ℓ)}
+    (hU : ∀ ℓ, MeasurePreserving (U ℓ) μ volume)
+    (hUind : Pairwise fun i j => IndepFun (U i) (U j) μ)
+    {f : (ℓ : ℕ) → UnitAddTorus (d ℓ) → ℝ} (hf : ∀ ℓ, MemLp (f ℓ) 2 volume)
+    (Z : (ℓ : ℕ) → ℕ → d ℓ → ℤ) {C : ℕ → ℝ} {I a b g c₁ c₂ c₃ : ℝ} (ha : 0 < a)
+    (hgb : g < b ∨ (a ≤ b ∧ a < g))
     (hbias : ∀ L : ℕ, |∑ ℓ ∈ range (L + 1), (∫ y, f ℓ y) - I| ≤
       c₁ * (2 : ℝ) ^ (-(a * (L : ℝ))))
-    (hV : ∀ ℓ N : ℕ, 0 < N → ∑' k, (dualLattice (Z ℓ N) N \ {0}).indicator
+    (hV : ∀ ℓ m : ℕ, ∑' k, (dualLattice (Z ℓ (2 ^ m)) (2 ^ m) \ {0}).indicator
       (fun k => ‖torusCoeff (fun x => (f ℓ x : ℂ)) k‖ ^ 2) k ≤
-        (c₂ * (2 : ℝ) ^ (-(b * (ℓ : ℝ))) / N) ^ 2)
+        (c₂ * (2 : ℝ) ^ (-(b * (ℓ : ℝ))) / 2 ^ m) ^ 2)
     (hC : ∀ ℓ : ℕ, C ℓ ≤ c₃ * (2 : ℝ) ^ (g * (ℓ : ℝ))) :
-    ∃ K : ℝ, 0 < K ∧ ∀ ε : ℝ, 0 < ε → ε < 1 → ∃ (L : ℕ) (N : ℕ → ℕ), (∀ ℓ, 0 < N ℓ) ∧
+    ∃ K : ℝ, 0 < K ∧ ∀ ε : ℝ, 0 < ε → ε < 1 → ∃ (L : ℕ) (N : ℕ → ℕ),
+      (∀ ℓ, ∃ m : ℕ, N ℓ = 2 ^ m) ∧
       ∫ ω, (∑ ℓ ∈ range (L + 1),
           shiftedQMC (f ℓ) (rank1Lattice (Z ℓ (N ℓ)) (N ℓ)) (N ℓ) (U ℓ ω) - I) ^ 2 ∂μ < ε ^ 2 ∧
-      ∑ ℓ ∈ range (L + 1), (N ℓ : ℝ) * C ℓ ≤ K * ε ^ (-max 1 (g / a)) := by
-  have hcore := mlqmc_complexity_core ha hgb (lt_max_of_lt_right one_pos : 0 < max c₁ 1)
-    (lt_max_of_lt_right one_pos : 0 < max |c₂| 1) (lt_max_of_lt_right one_pos : 0 < max c₃ 1)
-  exact mlqmcLattice_of_core (vb := fun ℓ N =>
-      (max |c₂| 1 * (2 : ℝ) ^ (-(b * (ℓ : ℝ))) / (N : ℝ)) ^ 2)
-    hU hUind hfm hf Z (fun L => le_max_one_mul (by positivity) (hbias L))
-    (fun ℓ N hN => (hV ℓ N hN).trans (sq_mul_two_rpow_div_le le_rfl (Nat.cast_nonneg N) ℓ))
-    (fun ℓ => le_max_one_mul (by positivity) (hC ℓ)) hcore
+      ∑ ℓ ∈ range (L + 1), (N ℓ : ℝ) * C ℓ ≤ K * ε ^ (-max 1 (g / a)) :=
+  mlqmcLattice_of_core (vb := fun ℓ n => (max |c₂| 1 * (2 : ℝ) ^ (-(b * (ℓ : ℝ))) / (n : ℝ)) ^ 2)
+    hU hUind hf Z (zero_le_one.trans (le_max_right c₃ 1))
+    (fun L => le_max_one_mul (by positivity) (hbias L))
+    (fun ℓ m => (hV ℓ m).trans (sq_mul_two_rpow_div_two_pow_le le_rfl ℓ m))
+    (fun ℓ _ _ hn h => sq_div_natCast_le (by positivity) hn h)
+    (fun ℓ => le_max_one_mul (by positivity) (hC ℓ))
+    (mlqmc_complexity_core ha hgb (lt_max_of_lt_right one_pos) (lt_max_of_lt_right one_pos)
+      (lt_max_of_lt_right one_pos))
 
-/-- **MLQMC with randomly shifted rank-1 lattice rules in `d` dimensions has complexity `O(ε^{−p})`
-with `p < 2` whenever `g < 2a` and `g < a + b`** (Giles 2015, §2.7, p. 20: "These theoretical
-developments are very encouraging, showing that under certain conditions they lead to multilevel
-methods with a complexity which is `O(ε^{−p})` with `p < 2`").  The `d`-dimensional analogue of
-`mlqmc_complexity_lt_two`: in the setting of `mlqmcLattice_complexity` (level corrections `f_ℓ` on
-`𝕋^d`, generating vectors `Z(ℓ, N)` with dual-lattice sums `≤ (c₂ 2^{−bℓ}/N)²` (assumed), bias
-`≤ c₁ 2^{−aL}`, cost per point `C_ℓ ≤ c₃ 2^{gℓ}`, pairwise independent uniform shifts), assume only
-`a > 0`, `g < 2a` and `g < a + b`.  Then there are `p < 2` and `K > 0` such that for every
-`0 < ε < 1` there are `L` and `N_ℓ ≥ 1` for which the MLQMC estimator
-`Y = ∑_{ℓ≤L} N_ℓ⁻¹ ∑_{i<N_ℓ} f_ℓ(frac(i Z(ℓ, N_ℓ)/N_ℓ + U_ℓ))` has `E[(Y − I)²] < ε²` at cost
-`∑_{ℓ≤L} N_ℓ C_ℓ ≤ K ε^{−p}`.  Proof: with `b' = min(b, g − a/2) < g` the sums are
-`≤ (max(|c₂|, 1) 2^{−b'ℓ}/N)²`, and `mlqmc_complexity_core_of_lt` gives
-`p = max(1 + (g − b')/a, g/a) < 2`. -/
-theorem mlqmcLattice_complexity_lt_two {Ω : Type*} [MeasurableSpace Ω] {μ : Measure Ω}
-    {U : ℕ → Ω → UnitAddTorus d} (hU : ∀ ℓ, MeasurePreserving (U ℓ) μ volume)
-    (hUind : Pairwise fun i j => IndepFun (U i) (U j) μ) {f : ℕ → UnitAddTorus d → ℝ}
-    (hfm : ∀ ℓ, Measurable (f ℓ)) (hf : ∀ ℓ, MemLp (f ℓ) 2 volume) (Z : ℕ → ℕ → d → ℤ)
-    {C : ℕ → ℝ} {I a b g c₁ c₂ c₃ : ℝ} (ha : 0 < a) (h2a : g < 2 * a) (hgab : g < a + b)
+/-- **MLQMC with randomly shifted rank-1 lattice rules when `b < g`: cost
+`O(ε^{−max(1 + (g − b)/a, g/a)})`** (Giles 2015, §2.7, p. 20: "under certain conditions they lead
+to multilevel methods with a complexity which is `O(ε^{−p})` with `p < 2`"; §3.5, pp. 26–27:
+"rank-1 lattices (Dick et al. 2007)", "a random shift (for rank-1 lattice rules)", "Many QMC methods
+work naturally with `N_ℓ` as a power of 2").  The `d`-dimensional analogue of
+`mlqmc_complexity_of_lt`, in the setting of `mlqmcLattice_complexity`: level corrections `f_ℓ` on
+`𝕋^{d_ℓ}`, the dimension `d_ℓ` possibly depending on `ℓ`; for every `m ≥ 0`, generating vectors
+`Z(ℓ, 2^m)` (which may, and for `d_ℓ ≥ 2` in general must, depend on `m`) with dual-lattice sums
+`≤ (c₂ 2^{−bℓ}/2^m)²` (an assumption); bias `≤ c₁ 2^{−aL}`; cost per point `C_ℓ ≤ c₃ 2^{gℓ}`;
+pairwise independent uniform shifts; `a > 0`, no sign conditions on `b`, `g` or the constants; and
+now `b < g`.  There is `K > 0` such that for every `0 < ε < 1` there are `L` and powers of two
+`N_ℓ = 2^{m_ℓ}` for which the MLQMC estimator
+`Y = ∑_{ℓ≤L} N_ℓ⁻¹ ∑_{i<N_ℓ} f_ℓ(frac(i Z(ℓ, N_ℓ)/N_ℓ + U_ℓ))` has `E[(Y − I)²] < ε²` and cost
+`∑_{ℓ≤L} N_ℓ C_ℓ ≤ K ε^{−p}`, `p = max(1 + (g − b)/a, g/a)` (`mlqmc_complexity_core_of_lt`, with
+the allocation `N_ℓ ∝ (V_ℓ²/C_ℓ)^{1/3}` rounded up to powers of two by `mlqmcLattice_of_core`);
+`p < 2` iff `g < 2a` and `g < a + b`. -/
+theorem mlqmcLattice_complexity_of_lt {Ω : Type*} [MeasurableSpace Ω] {μ : Measure Ω}
+    {d : ℕ → Type*} [∀ ℓ, Fintype (d ℓ)] {U : (ℓ : ℕ) → Ω → UnitAddTorus (d ℓ)}
+    (hU : ∀ ℓ, MeasurePreserving (U ℓ) μ volume)
+    (hUind : Pairwise fun i j => IndepFun (U i) (U j) μ)
+    {f : (ℓ : ℕ) → UnitAddTorus (d ℓ) → ℝ} (hf : ∀ ℓ, MemLp (f ℓ) 2 volume)
+    (Z : (ℓ : ℕ) → ℕ → d ℓ → ℤ) {C : ℕ → ℝ} {I a b g c₁ c₂ c₃ : ℝ} (ha : 0 < a) (hbg : b < g)
     (hbias : ∀ L : ℕ, |∑ ℓ ∈ range (L + 1), (∫ y, f ℓ y) - I| ≤
       c₁ * (2 : ℝ) ^ (-(a * (L : ℝ))))
-    (hV : ∀ ℓ N : ℕ, 0 < N → ∑' k, (dualLattice (Z ℓ N) N \ {0}).indicator
+    (hV : ∀ ℓ m : ℕ, ∑' k, (dualLattice (Z ℓ (2 ^ m)) (2 ^ m) \ {0}).indicator
       (fun k => ‖torusCoeff (fun x => (f ℓ x : ℂ)) k‖ ^ 2) k ≤
-        (c₂ * (2 : ℝ) ^ (-(b * (ℓ : ℝ))) / N) ^ 2)
+        (c₂ * (2 : ℝ) ^ (-(b * (ℓ : ℝ))) / 2 ^ m) ^ 2)
+    (hC : ∀ ℓ : ℕ, C ℓ ≤ c₃ * (2 : ℝ) ^ (g * (ℓ : ℝ))) :
+    ∃ K : ℝ, 0 < K ∧ ∀ ε : ℝ, 0 < ε → ε < 1 → ∃ (L : ℕ) (N : ℕ → ℕ),
+      (∀ ℓ, ∃ m : ℕ, N ℓ = 2 ^ m) ∧
+      ∫ ω, (∑ ℓ ∈ range (L + 1),
+          shiftedQMC (f ℓ) (rank1Lattice (Z ℓ (N ℓ)) (N ℓ)) (N ℓ) (U ℓ ω) - I) ^ 2 ∂μ < ε ^ 2 ∧
+      ∑ ℓ ∈ range (L + 1), (N ℓ : ℝ) * C ℓ ≤ K * ε ^ (-max (1 + (g - b) / a) (g / a)) :=
+  mlqmcLattice_of_core (vb := fun ℓ n => (max |c₂| 1 * (2 : ℝ) ^ (-(b * (ℓ : ℝ))) / (n : ℝ)) ^ 2)
+    hU hUind hf Z (zero_le_one.trans (le_max_right c₃ 1))
+    (fun L => le_max_one_mul (by positivity) (hbias L))
+    (fun ℓ m => (hV ℓ m).trans (sq_mul_two_rpow_div_two_pow_le le_rfl ℓ m))
+    (fun ℓ _ _ hn h => sq_div_natCast_le (by positivity) hn h)
+    (fun ℓ => le_max_one_mul (by positivity) (hC ℓ))
+    (mlqmc_complexity_core_of_lt ha hbg (lt_max_of_lt_right one_pos) (lt_max_of_lt_right one_pos)
+      (lt_max_of_lt_right one_pos))
+
+/-- **MLQMC with randomly shifted rank-1 lattice rules has complexity `O(ε^{−p})` with `p < 2`
+whenever `g < 2a` and `g < a + b`** (Giles 2015, §2.7, p. 20: "These theoretical developments are
+very encouraging, showing that under certain conditions they lead to multilevel methods with a
+complexity which is `O(ε^{−p})` with `p < 2`").  The `d`-dimensional analogue of
+`mlqmc_complexity_lt_two`, in the setting of `mlqmcLattice_complexity`: level corrections `f_ℓ` on
+`𝕋^{d_ℓ}`, the dimension `d_ℓ` possibly depending on `ℓ`; for every `m ≥ 0`, generating vectors
+`Z(ℓ, 2^m)` (which may, and for `d_ℓ ≥ 2` in general must, depend on `m`) with dual-lattice sums
+`≤ (c₂ 2^{−bℓ}/2^m)²` (an assumption); bias `≤ c₁ 2^{−aL}`; cost per point `C_ℓ ≤ c₃ 2^{gℓ}`;
+pairwise independent uniform shifts.  Assume only `a > 0`, `g < 2a` and `g < a + b`.  Then there
+are `p < 2` and `K > 0` such that for every `0 < ε < 1` there are `L` and powers of two
+`N_ℓ = 2^{m_ℓ}` for which the MLQMC estimator
+`Y = ∑_{ℓ≤L} N_ℓ⁻¹ ∑_{i<N_ℓ} f_ℓ(frac(i Z(ℓ, N_ℓ)/N_ℓ + U_ℓ))` has `E[(Y − I)²] < ε²` at cost
+`∑_{ℓ≤L} N_ℓ C_ℓ ≤ K ε^{−p}`.  Proof: with `b' = min(b, g − a/2) < g` the sums are
+`≤ (max(|c₂|, 1) 2^{−b'ℓ}/2^m)²`, and `mlqmcLattice_complexity_of_lt` gives
+`p = max(1 + (g − b')/a, g/a) < 2`. -/
+theorem mlqmcLattice_complexity_lt_two {Ω : Type*} [MeasurableSpace Ω] {μ : Measure Ω}
+    {d : ℕ → Type*} [∀ ℓ, Fintype (d ℓ)] {U : (ℓ : ℕ) → Ω → UnitAddTorus (d ℓ)}
+    (hU : ∀ ℓ, MeasurePreserving (U ℓ) μ volume)
+    (hUind : Pairwise fun i j => IndepFun (U i) (U j) μ)
+    {f : (ℓ : ℕ) → UnitAddTorus (d ℓ) → ℝ} (hf : ∀ ℓ, MemLp (f ℓ) 2 volume)
+    (Z : (ℓ : ℕ) → ℕ → d ℓ → ℤ) {C : ℕ → ℝ} {I a b g c₁ c₂ c₃ : ℝ} (ha : 0 < a)
+    (h2a : g < 2 * a) (hgab : g < a + b)
+    (hbias : ∀ L : ℕ, |∑ ℓ ∈ range (L + 1), (∫ y, f ℓ y) - I| ≤
+      c₁ * (2 : ℝ) ^ (-(a * (L : ℝ))))
+    (hV : ∀ ℓ m : ℕ, ∑' k, (dualLattice (Z ℓ (2 ^ m)) (2 ^ m) \ {0}).indicator
+      (fun k => ‖torusCoeff (fun x => (f ℓ x : ℂ)) k‖ ^ 2) k ≤
+        (c₂ * (2 : ℝ) ^ (-(b * (ℓ : ℝ))) / 2 ^ m) ^ 2)
     (hC : ∀ ℓ : ℕ, C ℓ ≤ c₃ * (2 : ℝ) ^ (g * (ℓ : ℝ))) :
     ∃ p : ℝ, p < 2 ∧ ∃ K : ℝ, 0 < K ∧ ∀ ε : ℝ, 0 < ε → ε < 1 → ∃ (L : ℕ) (N : ℕ → ℕ),
-      (∀ ℓ, 0 < N ℓ) ∧
+      (∀ ℓ, ∃ m : ℕ, N ℓ = 2 ^ m) ∧
       ∫ ω, (∑ ℓ ∈ range (L + 1),
           shiftedQMC (f ℓ) (rank1Lattice (Z ℓ (N ℓ)) (N ℓ)) (N ℓ) (U ℓ ω) - I) ^ 2 ∂μ < ε ^ 2 ∧
       ∑ ℓ ∈ range (L + 1), (N ℓ : ℝ) * C ℓ ≤ K * ε ^ (-p) := by
@@ -1266,57 +1472,63 @@ theorem mlqmcLattice_complexity_lt_two {Ω : Type*} [MeasurableSpace Ω] {μ : M
     rw [div_lt_one ha]
     have : g - a < min b (g - a / 2) := lt_min (by linarith) (by linarith)
     linarith
-  have hcore := mlqmc_complexity_core_of_lt ha hb'g (lt_max_of_lt_right one_pos : 0 < max c₁ 1)
-    (lt_max_of_lt_right one_pos : 0 < max |c₂| 1) (lt_max_of_lt_right one_pos : 0 < max c₃ 1)
   exact ⟨max (1 + (g - min b (g - a / 2)) / a) (g / a), max_lt (by linarith) hga,
-    mlqmcLattice_of_core (vb := fun ℓ N =>
-      (max |c₂| 1 * (2 : ℝ) ^ (-(min b (g - a / 2) * (ℓ : ℝ))) / (N : ℝ)) ^ 2)
-    hU hUind hfm hf Z (fun L => le_max_one_mul (by positivity) (hbias L))
-    (fun ℓ N hN => (hV ℓ N hN).trans
-      (sq_mul_two_rpow_div_le (min_le_left _ _) (Nat.cast_nonneg N) ℓ))
-    (fun ℓ => le_max_one_mul (by positivity) (hC ℓ)) hcore⟩
+    mlqmcLattice_complexity_of_lt hU hUind hf Z ha hb'g hbias
+      (fun ℓ m => (hV ℓ m).trans (sq_mul_two_rpow_div_le (min_le_left _ _) (by positivity) ℓ))
+      hC⟩
 
 /-- **MLQMC with randomly shifted rank-1 lattice rules for a QMC variance rate `N^{−2r}`: cost
 `O(ε^{−max(1/r, g/a)})`** (Giles 2015, §2.7, p. 20: "under certain conditions they lead to
-multilevel methods with a complexity which is `O(ε^{−p})` with `p < 2`"; §3.5, p. 26: "In the best
-cases, this results in the approximate numerical integration error being `O(N_ℓ⁻¹)` rather than
-the usual `O(N_ℓ^{−1/2})` error which comes from Monte Carlo sampling").  In the setting of
-`mlqmcLattice_complexity` (level corrections `f_ℓ` on `𝕋^d`, pairwise independent uniform shifts,
-bias `≤ c₁ 2^{−aL}`, cost per point `C_ℓ ≤ c₃ 2^{gℓ}`), assume that for every level `ℓ` and every
-`N ≥ 1` the generating vector `Z(ℓ, N)` makes the dual-lattice sum
-`∑_{k ∈ L^⊥ \ {0}} |f̂_ℓ(k)|² ≤ (c₂ 2^{−bℓ} N^{−r})²` (root-mean-square error `O(2^{−bℓ}N^{−r})`;
-`r = 1/2` is the Monte Carlo rate and `r = 1` the paper's best case), with `a, r > 0` and
-`rg < b` (no sign conditions on `b`, `g` or the constants).  Then there is `K > 0` such that for
-every `0 < ε < 1` there are `L` and `N_ℓ ≥ 1` for which the MLQMC estimator
+multilevel methods with a complexity which is `O(ε^{−p})` with `p < 2`"; §3.5, pp. 26–27: "In the
+best cases, this results in the approximate numerical integration error being `O(N_ℓ⁻¹)` rather
+than the usual `O(N_ℓ^{−1/2})` error which comes from Monte Carlo sampling", "Many QMC methods work
+naturally with `N_ℓ` as a power of 2").  In the setting of `mlqmcLattice_complexity` (level
+corrections `f_ℓ` on `𝕋^{d_ℓ}`, the dimension `d_ℓ` possibly depending on `ℓ`; pairwise
+independent uniform shifts; bias `≤ c₁ 2^{−aL}`; cost per point `C_ℓ ≤ c₃ 2^{gℓ}`), assume that for
+every level `ℓ` and every `m ≥ 0` the generating vector `Z(ℓ, 2^m)` (which may, and for `d_ℓ ≥ 2`
+in general must, depend on `m`) makes the dual-lattice sum
+`∑_{k ∈ L^⊥ \ {0}} |f̂_ℓ(k)|² ≤ (c₂ 2^{−bℓ} (2^m)^{−r})²` (root-mean-square error
+`O(2^{−bℓ}N^{−r})` for `N = 2^m` points, an assumption; `r = 1/2` is the Monte Carlo rate and
+`r = 1` the paper's best case), with `a, r > 0` and `rg < b` (no sign conditions on `b`, `g` or the
+constants).  Then there is `K > 0` such that for every `0 < ε < 1` there are `L` and powers of two
+`N_ℓ = 2^{m_ℓ}` for which the MLQMC estimator
 `Y = ∑_{ℓ≤L} N_ℓ⁻¹ ∑_{i<N_ℓ} f_ℓ(frac(i Z(ℓ, N_ℓ)/N_ℓ + U_ℓ))` has `E[(Y − I)²] < ε²` and cost
-`∑_{ℓ≤L} N_ℓ C_ℓ ≤ K ε^{−max(1/r, g/a)}` (`mlqmc_complexity_core_rate`).  So
-`p = max(1/r, g/a) < 2` exactly when `r > 1/2` and `g < 2a`; for `r = 1/2` it is
-`max(2, g/a)`, as for Giles' Theorem 1 with `β = 2b > γ = g`.  (Giles 2015, §5.2, p. 35, reports
-that MLQMC with the Milstein scheme for geometric Brownian motion, where `a = b = g = 1`
-(`V_ℓ = O(h_ℓ²)`), reduced the complexity "from `O(ε^{−2})` to approximately `O(ε^{−1.5})`"; here
-that corresponds to `r = 2/3`.) -/
+`∑_{ℓ≤L} N_ℓ C_ℓ ≤ K ε^{−max(1/r, g/a)}` (`mlqmc_complexity_core_rate`, rounded up to powers of two
+by `mlqmcLattice_of_core`).  So `p = max(1/r, g/a) < 2` exactly when `r > 1/2` and `g < 2a`; for
+`r = 1/2` it is `max(2, g/a)`, as for Giles' Theorem 1 with `β = 2b > γ = g`.  (A heuristic
+reading only: Giles 2015, §5.2, p. 35, reports for geometric Brownian motion with the Milstein
+scheme (`a = b = g = 1`, `V_ℓ = O(h_ℓ²)`) that MLQMC reduced the complexity "from `O(ε^{−2})` to
+approximately `O(ε^{−1.5})`", a numerical observation.  Here `1.5 = 1/r` would correspond to a
+root-mean-square error `≍ c 2^{−ℓ} N^{−2/3}` on every level, uniformly in `ℓ`, for corrections whose
+dimension `d_ℓ` grows like the number `2^ℓ` of time steps; neither that rate nor its uniformity in
+`ℓ` is proved here or claimed in the paper, which attributes the gain to the coarsest,
+low-dimensional levels.) -/
 theorem mlqmcLattice_complexity_rate {Ω : Type*} [MeasurableSpace Ω] {μ : Measure Ω}
-    {U : ℕ → Ω → UnitAddTorus d} (hU : ∀ ℓ, MeasurePreserving (U ℓ) μ volume)
-    (hUind : Pairwise fun i j => IndepFun (U i) (U j) μ) {f : ℕ → UnitAddTorus d → ℝ}
-    (hfm : ∀ ℓ, Measurable (f ℓ)) (hf : ∀ ℓ, MemLp (f ℓ) 2 volume) (Z : ℕ → ℕ → d → ℤ)
-    {C : ℕ → ℝ} {I a b g r c₁ c₂ c₃ : ℝ} (ha : 0 < a) (hr : 0 < r) (hrgb : r * g < b)
+    {d : ℕ → Type*} [∀ ℓ, Fintype (d ℓ)] {U : (ℓ : ℕ) → Ω → UnitAddTorus (d ℓ)}
+    (hU : ∀ ℓ, MeasurePreserving (U ℓ) μ volume)
+    (hUind : Pairwise fun i j => IndepFun (U i) (U j) μ)
+    {f : (ℓ : ℕ) → UnitAddTorus (d ℓ) → ℝ} (hf : ∀ ℓ, MemLp (f ℓ) 2 volume)
+    (Z : (ℓ : ℕ) → ℕ → d ℓ → ℤ) {C : ℕ → ℝ} {I a b g r c₁ c₂ c₃ : ℝ} (ha : 0 < a) (hr : 0 < r)
+    (hrgb : r * g < b)
     (hbias : ∀ L : ℕ, |∑ ℓ ∈ range (L + 1), (∫ y, f ℓ y) - I| ≤
       c₁ * (2 : ℝ) ^ (-(a * (L : ℝ))))
-    (hV : ∀ ℓ N : ℕ, 0 < N → ∑' k, (dualLattice (Z ℓ N) N \ {0}).indicator
+    (hV : ∀ ℓ m : ℕ, ∑' k, (dualLattice (Z ℓ (2 ^ m)) (2 ^ m) \ {0}).indicator
       (fun k => ‖torusCoeff (fun x => (f ℓ x : ℂ)) k‖ ^ 2) k ≤
-        (c₂ * (2 : ℝ) ^ (-(b * (ℓ : ℝ))) / (N : ℝ) ^ r) ^ 2)
+        (c₂ * (2 : ℝ) ^ (-(b * (ℓ : ℝ))) / ((2 : ℝ) ^ m) ^ r) ^ 2)
     (hC : ∀ ℓ : ℕ, C ℓ ≤ c₃ * (2 : ℝ) ^ (g * (ℓ : ℝ))) :
-    ∃ K : ℝ, 0 < K ∧ ∀ ε : ℝ, 0 < ε → ε < 1 → ∃ (L : ℕ) (N : ℕ → ℕ), (∀ ℓ, 0 < N ℓ) ∧
+    ∃ K : ℝ, 0 < K ∧ ∀ ε : ℝ, 0 < ε → ε < 1 → ∃ (L : ℕ) (N : ℕ → ℕ),
+      (∀ ℓ, ∃ m : ℕ, N ℓ = 2 ^ m) ∧
       ∫ ω, (∑ ℓ ∈ range (L + 1),
           shiftedQMC (f ℓ) (rank1Lattice (Z ℓ (N ℓ)) (N ℓ)) (N ℓ) (U ℓ ω) - I) ^ 2 ∂μ < ε ^ 2 ∧
-      ∑ ℓ ∈ range (L + 1), (N ℓ : ℝ) * C ℓ ≤ K * ε ^ (-max (1 / r) (g / a)) := by
-  have hcore := mlqmc_complexity_core_rate ha hr hrgb (lt_max_of_lt_right one_pos : 0 < max c₁ 1)
-    (lt_max_of_lt_right one_pos : 0 < max |c₂| 1) (lt_max_of_lt_right one_pos : 0 < max c₃ 1)
-  exact mlqmcLattice_of_core (vb := fun ℓ N =>
-      (max |c₂| 1 * (2 : ℝ) ^ (-(b * (ℓ : ℝ))) / (N : ℝ) ^ r) ^ 2)
-    hU hUind hfm hf Z (fun L => le_max_one_mul (by positivity) (hbias L))
-    (fun ℓ N hN => (hV ℓ N hN).trans
-      (sq_mul_two_rpow_div_le le_rfl (Real.rpow_nonneg (Nat.cast_nonneg N) r) ℓ))
-    (fun ℓ => le_max_one_mul (by positivity) (hC ℓ)) hcore
+      ∑ ℓ ∈ range (L + 1), (N ℓ : ℝ) * C ℓ ≤ K * ε ^ (-max (1 / r) (g / a)) :=
+  mlqmcLattice_of_core
+    (vb := fun ℓ n => (max |c₂| 1 * (2 : ℝ) ^ (-(b * (ℓ : ℝ))) / (n : ℝ) ^ r) ^ 2)
+    hU hUind hf Z (zero_le_one.trans (le_max_right c₃ 1))
+    (fun L => le_max_one_mul (by positivity) (hbias L))
+    (fun ℓ m => (hV ℓ m).trans (sq_mul_two_rpow_div_two_pow_rpow_le ℓ m))
+    (fun ℓ _ _ hn h => sq_div_natCast_rpow_le (by positivity) hr.le hn h)
+    (fun ℓ => le_max_one_mul (by positivity) (hC ℓ))
+    (mlqmc_complexity_core_rate ha hr hrgb (lt_max_of_lt_right one_pos)
+      (lt_max_of_lt_right one_pos) (lt_max_of_lt_right one_pos))
 
 end MLMC
