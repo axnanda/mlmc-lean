@@ -679,3 +679,34 @@ Findings and what was done:
 - **`TauLeapingExtensions` covers one species with bounded propensities**; the adaptive results are
   law identities only (no variance rate).  Documented.  Kept.
 
+**Twenty-third round (2026-10-08).** Blind read-backs of the 29 theorems added in round 23:
+`gbm_digital_cond_exp.md` (R38: `GBMDigitalCondExp`; 7 theorems), `tau_leaping_ssa.md` (R39:
+`TauLeapingSSA`; 10), `karhunen_loeve.md` (R40: `KarhunenLoeve`; 7) and
+`change_of_measure_variance.md` (R41: `ChangeOfMeasureVariance`; 5).  All 29 read back as true; none
+is vacuous and none holds only because of a junk value.  The R38 auditor checked in Lean that every
+packet definition is the library's (`rfl`) and that each packet statement is closed by the library
+theorem, and reproduced the rates by Monte Carlo (`E[D²]/h^{3/2}` levels off) and Gauss–Hermite
+quadrature (the weak error falls by a factor of 3.4 to 4.1 per level).  The R39 auditor computed the
+coupled chain exactly (truncated Poisson series): the marginals agree to `10⁻¹²` and the coupling
+bounds hold with ratios at most 0.39.  The R40/R41 auditor confirmed the level-correction identity
+exactly with a sine basis, the lognormal moments and the closed form of `E[L_f²]` (relative error
+about `10⁻²⁴` on six parameter sets) by quadrature.
+Findings and what was done:
+
+- **The digital rates carry a loss** (`q < 3/2` for `V_ℓ`, `q < 1` for the weak error), and
+  **`K ≠ 0` is stronger than needed** (`K = 0` is an easy case: the corrections are exponentially
+  small).  The loss was documented; the `K = 0` remark was added to the module docstring.  Kept.
+- **`gbm_digital_cond_moments_match` assumes `0 < m`**, which is not needed (`m = 0` is trivial).
+  Kept.
+- **`ssa_mlmc_complexity` is the generic Monte Carlo bound**: for an unbiased estimator with
+  finitely many levels of finite variance the rate `ε⁻²` holds whatever the coupling, and the
+  constant depends on `L`.  The module and theorem docstrings already said so.  Kept.
+- **`variance_ssaCorrection_exact_le` does not state that its sampling law is a probability
+  measure** (it is, by the first conjunct of `ssa_mlmc_unbiased`, so the bound is not trivial).
+  Kept for this round; to be added as a conjunct with the next change to the module.
+- **The constants of `ssaChain_ne_le` and `ssaChain_abs_le` have a factor 2 of slack.**  Kept.
+- **The KL theorems need fewer hypotheses than the KL setting** (the pointwise results need no
+  orthonormality, the `L²` results no eigen-relation); the satisfiability witness is a discrete
+  diagonal kernel.  Documented.  Kept.
+- **The converse `not_memLp_two_mul_sub_likelihoodRatio` needs `|g| ≥ c > 0`**, which excludes the
+  digital payoff; `g` bounded away from `0` on one tail would suffice.  Documented.  Kept.
