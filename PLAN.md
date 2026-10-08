@@ -233,8 +233,17 @@ items listed under "Not formalised" below.
   curved pieces and several kinks, and MIMC on the two axes for the kink counterexample
   (`NestedKinkCurved.lean`); tau-leaping against the exact chain for Lipschitz payoffs, and with
   state-dependent propensities on adaptive grids (`TauLeapingExtensions.lean`).
-- Not formalised (each with its reason in `notes/coverage/README.md`): the convergence orders of the
-  discretisations of general SDEs, SPDEs and PDEs (Itô calculus and PDE regularity are not in
+- ✅ Round 23: the conditional-expectation estimator of the digital option for GBM, with the
+  conditional laws of the fine and the coarse path matching to `O(h)`, `V_ℓ = O(h^q)` for every
+  `q < 3/2`, the weak rate `q < 1`, zero variance on level `0`, Theorem 1 at the paper's cost
+  `O(ε⁻²)` and splitting at the same rate (`GBMDigitalCondExp.lean`); tau-leaping coupled with the
+  exact chain on the finest level, an unbiased multilevel estimator at expected cost `O(ε⁻²)` with a
+  fixed number of levels (`TauLeapingSSA.lean`); the truncated Karhunen–Loève field with Mercer's
+  expansion as hypotheses: the level correction, the truncation error, the pointwise law, uniform
+  moments of the diffusivity and the covariance (`KarhunenLoeve.lean`); when the change-of-measure
+  correction of §5.2 has finite variance (`ChangeOfMeasureVariance.lean`).
+- Not formalised (each with its reason in `notes/coverage/README.md`): the convergence orders of
+  the discretisations of general SDEs, SPDEs and PDEs (Itô calculus and PDE regularity are not in
   Mathlib; the SPDE of §7.3 has multiplicative noise and an absorbing boundary; proved for geometric
   Brownian motion from its exact solution, including weak order one for smooth and polynomial
   payoffs) and of QMC in `d` dimensions (discrepancy theory and the existence of good lattices; the
@@ -247,23 +256,34 @@ items listed under "Not formalised" below.
   deterministic numbers of levels and samples are proved); the kurtosis upper bounds of the digital
   option, the endpoints of its rates `O(h^{1/2})`, `O(h)` (every smaller exponent is proved for GBM
   from `L^p` strong errors), and its weak rate `α = 1`, hence the paper's `O(ε^{−2.5})` (Theorem 1
-  at cost `O(ε^{−3−η})`, and `O(ε^{−2−η})` with Milstein, is proved for GBM); continuously monitored
-  path-dependent payoffs (Brownian-bridge extremes; fixed dates, the barrier option included, and
-  every time step are proved for GBM); real-valued adaptive step sizes (Brownian motion at stopping
-  times; deterministic union grids and adaptive steps on a base grid are proved); for tau-leaping on
-  adaptive grids, the variance rate of the coupling and time-dependent propensities ((2.4) with
-  state-dependent propensities on a base grid is proved), tau-leaping's weak rate for unbounded
-  propensities or payoffs of super-linear growth, and the pathwise exact (SSA) coupling (bounded
-  propensities with bounded or Lipschitz payoffs are proved); the comparison of the explicit scheme
-  with the exact solution for super-linear coefficients, and several dimensions (the divergence of
-  the scheme's moments is proved for scalar coefficients); the jump-diffusion and Lévy-process
-  theory of §6 beyond grid values (the Poisson and Lévy processes themselves; the discrete parts are
-  proved); the Karhunen–Loève expansion and the finite-element analysis of §7.2 (Mercer's theorem
-  and elliptic regularity), and the truncation error of the expansion, which is provable with
-  Mercer's expansion as a hypothesis (not yet formalised; (2.4) for nested inputs
-  `ξ_ℓ = (ξ_{ℓ−1}, z_ℓ)` is proved); that the limit of the discretised contracting chains is the
-  SDE's invariant law (§10.1; fixed and level-dependent steps are proved for the discretised chains,
-  and for the Ornstein–Uhlenbeck SDE the invariant laws of the scheme tend to `N(0, σ²/(2κ))`); the
+  at cost `O(ε^{−3−η})`, and `O(ε^{−2−η})` with Milstein, is proved for GBM); for the
+  conditional-expectation estimator of the digital option, the endpoints `β = 3/2` and `α = 1` and
+  the kurtosis `O(h^{−1/2})` (every `q < 3/2`, resp. `q < 1`, and Theorem 1 at the paper's cost
+  `O(ε⁻²)` are proved for GBM with `K ≠ 0`), and for splitting the variance "the same, to leading
+  order" as with the conditional expectation (the same rate is proved, with an Euler–Maruyama final
+  step); for the change-of-measure estimator, finite variance after averaging over the paths and its
+  variance rate (finite variance for fixed conditional laws is proved, when the sampling variance
+  exceeds half of the fine and the coarse one); continuously monitored path-dependent payoffs
+  (Brownian-bridge extremes; fixed dates, the barrier option included, and every time step are
+  proved for GBM); real-valued adaptive step sizes (Brownian motion at stopping times; deterministic
+  union grids and adaptive steps on a base grid are proved); for tau-leaping on adaptive grids, the
+  variance rate of the coupling and time-dependent propensities ((2.4) with state-dependent
+  propensities on a base grid is proved), tau-leaping's weak rate for unbounded propensities or
+  payoffs of super-linear growth (bounded propensities with bounded or Lipschitz payoffs are
+  proved); the exact (SSA) coupling on the finest level for several reactions, unbounded
+  propensities or unbounded payoffs, and the random cost of the exact level (one reaction with a
+  bounded propensity and a bounded payoff, coupled by uniformisation, is proved: the estimator is
+  unbiased and costs `O(ε⁻²)` in expectation with a fixed number of levels); the comparison of the
+  explicit scheme with the exact solution for super-linear coefficients, and several dimensions (the
+  divergence of the scheme's moments is proved for scalar coefficients); the jump-diffusion and
+  Lévy-process theory of §6 beyond grid values (the Poisson and Lévy processes themselves; the
+  discrete parts are proved); Mercer's theorem behind the Karhunen–Loève expansion, the law of the
+  limit field and the finite-element analysis of §7.2 (spectral theory of covariance operators and
+  elliptic regularity; with Mercer's expansion as a hypothesis the truncation error, the pointwise
+  law, the moments and the covariance of the truncated field are proved, and (2.4) for nested inputs
+  `ξ_ℓ = (ξ_{ℓ−1}, z_ℓ)`); that the limit of the discretised contracting chains is the SDE's
+  invariant law (§10.1; fixed and level-dependent steps are proved for the discretised chains, and
+  for the Ornstein–Uhlenbeck SDE the invariant laws of the scheme tend to `N(0, σ²/(2κ))`); the
   value of the dyadic limit `C` and the exact halving ratio of the MSE per bit (Haas–Giles §3.4; the
   existence of `C > 0` and the order `2^{−d}/d` are proved for `Φ⁻¹`, the exact ratio needs finer
   asymptotics of `Φ⁻¹`); whether MIMC reaches `O(ε⁻²)` for a general piecewise linear `f` (the
