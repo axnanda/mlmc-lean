@@ -410,10 +410,10 @@ Lean statement or to the reason it is not formalised. The deviations of the new 
   (`IsPreBrownianReal`), not for path continuity.
 * **The digital option for GBM (`GBMDigital.lean`, round 18).** The rates proved are those the
   mean-square strong error gives (`h^{1/3}` for Euler–Maruyama, `h^{2/3}` for Milstein), not the
-  paper's `O(h^{1/2})` and `O(h)`, which need `L^p` strong errors; the exponent is the best mean
-  square gives (`digital_mismatch_exponent_sharp`).  The kurtosis bounds use the raw fourth moment
-  (the paper's definition is for zero-mean `X`).  The law equality for the smoothed coarse payoff is
-  for autonomous coefficients `a(S)`, `b(S)`.
+  paper's `O(h^{1/2})` and `O(h)`, which need `L^p` strong errors (round 20, below); the exponent is
+  the best mean square gives (`digital_mismatch_exponent_sharp`). The kurtosis bounds use the raw
+  fourth moment (the paper's definition is for zero-mean `X`). The law equality for the smoothed
+  coarse payoff is for autonomous coefficients `a(S)`, `b(S)`.
 * **Tau-leaping against the exact chain (`TauLeapingExact.lean`, round 18).** The exact chain is
   built by uniformisation for bounded propensities `λ ≤ Λ` and identified by its master equation;
   the weak rate is for bounded payoffs.  The pathwise SSA coupling of §8 is not formalised.
@@ -437,7 +437,27 @@ Lean statement or to the reason it is not formalised. The deviations of the new 
   need a small-ball bound at every kink.
 * **Contracting levels (`ContractingLevels.lean`, round 19).** One dimension, Lipschitz payoffs, the
   target is the limit of the means of the discretised chains; the cost per sample grows like
-  `ℓ 2^ℓ`, so the complexity is `O(ε^{−2−η})` for every `η > 0`.
+  `ℓ 2^ℓ`, so the complexity is `O(ε^{−2−η})` for every `η > 0` (round 20: `O(ε⁻²|log ε|³)`,
+  `contracting_levels_mlmc_log`).
+* **Adaptive grids (`AdaptiveGrids.lean`, round 20).** Step sizes are multiples of a fixed base
+  spacing `δ` (for `h_ℓ = 2^{−ℓ}H(Ŝ_n)`: `H` with values in `2^{−m₀}Tℕ`), so the union grid lies in a
+  base grid and only i.i.d. base increments are needed; real-valued step sizes would need Brownian
+  motion at stopping times.  Algorithm 3 is modelled with steps of at least one base interval and an
+  unbounded loop (stopping at `T` is part of the rule).  The Poisson results have a constant rate.
+* **Lattice rules in `d` dimensions (`LatticeRuleD.lean`, round 20).** The MLQMC theorems assume the
+  decay of the dual-lattice sums for `N = 2^m` points (the existence of good generating vectors is
+  not formalised); the generating vector may depend on `N`, and for `d ≥ 2` it must.  Parseval's
+  identity on `𝕋^d` is re-proved, since Mathlib's `AddCircleMulti` is not in this project's build.
+* **Theorem 1 with a polylogarithmic cost (`Theorem1Log.lean`, round 20).** An extension the paper
+  does not state, needed for §10.1: condition iv) becomes `C_ℓ ≤ c₃(ℓ+1)^κ 2^{γℓ}` with `κ ≥ 0`
+  (needed except in `giles_theorem1_log_of_lt`); Giles' `β > 0` is dropped.  The §10.1 corollary
+  keeps the deviations of `ContractingLevels.lean`.
+* **`L^p` strong errors for GBM (`GBMStrongLp.lean`, round 20).** The strong errors are proved at
+  grid points, with explicit but loose constants (for `m = 2` at the paper's parameters a factor of
+  about `2·10⁶` (EM) and `1.5·10⁹` (Milstein) above the exact ratio), so the digital exponents
+  improve on `GBMDigital.lean` only asymptotically.  Every exponent below the paper's `½` and `1` is
+  reached; the endpoints, the `log h` of Table 5.2 and the kurtosis upper bounds are not.  The
+  payoff factors `10e^{−rT}` and `25e^{−rT}` are omitted.
 
 ### Corrections to the papers recorded elsewhere, collected
 

@@ -586,3 +586,39 @@ Findings and what was done:
   limit of the discretised chains' invariant means, not identified with the SDE's.  Documented.  Kept.
 - **The two-sample consistency check** fails with probability `≈ 0.280` (biased variance estimate) or
   `≈ 0.205` (unbiased); the docs gave only the first and now give both.
+
+**Twentieth round (2026-10-08).** Blind read-backs of the 65 theorems added in round 20:
+`adaptive_grids.md` (R26: `AdaptiveGrids`; 27 theorems), `lattice_rule_d.md` (R27: `LatticeRuleD`;
+15), `theorem1_log.md` (R28: `Theorem1Log`; 9) and `gbm_strong_lp.md` (R29: `GBMStrongLp`; 14).
+All 65 read back as true; none is vacuous and none holds only because of a junk value.  The R26
+auditor checked the Algorithm 3 identities exactly on 60 random rational instances (they fail in 16
+of 30 instances when a level may take empty steps, which the hypotheses exclude) and the coupling of
+the two paths by a 400,000-path Monte Carlo that tells it apart from an independent coupling.  The
+R27 auditor matched the dual-lattice variance formula against exact grid integration to `10⁻¹⁶` and
+checked the MLQMC rates down to `ε = 10⁻⁴⁰`.  The R28 auditor checked the construction down to
+`ε = 10⁻⁶⁴` in nine regimes, the lower bounds on 4,000 random instances, and simulated the
+contracting SDE.  The R29 auditor checked that the packet is definitionally equal to the module and
+compared the explicit moment constants with the exact error moments of GBM in 260-digit arithmetic
+(15,594 cases per scheme, no violation; the smallest ratio, 156 for Euler–Maruyama, is the exact
+`n = 1`, `h → 0` limit).
+Findings and what was done:
+
+- **`mlmc_cost_lower_log` is a lower bound for the model problem** (equality in the rate
+  conditions), and the `|log ε|^κ` of the case `β > γ` is needed only when `γ = 2α`.  The README had
+  called the exponents "sharp"; it and the coverage notes now state both qualifications.
+- **The constants `c₄` of `giles_theorem1_log`, `adaptiveEM_mlmc_theorem1` and their variants are
+  chosen after the data**, as in `giles_theorem1`; the uniform version is
+  `giles_theorem1_log_uniform`.  Documented.  Kept.
+- **`GBMStrongLp`'s constants are loose:** at `r = 0.05`, `σ = 0.2`, `t = 1` the fourth-moment
+  constants are about 44 (Euler–Maruyama) and 330 (Milstein), factors of about `2·10⁶` and `1.5·10⁹`
+  above the exact ratio (recomputed from the auditor's implementation), and the mismatch bound with
+  `m = 1` is below 1 only from level 9 (Euler–Maruyama) and 5 (Milstein).  The docstrings say the gain
+  over `GBMDigital` is asymptotic only.  Kept.
+- **`kurtosis` is the raw ratio `E[X⁴]/(E[X²])²`**, so the kurtosis lower bounds are the reciprocals
+  of the mismatch bounds.  Documented in round 18.  Kept.
+- **The MLQMC theorems of `LatticeRuleD` assume the dual-lattice bound for every power of two
+  (including `N = 1`) and every level**; the strict inequalities of the case split are needed (the
+  boundary cases carry a logarithm).  Documented.  Kept.
+- **After the read-back**, the existence proof that `alg3FirstReach` passes to `Nat.find` was
+  written inline instead of citing `alg3_exists_reach` (the prove2.me generator rejects definitions
+  that cite theorems); by proof irrelevance the definition is unchanged.
