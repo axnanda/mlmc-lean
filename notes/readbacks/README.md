@@ -619,3 +619,6 @@ Findings and what was done:
 - **The MLQMC theorems of `LatticeRuleD` assume the dual-lattice bound for every power of two
   (including `N = 1`) and every level**; the strict inequalities of the case split are needed (the
   boundary cases carry a logarithm).  Documented.  Kept.
+- **After the read-back**, the existence proof that `alg3FirstReach` passes to `Nat.find` was
+  written inline instead of citing `alg3_exists_reach` (the prove2.me generator rejects definitions
+  that cite theorems); by proof irrelevance the definition is unchanged.
