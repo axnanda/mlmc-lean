@@ -67,7 +67,8 @@ precision.
 **Scope.**  Bounded propensities (uniformisation needs `Λ < ∞`) and bounded payoffs; Lipschitz
 unbounded payoffs such as `Φ(x) = x` would need moment bounds for the exact chain and weighted
 sup norms.  One reaction, as in `tauChain`.  The extra coupling of the finest level to the exact
-chain (Anderson–Higham, p. 56, an unbiased estimator) is not formalised.
+chain (Anderson–Higham, p. 56, an unbiased estimator) is in `MlmcLean.TauLeapingSSA`
+(`ssa_mlmc_unbiased`, `ssa_mlmc_complexity`).
 -/
 
 open MeasureTheory ProbabilityTheory Finset

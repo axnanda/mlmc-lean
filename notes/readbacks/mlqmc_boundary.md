@@ -20,7 +20,7 @@ every `x ^ 2` is a natural-number power, `(2:ℝ) ^ (…)`, `(-Real.log ε) ^ ((
 | 0 | `latticeRule` | def | — | — | no (only $N=0$ gives $0^{-1}\cdot 0=0$; never used with $N=0$) |
 | 1 | `mlqmc_boundary_complexity_core` | theorem | true | no | no |
 | 2 | `mlqmc_boundary_complexity` | theorem | true | no (product-space instance exists) | no |
-| 3 | `mlqmc_boundary_cost_lower` | theorem | true | no (for $a>0$); for $a\le 0$ partly vacuous (infeasible for $\varepsilon\le|c_1|$) | no |
+| 3 | `mlqmc_boundary_cost_lower` | theorem | true | no (for $a>0$); for $a\le 0$ partly vacuous (infeasible for $\varepsilon\le\|c_1\|$) | no |
 | 4 | `mlqmc_boundary_exponents_optimal` | theorem | true | no (for $a>0$); trivially true for $a\le 0$ | no |
 | 5 | `mlqmc_finest_level_cost_lower` | theorem | true | no | no |
 | 6 | `mlqmc_finest_level_exponent_optimal` | theorem | true | no | no |

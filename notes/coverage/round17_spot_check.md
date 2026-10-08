@@ -123,3 +123,20 @@ paper's `O(ε^{−2.5})`), the identification of the parabolic limit with the SP
 truncation error of the Karhunen–Loève expansion, the variance rate of adaptive tau-leaping, the
 simplex optimality, the kurtosis upper bound, and whether MIMC reaches `O(ε⁻²)` for a general
 piecewise linear `f`.
+
+**Follow-up (round 23).** From the remaining spot-check 21 notes and the out-of-scope table,
+round 23 formalised: the conditional-expectation estimator of the digital option for GBM, with the
+`O(h)` matching of the fine and the coarse conditional laws, `V_ℓ = O(h^q)` for every `q < 3/2`,
+the weak rate `q < 1` and Theorem 1 at the paper's cost `O(ε⁻²)`, and splitting at the same rate
+(`GBMDigitalCondExp.lean`); the coupling of the finest tau-leaping level with the exact chain, an
+unbiased estimator at cost `O(ε⁻²)` with a fixed number of levels, for one reaction with a bounded
+propensity and payoff (`TauLeapingSSA.lean`); the truncation error of the Karhunen–Loève expansion,
+and the law, moments and covariance of the truncated field, with Mercer's expansion as hypotheses
+(`KarhunenLoeve.lean`); when the change-of-measure correction has finite variance
+(`ChangeOfMeasureVariance.lean`).  Still open: the digital option's weak order `α = 1` (hence the
+paper's `O(ε^{−2.5})`) and, for the conditional-expectation estimator, the endpoints `β = 3/2`,
+`α = 1`; the splitting variance "the same, to leading order"; Mercer's theorem and the law of the
+limit field; the SSA coupling for several reactions and unbounded propensities; the identification
+of the parabolic limit with the SPDE functional, the variance rate of adaptive tau-leaping, the
+simplex optimality, the kurtosis upper bound, and whether MIMC reaches `O(ε⁻²)` for a general
+piecewise linear `f`.

@@ -196,13 +196,13 @@ e₁ = 2D₂, e₂ = (D₂ − 1)(2 + η), where D₂ is the number of dimension
 | telescoping `E[P] = ∑_{ℓ≥0} E[ΔP_ℓ]` | `sum_crossDiff`: `∑_{ℓ ≤ k} ΔP_ℓ = P_k` over every box; `tendsto_sum_box_integral_crossDiff`: the box sums of `E[ΔP_ℓ]` tend to `E[P]` as `min_d k_d → ∞`, from condition i); `hasSum_integral_crossDiff`: under i)–iii) the series converges absolutely (unconditionally) with sum `E[P]` | ✓ |
 | independent `Y_ℓ`, `N_ℓ` samples, expected cost `C_ℓ`, variance `V_ℓ` | as for Theorem 1: `Y ℓ n`, random costs `Cost ℓ n` with `E[Cost ℓ n] = n C_ℓ`, `V[Y ℓ n] = V_ℓ/n` and `Y ℓ n ∈ L²` for `n ≥ 1`, pairwise independence across levels for every `N ≥ 1` | ✓ (same reading as Theorem 1; pairwise independence is weaker than the paper's) |
 | positive `α, β, γ` with `α_d ≥ ½β_d`, positive `c₁, c₂, c₃` | `hα hβ hγ`, `hαβ : β d / 2 < α d` (`giles_theorem2`) or `β d / 2 ≤ α d` (`giles_theorem2_boundary`); `hc₁ hc₂ hc₃` | ✓ (`β_d > 0` is unused by the proof; kept for fidelity) |
-| i) `|E[P_ℓ − P]| → 0` as `min_d ℓ_d → ∞` | `h_i : ∀ δ > 0, ∃ n₀, ∀ ℓ, (∀ d, n₀ ≤ ℓ_d) → |E[P_ℓ − P]| < δ` | ✓ (the definition of this limit) |
+| i) `\|E[P_ℓ − P]\| → 0` as `min_d ℓ_d → ∞` | `h_i : ∀ δ > 0, ∃ n₀, ∀ ℓ, (∀ d, n₀ ≤ ℓ_d) → \|E[P_ℓ − P]\| < δ` | ✓ (the definition of this limit) |
 | iii) `E[Y_ℓ] = E[ΔP_ℓ]` | `h_iii` (for `n ≥ 1`, as in Theorem 1, finding 3) | ✓ |
-| ii) `|E[Y_ℓ]| ≤ c₁2^{−α·ℓ}` | `h_ii` (for `n ≥ 1`) | ✓ |
+| ii) `\|E[Y_ℓ]\| ≤ c₁2^{−α·ℓ}` | `h_ii` (for `n ≥ 1`) | ✓ |
 | iv), v) | `h_iv`, `h_v` with `dot a ℓ = ∑_d a_d ℓ_d` | ✓ |
 | `∃ c₄ > 0 ∀ ε < e⁻¹ ∃ 𝓛, N_ℓ` | `∃ c₄, 0 < c₄ ∧ ∀ ε, 0 < ε → ε < exp(−1) → ∃ (𝓛 : Finset _) N, (∀ ℓ, 0 < N ℓ) ∧ …` | ✓ (`𝓛` finite, `N_ℓ ≥ 1`) |
 | `MSE < ε²` | `μ[(∑_{ℓ∈𝓛} Y ℓ (N ℓ) − μ[P])²] < ε²` | ✓ |
-| `E[C] ≤ c₄ · (three regimes)`, `e₁ = 2D₂`, `e₂ = (D₂−1)(2+η)` for `α_d > ½β_d` | `μ[∑_{ℓ∈𝓛} Cost ℓ (N ℓ)] ≤ c₄ · mimcBound η (2D₂) ((D₂−1)(2+η)) ε` with `mimcBound η e₁ e₂ ε = ε⁻²`, `ε⁻²|log ε|^{e₁}`, `ε^{−2−η}|log ε|^{e₂}` for `η < 0`, `= 0`, `> 0`; `η = mimcEta`, `D₂ = mimcD2` | ✓ |
+| `E[C] ≤ c₄ · (three regimes)`, `e₁ = 2D₂`, `e₂ = (D₂−1)(2+η)` for `α_d > ½β_d` | `μ[∑_{ℓ∈𝓛} Cost ℓ (N ℓ)] ≤ c₄ · mimcBound η (2D₂) ((D₂−1)(2+η)) ε` with `mimcBound η e₁ e₂ ε = ε⁻²`, `ε⁻²\|log ε\|^{e₁}`, `ε^{−2−η}\|log ε\|^{e₂}` for `η < 0`, `= 0`, `> 0`; `η = mimcEta`, `D₂ = mimcD2` | ✓ |
 | exponents when some `α_d = ½β_d`: "more complicated", not stated | `giles_theorem2_full` (the goal): under `α_d ≥ ½β_d`, `∃ e₁ e₂`, chosen before the probability space and the constants, with `e₁ = 2D₂`, `e₂ = (D₂−1)(2+η)` when every `α_d > ½β_d` — exactly the paper's claim. `giles_theorem2_boundary` gives explicit exponents: `e₁ = 2D₂ + (D₃−3)⁺`, `e₂ = (D₂−1)(2+η) + (D₃−1)⁺` with `D₃ = mimcD3 = #{d : α_d = ½β_d}` (natural-number subtraction) | `giles_theorem2_full` ✓; the explicit boundary exponents are not a paper statement: a valid bound for the case the paper leaves open, not claimed sharp; for `D₃ = 0` (every `α_d > ½β_d`) they are the paper's |
 
 **Label typo in the paper.** The statement lists the conditions as i), iii), ii), iv), v): "iii)"
@@ -424,7 +424,8 @@ Lean statement or to the reason it is not formalised. The deviations of the new 
   coarse payoff is for autonomous coefficients `a(S)`, `b(S)`.
 * **Tau-leaping against the exact chain (`TauLeapingExact.lean`, round 18).** The exact chain is
   built by uniformisation for bounded propensities `λ ≤ Λ` and identified by its master equation;
-  the weak rate is for bounded payoffs.  The pathwise SSA coupling of §8 is not formalised.
+  the weak rate is for bounded payoffs.  The pathwise SSA coupling of §8 is not formalised
+  (round 23: a coupling by uniformisation with shared uniforms, `TauLeapingSSA.lean`, below).
 * **`Φ⁻¹` (`InverseNormal.lean`, round 18).** `normCDFInv` is defined on all of `ℝ` with a junk value
   outside `(0, 1)`; every statement about it restricts to `(0, 1)` or to a uniform variable.  The
   dyadic lower bound is proved for the cells `k ≥ 2` (the paper's claims need one such cell).
@@ -487,15 +488,16 @@ Lean statement or to the reason it is not formalised. The deviations of the new 
   square error can be `1` on every level).  The barrier option is monitored at `m` fixed dates, not
   continuously, with a Lipschitz `g` and an up-and-out or down-and-out set; the Brownian-bridge
   rows of Table 5.2 are not covered.  Splitting with a Milstein final step: autonomous coefficients,
-  (2.4) only; the variance of the splitting estimator is not formalised.  The factor `10e^{−rT}` is
-  omitted.
+  (2.4) only; the variance of the splitting estimator is not formalised (round 23: its rate with an
+  Euler–Maruyama final step, `GBMDigitalCondExp.lean`, below).  The factor `10e^{−rT}` is omitted.
 * **Spot-check items (`SpotCheckRemarks.lean`, round 22).** ML2R: one sequence of level means
   satisfying the expansion with an `L`-independent constant, which suffices to refute
   `O(2^{−αL²})` under the hypotheses of `ml2r_theorem_eq`.  §5.7: the variance bound assumes `g`
   Lipschitz (the paper's `g` is only continuous); the limit as `δ → 0` assumes no atom of `P_ℓ`,
   `P_{ℓ−1}` at `x`.  §7.1: the Dirichlet instability needs `J ≥ J₀(λ)` (with one interior node the
   step is stable up to `λ = 1`).  §7.2: (2.4) for nested inputs without the Karhunen–Loève
-  expansion, whose truncation error is not formalised.  §9.1: the bias and variance rates of an
+  expansion, whose truncation error is not formalised (round 23: with Mercer's expansion as a
+  hypothesis, `KarhunenLoeve.lean`, below).  §9.1: the bias and variance rates of an
   outer sample are hypotheses.  §10.1: only the discretised Ornstein–Uhlenbeck chain; that
   `N(0, σ²/(2κ))` is the stationary law of the SDE is not proved.  §10.2: `I_max` is the index of
   the sequence.  HG25 §2.1: the explicit lower bound `∝ 2^{−ℓ}` is proved for the levels with
@@ -533,6 +535,57 @@ Lean statement or to the reason it is not formalised. The deviations of the new 
   `variance_levels_le`, `variance_tauCorrection_le`, `tauLeaping_level_variance` and
   `gbm_correction_variance_le` now also state that the variable is in `L²`.  The abstract
   Theorem 1 and Theorem 2 statements, whose rates are hypotheses, are unchanged.
+* **The digital option with the conditional expectation (`GBMDigitalCondExp.lean`, round 23).** `β`
+  is every `q < 3/2` and `α` every `q < 1`, not the paper's `3/2` ("approximately") and `1`: the
+  `O(h)` matching of the conditional means and standard deviations holds in every `L^p`, not on
+  every path, so the tails cost an arbitrarily small loss, and `α` is derived from the strong error
+  and the bounded density of `S_T`, not from a weak-order analysis.  Neither loss changes the
+  complexity: Theorem 1 holds at the paper's `O(ε⁻²)` with `α = 3/4`, `β = 5/4`, `γ = 1`.  `K ≠ 0`
+  is assumed for the variance rate and Theorem 1 (near the strike the conditional standard deviation
+  `|σŜ|√h` is then of order `√h`), with `s₀ ≠ 0`, `σ ≠ 0`, `T > 0`; `K = 0` is an easy case left out
+  (for small `h` the Milstein path keeps the sign of `s₀`, so the corrections are exponentially
+  small; not proved).  The factor `25e^{−rT}` is omitted, `b` stands for `|b|` in the denominators,
+  and the coarse numerator uses the re-used increment `b ΔW_{N−2}` in place of the printed `b√h_ℓ`.
+  Splitting (Euler–Maruyama final step, sub-samples independent of the path): `M_ℓ = ⌈h_ℓ^{−1/2}⌉`
+  gives the rate of the conditional expectation at an extra cost `o(h_ℓ^{−1})`, not the same
+  variance to leading order, which would need `M_ℓ h_ℓ^{1/2} → ∞` and lower bounds (numerically the
+  ratio of the two variances stays near `15` with this `M_ℓ`); Theorem 1 is not stated for the
+  splitting estimator.  The kurtosis `O(h^{−1/2})` is not proved.
+* **Tau-leaping with the exact SSA level (`TauLeapingSSA.lean`, round 23).** One reaction, a bounded
+  propensity `λ ≤ Λ` and a bounded payoff `|Φ| ≤ M` (Anderson and Higham treat several reactions).
+  The exact chain is simulated by uniformisation, a rate-`Λ` clock thinned with probabilities
+  `λ(x)/Λ`, not by Gillespie's exponential waiting times; it is the same Markov chain
+  (`exactLaw_unique`).  The coupling uses a shared uniform per tick, which enters only through the
+  joint law `ssaTick` of one tick; it is not Anderson and Higham's split coupling of unit-rate
+  Poisson processes, although for one reaction it has the same jump rates and so is theirs in law (a
+  remark, not proved).  The cost of an exact-level sample is its expected value `2^L + ΛT`; the
+  random cost is not modelled.  `ε ≤ 1`, and the constant `c` depends on `L`.  The rate `O(ε⁻²)`
+  uses only that the estimator is unbiased with finitely many levels of finite variance (plain Monte
+  Carlo on the exact chain has it too); the coupling only makes the exact-level variance
+  `O(2^{−L})`.
+* **The truncated Karhunen–Loève field (`KarhunenLoeve.lean`, round 23).** Mercer's theorem is not
+  formalised; what it provides is assumed: an s-finite `(D, ν)`, orthonormal `f_n ∈ L²(ν)`, summable
+  `θ_n ≥ 0` and, where needed, the pointwise expansion `R(x, y) = ∑ θ_n f_n(x) f_n(y)`, for a
+  general `R` in place of the paper's stationary `r(x − y)`; the hypotheses are satisfiable
+  (`kl_hypotheses_satisfiable`, a discrete diagonal kernel, not a stationary covariance on a domain
+  of `ℝ^d`).  The decreasing order of the `θ_n` is not needed and not assumed.  The truncation error
+  is `∑_{n≥K} θ_n` (the terms `n < K` are kept), for a limit field in `L²(P ⊗ ν)`; almost sure
+  convergence of the series, the law of the limit field, the moments of the untruncated `κ = exp Y`
+  and of `max_x κ`, `1/min_x κ`, and the elliptic PDE analysis are not proved.
+* **Change-of-measure variance (`ChangeOfMeasureVariance.lean`, round 23).** The payoff `g` is
+  bounded and measurable, as the digital payoff is.  The condition `v_f, v_c < 2v` is sufficient for
+  the correction to be in `L²`; it is necessary for a single weight, and for the correction only
+  when exactly one of the two conditions fails and `|g| ≥ c > 0`, which excludes the digital payoff
+  (the module docstring gives a digital example in `L²` with `v_f = 2v`).  The statements are for
+  fixed conditional laws: the means and variances of the final Euler–Maruyama step are not
+  substituted, and with the averaged choice
+  `E[L_f²] = (v_f + v_c)/(2√(v_f v_c)) · exp((m_f − m_c)²/(4v_c))` is unbounded as `v_c/v_f → 0`, so
+  finite variance after averaging over the paths does not follow.  The paper's "the resulting
+  variance is no better" (empirical) and the cost are not formalised.
+* **prove2.me metadata (round 23).** 42 text fields of `prove2me/metadata.json` contained literal
+  `\"` and `\n` escapes, left by raw strings in earlier generator scripts; they are now real quotes
+  and newlines.  LaTeX commands that begin with these letters, such as `\ne` and `\nu`, are
+  untouched.
 
 ### Corrections to the papers recorded elsewhere, collected
 
@@ -543,7 +596,7 @@ Lean statement or to the reason it is not formalised. The deviations of the new 
 | G15 | §2.1, p. 7 | "Because of condition i), we have `2^{−αL} = O(ε)`, and hence `C_L = O(ε^{−γ/α})`" | `C_L = O(ε^{−γ/α})` needs `2^{αL} = O(ε⁻¹)`, which holds because `L` is the least level meeting the bias target | `finest_cost_le`, `two_rpow_levelL_le` |
 | G15 | §2.3, p. 11 | expansion `E[P_ℓ] − E[P] = ∑_{n=1}^{L} a_n 2^{−nαℓ} + O(2^{−αℓL})` | the remainder has the order of the `n = L` term, which it absorbs; `O(2^{−αℓ(L+1)})` is the natural form. Harmless: the bias bound is the same | `ml2r_bias_le` (reads the printed form) |
 | G15 | §2.3, p. 11 | weights with `∑ w_ℓ 2^{−nαℓ} = 1` | `= 0` | `ml2r_weights` |
-| G15 | §2.3, p. 12 | bias `O(2^{−αL²})`, exponent `√(|log₂ ε|/α)` | `O(2^{−αL(L+1)/2})`, `√(2|log₂ ε|/α)` | `ml2r_bias`, `ml2r_bias_le`, `ml2r_theorem_lt`, `ml2r_bias_not_attainable` |
+| G15 | §2.3, p. 12 | bias `O(2^{−αL²})`, exponent `√(\|log₂ ε\|/α)` | `O(2^{−αL(L+1)/2})`, `√(2\|log₂ ε\|/α)` | `ml2r_bias`, `ml2r_bias_le`, `ml2r_theorem_lt`, `ml2r_bias_not_attainable` |
 | G15 | §2.4, pp. 13–14 | conditions labelled i), iii), ii), iv), v) | labels as in the Notes | hypothesis names follow the statement |
 | G15 | §2.4, p. 15 | rectangles "optimal order" | only for `O(ε⁻²)` | `mimc_rect_lower_bounds` |
 | G15 | §2.4, pp. 15–16 | for large `D`, standard MLMC has complexity "less (often much less) than the optimal `O(ε⁻²)`" | worse than (of larger order than) `O(ε⁻²)` | `mlmc_optimal_complexity_necessary` |
@@ -555,14 +608,14 @@ Lean statement or to the reason it is not formalised. The deviations of the new 
 | G15 | §5, p. 29 | `h_ℓ = h₀M^ℓ` | `h₀M^{−ℓ}` | `timestep_rate` |
 | G15 | §5.1, pp. 29–30 | Lipschitz payoffs "(such as European, Asian and lookback options)"; with `h_ℓ = 2^{−ℓ}h₀`, `α = 1` | for a lookback option monitored at the time steps the weak order is `½` (the discrete maximum is biased by about `0.5826 σ h^{1/2}` times the mean maximum); the complexity is unchanged, since `α ≥ ½ min(β, γ)` | `gbm_em_gridLookback_mean_converges` (`α = (1 − δ)/2`; the order `½` is argued in its docstring) |
 | G15 | §5.1, p. 33, Table 5.2 | `O(h^{1/2} log h)` | `O(h^{1/2} \|log h\|)` (`log h < 0`) | — |
-| G15 | §5.2, p. 36 | coarse numerator `b√h_ℓ`; `Φ(…/(b√h_ℓ))`; digital constant `25` | `b ΔW_{N−2}`; `|b|` in the denominator; `10` as on p. 30 | `digital_smoothing_coarse`, `integral_digital_final_step` |
+| G15 | §5.2, p. 36 | coarse numerator `b√h_ℓ`; `Φ(…/(b√h_ℓ))`; digital constant `25` | `b ΔW_{N−2}`; `\|b\|` in the denominator; `10` as on p. 30 | `digital_smoothing_coarse`, `integral_digital_final_step`, `gbmDigitalCondCoarse`, `gbmCondMeanCoarse` |
 | G15 | §5.2, p. 38 | "`O(h_ℓ)` difference on average" | `O(h_ℓ^{1/2})` | — |
 | G15 | §5.3, p. 39 | `b(Ŝ^c_n, c_n)` | `b(Ŝ^c_n, t_n)` | — |
 | G15 | §5.5, p. 43 | exit time `τ = inf_t {t : S_t ∉ V}` in `u(x, t) = E[… \| S_t = x]` | `τ = inf {s ≥ t : S_s ∉ V}` (the bound variable clashes with the time `t` of the conditioning) | — |
 | G15 | §6.1, p. 47 | "this introduces a Radon-Nikodym into the payoff evaluation" | "a Radon–Nikodym derivative" | — |
-| G15 | §7.1, p. 49 | a constant `K` with `|P − P_ℓ| < K h_ℓ²` | impossible for the example (error `∝ Z²`); a random `K` with `E[K²] < ∞` | `elliptic_rates` (literal), `ApplicationExtras.lean` (random `K`), `not_ae_abs_ellipticP_sub_le`, `ellipticPl_error` |
+| G15 | §7.1, p. 49 | a constant `K` with `\|P − P_ℓ\| < K h_ℓ²` | impossible for the example (error `∝ Z²`); a random `K` with `E[K²] < ∞` | `elliptic_rates` (literal), `ApplicationExtras.lean` (random `K`), `not_ae_abs_ellipticP_sub_le`, `ellipticPl_error` |
 | G15 | §7.1, p. 51 | `P = ∫₀¹ u²(x, 0.25)` | `P = ∫₀¹ u²(x, 0.25) dx` | `parabolicP` (grid quadrature), `parabolicLimit` |
-| G15 | §7.2, p. 53 | "Samples of `log k`"; "`f_n` are the corresponding eigenfunctions" | `log κ`; the `f_n` must be orthonormal in `L²` | — |
+| G15 | §7.2, p. 53 | "Samples of `log k`"; "`f_n` are the corresponding eigenfunctions" | `log κ`; the `f_n` must be orthonormal in `L²` | `klField`, `klField_levelCorrection`, `exists_klField_limit` (orthonormal `f_n` assumed) |
 | G15 | §5.6, p. 44 | "a change or variables" | "a change of variables" | — |
 | G15 | §7.3, p. 54 | `√h Z_n` | `√k Z_n` | `ApplicationExtras.lean`, `spdeStep_eq_milstein` |
 | G15 | §9.1, p. 58; §9.2, p. 60 | `−1/(4N_ℓ)` | `−1/(8N_ℓ)` | `antithetic_quadratic`, `NestedRates.lean` |

@@ -56,8 +56,12 @@ here `α` is the mismatch rate `q < ½`, which gives `O(ε^{−3−η})`.  The e
 `η > 0`.  The barrier option of the paper is continuously monitored; its analysis (Giles, Higham and
 Mao 2009) and the Milstein rows `O(h^{3/2})` of Table 5.2 (Brownian-bridge estimators) are out of
 reach here; for the discretely monitored option with the natural estimators the rates are those of
-the digital option.  The variance of the splitting estimator (l. 1597–1600, "the variance is the
-same, to leading order") is not formalised.
+the digital option.  The variance of the splitting estimator with a Milstein final step
+(l. 1597–1600, "the variance is the same, to leading order") is not formalised; with an
+Euler–Maruyama final step its rate (the rate of the conditional expectation, not the same variance
+to leading order) is in `MlmcLean.GBMDigitalCondExp` (`gbm_digital_split_variance_rate`,
+`gbm_digital_split_sqrt_rate`), together with the conditional-expectation estimator itself at cost
+`O(ε⁻²)` (`gbm_digital_condExp_theorem1`).
 
 **Hypotheses.**  `σ ≠ 0` is needed in the digital and the barrier statements: for `σ = 0`,
 `s₀ = −1`, `r = T = 1` and `K = −e` the Euler–Maruyama (= Milstein) paths are deterministic,
