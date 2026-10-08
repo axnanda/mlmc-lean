@@ -209,15 +209,23 @@ items listed under "Not formalised" below.
   sample variance (`EstimatorRemarks.lean`); drift-implicit Euler with multiplicative noise, the
   time-reversed path as a Brownian motion, several kinks (`SDEExtensions.lean`); contracting SDEs
   with level-dependent steps (`ContractingLevels.lean`).
+- ✅ Round 20: `L^p` strong errors for GBM and the digital option's rates up to an arbitrarily
+  small loss in the exponent (`GBMStrongLp.lean`); path-dependent (adaptive) grids on a base grid,
+  with (2.4), Theorem 1 and Algorithm 3's coupling (`AdaptiveGrids.lean`); randomly shifted rank-1
+  lattice rules in `d` dimensions and the MLQMC complexity with a level-dependent dimension
+  (`LatticeRuleD.lean`); Theorem 1 with a polylogarithmic cost factor, which gives the contracting
+  SDEs of §10.1 the cost `O(ε⁻²|log ε|³)` (`Theorem1Log.lean`).
 - Not formalised (each with its reason in `notes/coverage/README.md`): the convergence orders of the
   discretisations of general SDEs, SPDEs and PDEs (Itô calculus and PDE regularity are not in
   Mathlib; proved for geometric Brownian motion from its exact solution) and of QMC in `d`
-  dimensions (discrepancy theory; the one-dimensional case and the MLQMC complexity it gives are
-  proved); the optimality of the simplex among all MIMC index sets; the kurtosis rates of the
-  digital option (and its rates `O(h^{1/2})`, `O(h)`: they need `L^p` strong errors); continuously
-  monitored path-dependent payoffs (Brownian-bridge extremes; fixed monitoring dates are proved for
-  GBM); path-dependent (adaptive) grids for Brownian and Poisson noise (a martingale argument;
-  deterministic union grids are proved); tau-leaping's weak rate for unbounded payoffs and the
+  dimensions (discrepancy theory and the existence of good lattices; the one-dimensional case, and
+  in `d` dimensions the variance of shifted lattice rules and the MLQMC complexity given the decay
+  of the dual-lattice sums, are proved); the optimality of the simplex among all MIMC index sets;
+  the kurtosis upper bounds of the digital option and the endpoints of its rates `O(h^{1/2})`,
+  `O(h)` (every smaller exponent is proved for GBM from `L^p` strong errors); continuously monitored
+  path-dependent payoffs (Brownian-bridge extremes; fixed monitoring dates are proved for GBM);
+  real-valued adaptive step sizes (Brownian motion at stopping times; deterministic union grids and
+  adaptive steps on a base grid are proved); tau-leaping's weak rate for unbounded payoffs and the
   pathwise exact (SSA) coupling (bounded payoffs are proved); the general moment results for
   super-linear drifts (the paper's example `dS = −S³dt + dW` is proved); the jump-diffusion and
   Lévy-process theory of §6 beyond grid values (the Poisson and Lévy processes themselves; the

@@ -410,10 +410,10 @@ Lean statement or to the reason it is not formalised. The deviations of the new 
   (`IsPreBrownianReal`), not for path continuity.
 * **The digital option for GBM (`GBMDigital.lean`, round 18).** The rates proved are those the
   mean-square strong error gives (`h^{1/3}` for Euler–Maruyama, `h^{2/3}` for Milstein), not the
-  paper's `O(h^{1/2})` and `O(h)`, which need `L^p` strong errors; the exponent is the best mean
-  square gives (`digital_mismatch_exponent_sharp`).  The kurtosis bounds use the raw fourth moment
-  (the paper's definition is for zero-mean `X`).  The law equality for the smoothed coarse payoff is
-  for autonomous coefficients `a(S)`, `b(S)`.
+  paper's `O(h^{1/2})` and `O(h)`, which need `L^p` strong errors (round 20, below); the exponent is
+  the best mean square gives (`digital_mismatch_exponent_sharp`). The kurtosis bounds use the raw
+  fourth moment (the paper's definition is for zero-mean `X`). The law equality for the smoothed
+  coarse payoff is for autonomous coefficients `a(S)`, `b(S)`.
 * **Tau-leaping against the exact chain (`TauLeapingExact.lean`, round 18).** The exact chain is
   built by uniformisation for bounded propensities `λ ≤ Λ` and identified by its master equation;
   the weak rate is for bounded payoffs.  The pathwise SSA coupling of §8 is not formalised.
@@ -452,6 +452,12 @@ Lean statement or to the reason it is not formalised. The deviations of the new 
   does not state, needed for §10.1: condition iv) becomes `C_ℓ ≤ c₃(ℓ+1)^κ 2^{γℓ}` with `κ ≥ 0`
   (needed except in `giles_theorem1_log_of_lt`); Giles' `β > 0` is dropped.  The §10.1 corollary
   keeps the deviations of `ContractingLevels.lean`.
+* **`L^p` strong errors for GBM (`GBMStrongLp.lean`, round 20).** The strong errors are proved at
+  grid points, with explicit but loose constants (for `m = 2` at the paper's parameters a factor of
+  about `2·10⁶` (EM) and `1.5·10⁹` (Milstein) above the exact ratio), so the digital exponents
+  improve on `GBMDigital.lean` only asymptotically.  Every exponent below the paper's `½` and `1` is
+  reached; the endpoints, the `log h` of Table 5.2 and the kurtosis upper bounds are not.  The
+  payoff factors `10e^{−rT}` and `25e^{−rT}` are omitted.
 
 ### Corrections to the papers recorded elsewhere, collected
 

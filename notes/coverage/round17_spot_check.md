@@ -90,3 +90,10 @@ time-reversed path as a Brownian motion and several kinks (`SDEExtensions.lean`)
 SDEs with level-dependent steps (`ContractingLevels.lean`).  Still open from the list: adaptive
 (path-dependent) grids, `L^p` strong errors for GBM, the shifted-lattice variance in `d`
 dimensions, and the large items.
+
+**Follow-up (round 20).** Formalised: `L^p` strong errors for GBM and the digital rates up to an
+arbitrarily small loss in the exponent (`GBMStrongLp.lean`), adaptive grids on a base grid with
+Algorithm 3's coupling (`AdaptiveGrids.lean`), the shifted-lattice variance in `d` dimensions and
+the MLQMC complexity it gives (`LatticeRuleD.lean`), and Theorem 1 with a polylogarithmic cost
+factor, which gives G10.1-16 the cost `O(ε⁻²|log ε|³)` (`Theorem1Log.lean`).  Every small, medium
+and medium-to-large item of the list above is now formalised; the items "out of reach" remain.
