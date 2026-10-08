@@ -456,8 +456,8 @@ theorem lintegral_dist_levels_le (hφm : Measurable fun q : α × E => φ q.1 q.
 increases".**  With the hypotheses of `lintegral_dist_levels_le`, let `f` be Hölder continuous with
 exponent `γ`, `|f(y) − f(x)| ≤ d(x, y)^γ`, and `c = E[d(x₀, φ(x₀, ξ))^{2γ}] < ∞`.  The multilevel
 correction `P_ℓ − P_{ℓ−1} = f(X^{(ℓ)}) − f(X^{(ℓ−1)})`, with the level `ℓ` path started `N` steps
-and the level `ℓ − 1` path `N' ≤ N` steps in the past, has variance at most
-`4c/(1 − ρ)² · ρ^{N'}`: it decays exponentially in the number `N'` of shared steps. -/
+and the level `ℓ − 1` path `N' ≤ N` steps in the past, is square integrable and has variance at
+most `4c/(1 − ρ)² · ρ^{N'}`: it decays exponentially in the number `N'` of shared steps. -/
 theorem variance_levels_le (hφm : Measurable fun q : α × E => φ q.1 q.2) {γ ρ : ℝ}
     (hφ : ∀ x y, ∫⁻ e, ENNReal.ofReal (dist (φ x e) (φ y e) ^ (2 * γ)) ∂ν ≤
       ENNReal.ofReal ρ * ENNReal.ofReal (dist x y ^ (2 * γ)))
@@ -466,6 +466,8 @@ theorem variance_levels_le (hφm : Measurable fun q : α × E => φ q.1 q.2) {γ
     (hc : ∫⁻ e, ENNReal.ofReal (dist x₀ (φ x₀ e) ^ (2 * γ)) ∂ν ≠ ∞)
     {f : α → ℝ} (hfm : Measurable f) (hf : ∀ x y, |f x - f y| ≤ dist x y ^ γ) {N N' : ℕ}
     (hN : N' ≤ N) :
+    MemLp (fun ω => f (backIter φ N (fun k => ξ k ω) x₀) -
+        f (backIter φ N' (fun k => ξ k ω) x₀)) 2 μ ∧
     variance (fun ω => f (backIter φ N (fun k => ξ k ω) x₀) -
         f (backIter φ N' (fun k => ξ k ω) x₀)) μ ≤
       4 / (1 - ρ) ^ 2 * (∫⁻ e, ENNReal.ofReal (dist x₀ (φ x₀ e) ^ (2 * γ)) ∂ν).toReal *
@@ -489,6 +491,12 @@ theorem variance_levels_le (hφm : Measurable fun q : α × E => φ q.1 q.2) {γ
     have h := hf (backIter φ N (fun k => ξ k ω) x₀) (backIter φ N' (fun k => ξ k ω) x₀)
     rw [mul_comm, Real.rpow_mul dist_nonneg, Real.rpow_two, ← sq_abs]
     exact pow_le_pow_left₀ (abs_nonneg _) h 2
+  have hint : Integrable (fun ω => (f (backIter φ N (fun k => ξ k ω) x₀) -
+      f (backIter φ N' (fun k => ξ k ω) x₀)) ^ 2) μ := by
+    refine ⟨(hΔm.pow_const 2).aestronglyMeasurable, ?_⟩
+    rw [hasFiniteIntegral_iff_ofReal (Filter.Eventually.of_forall fun ω => sq_nonneg _)]
+    exact ((lintegral_mono hpt).trans hlev).trans_lt hfin.lt_top
+  refine ⟨(memLp_two_iff_integrable_sq hΔm.aestronglyMeasurable).2 hint, ?_⟩
   calc variance (fun ω => f (backIter φ N (fun k => ξ k ω) x₀) -
         f (backIter φ N' (fun k => ξ k ω) x₀)) μ
       ≤ ∫ ω, (f (backIter φ N (fun k => ξ k ω) x₀) -

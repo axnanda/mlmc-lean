@@ -260,7 +260,7 @@ theorem gbm_call_mlmc_theorem1 (r σ s₀ K : ℝ) {T : ℝ} (hT : 0 ≤ T) :
     exact (hPf ℓ).comp_measurePreserving measurePreserving_pairAvg
   obtain ⟨c₄, hc₄, h⟩ := gbm_mlmc_theorem1 r σ s₀ hT hg
   refine ⟨c₄, hc₄, fun ε hε hε1 => ?_⟩
-  obtain ⟨L, N, hN, hmse, hcost⟩ := h ε hε hε1
+  obtain ⟨L, N, hN, -, hmse, hcost⟩ := h ε hε hε1
   exact ⟨L, N, hN, integrable_sq_sum_blockMean_sub hω (memLp_fineCoarseDiff hPf hPc) L N _,
     hmse, hcost⟩
 
@@ -303,7 +303,7 @@ theorem gbm_mil_call_mlmc_theorem1 (r σ s₀ K : ℝ) {T : ℝ} (hT : 0 ≤ T) 
   obtain ⟨c₄, hc₄, h⟩ := gbm_mil_mlmc_theorem1 r σ s₀ hT
     (g := fun S => Real.exp (-r * T) * max (S - K) 0) hg
   refine ⟨c₄, hc₄, fun ε hε hε1 => ?_⟩
-  obtain ⟨L, N, hN, hmse, hcost⟩ := h ε hε hε1
+  obtain ⟨L, N, hN, -, hmse, hcost⟩ := h ε hε hε1
   exact ⟨L, N, hN, integrable_sq_sum_blockMean_sub hω (memLp_fineCoarseDiff hPf hPc) L N _,
     hmse, hcost⟩
 

@@ -1084,9 +1084,10 @@ complexity which is `O(ε⁻²(log ε)⁻²)`").  Under the hypotheses of `neste
 uniformly in `Z`), which stand in for the orders of the Milstein scheme, let the inputs
 `ω^{(ℓ,n)}` be independent with law `ν ⊗ ρ^{⊗ℕ}` and let the level-`ℓ` cost have mean
 `C_ℓ ≤ c₃ 4^ℓ`.  Then there is `c₄ > 0` such that for every `0 < ε < e⁻¹` there are `L` and
-`N_ℓ ≥ 1` for which the MLMC estimator of `E_Z[f(E_W[g(Z, W)])]` has mean square error `< ε²` and
-expected cost `≤ c₄ ε⁻² (log ε)²`: Theorem 1 (`giles_theorem1_corrections`) with `β = γ = 2`.  The
-exponent of `log ε` printed in the paper, `−2`, should be `2` (see `nested_complexity`). -/
+`N_ℓ ≥ 1` for which the MLMC estimator of `E_Z[f(E_W[g(Z, W)])]` has a square-integrable error
+with mean square `< ε²`, and expected cost `≤ c₄ ε⁻² (log ε)²`: Theorem 1
+(`giles_theorem1_corrections`) with `β = γ = 2`.  The exponent of `log ε` printed in the paper,
+`−2`, should be `2` (see `nested_complexity`). -/
 theorem nested_sde_mlmc_complexity {Ω : Type*} [MeasurableSpace Ω] {μ : Measure Ω}
     [IsProbabilityMeasure μ] {f f' : ℝ → ℝ} {K : ℝ} (hf : ∀ x, HasDerivAt f (f' x) x)
     (hf' : ∀ x y, x ≤ y → |f' y - f' x| ≤ K * (y - x)) {gh : ℕ → 𝒵 → 𝒲 → ℝ}
@@ -1104,6 +1105,8 @@ theorem nested_sde_mlmc_complexity {Ω : Type*} [MeasurableSpace Ω] {μ : Measu
     (hC : ∀ ℓ : ℕ, C ℓ ≤ c₃ * 4 ^ ℓ) :
     ∃ c₄ : ℝ, 0 < c₄ ∧ ∀ ε : ℝ, 0 < ε → ε < Real.exp (-1) →
       ∃ (L : ℕ) (N : ℕ → ℕ), (∀ ℓ, 0 < N ℓ) ∧
+        Integrable (fun x => (∑ ℓ ∈ range (L + 1), blockMean (nestedSdeDelta f gh) ω ℓ (N ℓ) x -
+          ∫ z, f (∫ v, g z v ∂ρ) ∂ν) ^ 2) μ ∧
         μ[fun x => (∑ ℓ ∈ range (L + 1), blockMean (nestedSdeDelta f gh) ω ℓ (N ℓ) x -
           ∫ z, f (∫ v, g z v ∂ρ) ∂ν) ^ 2] < ε ^ 2 ∧
         μ[totalCost cost L N] ≤ c₄ * (ε ^ (-2 : ℝ) * Real.log ε ^ 2) := by
@@ -1182,7 +1185,8 @@ theorem nested_sde_mlmc_complexity {Ω : Type*} [MeasurableSpace Ω] {μ : Measu
   obtain ⟨L, N, hN, hmse, hcost'⟩ := h ε hε hε1
   rw [hPint] at hmse
   rw [complexityBound_of_eq rfl ε] at hcost'
-  exact ⟨L, N, hN, hmse, hcost'⟩
+  exact ⟨L, N, hN, ((memLp_finsetSum _ fun ℓ _ => memLp_blockMean hω hΔ ℓ (N ℓ)).sub
+    (memLp_const _)).integrable_sq, hmse, hcost'⟩
 
 end Discretised
 
@@ -1803,9 +1807,10 @@ sufficiently large to achieve an overall complexity which is `O(ε⁻²)`").  Un
 `nested_kink_variance_rate`, for independent inputs `ω^{(ℓ,n)}` with law `ν ⊗ ρ^{⊗ℕ}` and level-`ℓ`
 costs with mean `C_ℓ ≤ c₃ 2^ℓ` (`M_ℓ = 2^ℓ` inner samples), there is `c₄ > 0` such that for every
 `0 < ε < e⁻¹` there are `L` and `N_ℓ ≥ 1` for which the MLMC estimator
-`∑_{ℓ ≤ L} N_ℓ⁻¹ ∑_{n < N_ℓ} Y_ℓ(ω^{(ℓ,n)})` of `E_Z[f(E_W[g(Z, W)])]` has mean square error `< ε²`
-and expected cost `≤ c₄ ε⁻²`: Theorem 1 (`giles_theorem1_corrections`) with `α = ½`
-(`nested_kink_bias_rate`), `β = 3/2` (`nested_kink_variance_rate`) and `γ = 1`. -/
+`∑_{ℓ ≤ L} N_ℓ⁻¹ ∑_{n < N_ℓ} Y_ℓ(ω^{(ℓ,n)})` of `E_Z[f(E_W[g(Z, W)])]` has a square-integrable
+error with mean square `< ε²`, and expected cost `≤ c₄ ε⁻²`: Theorem 1
+(`giles_theorem1_corrections`) with `α = ½` (`nested_kink_bias_rate`), `β = 3/2`
+(`nested_kink_variance_rate`) and `γ = 1`. -/
 theorem nested_kink_mlmc_complexity {Ω : Type*} [MeasurableSpace Ω] {μ : Measure Ω}
     [IsProbabilityMeasure μ] {f : ℝ → ℝ} {a₀ a₁ c k : ℝ}
     (hf : ∀ x, f x = a₀ + a₁ * x + c * max (x - k) 0) {g : 𝒵 → 𝒲 → ℝ}
@@ -1818,6 +1823,8 @@ theorem nested_kink_mlmc_complexity {Ω : Type*} [MeasurableSpace Ω] {μ : Meas
     (hC : ∀ ℓ : ℕ, C ℓ ≤ c₃ * 2 ^ ℓ) :
     ∃ c₄ : ℝ, 0 < c₄ ∧ ∀ ε : ℝ, 0 < ε → ε < Real.exp (-1) →
       ∃ (L : ℕ) (N : ℕ → ℕ), (∀ ℓ, 0 < N ℓ) ∧
+        Integrable (fun x => (∑ ℓ ∈ range (L + 1), blockMean (nestedDelta f g) ω ℓ (N ℓ) x -
+          ∫ z, f (∫ v, g z v ∂ρ) ∂ν) ^ 2) μ ∧
         μ[fun x => (∑ ℓ ∈ range (L + 1), blockMean (nestedDelta f g) ω ℓ (N ℓ) x -
           ∫ z, f (∫ v, g z v ∂ρ) ∂ν) ^ 2] < ε ^ 2 ∧
         μ[totalCost cost L N] ≤ c₄ * ε ^ (-2 : ℝ) := by
@@ -1914,7 +1921,8 @@ theorem nested_kink_mlmc_complexity {Ω : Type*} [MeasurableSpace Ω] {μ : Meas
   obtain ⟨L, N, hN, hmse, hcost'⟩ := h ε hε hε1
   rw [hPint] at hmse
   rw [complexityBound_of_lt (by norm_num) ε] at hcost'
-  exact ⟨L, N, hN, hmse, hcost'⟩
+  exact ⟨L, N, hN, ((memLp_finsetSum _ fun ℓ _ => memLp_blockMean hω hΔ ℓ (N ℓ)).sub
+    (memLp_const _)).integrable_sq, hmse, hcost'⟩
 
 end Kink
 

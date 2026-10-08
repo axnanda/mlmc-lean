@@ -648,3 +648,34 @@ Findings and what was done:
   and polynomial growth only to make the moments finite; the `∫⁻` versions carry no extra
   hypotheses.  Documented.  Kept.
 
+**Twenty-second round (2026-10-08).** Blind read-backs of the 52 theorems added in round 22:
+`gbm_digital_theorem1.md` (R33: `GBMDigitalTheorem1`; 11 theorems), `spot_check_remarks.md` (R34:
+`SpotCheckRemarks`; 14), `parabolic_example.md` (R35: `ParabolicExample`; 9), `nested_kink_curved.md`
+(R36: `NestedKinkCurved`; 8) and `tau_leaping_extensions.md` (R37: `TauLeapingExtensions`; 10).  All
+52 read back as true; none is vacuous and none holds only because of a junk value.  The R35 auditor
+checked by hand that the limit of the parabolic level means is `E∫₀¹u(x,¼)²dx` for the paper's SPDE
+(the identification the module leaves to its documentation) and reproduced the rates numerically.
+The R36 auditor checked that the packet statements are the repository's (`type_of%` examples) and
+computed the two-axes MIMC bias and variances exactly.  The R37 auditor proved in Lean that the
+sampling measure of the Lipschitz tau-leaping theorem is a probability measure (so the theorem is not
+trivial through `Measure.infinitePi = 0`) and that dropping the adaptive-grid hypotheses breaks the
+law identities.
+Findings and what was done:
+
+- **`integral_condExp_milstein_coarse_eq_fine` only says that the means are equal** (the conditional
+  expectation integrates away, and without integrability of `g` both sides are `0`); it mirrors
+  `integral_condExp_milsteinEM_coarse_eq_fine`.  Documented.  Kept.
+- **The Euler–Maruyama digital and barrier results are correct but not sharp** (cost
+  `O(ε^{−3−η})` against the paper's `O(ε^{−2.5})`, which needs the weak order 1 of the digital option).
+  Documented.  Kept.
+- **`ParabolicExample`'s constants are loose** (factors of about 770 and 35,000); only the rates
+  `α = 2`, `β = 4` carry information.  The model has one scalar Brownian motion, `λ = 1/4` and
+  `T = 1/4` fixed, as in the paper.  Kept.
+- **`gbm_em_identity_variance_two_sided` assumes `|r|T ≤ 2^ℓ`**, which the numerics suggest is not
+  needed.  **`nested_kinks_sde_variance_rate` assumes an `L⁴` strong error of order 1**, stronger than
+  the rate needs (it excludes plain Euler–Maruyama inner samplers).  **`kinkInnerApprox_mimc_axes_complexity`
+  holds for the counterexample only** (its mean splits into a function of each index).  Documented.
+  Kept.
+- **`TauLeapingExtensions` covers one species with bounded propensities**; the adaptive results are
+  law identities only (no variance rate).  Documented.  Kept.
+

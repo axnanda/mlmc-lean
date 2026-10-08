@@ -1674,10 +1674,11 @@ sample, strong order `½` in `L²`, the small ball for `E_W[g(Z, W)]` at the kin
 `E[g₀(Z, W)²] < ∞`.  Let the inputs `ω^{(ℓ,n)}` be independent with law `ν ⊗ ρ^{⊗ℕ}` and let a
 level-`ℓ` sample cost `C_ℓ ≤ c₃ 2^{ℓ₁+ℓ₂}` on average.  Then there is `c₄ > 0` such that for
 every `0 < ε < e⁻¹` there are a finite set of levels `𝓛 ⊂ ℕ²` and `N_ℓ ≥ 1` for which the MIMC
-estimator `∑_{ℓ∈𝓛} N_ℓ⁻¹ ∑_{n<N_ℓ} Y_ℓ(ω^{(ℓ,n)})` of `E_Z[f(E_W[g(Z, W)])]` has mean square
-error `< ε²` at expected cost `≤ c₄ ε⁻² |log ε|⁴`.  Proof: Theorem 2 (`giles_theorem2_boundary`)
-with `α = (½, ½)`, `β = γ = (1, 1)` (`nested_mimc_kink_all_levels`, `nested_mimc_kink_bias`,
-`integral_nestedMimcDelta_eq`, `nested_mimc_kink_exponents`).  Correction: the paper derives
+estimator `∑_{ℓ∈𝓛} N_ℓ⁻¹ ∑_{n<N_ℓ} Y_ℓ(ω^{(ℓ,n)})` of `E_Z[f(E_W[g(Z, W)])]` has a
+square-integrable error and mean square error `< ε²` at expected cost `≤ c₄ ε⁻² |log ε|⁴`.  Proof:
+Theorem 2 (`giles_theorem2_boundary`) with `α = (½, ½)`, `β = γ = (1, 1)`
+(`nested_mimc_kink_all_levels`, `nested_mimc_kink_bias`, `integral_nestedMimcDelta_eq`,
+`nested_mimc_kink_exponents`).  Correction: the paper derives
 `O(ε⁻²)` from Theorem 2 with `β_d = 1.5 > γ_d = 1`; these rates are false
 (`nested_mimc_kink_rates_false`), and with the corrected `β = γ` Theorem 2 gives only the bound
 `O(ε⁻² |log ε|⁴)`.  This is an upper bound: whether `O(ε⁻²)` is attainable with another index
@@ -1706,6 +1707,9 @@ theorem nested_mimc_kink_complexity {Ω : Type*} [MeasurableSpace Ω] {μ : Meas
     (hC : ∀ ℓ : Fin 2 → ℕ, C ℓ ≤ c₃ * 2 ^ (ℓ 0 + ℓ 1)) :
     ∃ c₄ : ℝ, 0 < c₄ ∧ ∀ ε : ℝ, 0 < ε → ε < Real.exp (-1) →
       ∃ (𝓛 : Finset (Fin 2 → ℕ)) (N : (Fin 2 → ℕ) → ℕ), (∀ ℓ, 0 < N ℓ) ∧
+        Integrable (fun x => (∑ ℓ ∈ 𝓛,
+          blockMean (fun ℓ : Fin 2 → ℕ => nestedMimcDelta f gh (ℓ 0) (ℓ 1)) ω ℓ (N ℓ) x -
+            ∫ z, f (∫ v, g z v ∂ρ) ∂ν) ^ 2) μ ∧
         μ[fun x => (∑ ℓ ∈ 𝓛, blockMean (fun ℓ : Fin 2 → ℕ => nestedMimcDelta f gh (ℓ 0) (ℓ 1))
           ω ℓ (N ℓ) x - ∫ z, f (∫ v, g z v ∂ρ) ∂ν) ^ 2] < ε ^ 2 ∧
         μ[fun x => ∑ ℓ ∈ 𝓛, ∑ n ∈ range (N ℓ), cost ℓ n x] ≤
@@ -1863,7 +1867,8 @@ theorem nested_mimc_kink_complexity {Ω : Type*} [MeasurableSpace Ω] {μ : Meas
   obtain ⟨𝓛, N, hN, hmse, hcost'⟩ := h ε hε hε1
   rw [hPint] at hmse
   rw [(hbd ε).1] at hcost'
-  exact ⟨𝓛, N, hN, hmse, hcost'⟩
+  exact ⟨𝓛, N, hN, ((memLp_finsetSum _ fun ℓ _ => memLp_blockMean hω hΔ ℓ (N ℓ)).sub
+    (memLp_const _)).integrable_sq, hmse, hcost'⟩
 
 end Cost
 

@@ -445,8 +445,8 @@ theorem markov_linear_levels (hφm : Measurable fun q : α × E => φ q.1 q.2) {
   · cases ℓ with
     | zero =>
       -- level `0`: `V[P_0] = V[f(X^{(b)}) − f(x₀)] ≤ 4c/(1 − ρ)²`
-      have h := variance_levels_le hφm hφ hξ hξm hlaw hγ0 hγ1 hρ0.le hρ1 x₀ hc hfm hf
-        (Nat.zero_le b)
+      have h := (variance_levels_le hφm hφ hξ hξm hlaw hγ0 hγ1 hρ0.le hρ1 x₀ hc hfm hf
+        (Nat.zero_le b)).2
       have e : variance (fun ω => f (backIter φ b (fun k => ξ k ω) x₀) -
           f (backIter φ 0 (fun k => ξ k ω) x₀)) μ =
           variance (fun ω => f (backIter φ b (fun k => ξ k ω) x₀)) μ :=
@@ -456,8 +456,8 @@ theorem markov_linear_levels (hφm : Measurable fun q : α × E => φ q.1 q.2) {
         mul_one]
       exact h.trans (le_div_self hK0 hρa hρa1)
     | succ ℓ =>
-      have h := variance_levels_le hφm hφ hξ hξm hlaw hγ0 hγ1 hρ0.le hρ1 x₀ hc hfm hf
-        (N := a * (ℓ + 1) + b) (N' := a * ℓ + b) (by nlinarith)
+      have h := (variance_levels_le hφm hφ hξ hξm hlaw hγ0 hγ1 hρ0.le hρ1 x₀ hc hfm hf
+        (N := a * (ℓ + 1) + b) (N' := a * ℓ + b) (by nlinarith)).2
       rw [levelDiff_succ, ← pow_mul_eq_two_rpow hρ0 a (ℓ + 1)]
       refine h.trans ?_
       have e : ∀ K : ℝ, K / ρ ^ a * (ρ ^ a * ρ ^ (a * ℓ)) = K * ρ ^ (a * ℓ) := fun K => by

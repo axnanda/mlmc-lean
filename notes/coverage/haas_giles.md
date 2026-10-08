@@ -37,8 +37,8 @@ MISSING, OUT-OF-SCOPE (OOS), N/A.
 | H2-11 | §2.1 p.3 | standard MC "overall cost would be ε⁻²VC" | DONE | mc_cost, mc_cost_lower | |
 | H2-12 | §2.1 p.3 | "if the factor V_ℓC_ℓ decreases (resp. increases) with level then the total cost of MLMC is approximately ε⁻²V_0C_0 (resp. ε⁻²V_LC_L)" | DONE-DEV | optimal_cost_decreasing, optimal_cost_increasing | "Decreases" and "increases" are read as geometric with ratio r. Two-sided bounds with factors (1−r)⁻² and (r/(r−1))². Stated in the docstrings. |
 | H2-13 | §2.1 p.3 | "smaller than the standard Monte Carlo cost by a factor C_0/C_L (resp. V_L/V_0)" | DONE-DEV | mlmc_vs_mc_decreasing, mlmc_vs_mc_increasing | Uses V[P_L] in place of V_0 (docstring: "≈ V₀ in the paper"). Geometric rates as in H2-12. |
-| H2-14 | §2.1 p.3 | "for Lipschitz payoffs for the Euler-Maruyama scheme the variance V_ℓ decreases exponentially with level" | OOS | gbm_correction_variance_le, variance_levelDiff_of_strong | General SDE: documented (Itô). GBM: V_ℓ ≤ c·2^{−ℓ}. The general statement is only conditional on the strong rate. |
-| H2-15 | §2.1 p.3 | "the former leads to the MLMC estimation being cheaper than the standard Monte Carlo estimation" | N/A | (H2-12/13, gbm_mlmc_theorem1, mc_complexity) | Informal conclusion. |
+| H2-14 | §2.1 p.3 | "for Lipschitz payoffs for the Euler-Maruyama scheme the variance V_ℓ decreases exponentially with level" | OOS | gbm_correction_variance_le, variance_levelDiff_of_strong | General SDE: documented (Itô). GBM: V_ℓ ≤ c·2^{−ℓ}. The general statement is only conditional on the strong rate. Round 22 (`SpotCheckRemarks.lean`): for GBM and `g(x) = x` the decay is of exact order `2^{−ℓ}`, `s₀²σ⁴T²e^{−4\|r\|T}/4 · 2^{−ℓ} ≤ V_{ℓ+1} ≤ 6C(T)T 2^{−(ℓ+1)}` for `\|r\|T ≤ 2^ℓ` (`gbm_em_identity_variance_two_sided`). |
+| H2-15 | §2.1 p.3 | "the former leads to the MLMC estimation being cheaper than the standard Monte Carlo estimation" | N/A | (H2-12/13, gbm_mlmc_theorem1, mc_complexity) | Informal conclusion. Spot-check 21: the reason given is a slip (corrections table of `notes/statement-audit.md`): for Euler–Maruyama `β = γ = 1`, so `V_ℓC_ℓ` is roughly constant, not decreasing ("the former"); MLMC then costs about `(L+1)² 2^{−L}` times plain Monte Carlo, less only for `L ≥ 6`. The corrected comparison is not formalised. Round 22 (`SpotCheckRemarks.lean`): for GBM, Euler–Maruyama and `g(x) = x`, `V_ℓC_ℓ` stays between two positive constants at all levels (`gbm_em_identity_variance_two_sided`, `gbm_em_identity_variance_cost`), so the case "the former" (`V_ℓC_ℓ` decreasing) does not hold for this scheme. |
 | H2-16 | (9) | E[P_L] = Σ E[Δ̃P_ℓ] + E[ΔP_ℓ − Δ̃P_ℓ], "ensures that the expectations rigorously cancel out" | DONE | nestedEstimator_mean_variance, nested_mlmc_mse | |
 | H2-17 | (10) | nested cost Σ Ñ_ℓC̃_ℓ + N^Δ_ℓC^Δ_ℓ | DONE | nestedCost_mean, nestedCost | |
 | H2-18 | (11) | nested variance Σ Ñ⁻¹Ṽ + (N^Δ)⁻¹V^Δ | DONE | nestedEstimator_mean_variance, nested_mlmc_mse | Assumes only pairwise independence, a documented generalisation. |
@@ -51,7 +51,7 @@ MISSING, OUT-OF-SCOPE (OOS), N/A.
 | H2-25 | §2.2 p.4 | "Ideally the cost of RNG on the FPGA would be almost negligible" | OOS | — | Hardware. Documented. |
 | H3-01 | §3 p.4–5 | "we exploit the symmetry of Φ⁻¹ so we only need to approximate it on [0,1/2]" | DONE | lutValue_mirror, lutValue_upper_half | Holds for any f with f(1−u) = −f(u). |
 | H3-02 | §3 p.5 | U ↔ D-bit integer J; low precision ↔ d-bit integer j | N/A | coupledUniform (j = ⌊J/2^{D−d}⌋) | Notation. |
-| H3-03 | §3.1 p.5 | LUT of size 2^{d−1}. "The leading bit of j gives the sign ... next d−1 bits are used to pick the right value". "Locating the interval ... is trivial" | DONE | lutValue_upper_half, midpoint_mem_cell | The Lean mirror index is 2^d−1−j, the complement of the low bits. The paper's "next d−1 bits" gives the exact coupling only when read that way (minor imprecision in the paper). |
+| H3-03 | §3.1 p.5 | LUT of size 2^{d−1}. "The leading bit of j gives the sign ... next d−1 bits are used to pick the right value". "Locating the interval ... is trivial" | DONE | lutValue_upper_half, midpoint_mem_cell | The Lean mirror index is 2^d−1−j, the complement of the low bits. The paper's "next d−1 bits" gives the exact coupling only when read that way (minor imprecision in the paper). Spot-check 21: the imprecision is in the corrections table of `notes/statement-audit.md`. |
 | H3-04 | (14)–(15) | minimising the MSE (14) "gives that Z_j is the mean of Φ⁻¹": Z_j = 2^d∫Φ⁻¹ | DONE | integral_sq_sub_eq, intervalMean_isLeast, eq_intervalMean_of_integral_sq_sub_le, lutValue_isLeast | Unique minimiser. Holds for general f with f and f² interval-integrable (true for Φ⁻¹). |
 | H3-05 | §3.1 p.5 | "U = 2^{−D}(J + ½)" (coupled with the interval of j) | DONE | midpoint_mem_cell | |
 | H3-06 | §3.1 p.5 | "for d=10 the LUT stores 2^9=512 values", "may not fit on the FPGA" | OOS | — | Hardware. The arithmetic is trivial. |
@@ -64,13 +64,13 @@ MISSING, OUT-OF-SCOPE (OOS), N/A.
 | H3-13 | (17) | U = 2^{−d}π(j) + 2^{−D}((J−2^{D−d}j)+½) = 2^{−d}(π(j)−j) + 2^{−D}(J+½) | DONE | coupledUniform_eq, coupledUniform_mem, coupledUniform_eq_index, sum_coupledIndex | Also proves U ∈ I_{π(j)} and that U is uniform. |
 | H3-14 | §3.2 p.6 | permutation table (size 2^d) on the CPU, LUT 2^{d/2−1} on the FPGA | N/A | — | Implementation. |
 | H3-15 | §3.2 p.6 | n>2: "divided by √n ... coupled uniform variable ... exactly the same formula" | DONE | coupledUniform (any π), card_signed_sums | The √n scaling is a design choice. |
-| H3-16 | §3.3 p.6 | Z̄_j = a+bj per I'_i = [[2^{i−1}, 2^i−1]], "LUT of size d − 1" | DONE | dyadic_index | |
+| H3-16 | §3.3 p.6 | Z̄_j = a+bj per I'_i = [[2^{i−1}, 2^i−1]], "LUT of size d − 1" | DONE | dyadic_index | Spot-check 21: `dyadic_index` assumes `j ≠ 0`; the index `j = 0` has no leading bit and lies in no `I'_i` (paper slip, corrections table of `notes/statement-audit.md`); `LUTAsymptotics.lean` joins it to `{1}` (`dyadicGroup`). |
 | H3-17 | (18) | ∫(Z̄_j−Φ⁻¹)² = 2^{−d}(Z̄_j−Z_j)² + ∫(Z_j−Φ⁻¹)² | DONE | integral_sq_sub_lutValue | |
 | H3-18 | (19) | "we only need to minimise Σ(Z̄_j − Z_j)²" | DONE | sum_integral_sq_sub_lutValue, sum_integral_sq_le_iff | |
 | H3-19 | §3.3 p.6 | "(18) also shows that for the same value of d this approximation cannot be as good as the method 1" | DONE | method1_le | |
 | H3-20 | §3.3 p.6 | "U is defined in the same way as in method 1 and the coupling follows naturally" | DONE | midpoint_mem_cell | |
 | H3-21 | §3.4 p.7 | "the MSE obtained in methods 2 and 3 are necessarily larger than in method 1" | DONE | method1_le, method1_le_perm | ≥, with equality iff w = Z. |
-| H3-22 | §3.4 p.7 | "for the first two dyadic intervals there are only two points in each so Z̄_j will exactly match Z_j" | DONE | affine_fit_exact | The numerical part is N/A. By the paper's own definition I'_1 = {1} has one point (minor inconsistency in the paper). |
+| H3-22 | §3.4 p.7 | "for the first two dyadic intervals there are only two points in each so Z̄_j will exactly match Z_j" | DONE-DEV | affine_fit_exact | The numerical part is N/A. By the paper's own definition I'_1 = {1} has one point (minor inconsistency in the paper). Spot-check 21 (status corrected from DONE): the two-point groups are those of the Lean grouping, which joins `j = 0` to `{1}` (`dyadicGroup`); `affine_fit_exact` is the generic two-point fit. |
 | H3-23 | §3.4 p.7 | d=10 "only slightly worse". d=12 "nearly a factor 2" | N/A | — | Numerical. |
 | H3-24 | §3.4 p.7 | "as d tends to infinity, the uniform intervals give MSE → 0" | DONE-DEV | tendsto_method1MSE | Holds for any f monotone on (0,1) with f and f² integrable. Mathlib has no Φ⁻¹, so its properties are assumed. Documented in the module docstrings. Round 18: for `Φ⁻¹` itself (`tendsto_method1MSE_normCDFInv`). |
 | H3-25 | §3.4 p.7 | "the dyadic intervals give MSE → C, for some positive constant C" | PARTIAL | dyadic_mse_ge, method3_mse_ge, method3_mse_not_tendsto_zero | Proved: MSE ≥ c > 0 for every d ≥ k+3 if f is strongly concave on one dyadic cell (true for Φ⁻¹ with k≥2; I checked (Φ⁻¹)'' = Φ⁻¹/φ(Φ⁻¹)² ≤ 2πΦ⁻¹(1/4) < 0). Missing: existence of lim MSE = C. Documented (LUTLimits docstring, PLAN M5). Round 14: DONE, the limit exists and is positive (`exists_tendsto_method3MSE`, `LUTAsymptotics.lean`). Round 18: for `Φ⁻¹` itself, the limit exists and is positive (`tendsto_method3MSE_normCDFInv`, `method3_mse_ge_normCDFInv`). |
@@ -152,12 +152,15 @@ MISSING, OUT-OF-SCOPE (OOS), N/A.
 
 | Status | Count |
 |---|---|
-| DONE | 57 |
-| DONE-DEV | 14 |
+| DONE | 56 |
+| DONE-DEV | 15 |
 | PARTIAL | 7 |
 | MISSING | 0 |
 | OOS | 12 (all documented: general SDE rates, Φ⁻¹ asymptotics, or hardware) |
 | N/A | 39 |
+
+The counts follow the status column as corrected after round 10: H3-22 became DONE-DEV in
+spot-check 21 (see `README.md`). The round-10 counts were DONE 57 and DONE-DEV 14.
 
 ## Checks of the repository's "corrected" versions
 

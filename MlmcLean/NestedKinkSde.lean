@@ -1212,13 +1212,14 @@ level-`0` term `Y₀ = P₀` has a finite variance.  Let the inputs `ω^{(ℓ,n)
 law `ν ⊗ ρ^{⊗ℕ}` and let the level-`ℓ` cost have mean `C_ℓ ≤ c₃ 4^ℓ` (twice as many timesteps and
 twice as many inner samples per level).  Then there is `c₄ > 0` such that for every
 `0 < ε < e⁻¹` there are `L` and `N_ℓ ≥ 1` for which the MLMC estimator of
-`E_Z[f(E_W[g(Z, W)])]` has mean square error `< ε²` and expected cost `≤ c₄ ε^{−2.5}`: Theorem 1
-(`giles_theorem1_corrections`) with `α = 1`, `β = 3/2`, `γ = 2`, so `ε^{−2−(γ−β)/α} = ε^{−2.5}`.
-The rate `α = ½` of `nested_kink_bias_rate` would not do: Theorem 1 needs `α ≥ ½ min(β, γ)`, so
-with `α = ½` it applies only with `β` lowered to `1`, and gives `O(ε⁻⁴)`.  Deviation: the paper's
-`f` is continuous and piecewise differentiable; here `f` is piecewise linear with one kink, as in
-`nested_kink_variance_rate`; several kinks or curved pieces are not covered (several kinks would
-follow by summing the hinge terms, given a small-ball bound at each kink). -/
+`E_Z[f(E_W[g(Z, W)])]` has a square-integrable error with mean square `< ε²`, and expected cost
+`≤ c₄ ε^{−2.5}`: Theorem 1 (`giles_theorem1_corrections`) with `α = 1`, `β = 3/2`, `γ = 2`, so
+`ε^{−2−(γ−β)/α} = ε^{−2.5}`.  The rate `α = ½` of `nested_kink_bias_rate` would not do: Theorem 1
+needs `α ≥ ½ min(β, γ)`, so with `α = ½` it applies only with `β` lowered to `1`, and gives
+`O(ε⁻⁴)`.  Deviation: the paper's `f` is continuous and piecewise differentiable; here `f` is
+piecewise linear with one kink, as in `nested_kink_variance_rate`; several kinks or curved pieces
+are not covered (several kinks would follow by summing the hinge terms, given a small-ball bound at
+each kink). -/
 theorem nested_kink_sde_mlmc_complexity {Ω : Type*} [MeasurableSpace Ω] {μ : Measure Ω}
     [IsProbabilityMeasure μ] {f : ℝ → ℝ} {a₀ a₁ c k : ℝ}
     (hf : ∀ x, f x = a₀ + a₁ * x + c * max (x - k) 0) {gh : ℕ → 𝒵 → 𝒲 → ℝ}
@@ -1237,6 +1238,8 @@ theorem nested_kink_sde_mlmc_complexity {Ω : Type*} [MeasurableSpace Ω] {μ : 
     (hC : ∀ ℓ : ℕ, C ℓ ≤ c₃ * 4 ^ ℓ) :
     ∃ c₄ : ℝ, 0 < c₄ ∧ ∀ ε : ℝ, 0 < ε → ε < Real.exp (-1) →
       ∃ (L : ℕ) (N : ℕ → ℕ), (∀ ℓ, 0 < N ℓ) ∧
+        Integrable (fun x => (∑ ℓ ∈ range (L + 1), blockMean (nestedSdeDelta f gh) ω ℓ (N ℓ) x -
+          ∫ z, f (∫ v, g z v ∂ρ) ∂ν) ^ 2) μ ∧
         μ[fun x => (∑ ℓ ∈ range (L + 1), blockMean (nestedSdeDelta f gh) ω ℓ (N ℓ) x -
           ∫ z, f (∫ v, g z v ∂ρ) ∂ν) ^ 2] < ε ^ 2 ∧
         μ[totalCost cost L N] ≤ c₄ * ε ^ (-2.5 : ℝ) := by
@@ -1337,7 +1340,8 @@ theorem nested_kink_sde_mlmc_complexity {Ω : Type*} [MeasurableSpace Ω] {μ : 
   rw [hPint] at hmse
   rw [complexityBound_of_gt (by norm_num) ε, show (-2 - (2 - 3 / 2) / 1 : ℝ) = -2.5 by norm_num]
     at hcost'
-  exact ⟨L, N, hN, hmse, hcost'⟩
+  exact ⟨L, N, hN, ((memLp_finsetSum _ fun ℓ _ => memLp_blockMean hω hΔ ℓ (N ℓ)).sub
+    (memLp_const _)).integrable_sq, hmse, hcost'⟩
 
 end Discretised
 

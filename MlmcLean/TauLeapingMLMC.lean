@@ -273,12 +273,13 @@ lemma variance_tauCorrection_succ (lam : ℕ → ℝ≥0) (T : ℝ≥0) (x₀ : 
 
 /-- **`β = 1` on every level** (Giles 2015, §8, p. 56: "a correction variance which is `O(h)`"):
 for a `K`-Lipschitz propensity bounded by `Λ` and a Lipschitz payoff, there is `c₂ > 0` such that
-the correction of every level `ℓ` has variance at most `c₂ 2^{−ℓ}`. -/
+the correction of every level `ℓ` is square integrable and has variance at most `c₂ 2^{−ℓ}`. -/
 theorem variance_tauCorrection_le {lam : ℕ → ℝ≥0} {K Λ : ℝ≥0}
     (hK : ∀ x y : ℕ, |(lam x : ℝ) - lam y| ≤ K * |(x : ℝ) - y|) (hΛ : ∀ x, lam x ≤ Λ)
     (T : ℝ≥0) (x₀ : ℕ) {Φ : ℕ → ℝ} {LΦ : ℝ}
     (hΦ : ∀ x y : ℕ, |Φ x - Φ y| ≤ LΦ * |(x : ℝ) - y|) :
     ∃ c₂ : ℝ, 0 < c₂ ∧ ∀ ℓ : ℕ,
+      MemLp (fineCoarseDiff (tauFine Φ) (tauCoarse Φ) ℓ) 2 (tauInputLaw lam T x₀) ∧
       variance (fineCoarseDiff (tauFine Φ) (tauCoarse Φ) ℓ) (tauInputLaw lam T x₀) ≤
         c₂ * (2 : ℝ) ^ (-(1 * (ℓ : ℝ))) := by
   obtain ⟨c, hc, hbd⟩ := tauLeaping_level_variance hK hΛ T hΦ
@@ -290,7 +291,8 @@ theorem variance_tauCorrection_le {lam : ℕ → ℝ≥0} {K Λ : ℝ≥0}
   obtain ⟨N, hN⟩ : ∃ N : ℕ, (T : ℝ) < 2 ^ N := pow_unbounded_of_one_lt (T : ℝ) one_lt_two
   have hS0 : 0 ≤ ∑ ℓ ∈ range (N + 1), V ℓ * 2 ^ ℓ :=
     Finset.sum_nonneg fun ℓ _ => mul_nonneg (hV0 ℓ) (by positivity)
-  refine ⟨1 + 2 * c + ∑ ℓ ∈ range (N + 1), V ℓ * 2 ^ ℓ, by linarith, fun ℓ => ?_⟩
+  refine ⟨1 + 2 * c + ∑ ℓ ∈ range (N + 1), V ℓ * 2 ^ ℓ, by linarith, fun ℓ =>
+    ⟨memLp_fineCoarseDiff (memLp_tauFine hΛ T x₀ hΦ) (memLp_tauCoarse hΛ T x₀ hΦ) ℓ, ?_⟩⟩
   have hpow : (2 : ℝ) ^ (-(1 * (ℓ : ℝ))) = ((2 : ℝ) ^ ℓ)⁻¹ := by
     rw [one_mul, Real.rpow_neg zero_le_two, Real.rpow_natCast]
   have h2 : (0 : ℝ) < 2 ^ ℓ := by positivity
@@ -309,7 +311,7 @@ theorem variance_tauCorrection_le {lam : ℕ → ℝ≥0} {K Λ : ℝ≥0}
     obtain ⟨k, rfl⟩ : ∃ k, ℓ = k + 1 := ⟨ℓ - 1, by omega⟩
     have hT : (T : ℝ) ≤ 2 ^ (k + 1) :=
       hN.le.trans (pow_le_pow_right₀ one_le_two (by omega))
-    have hk := hbd k x₀ hT
+    have hk := (hbd k x₀ hT).2
     rw [← variance_tauCorrection_succ lam T x₀ Φ k, hVℓ] at hk
     have hk2 : V (k + 1) * 2 ^ k ≤ c := (le_div_iff₀ (by positivity)).1 hk
     have e : V (k + 1) * 2 ^ (k + 1) = 2 * (V (k + 1) * 2 ^ k) := by ring
@@ -325,8 +327,8 @@ and bounded by `Λ`, the payoff `Φ` be `L_Φ`-Lipschitz, and level `ℓ` use th
 inputs of law `tauInputLaw` (the coordinates of the infinite product), and a level-`ℓ` sample costs
 `2^ℓ`.  If the weak error is `|E[Φ(x^{h_ℓ}_T)] − P| ≤ c₁ 2^{−αℓ}` with `α ≥ ½` (for tau-leaping
 `α = 1`; this compares with the exact chain and is assumed), then there is `c₄ > 0` such that for
-every `0 < ε < e⁻¹` there are `L` and `N_ℓ ≥ 1` with mean square error `< ε²` and cost
-`∑_{ℓ≤L} N_ℓ 2^ℓ ≤ c₄ ε⁻²(log ε)²`. -/
+every `0 < ε < e⁻¹` there are `L` and `N_ℓ ≥ 1` with a square-integrable error, mean square error
+`< ε²`, and cost `∑_{ℓ≤L} N_ℓ 2^ℓ ≤ c₄ ε⁻²(log ε)²`. -/
 theorem tauLeaping_mlmc_theorem1 {lam : ℕ → ℝ≥0} {K Λ : ℝ≥0}
     (hK : ∀ x y : ℕ, |(lam x : ℝ) - lam y| ≤ K * |(x : ℝ) - y|) (hΛ : ∀ x, lam x ≤ Λ)
     (T : ℝ≥0) (x₀ : ℕ) {Φ : ℕ → ℝ} {LΦ : ℝ}
@@ -336,6 +338,9 @@ theorem tauLeaping_mlmc_theorem1 {lam : ℕ → ℝ≥0} {K Λ : ℝ≥0}
       c₁ * (2 : ℝ) ^ (-(α * (ℓ : ℝ)))) :
     ∃ c₄ : ℝ, 0 < c₄ ∧ ∀ ε : ℝ, 0 < ε → ε < Real.exp (-1) →
       ∃ (L : ℕ) (N : ℕ → ℕ), (∀ ℓ, 0 < N ℓ) ∧
+        Integrable (fun x => (∑ ℓ ∈ range (L + 1),
+            blockMean (fineCoarseDiff (tauFine Φ) (tauCoarse Φ)) (fun p x => x p) ℓ (N ℓ) x -
+              P) ^ 2) (Measure.infinitePi fun _ : ℕ × ℕ => tauInputLaw lam T x₀) ∧
         ∫ x, (∑ ℓ ∈ range (L + 1),
             blockMean (fineCoarseDiff (tauFine Φ) (tauCoarse Φ)) (fun p x => x p) ℓ (N ℓ) x -
               P) ^ 2 ∂(Measure.infinitePi fun _ : ℕ × ℕ => tauInputLaw lam T x₀) < ε ^ 2 ∧
@@ -359,10 +364,13 @@ theorem tauLeaping_mlmc_theorem1 {lam : ℕ → ℝ≥0} {K Λ : ℝ≥0}
     (measurable_tauCoarse Φ) (memLp_tauFine hΛ T x₀ hΦ) (memLp_tauCoarse hΛ T x₀ hΦ)
     (fun ℓ => (integral_tauFine lam T x₀ Φ ℓ).trans (integral_tauCoarse lam T x₀ Φ ℓ).symm)
     (fun _ _ => integrable_const _)
-    (fun _ _ => by simp only [integral_const, probReal_univ, one_smul]) h_i hvar h_iv
+    (fun _ _ => by simp only [integral_const, probReal_univ, one_smul]) h_i (fun ℓ => (hvar ℓ).2)
+    h_iv
   refine ⟨c₄, hc₄, fun ε hε hε1 => ?_⟩
   obtain ⟨L, N, hN, hmse, hcost⟩ := h ε hε hε1
-  refine ⟨L, N, hN, ?_, ?_⟩
+  refine ⟨L, N, hN, ?_, ?_, ?_⟩
+  · exact ((memLp_finsetSum _ fun ℓ _ => memLp_blockMean hω (fun ℓ => (hvar ℓ).1) ℓ (N ℓ)).sub
+      (memLp_const _)).integrable_sq
   · rw [integral_const, probReal_univ, one_smul] at hmse
     exact hmse
   · simp only [totalCost, Finset.sum_const, Finset.card_range, nsmul_eq_mul, integral_const,

@@ -47,7 +47,8 @@ Lipschitz payoff functions `P` (such as European, Asian and lookback options in 
   strong error at each monitoring date (`gbm_em_strong_error`, `gbm_mil_strong_error`); the bias
   `|E[P̂_j] − E[P]| = O(h_j^{1/2})`, resp. `O(h_j)`; the correction variance
   `V[P̂^f_{j+1} − P̂^c_j] ≤ 6 c m C(T) h_{j+1}`, resp. `≤ 10 c m C_M(T) h_{j+1}²`; and Theorem 1:
-  mean square error `< ε²` at cost `O(ε⁻²(log ε)²)` (`β = γ = 1`), resp. `O(ε⁻²)` (`β = 2 > γ = 1`).
+  a square-integrable error with mean square `< ε²` at cost `O(ε⁻²(log ε)²)` (`β = γ = 1`), resp.
+  `O(ε⁻²)` (`β = 2 > γ = 1`).
 * The same for the Asian and the lookback option by name (`gbm_em_asian_*`, `gbm_mil_asian_*`,
   `gbm_em_lookback_*`, `gbm_mil_lookback_*`): the rates of Table 5.2, `V_ℓ = O(h)` for
   Euler–Maruyama and `V_ℓ = O(h²)` for Milstein; and the correction variance and Theorem 1 for the
@@ -618,9 +619,9 @@ intervals, and `Φ` a payoff of the monitored values with
 `(Φ(a) − Φ(b))² ≤ c ∑_{k=0}^m (a_k − b_k)²`.  Level `j` uses `m 2^j` Euler–Maruyama steps of size
 `h_j = T/(m 2^j)`; its correction is the payoff of the fine path minus the payoff of the coarse path
 driven by the summed increments; the samples are independent and a level-`j` sample costs `m 2^j`.
-Then there is `c₄ > 0` such that for every `0 < ε < e⁻¹` there are `L` and `N_j ≥ 1` with mean
-square error `< ε²` for `E[Φ(S_{t_0}, …, S_{t_m})]` and cost `∑_{j≤L} N_j m 2^j ≤ c₄ ε⁻²(log ε)²`;
-here `S = gbmMonExact … 0`, i.e.
+Then there is `c₄ > 0` such that for every `0 < ε < e⁻¹` there are `L` and `N_j ≥ 1` with a
+square-integrable error, mean square error `< ε²` for `E[Φ(S_{t_0}, …, S_{t_m})]` and cost
+`∑_{j≤L} N_j m 2^j ≤ c₄ ε⁻²(log ε)²`; here `S = gbmMonExact … 0`, i.e.
 `S_{t_k} = s₀ exp((r − σ²/2) kT/m + σ √(T/m) ∑_{i<k} Z_i)` (`gbmMonExact_level_zero`).  No rate is
 assumed: `α = ½` (`gbm_em_monitored_bias_le`), `β = 1` (`gbm_em_monitored_variance_le`) and (2.4)
 are proved.  The paper's `α = 1` is not proved; `α = ½` suffices because Theorem 1 only needs
@@ -630,6 +631,11 @@ theorem gbm_em_monitored_theorem1 (r σ s₀ : ℝ) {T : ℝ} (hT : 0 ≤ T) {m 
     (hΦ : ∀ a b : ℕ → ℝ, (Φ a - Φ b) ^ 2 ≤ c * ∑ k ∈ range (m + 1), (a k - b k) ^ 2) :
     ∃ c₄ : ℝ, 0 < c₄ ∧ ∀ ε : ℝ, 0 < ε → ε < Real.exp (-1) →
       ∃ (L : ℕ) (N : ℕ → ℕ), (∀ j, 0 < N j) ∧
+        Integrable (fun x => (∑ j ∈ range (L + 1),
+            blockMean (fineCoarseDiff (fun j z => Φ (gbmMonEM r σ T s₀ m j z))
+              (fun j z => Φ (gbmMonEM r σ T s₀ m j (pairAvg z)))) (fun p x => x p) j (N j) x -
+            ∫ z, Φ (gbmMonExact r σ T s₀ m 0 z) ∂stdNormalSeq) ^ 2)
+            (Measure.infinitePi fun _ : ℕ × ℕ => stdNormalSeq) ∧
         ∫ x, (∑ j ∈ range (L + 1),
             blockMean (fineCoarseDiff (fun j z => Φ (gbmMonEM r σ T s₀ m j z))
               (fun j z => Φ (gbmMonEM r σ T s₀ m j (pairAvg z)))) (fun p x => x p) j (N j) x -
@@ -719,7 +725,9 @@ theorem gbm_em_monitored_theorem1 (r σ s₀ : ℝ) {T : ℝ} (hT : 0 ≤ T) {m 
     (fun _ _ => by simp only [integral_const, probReal_univ, one_smul]) h_i h_iii h_iv
   refine ⟨c₄, hc₄, fun ε hε hε1 => ?_⟩
   obtain ⟨L, N, hN, hmse, hcost⟩ := h ε hε hε1
-  refine ⟨L, N, hN, hmse, ?_⟩
+  refine ⟨L, N, hN, ((memLp_finsetSum _ fun j _ =>
+    memLp_blockMean hω (memLp_fineCoarseDiff hPf hPc) j (N j)).sub (memLp_const _)).integrable_sq,
+    hmse, ?_⟩
   simp only [totalCost, Finset.sum_const, Finset.card_range, nsmul_eq_mul, integral_const,
     probReal_univ, one_smul] at hcost
   rw [complexityBound_of_eq rfl ε] at hcost
@@ -807,15 +815,20 @@ theorem gbm_mil_monitored_variance_le (r σ s₀ : ℝ) {T : ℝ} (hT : 0 ≤ T)
 the dominant computational cost is on the coarsest levels", with Theorem 1, §2.1, pp. 6–7 (cost
 `c₄ ε⁻²` for `β > γ`), and (2.4), §2.1, p. 8; Table 5.2, p. 33).  In the setting of
 `gbm_em_monitored_theorem1` with the Milstein scheme there is `c₄ > 0` such that for every
-`0 < ε < e⁻¹` there are `L` and `N_j ≥ 1` with mean square error `< ε²` for
-`E[Φ(S_{t_0}, …, S_{t_m})]`, `S = gbmMonExact … 0` (closed form in `gbmMonExact_level_zero`), and
-cost `∑_{j≤L} N_j m 2^j ≤ c₄ ε⁻²`.  No rate is assumed: `α = 1` (`gbm_mil_monitored_bias_le`),
-`β = 2` (`gbm_mil_monitored_variance_le`) and (2.4) are proved. -/
+`0 < ε < e⁻¹` there are `L` and `N_j ≥ 1` with a square-integrable error, mean square error
+`< ε²` for `E[Φ(S_{t_0}, …, S_{t_m})]`, `S = gbmMonExact … 0` (closed form in
+`gbmMonExact_level_zero`), and cost `∑_{j≤L} N_j m 2^j ≤ c₄ ε⁻²`.  No rate is assumed: `α = 1`
+(`gbm_mil_monitored_bias_le`), `β = 2` (`gbm_mil_monitored_variance_le`) and (2.4) are proved. -/
 theorem gbm_mil_monitored_theorem1 (r σ s₀ : ℝ) {T : ℝ} (hT : 0 ≤ T) {m : ℕ} (hm : 0 < m)
     {Φ : (ℕ → ℝ) → ℝ} {c : ℝ}
     (hΦ : ∀ a b : ℕ → ℝ, (Φ a - Φ b) ^ 2 ≤ c * ∑ k ∈ range (m + 1), (a k - b k) ^ 2) :
     ∃ c₄ : ℝ, 0 < c₄ ∧ ∀ ε : ℝ, 0 < ε → ε < Real.exp (-1) →
       ∃ (L : ℕ) (N : ℕ → ℕ), (∀ j, 0 < N j) ∧
+        Integrable (fun x => (∑ j ∈ range (L + 1),
+            blockMean (fineCoarseDiff (fun j z => Φ (gbmMonMil r σ T s₀ m j z))
+              (fun j z => Φ (gbmMonMil r σ T s₀ m j (pairAvg z)))) (fun p x => x p) j (N j) x -
+            ∫ z, Φ (gbmMonExact r σ T s₀ m 0 z) ∂stdNormalSeq) ^ 2)
+            (Measure.infinitePi fun _ : ℕ × ℕ => stdNormalSeq) ∧
         ∫ x, (∑ j ∈ range (L + 1),
             blockMean (fineCoarseDiff (fun j z => Φ (gbmMonMil r σ T s₀ m j z))
               (fun j z => Φ (gbmMonMil r σ T s₀ m j (pairAvg z)))) (fun p x => x p) j (N j) x -
@@ -902,7 +915,9 @@ theorem gbm_mil_monitored_theorem1 (r σ s₀ : ℝ) {T : ℝ} (hT : 0 ≤ T) {m
     (fun _ _ => by simp only [integral_const, probReal_univ, one_smul]) h_i h_iii h_iv
   refine ⟨c₄, hc₄, fun ε hε hε1 => ?_⟩
   obtain ⟨L, N, hN, hmse, hcost⟩ := h ε hε hε1
-  refine ⟨L, N, hN, hmse, ?_⟩
+  refine ⟨L, N, hN, ((memLp_finsetSum _ fun j _ =>
+    memLp_blockMean hω (memLp_fineCoarseDiff hPf hPc) j (N j)).sub (memLp_const _)).integrable_sq,
+    hmse, ?_⟩
   simp only [totalCost, Finset.sum_const, Finset.card_range, nsmul_eq_mul, integral_const,
     probReal_univ, one_smul] at hcost
   rw [complexityBound_of_lt (by norm_num : (1 : ℝ) < 2) ε] at hcost
@@ -1066,14 +1081,20 @@ theorem gbm_em_asian_variance_le (r σ s₀ : ℝ) {T : ℝ} (hT : 0 ≤ T) {m :
 (Giles 2015, §5.1, p. 30, and Table 5.2, p. 33, row "Asian", with Theorem 1, §2.1, pp. 6–7:
 `β = γ = 1`, complexity `O(ε⁻²(log ε)²)`).  For GBM, `m ≥ 1` monitoring dates and
 `P = g((1/m) ∑_{k=1}^m S_{t_k})` with a `K`-Lipschitz `g`, there is `c₄ > 0` such that for every
-`0 < ε < e⁻¹` there are `L` and `N_j ≥ 1` with mean square error `< ε²` and cost
-`∑_{j≤L} N_j m 2^j ≤ c₄ ε⁻²(log ε)²` (levels, coupling and the target `E[P(S)]`,
+`0 < ε < e⁻¹` there are `L` and `N_j ≥ 1` with a square-integrable error, mean square error
+`< ε²`, and cost `∑_{j≤L} N_j m 2^j ≤ c₄ ε⁻²(log ε)²` (levels, coupling and the target `E[P(S)]`,
 `S_{t_k} = s₀ exp((r − σ²/2) kT/m + σ √(T/m) ∑_{i<k} Z_i)`, as in `gbm_em_monitored_theorem1`;
 `α = ½` is proved, the paper's `α = 1` is not needed). -/
 theorem gbm_em_asian_theorem1 (r σ s₀ : ℝ) {T : ℝ} (hT : 0 ≤ T) {m : ℕ} (hm : 0 < m)
     {g : ℝ → ℝ} {K : ℝ} (hg : ∀ x y, |g x - g y| ≤ K * |x - y|) :
     ∃ c₄ : ℝ, 0 < c₄ ∧ ∀ ε : ℝ, 0 < ε → ε < Real.exp (-1) →
       ∃ (L : ℕ) (N : ℕ → ℕ), (∀ j, 0 < N j) ∧
+        Integrable (fun x => (∑ j ∈ range (L + 1),
+            blockMean (fineCoarseDiff (fun j z => asianPayoff g m (gbmMonEM r σ T s₀ m j z))
+              (fun j z => asianPayoff g m (gbmMonEM r σ T s₀ m j (pairAvg z))))
+              (fun p x => x p) j (N j) x -
+            ∫ z, asianPayoff g m (gbmMonExact r σ T s₀ m 0 z) ∂stdNormalSeq) ^ 2)
+            (Measure.infinitePi fun _ : ℕ × ℕ => stdNormalSeq) ∧
         ∫ x, (∑ j ∈ range (L + 1),
             blockMean (fineCoarseDiff (fun j z => asianPayoff g m (gbmMonEM r σ T s₀ m j z))
               (fun j z => asianPayoff g m (gbmMonEM r σ T s₀ m j (pairAvg z))))
@@ -1125,12 +1146,18 @@ theorem gbm_mil_asian_variance_le (r σ s₀ : ℝ) {T : ℝ} (hT : 0 ≤ T) {m 
 /-- **Theorem 1 for the Milstein MLMC estimator of the discretely monitored Asian option** (Giles
 2015, §5.2, p. 35, and Table 5.2, p. 33, row "Asian", with Theorem 1, §2.1, pp. 6–7:
 `β = 2 > γ = 1`, complexity `O(ε⁻²)`).  In the setting of `gbm_em_asian_theorem1` (same target
-`E[P(S)]`, `S = gbmMonExact … 0`) with the Milstein scheme, the cost is
-`∑_{j≤L} N_j m 2^j ≤ c₄ ε⁻²`. -/
+`E[P(S)]`, `S = gbmMonExact … 0`) with the Milstein scheme, the error is again square integrable
+with mean square `< ε²`, and the cost is `∑_{j≤L} N_j m 2^j ≤ c₄ ε⁻²`. -/
 theorem gbm_mil_asian_theorem1 (r σ s₀ : ℝ) {T : ℝ} (hT : 0 ≤ T) {m : ℕ} (hm : 0 < m)
     {g : ℝ → ℝ} {K : ℝ} (hg : ∀ x y, |g x - g y| ≤ K * |x - y|) :
     ∃ c₄ : ℝ, 0 < c₄ ∧ ∀ ε : ℝ, 0 < ε → ε < Real.exp (-1) →
       ∃ (L : ℕ) (N : ℕ → ℕ), (∀ j, 0 < N j) ∧
+        Integrable (fun x => (∑ j ∈ range (L + 1),
+            blockMean (fineCoarseDiff (fun j z => asianPayoff g m (gbmMonMil r σ T s₀ m j z))
+              (fun j z => asianPayoff g m (gbmMonMil r σ T s₀ m j (pairAvg z))))
+              (fun p x => x p) j (N j) x -
+            ∫ z, asianPayoff g m (gbmMonExact r σ T s₀ m 0 z) ∂stdNormalSeq) ^ 2)
+            (Measure.infinitePi fun _ : ℕ × ℕ => stdNormalSeq) ∧
         ∫ x, (∑ j ∈ range (L + 1),
             blockMean (fineCoarseDiff (fun j z => asianPayoff g m (gbmMonMil r σ T s₀ m j z))
               (fun j z => asianPayoff g m (gbmMonMil r σ T s₀ m j (pairAvg z))))
@@ -1191,14 +1218,20 @@ theorem gbm_em_lookback_variance_le (r σ s₀ : ℝ) {T : ℝ} (hT : 0 ≤ T) {
 (Giles 2015, §5.1, p. 30, and Table 5.2, p. 33, row "lookback", with Theorem 1, §2.1, pp. 6–7:
 `β = γ = 1`, complexity `O(ε⁻²(log ε)²)`).  For GBM, `m ≥ 1` monitoring dates and
 `P = g(max_{0≤k≤m} S_{t_k})` with a `K`-Lipschitz `g`, there is `c₄ > 0` such that for every
-`0 < ε < e⁻¹` there are `L` and `N_j ≥ 1` with mean square error `< ε²` and cost
-`∑_{j≤L} N_j m 2^j ≤ c₄ ε⁻²(log ε)²` (levels, coupling and the target `E[P(S)]`,
+`0 < ε < e⁻¹` there are `L` and `N_j ≥ 1` with a square-integrable error, mean square error
+`< ε²`, and cost `∑_{j≤L} N_j m 2^j ≤ c₄ ε⁻²(log ε)²` (levels, coupling and the target `E[P(S)]`,
 `S_{t_k} = s₀ exp((r − σ²/2) kT/m + σ √(T/m) ∑_{i<k} Z_i)`, as in `gbm_em_monitored_theorem1`;
 `α = ½` is proved, the paper's `α = 1` is not needed). -/
 theorem gbm_em_lookback_theorem1 (r σ s₀ : ℝ) {T : ℝ} (hT : 0 ≤ T) {m : ℕ} (hm : 0 < m)
     {g : ℝ → ℝ} {K : ℝ} (hg : ∀ x y, |g x - g y| ≤ K * |x - y|) :
     ∃ c₄ : ℝ, 0 < c₄ ∧ ∀ ε : ℝ, 0 < ε → ε < Real.exp (-1) →
       ∃ (L : ℕ) (N : ℕ → ℕ), (∀ j, 0 < N j) ∧
+        Integrable (fun x => (∑ j ∈ range (L + 1),
+            blockMean (fineCoarseDiff (fun j z => lookbackPayoff g m (gbmMonEM r σ T s₀ m j z))
+              (fun j z => lookbackPayoff g m (gbmMonEM r σ T s₀ m j (pairAvg z))))
+              (fun p x => x p) j (N j) x -
+            ∫ z, lookbackPayoff g m (gbmMonExact r σ T s₀ m 0 z) ∂stdNormalSeq) ^ 2)
+            (Measure.infinitePi fun _ : ℕ × ℕ => stdNormalSeq) ∧
         ∫ x, (∑ j ∈ range (L + 1),
             blockMean (fineCoarseDiff (fun j z => lookbackPayoff g m (gbmMonEM r σ T s₀ m j z))
               (fun j z => lookbackPayoff g m (gbmMonEM r σ T s₀ m j (pairAvg z))))
@@ -1258,7 +1291,8 @@ theorem gbm_mil_lookback_variance_le (r σ s₀ : ℝ) {T : ℝ} (hT : 0 ≤ T) 
 (Giles 2015, §5.2, p. 35: "Because `β > γ`, the dominant computational cost is on the coarsest
 levels", Table 5.2, p. 33, row "lookback", and Theorem 1, §2.1, pp. 6–7: cost `O(ε⁻²)` for
 `β > γ`).  In the setting of `gbm_em_lookback_theorem1` (same target `E[P(S)]`,
-`S = gbmMonExact … 0`) with the Milstein scheme, the cost is `∑_{j≤L} N_j m 2^j ≤ c₄ ε⁻²`.  Here
+`S = gbmMonExact … 0`) with the Milstein scheme, the error is again square integrable with mean
+square `< ε²`, and the cost is `∑_{j≤L} N_j m 2^j ≤ c₄ ε⁻²`.  Here
 `β = 2` comes directly from the Milstein strong error at the fixed dates
 (`gbm_mil_lookback_variance_le`).  The paper's §5.2, p. 39 statement "the outcome is that `β = 2`
 for lookback options … the overall complexity is `O(ε⁻²)`" concerns a different estimator: the
@@ -1268,6 +1302,12 @@ theorem gbm_mil_lookback_theorem1 (r σ s₀ : ℝ) {T : ℝ} (hT : 0 ≤ T) {m 
     {g : ℝ → ℝ} {K : ℝ} (hg : ∀ x y, |g x - g y| ≤ K * |x - y|) :
     ∃ c₄ : ℝ, 0 < c₄ ∧ ∀ ε : ℝ, 0 < ε → ε < Real.exp (-1) →
       ∃ (L : ℕ) (N : ℕ → ℕ), (∀ j, 0 < N j) ∧
+        Integrable (fun x => (∑ j ∈ range (L + 1),
+            blockMean (fineCoarseDiff (fun j z => lookbackPayoff g m (gbmMonMil r σ T s₀ m j z))
+              (fun j z => lookbackPayoff g m (gbmMonMil r σ T s₀ m j (pairAvg z))))
+              (fun p x => x p) j (N j) x -
+            ∫ z, lookbackPayoff g m (gbmMonExact r σ T s₀ m 0 z) ∂stdNormalSeq) ^ 2)
+            (Measure.infinitePi fun _ : ℕ × ℕ => stdNormalSeq) ∧
         ∫ x, (∑ j ∈ range (L + 1),
             blockMean (fineCoarseDiff (fun j z => lookbackPayoff g m (gbmMonMil r σ T s₀ m j z))
               (fun j z => lookbackPayoff g m (gbmMonMil r σ T s₀ m j (pairAvg z))))
@@ -1298,13 +1338,20 @@ theorem gbm_em_floatLookback_variance_le (r σ s₀ : ℝ) {T : ℝ} (hT : 0 ≤
 lookback option** (Giles 2015, §5.1, p. 30, and Table 5.2, p. 33, row "lookback", with Theorem 1,
 §2.1, pp. 6–7: `β = γ = 1`, complexity `O(ε⁻²(log ε)²)`).  For GBM, `m ≥ 1` monitoring dates and
 `P = g(S_{t_m} − min_{0≤k≤m} S_{t_k})` with a `K`-Lipschitz `g`, there is `c₄ > 0` such that for
-every `0 < ε < e⁻¹` there are `L` and `N_j ≥ 1` with mean square error `< ε²` and cost
-`∑_{j≤L} N_j m 2^j ≤ c₄ ε⁻²(log ε)²` (levels, coupling and the target `E[P(S)]`,
-`S = gbmMonExact … 0`, as in `gbm_em_monitored_theorem1`). -/
+every `0 < ε < e⁻¹` there are `L` and `N_j ≥ 1` with a square-integrable error, mean square
+error `< ε²`, and cost `∑_{j≤L} N_j m 2^j ≤ c₄ ε⁻²(log ε)²` (levels, coupling and the target
+`E[P(S)]`, `S = gbmMonExact … 0`, as in `gbm_em_monitored_theorem1`). -/
 theorem gbm_em_floatLookback_theorem1 (r σ s₀ : ℝ) {T : ℝ} (hT : 0 ≤ T) {m : ℕ} (hm : 0 < m)
     {g : ℝ → ℝ} {K : ℝ} (hg : ∀ x y, |g x - g y| ≤ K * |x - y|) :
     ∃ c₄ : ℝ, 0 < c₄ ∧ ∀ ε : ℝ, 0 < ε → ε < Real.exp (-1) →
       ∃ (L : ℕ) (N : ℕ → ℕ), (∀ j, 0 < N j) ∧
+        Integrable (fun x => (∑ j ∈ range (L + 1),
+            blockMean (fineCoarseDiff
+              (fun j z => floatLookbackPayoff g m (gbmMonEM r σ T s₀ m j z))
+              (fun j z => floatLookbackPayoff g m (gbmMonEM r σ T s₀ m j (pairAvg z))))
+              (fun p x => x p) j (N j) x -
+            ∫ z, floatLookbackPayoff g m (gbmMonExact r σ T s₀ m 0 z) ∂stdNormalSeq) ^ 2)
+            (Measure.infinitePi fun _ : ℕ × ℕ => stdNormalSeq) ∧
         ∫ x, (∑ j ∈ range (L + 1),
             blockMean (fineCoarseDiff
               (fun j z => floatLookbackPayoff g m (gbmMonEM r σ T s₀ m j z))
@@ -1336,13 +1383,21 @@ theorem gbm_mil_floatLookback_variance_le (r σ s₀ : ℝ) {T : ℝ} (hT : 0 �
 lookback option** (Giles 2015, §5.2, p. 35: "Because `β > γ`, the dominant computational cost is
 on the coarsest levels", Table 5.2, p. 33, row "lookback", and Theorem 1, §2.1, pp. 6–7: cost
 `O(ε⁻²)` for `β > γ`).  In the setting of `gbm_em_floatLookback_theorem1` with the Milstein scheme,
-the cost is `∑_{j≤L} N_j m 2^j ≤ c₄ ε⁻²`; `β = 2` comes from the Milstein strong error at the fixed
+the error is again square integrable with mean square `< ε²`, and the cost is
+`∑_{j≤L} N_j m 2^j ≤ c₄ ε⁻²`; `β = 2` comes from the Milstein strong error at the fixed
 dates (`gbm_mil_floatLookback_variance_le`), not from the Brownian-bridge estimator of §5.2,
 pp. 38–39. -/
 theorem gbm_mil_floatLookback_theorem1 (r σ s₀ : ℝ) {T : ℝ} (hT : 0 ≤ T) {m : ℕ} (hm : 0 < m)
     {g : ℝ → ℝ} {K : ℝ} (hg : ∀ x y, |g x - g y| ≤ K * |x - y|) :
     ∃ c₄ : ℝ, 0 < c₄ ∧ ∀ ε : ℝ, 0 < ε → ε < Real.exp (-1) →
       ∃ (L : ℕ) (N : ℕ → ℕ), (∀ j, 0 < N j) ∧
+        Integrable (fun x => (∑ j ∈ range (L + 1),
+            blockMean (fineCoarseDiff
+              (fun j z => floatLookbackPayoff g m (gbmMonMil r σ T s₀ m j z))
+              (fun j z => floatLookbackPayoff g m (gbmMonMil r σ T s₀ m j (pairAvg z))))
+              (fun p x => x p) j (N j) x -
+            ∫ z, floatLookbackPayoff g m (gbmMonExact r σ T s₀ m 0 z) ∂stdNormalSeq) ^ 2)
+            (Measure.infinitePi fun _ : ℕ × ℕ => stdNormalSeq) ∧
         ∫ x, (∑ j ∈ range (L + 1),
             blockMean (fineCoarseDiff
               (fun j z => floatLookbackPayoff g m (gbmMonMil r σ T s₀ m j z))
