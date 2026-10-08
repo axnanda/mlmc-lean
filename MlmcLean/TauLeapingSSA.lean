@@ -1039,14 +1039,17 @@ theorem ssa_mlmc_unbiased {lam : ℕ → ℝ≥0} {Λ : ℝ≥0} (hΛ : ∀ x, l
 
 /-- **The exact level has an `O(h_L)` correction variance** (Giles 2015, §8, p. 56, l. 2412–2415:
 "an additional coupling at the finest level to the exact Stochastic Simulation Algorithm").  For
-`0 ≤ λ ≤ Λ` and `|Φ| ≤ M`, the correction `Φ(X_T) − Φ(Z_{2^L})` of the exact level `L + 1` is square
-integrable with variance at most `4M²Λ²T²/2^L = 4M²Λ²T h_L`, `h_L = T 2^{−L}` (`ssaChain_sq_le`). -/
+`0 ≤ λ ≤ Λ` and `|Φ| ≤ M`, the input law is a probability measure, and the correction
+`Φ(X_T) − Φ(Z_{2^L})` of the exact level `L + 1` is square integrable with variance at most
+`4M²Λ²T²/2^L = 4M²Λ²T h_L`, `h_L = T 2^{−L}` (`ssaChain_sq_le`). -/
 theorem variance_ssaCorrection_exact_le {lam : ℕ → ℝ≥0} {Λ : ℝ≥0} (hΛ : ∀ x, lam x ≤ Λ)
     (T : ℝ≥0) (x₀ : ℕ) {Φ : ℕ → ℝ} {M : ℝ} (hΦ : ∀ x, |Φ x| ≤ M) (L : ℕ) :
+    IsProbabilityMeasure (ssaInputLaw lam Λ T x₀ L) ∧
     MemLp (ssaCorrection Φ L (L + 1)) 2 (ssaInputLaw lam Λ T x₀ L) ∧
       variance (ssaCorrection Φ L (L + 1)) (ssaInputLaw lam Λ T x₀ L) ≤
         4 * M ^ 2 * ((Λ : ℝ) ^ 2 * (T : ℝ) ^ 2 / 2 ^ L) := by
-  refine ⟨memLp_ssaCorrection hΛ T x₀ L hΦ (L + 1), ?_⟩
+  refine ⟨isProbabilityMeasure_ssaInputLaw hΛ T x₀ L,
+    memLp_ssaCorrection hΛ T x₀ L hΦ (L + 1), ?_⟩
   have := isProbabilityMeasure_ssaLevelLaw hΛ T x₀ L
   have hP := isProbabilityMeasure_ssaChain hΛ (T / 2 ^ L) x₀ (2 ^ L)
   have e1 : ssaCorrection Φ L (L + 1) = fun y => (fun q : ℕ × ℕ => Φ q.1 - Φ q.2) (y (L + 1)) := by

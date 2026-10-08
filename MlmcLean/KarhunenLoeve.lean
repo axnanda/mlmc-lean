@@ -42,16 +42,18 @@ truncated vectors of independent inputs is `nested_vector_inputs_mlmc` (`MlmcLea
 not imported here).
 
 **Deviations.**  The ordering `θ_0 ≥ θ_1 ≥ …` is not needed and not assumed.  The limit field is
-an `L²(P ⊗ ν)` limit (a representative of the limit class); almost sure pointwise convergence of the
-series is not proved.  The paper's stationary covariance `R(x, y) = r(x − y)` (l. 2255) is replaced
-by a general `R` given by its expansion.
+an `L²(P ⊗ ν)` limit (a representative of the limit class); the almost sure pointwise convergence
+of the series and the identification of the limits are in `MlmcLean.KarhunenLoeveLimit`
+(`klLimit_tendsto`, `klLimit_ae_eq_L2_limit`).  The paper's stationary covariance
+`R(x, y) = r(x − y)` (l. 2255) is replaced by a general `R` given by its expansion.
 
 **Not proved.**  Mercer's theorem (existence of the eigenpairs and of the expansion of `R`), the
 circulant embedding generation (l. 2262–2264), the identification with the paper's log-normal
 diffusivity on a specific domain `D` and covariance `r`, and the multilevel analysis of the elliptic
-PDE itself (Charrier, Scheichl & Teckentrup, l. 2275–2279); the law of the limit field `Y`
-(Gaussian with covariance `R`) and the moments of the untruncated `κ = exp Y`; the moments of
-`max_x κ` and `1/min_x κ` that the analysis of the elliptic PDE needs.
+PDE itself (Charrier, Scheichl & Teckentrup, l. 2275–2279); the moments of `max_x κ` and
+`1/min_x κ` that the analysis of the elliptic PDE needs.  The law of the limit field `Y` (Gaussian
+with covariance `R`) and the moments of the untruncated `κ = exp Y` are in
+`MlmcLean.KarhunenLoeveLimit` (`map_klLimit_eq_gaussianReal`, `klLimitDiffusivity_moment`).
 -/
 
 open MeasureTheory ProbabilityTheory Finset Filter Topology
