@@ -458,6 +458,18 @@ Lean statement or to the reason it is not formalised. The deviations of the new 
   improve on `GBMDigital.lean` only asymptotically.  Every exponent below the paper's `½` and `1` is
   reached; the endpoints, the `log h` of Table 5.2 and the kurtosis upper bounds are not.  The
   payoff factors `10e^{−rT}` and `25e^{−rT}` are omitted.
+* **Weak order one for GBM (`GBMWeakOrder.lean`, round 21).** Polynomial payoffs and payoffs with
+  four bounded derivatives (one more than the expansion needs, to bound its remainder); the call
+  and digital payoffs of §5.1 are not smooth and are not covered.  For smooth payoffs the cost
+  conclusion is already that of `gbm_mlmc_theorem1(_M)`; the weak rate shows in the finest-level
+  bound `M^L = O(ε⁻¹)`.  The smooth-payoff constant is not scale invariant in `S₀`.
+* **Every-step lookback (`GBMGridMax.lean`, round 21).** `V_ℓ = O(h^{1−δ})` instead of `O(h)`
+  (the loss comes from the monitoring gap of the exact solution), so the cost is `O(ε^{−2−η})`; the
+  weak order of these payoffs is `½`, not the paper's `α = 1`; the MLMC target is the limit of the
+  level means, identified with the continuously monitored price only informally.
+* **General HJK (`EulerSuperlinearGeneral.lean`, round 21).** Scalar coefficients, a deterministic
+  initial value with `b(x₀, 0) ≠ 0`, every `p > 0`; the comparison with the exact solution, random
+  initial values and several dimensions are not covered.  HJK (2011) is not in `docs/`.
 
 ### Corrections to the papers recorded elsewhere, collected
 
