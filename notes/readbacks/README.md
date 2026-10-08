@@ -703,7 +703,7 @@ Findings and what was done:
   constant depends on `L`.  The module and theorem docstrings already said so.  Kept.
 - **`variance_ssaCorrection_exact_le` does not state that its sampling law is a probability
   measure** (it is, by the first conjunct of `ssa_mlmc_unbiased`, so the bound is not trivial).
-  Kept for this round; to be added as a conjunct with the next change to the module.
+  Added as a conjunct in round 24.
 - **The constants of `ssaChain_ne_le` and `ssaChain_abs_le` have a factor 2 of slack.**  Kept.
 - **The KL theorems need fewer hypotheses than the KL setting** (the pointwise results need no
   orthonormality, the `L²` results no eigen-relation); the satisfiability witness is a discrete
