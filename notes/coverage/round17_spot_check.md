@@ -97,3 +97,11 @@ Algorithm 3's coupling (`AdaptiveGrids.lean`), the shifted-lattice variance in `
 the MLQMC complexity it gives (`LatticeRuleD.lean`), and Theorem 1 with a polylogarithmic cost
 factor, which gives G10.1-16 the cost `O(ε⁻²|log ε|³)` (`Theorem1Log.lean`).  Every small, medium
 and medium-to-large item of the list above is now formalised; the items "out of reach" remain.
+
+**Follow-up (round 21).** Auditor A's fuller list (`report_A`, kept outside the repository) had
+four items not carried into the summary above: weak order one of Euler–Maruyama for GBM (R19), the
+strong error uniformly over the grid (R17), the general theorem of Hutzenthaler, Jentzen and Kloeden
+(R14), and the optimality of the simplex among MIMC index sets (R16).  The first three are formalised
+(`GBMWeakOrder.lean`, `GBMGridMax.lean` with the every-step lookback, `EulerSuperlinearGeneral.lean`);
+the simplex optimality (large) remains open, as does the kurtosis upper bound (anti-concentration).
+

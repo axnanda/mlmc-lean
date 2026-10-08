@@ -622,3 +622,29 @@ Findings and what was done:
 - **After the read-back**, the existence proof that `alg3FirstReach` passes to `Nat.find` was
   written inline instead of citing `alg3_exists_reach` (the prove2.me generator rejects definitions
   that cite theorems); by proof irrelevance the definition is unchanged.
+
+**Twenty-first round (2026-10-08).** Blind read-backs of the 45 theorems added in round 21:
+`gbm_weak_order.md` (R30: `GBMWeakOrder`; 16 theorems), `gbm_grid_max.md` (R31: `GBMGridMax`; 12)
+and `euler_superlinear_general.md` (R32: `EulerSuperlinearGeneral`; 17).  All 45 read back as true;
+none is vacuous and none holds only because of a junk value.  The R30 auditor checked the monomial
+weak-error bound exactly in 34,848 cases (worst ratio 0.25; it holds with half the constant), the
+smooth-payoff bound numerically for one to three steps (worst ratio about 0.003), and the polynomial
+variance bounds exactly from Gaussian moments (8,000 cases).  The R31 auditor checked the explicit
+moment constant against exact error moments (about 750 cases, worst ratio `5.5·10⁻³`) and the
+coupling of the coarse level.  The R32 auditor worked through the pathwise growth argument by hand
+and checked it over 5,400 parameter combinations, and checked the coefficient conditions of the
+four examples.
+Findings and what was done:
+
+- **The Theorem 1 statements of `GBMWeakOrder` cover only polynomial payoffs and payoffs with four
+  bounded derivatives**, not the call option; the weak rate shows in the finest-level bound
+  `M^L ≤ c₅/ε`, which is not in Giles' statement.  Documented.  Kept.
+- **`gbm_em_grid_max_error` says little for `m = 1`** (the bound does not tend to 0); the rate
+  appears for `m ≥ 2`, and the sharp `O(h)` is `gbm_em_grid_max_error_sharp`.  The monitoring gap
+  and the level variances are stated as `O(h^{1−δ})` where the truth is `O(h)`.  Documented.  Kept.
+- **`mlmc_level_payoff_lintegral_tendsto` and `mlmc_level_payoff_sq_lintegral_tendsto` are about the
+  level payoff `P_ℓ`** (Giles' notation), not the correction `P_ℓ − P_{ℓ−1}`; their docstrings say
+  so.  `emPath_superlinear_moment_tendsto_atTop` and `…_integral_abs_tendsto_atTop` add measurability
+  and polynomial growth only to make the moments finite; the `∫⁻` versions carry no extra
+  hypotheses.  Documented.  Kept.
+

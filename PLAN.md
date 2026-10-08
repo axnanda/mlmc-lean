@@ -215,28 +215,35 @@ items listed under "Not formalised" below.
   lattice rules in `d` dimensions and the MLQMC complexity with a level-dependent dimension
   (`LatticeRuleD.lean`); Theorem 1 with a polylogarithmic cost factor, which gives the contracting
   SDEs of §10.1 the cost `O(ε⁻²|log ε|³)` (`Theorem1Log.lean`).
+- ✅ Round 21: weak order one of Euler–Maruyama for GBM with polynomial and smooth payoffs, and
+  Theorem 1 with the paper's `α = β = γ = log₂ M` (`GBMWeakOrder.lean`); the GBM error uniformly
+  over the grid and lookback options monitored at every time step (`GBMGridMax.lean`); the
+  divergence theorem of Hutzenthaler, Jentzen and Kloeden for scalar coefficients
+  (`EulerSuperlinearGeneral.lean`).
 - Not formalised (each with its reason in `notes/coverage/README.md`): the convergence orders of the
   discretisations of general SDEs, SPDEs and PDEs (Itô calculus and PDE regularity are not in
-  Mathlib; proved for geometric Brownian motion from its exact solution) and of QMC in `d`
-  dimensions (discrepancy theory and the existence of good lattices; the one-dimensional case, and
-  in `d` dimensions the variance of shifted lattice rules and the MLQMC complexity given the decay
-  of the dual-lattice sums, are proved); the optimality of the simplex among all MIMC index sets;
-  the kurtosis upper bounds of the digital option and the endpoints of its rates `O(h^{1/2})`,
-  `O(h)` (every smaller exponent is proved for GBM from `L^p` strong errors); continuously monitored
-  path-dependent payoffs (Brownian-bridge extremes; fixed monitoring dates are proved for GBM);
-  real-valued adaptive step sizes (Brownian motion at stopping times; deterministic union grids and
-  adaptive steps on a base grid are proved); tau-leaping's weak rate for unbounded payoffs and the
-  pathwise exact (SSA) coupling (bounded payoffs are proved); the general moment results for
-  super-linear drifts (the paper's example `dS = −S³dt + dW` is proved); the jump-diffusion and
-  Lévy-process theory of §6 beyond grid values (the Poisson and Lévy processes themselves; the
-  discrete parts are proved); the Karhunen–Loève expansion and the finite-element analysis of §7.2;
-  that the limit of the discretised contracting chains is the SDE's invariant law (§10.1; fixed and
-  level-dependent steps are proved for the discretised chains); the value of the dyadic limit `C`
-  and the exact halving ratio of the MSE per bit (Haas–Giles §3.4; the existence of `C > 0` and the
-  order `2^{−d}/d` are proved for `Φ⁻¹`, the exact ratio needs finer asymptotics of `Φ⁻¹`); whether
-  MIMC reaches `O(ε⁻²)` for a piecewise linear `f` (the paper's rates are refuted and the corrected
-  rates give `O(ε⁻²|log ε|⁴)`); the remaining claims are numerical or empirical (measured rates,
-  figures, run times) or hardware facts.
+  Mathlib; proved for geometric Brownian motion from its exact solution, including weak order one
+  for smooth and polynomial payoffs) and of QMC in `d` dimensions (discrepancy theory and the
+  existence of good lattices; the one-dimensional case, and in `d` dimensions the variance of
+  shifted lattice rules and the MLQMC complexity given the decay of the dual-lattice sums, are
+  proved); the optimality of the simplex among all MIMC index sets; the kurtosis upper bounds of the
+  digital option and the endpoints of its rates `O(h^{1/2})`, `O(h)` (every smaller exponent is
+  proved for GBM from `L^p` strong errors); continuously monitored path-dependent payoffs
+  (Brownian-bridge extremes; fixed dates and every time step are proved for GBM); real-valued
+  adaptive step sizes (Brownian motion at stopping times; deterministic union grids and adaptive
+  steps on a base grid are proved); tau-leaping's weak rate for unbounded payoffs and the pathwise
+  exact (SSA) coupling (bounded payoffs are proved); the comparison of the explicit scheme with the
+  exact solution for super-linear coefficients, and several dimensions (the divergence of the
+  scheme's moments is proved for scalar coefficients); the jump-diffusion and Lévy-process theory of
+  §6 beyond grid values (the Poisson and Lévy processes themselves; the discrete parts are proved);
+  the Karhunen–Loève expansion and the finite-element analysis of §7.2; that the limit of the
+  discretised contracting chains is the SDE's invariant law (§10.1; fixed and level-dependent steps
+  are proved for the discretised chains); the value of the dyadic limit `C` and the exact halving
+  ratio of the MSE per bit (Haas–Giles §3.4; the existence of `C > 0` and the order `2^{−d}/d` are
+  proved for `Φ⁻¹`, the exact ratio needs finer asymptotics of `Φ⁻¹`); whether MIMC reaches `O(ε⁻²)`
+  for a piecewise linear `f` (the paper's rates are refuted and the corrected rates give `O(ε⁻²|log
+  ε|⁴)`); the remaining claims are numerical or empirical (measured rates, figures, run times) or
+  hardware facts.
 
 **M4: Research, needs Alex's sign-off before formalising: nested MLMC with level-dependent
 precision.**
