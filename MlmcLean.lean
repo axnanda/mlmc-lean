@@ -165,6 +165,8 @@
 --   dimensions (variance as a dual-lattice sum) and MLQMC complexity with level-dependent dimension
 -- * `MlmcLean.Theorem1Log` — Theorem 1 with costs C_ℓ ≤ c₃(ℓ+1)^κ 2^{γℓ}, sharp polylogarithmic
 --   bounds, and the contracting SDEs of §10.1 at cost O(ε⁻²|log ε|³)
+-- * `MlmcLean.GBMStrongLp` — Giles §5.1–§5.2: strong errors of Euler–Maruyama and Milstein for GBM in
+--   every L^{2m}, and the digital option's V_ℓ and fourth moment at every rate below the paper's
 import MlmcLean.Allocation
 import MlmcLean.Estimator
 import MlmcLean.LevelDiff
@@ -246,3 +248,4 @@ import MlmcLean.ContractingLevels
 import MlmcLean.AdaptiveGrids
 import MlmcLean.LatticeRuleD
 import MlmcLean.Theorem1Log
+import MlmcLean.GBMStrongLp

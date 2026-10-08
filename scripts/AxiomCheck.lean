@@ -934,6 +934,20 @@ import MlmcLean
 #print axioms MLMC.giles_theorem1_corrections_log
 #print axioms MLMC.giles_theorem1_fineCoarse_log
 #print axioms MLMC.contracting_levels_mlmc_log
+#print axioms MLMC.gbm_em_moment_error
+#print axioms MLMC.gbm_em_moment_error_le
+#print axioms MLMC.gbm_em_strong_error_four
+#print axioms MLMC.gbm_em_moment_error_level
+#print axioms MLMC.gbm_mil_moment_error
+#print axioms MLMC.gbm_mil_moment_error_le
+#print axioms MLMC.gbm_mil_strong_error_four
+#print axioms MLMC.gbm_mil_moment_error_level
+#print axioms MLMC.gbm_em_digital_variance_le_moment
+#print axioms MLMC.gbm_mil_digital_variance_le_moment
+#print axioms MLMC.gbm_em_digital_fourth_moment_le_of_four
+#print axioms MLMC.gbm_mil_digital_fourth_moment_le_of_four
+#print axioms MLMC.gbm_em_digital_rate
+#print axioms MLMC.gbm_mil_digital_rate
 -- helper lemmas that the prove2.me generator promotes to nodes
 #print axioms MLMC.sqrt_Vb_mul_Cb
 #print axioms MLMC.two_rpow_levelL_le

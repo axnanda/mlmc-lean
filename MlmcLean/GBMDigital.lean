@@ -44,9 +44,11 @@ as in `MlmcLean.GBMEulerMaruyama` and `MlmcLean.GBMMilstein`.
 **What is not proved.**  The paper's rates `O(h^{1/2})` (Euler–Maruyama) and `O(h)` (Milstein) for
 the mismatch probability need more than the mean-square strong error
 (`digital_mismatch_exponent_sharp` shows that the mean-square error alone gives no better exponent
-than `1/3`).  Strong errors in `L^p`, `E|S_T − Ŝ_ℓ|^p = O(h_ℓ^{p/2})` (resp. `O(h_ℓ^p)`), would give
+than `1/3`).  Strong errors in `L^p`, `E|S_T − Ŝ_ℓ|^p = O(h_ℓ^{p/2})` (resp. `O(h_ℓ^p)`), give
 `O(h_ℓ^{p/(2(p+1))})` (resp. `O(h_ℓ^{p/(p+1)})`) through `digital_mismatch_le_of_moment`, hence
-every exponent below `1/2` (resp. `1`); these `L^p` bounds are not proved for GBM here.  The
+every exponent below `1/2` (resp. `1`); these `L^p` bounds are proved for GBM in
+`MlmcLean.GBMStrongLp` (`gbm_em_moment_error`, `gbm_mil_moment_error`), which gives every such
+exponent (`gbm_em_digital_rate`, `gbm_mil_digital_rate`); the endpoints are not proved.  The
 Gaussian-tail version `digital_mismatch_le_of_tail` does not apply to GBM, whose discretisation
 error has lognormal tails.  The kurtosis rates (an upper bound on `κ`) need a lower bound on the
 mismatch probability, which is not proved either.
@@ -227,8 +229,8 @@ lognormal density of `S_T`.
 **Deviation.**  This is `β = 2/3`, not the paper's `V_ℓ = O(h_ℓ)`: the mean-square strong error and
 a bounded density give no better exponent, for the variance as well as for the mismatch probability
 (`digital_mismatch_exponent_sharp`); the rate `O(h_ℓ)` uses that the error is `O(h_ℓ)` on (almost)
-every path, which is not proved here (`L^p` strong errors `O(h_ℓ^p)` would give every exponent
-below `1` through `digital_mismatch_le_of_moment`). -/
+every path, which is not proved here (`L^p` strong errors `O(h_ℓ^p)` give every exponent below `1`
+through `digital_mismatch_le_of_moment`: `gbm_mil_digital_rate` in `MlmcLean.GBMStrongLp`). -/
 theorem gbm_mil_digital_variance_le (r σ : ℝ) {s₀ T : ℝ} (hs₀ : s₀ ≠ 0) (hσ : σ ≠ 0)
     (hT : 0 < T) (K : ℝ) (ℓ : ℕ) :
     variance (fun z => (Set.Ioi K).indicator (1 : ℝ → ℝ) (gbmMil r σ T s₀ (ℓ + 1) z) -
@@ -268,9 +270,10 @@ as `P(D ≠ 0) → 0`; the statement below is about the raw-moment kurtosis.
 
 **What is not proved.**  The paper's `E[D⁴] = O(h^{1/2})` needs a sharper mismatch bound than the
 mean-square one, whose exponent `1/3` cannot be improved (`digital_mismatch_exponent_sharp`).
-Strong errors in `L^p`, `E|S_T − Ŝ_ℓ|^p = O(h_ℓ^{p/2})`, would give `O(h_ℓ^{p/(2(p+1))})`, hence
-every exponent below `1/2`, through `digital_mismatch_le_of_moment`; these `L^p` bounds are not
-proved for GBM here.  `digital_mismatch_le_of_tail` would give `O((h log(1/h))^{1/2})`, but its
+Strong errors in `L^p`, `E|S_T − Ŝ_ℓ|^p = O(h_ℓ^{p/2})`, give `O(h_ℓ^{p/(2(p+1))})`, hence
+every exponent below `1/2`, through `digital_mismatch_le_of_moment`; these `L^p` bounds are proved
+for GBM in `MlmcLean.GBMStrongLp` (`gbm_em_digital_rate`; the endpoint is not proved).
+`digital_mismatch_le_of_tail` would give `O((h log(1/h))^{1/2})`, but its
 hypothesis (Gaussian tails of the error, for all `δ > 0`) fails for GBM, whose Euler–Maruyama error
 has lognormal tails, so it is not used.  The kurtosis rate `κ = O(h^{−1/2})` of the paper (an upper
 bound on `κ`) needs a lower bound on `P(D ≠ 0)`, which is not proved. -/
@@ -324,8 +327,9 @@ kurtosis agrees with it to leading order only asymptotically, as `P(D ≠ 0) →
 **Deviation.**  The paper's `O(h_ℓ)` fraction (and the kurtosis `O(h_ℓ^{−1})`, which needs a lower
 bound on `P(D ≠ 0)`) is not proved; from the mean-square strong error the exponent `2/3` cannot be
 improved (`digital_mismatch_exponent_sharp`).  Strong errors in `L^p`, `E|S_T − Ŝ_ℓ|^p = O(h_ℓ^p)`,
-would give `O(h_ℓ^{p/(p+1)})`, hence every exponent below `1`, through
-`digital_mismatch_le_of_moment`; these `L^p` bounds are not proved for GBM here. -/
+give `O(h_ℓ^{p/(p+1)})`, hence every exponent below `1`, through
+`digital_mismatch_le_of_moment`; these `L^p` bounds are proved for GBM in `MlmcLean.GBMStrongLp`
+(`gbm_mil_digital_rate`; the endpoint is not proved). -/
 theorem gbm_mil_digital_fourth_moment_le (r σ : ℝ) {s₀ T : ℝ} (hs₀ : s₀ ≠ 0) (hσ : σ ≠ 0)
     (hT : 0 < T) (K : ℝ) (ℓ : ℕ) :
     ∫ z, ((Set.Ioi K).indicator (1 : ℝ → ℝ) (gbmMil r σ T s₀ (ℓ + 1) z) -
