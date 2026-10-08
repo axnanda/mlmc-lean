@@ -13,8 +13,10 @@ value.  Hence, in the case `β = γ` they prove that the overall cost is reduced
 while for `β < γ` the cost is reduced much more to `O(ε⁻² 2^{(γ−β)√(|log₂ ε|/α)})`."
 
 `MlmcLean.Richardson` shows that the remaining error is `(−1)^L a_{L+1} 2^{−αL(L+1)/2}`
-(`ml2r_bias`), i.e. of order `2^{−αL(L+1)/2}` rather than the printed `2^{−αL²}`.  This file proves
-the complexity statements with this rate.
+(`ml2r_bias`), i.e. of order `2^{−αL(L+1)/2}` rather than the printed `2^{−αL²}`, and
+`MlmcLean.ML2RTheorem` bounds it by `C K 2^{−αL(L+1)/2}` when the expansion has a remainder
+`|R_ℓ| ≤ K 2^{−αℓL}` (`ml2r_bias_le`).  This file proves the complexity statements with this rate,
+taking the bound `c₁ 2^{−αL(L+1)/2}` on the remaining error as given.
 
 * **The weights are bounded uniformly in `L`** (`abs_ml2rWeight_le`, `sum_abs_ml2rWeight_le`,
   `abs_ml2r_coeff_le`): with `r = 2^{−α}`, `|w_ℓ| ≤ B² r^{L−ℓ}` with `B = e^{r/(1−r)²}`, so
@@ -242,7 +244,7 @@ noncomputable def ml2rLevel (α c₁ ε : ℝ) : ℕ :=
   ⌈Real.sqrt (2 * max 0 (Real.logb 2 (2 * c₁ / ε)) / α)⌉₊
 
 /-- **ML2R reaches the weak error `ε/2`** (Giles 2015, §2.3): with `L = ml2rLevel α c₁ ε`, the
-remaining error bound of `ml2r_bias`, `c₁ 2^{−αL(L+1)/2}`, is at most `ε/2`. -/
+remaining error bound of `ml2r_bias_le`, `c₁ 2^{−αL(L+1)/2}`, is at most `ε/2`. -/
 theorem ml2rLevel_bias {α c₁ ε : ℝ} (hα : 0 < α) (hc₁ : 0 < c₁) (hε : 0 < ε) :
     c₁ * (2 : ℝ) ^ (-(α * ((ml2rLevel α c₁ ε : ℝ) * (ml2rLevel α c₁ ε + 1) / 2))) ≤ ε / 2 := by
   have hL : Real.sqrt (2 * max 0 (Real.logb 2 (2 * c₁ / ε)) / α) ≤ (ml2rLevel α c₁ ε : ℝ) :=
@@ -405,7 +407,7 @@ section cost
 
 /-- **The mean square error and the cost of the ML2R estimator for a given number of levels**
 (Giles 2015, §2.3).  Let `α > 0`, `V_ℓ = c₂ 2^{−βℓ}`, `C_ℓ = c₃ 2^{γℓ}` (`Vb`, `Cb`), and let `L`
-make the remaining error bound at most `ε/2`: `c₁ 2^{−αL(L+1)/2} ≤ ε/2` (`ml2r_bias`,
+make the remaining error bound at most `ε/2`: `c₁ 2^{−αL(L+1)/2} ≤ ε/2` (`ml2r_bias_le`,
 `ml2rLevel_bias`).  With `W = ml2rWeightBound α` and the rounded-up optimal allocation for the
 variances `W² V_ℓ` and the target `ε²/2`, the estimator of `ml2r_estimator_mean_variance`, whose
 variance is `∑_ℓ v_ℓ² V_ℓ/N_ℓ`, has mean square error bound `< ε²`, and its cost is at most
@@ -482,7 +484,7 @@ lemma ml2r_tail_cost {α γ c₁ c₃ ε : ℝ} (hα : 0 < α) (hγ : 0 < γ) (h
 
 /-- **ML2R in the case `β = γ`** (Giles 2015, §2.3: "Hence, in the case `β = γ` they prove that the
 overall cost is reduced to `O(ε⁻² |log ε|)`", after Lemaire and Pagès).  Let `α, γ > 0`, `β = γ`
-and `c₁, c₂, c₃ > 0`, with the remaining error bound `c₁ 2^{−αL(L+1)/2}` of `ml2r_bias`,
+and `c₁, c₂, c₃ > 0`, with the remaining error bound `c₁ 2^{−αL(L+1)/2}` of `ml2r_bias_le`,
 `V_ℓ = c₂ 2^{−βℓ}` and `C_ℓ = c₃ 2^{γℓ}`.  There is `c₄ > 0` such that for every `0 < ε < e⁻¹`
 there are `L` and `N_ℓ ≥ 1` for which the ML2R estimator has mean square error bound `< ε²` and
 cost at most `c₄ ε⁻² |log ε|`; standard MLMC costs `ε⁻² (log ε)²` in this case
@@ -559,11 +561,11 @@ theorem ml2r_complexity_eq {α β γ c₁ c₂ c₃ : ℝ} (hα : 0 < α) (hγ :
 
 /-- **ML2R in the case `β < γ`** (Giles 2015, §2.3: "while for `β < γ` the cost is reduced much
 more to `O(ε⁻² 2^{(γ−β)√(|log₂ ε|/α)})`", after Lemaire and Pagès).  Let `0 < α`, `β < γ`,
-`0 < γ` and `c₁, c₂, c₃ > 0`, with the remaining error bound `c₁ 2^{−αL(L+1)/2}` of `ml2r_bias`,
+`0 < γ` and `c₁, c₂, c₃ > 0`, with the remaining error bound `c₁ 2^{−αL(L+1)/2}` of `ml2r_bias_le`,
 `V_ℓ = c₂ 2^{−βℓ}` and `C_ℓ = c₃ 2^{γℓ}`.  There is `c₄ > 0` such that for every `0 < ε < e⁻¹`
 there are `L` and `N_ℓ ≥ 1` for which the ML2R estimator has mean square error bound `< ε²` and
 cost at most `c₄ ε⁻² 2^{(γ−β)√(2 log₂(1/ε)/α)}`.  The exponent is `√2` times the printed one
-because the remaining error is `2^{−αL(L+1)/2}` (`ml2r_bias`), not the printed `2^{−αL²}`; it is
+because the remaining error is `2^{−αL(L+1)/2}` (`ml2r_bias_le`), not the printed `2^{−αL²}`; it is
 `o(log(1/ε))`, so the cost is `ε^{−2−δ}` for every `δ > 0`, against `ε^{−2−(γ−β)/α}` for standard
 MLMC (`giles_theorem1`). -/
 theorem ml2r_complexity_lt {α β γ c₁ c₂ c₃ : ℝ} (hα : 0 < α) (hγ : 0 < γ) (hβγ : β < γ)

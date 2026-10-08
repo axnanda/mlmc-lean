@@ -238,7 +238,9 @@ Lean statement or to the reason it is not formalised. The deviations of the new 
   grows as `ε → 0`, and with a constant growing with `L` the bias need not be small). Under it the
   bias is at most `C_α K 2^{−αL(L+1)/2}` (`ml2r_bias_le`); the printed `O(2^{−αL²})` cannot hold
   uniformly (`ml2r_bias`: the expansion `2^{−α(L+1)ℓ}` has bias exactly `±2^{−αL(L+1)/2}`), so
-  the `β < γ` cost exponent is `√(2|log₂ ε|/α)`, `√2` times the printed one. The complexity
+  the `β < γ` cost exponent that the proved bias bound gives is `√(2|log₂ ε|/α)`, `√2` times the
+  printed one (that the printed exponent itself fails, a lower bound on the cost of ML2R, is not
+  proved). The complexity
   (`ml2r_theorem_eq`, `ml2r_theorem_lt`) is stated for the mean square error of the estimator
   itself; the earlier `ml2r_complexity_eq`/`_lt` are its deterministic core.
 * **Theorem 2's index set (G15 §2.4, p. 15).** `giles_theorem2_indexSet` and
@@ -267,7 +269,9 @@ Lean statement or to the reason it is not formalised. The deviations of the new 
   law (`existsUnique_invariant`); for the example it is `U[0, 2]` (`halfStep_limit_uniform`,
   `halfStep_invariant_unique`); the level bias decays like `(√ρ)^{N_ℓ}` and MLMC for `E[f(X_∞)]`
   has cost `O(ε⁻²)` (`markov_mlmc_theorem1`) or is unbiased with the randomised estimator
-  (`markov_randomised_mlmc`). The paper's `γ ∈ (0, 1)` is relaxed to `0 < γ ≤ 1`.
+  (`markov_randomised_mlmc`). The paper's `γ ∈ (0, 1)` is relaxed to `0 < γ ≤ 1`. The first step
+  has a finite moment, `E[d(x₀, φ(x₀, ξ))^{2γ}] < ∞`, which the paper does not state (recorded after
+  spot-check 24; round 25 shows that it cannot be dropped, `MarkovNoWeakLimit.lean`, below).
 * **Digital options (G15 §5.1–§5.2; `SDEDigital.lean`).** "`V_ℓ = O(h^{1/2})`" needs more than the
   mean-square strong rate: from `E[(Ŝ − S)²] = O(h)` and a bounded density alone the variance is
   `O(h^{1/3})` (`variance_digital_rate`), and no larger exponent follows from these two hypotheses
@@ -275,7 +279,8 @@ Lean statement or to the reason it is not formalised. The deviations of the new 
   `O(√(h log(1/h)))` (`digital_mismatch_le_of_tail`). The antithetic call's `O(h^{3/2})` (§5.3) is
   proved when, given `|A − B|`, the average `½(A + B)` of the fine and antithetic values has a
   bounded density (`variance_call_antithetic_le`); marginal information alone gives a weaker rate
-  (`variance_call_antithetic_le_holder`). For GBM, `β = 1/3` holds with no assumption
+  (`variance_call_antithetic_le_holder`; that it cannot give `3/2` is shown by a counterexample in
+  that docstring, not by a theorem). For GBM, `β = 1/3` holds with no assumption
   (`gbm_digital_variance_le`).
 * **Super-linear drift (G15 §5.6; `SDEMisc.lean`).** Deterministic analogues: the explicit Euler
   step for the drift `−S³` diverges iff `h S₀² > 2` (`eulerCubic_growth`,
@@ -488,10 +493,12 @@ Lean statement or to the reason it is not formalised. The deviations of the new 
   out of scope), so Theorem 1 gives `O(ε^{−3−η})`, resp. `O(ε^{−2−η})`, for every `η > 0`, not the
   paper's `O(ε^{−2.5})`.  `σ ≠ 0` is needed (for `σ = 0` the paths are deterministic and the mean
   square error can be `1` on every level).  The barrier option is monitored at `m` fixed dates, not
-  continuously, with a Lipschitz `g` and an up-and-out or down-and-out set; the Brownian-bridge
-  rows of Table 5.2 are not covered.  Splitting with a Milstein final step: autonomous coefficients,
-  (2.4) only; the variance of the splitting estimator is not formalised (round 23: its rate with an
-  Euler–Maruyama final step, `GBMDigitalCondExp.lean`, below).  The factor `10e^{−rT}` is omitted.
+  continuously and not at every time step (the `O(h^{1/2})` variance of the every-step barrier,
+  §5.2, p. 38, is not formalised), with a Lipschitz `g` and an up-and-out or down-and-out set; the
+  Brownian-bridge rows of Table 5.2 are not covered.  Splitting with a Milstein final step:
+  autonomous coefficients, (2.4) only; the variance of the splitting estimator is not formalised
+  (round 23: its rate with an Euler–Maruyama final step, `GBMDigitalCondExp.lean`, below).  The
+  factor `10e^{−rT}` is omitted.
 * **Spot-check items (`SpotCheckRemarks.lean`, round 22).** ML2R: one sequence of level means
   satisfying the expansion with an `L`-independent constant, which suffices to refute
   `O(2^{−αL²})` under the hypotheses of `ml2r_theorem_eq`.  §5.7: the variance bound assumes `g`
@@ -546,13 +553,14 @@ Lean statement or to the reason it is not formalised. The deviations of the new 
   is assumed for the variance rate and Theorem 1 (near the strike the conditional standard deviation
   `|σŜ|√h` is then of order `√h`), with `s₀ ≠ 0`, `σ ≠ 0`, `T > 0`; `K = 0` is an easy case left out
   (for small `h` the Milstein path keeps the sign of `s₀`, so the corrections are exponentially
-  small; not proved).  The factor `25e^{−rT}` is omitted, `b` stands for `|b|` in the denominators,
+  small; not proved; round 25 proves `O(h^q)` for every `q`, `GBMDigitalCondExpExtras.lean`,
+  below).  The factor `25e^{−rT}` is omitted, `b` stands for `|b|` in the denominators,
   and the coarse numerator uses the re-used increment `b ΔW_{N−2}` in place of the printed `b√h_ℓ`.
   Splitting (Euler–Maruyama final step, sub-samples independent of the path): `M_ℓ = ⌈h_ℓ^{−1/2}⌉`
   gives the rate of the conditional expectation at an extra cost `o(h_ℓ^{−1})`, not the same
   variance to leading order, which would need `M_ℓ h_ℓ^{1/2} → ∞` and lower bounds (numerically the
   ratio of the two variances stays near `15` with this `M_ℓ`); Theorem 1 is not stated for the
-  splitting estimator.  The kurtosis `O(h^{−1/2})` is not proved.
+  splitting estimator (round 25: it is, below).  The kurtosis `O(h^{−1/2})` is not proved.
 * **Tau-leaping with the exact SSA level (`TauLeapingSSA.lean`, round 23).** One reaction, a bounded
   propensity `λ ≤ Λ` and a bounded payoff `|Φ| ≤ M` (Anderson and Higham treat several reactions).
   The exact chain is simulated by uniformisation, a rate-`Λ` clock thinned with probabilities
@@ -595,7 +603,8 @@ Lean statement or to the reason it is not formalised. The deviations of the new 
   and paths are not simulated), with Lévy measure `ν`, `∫ min(1, z²) dν < ∞`, and the truncation
   `1_{|z|<1}`; the jump laws enter through `r • μ = T • ν|_B` for any such `r`, `μ`.  The small
   jumps are neglected; their replacement by a Brownian increment (Dereich 2011, Dereich and
-  Heidenreich 2011, Marxen 2010) is not formalised.  The intermediate range is the half-open
+  Heidenreich 2011, Marxen 2010) is not formalised here (round 25: `LevyExtras.lean`, below).  The
+  intermediate range is the half-open
   `[δ_ℓ, δ_{ℓ−1})`, not the paper's closed interval (a jump of size exactly `δ_{ℓ−1}` is simulated
   on both paths).  Two realisations of the coupling are used: per level (the jumps `|z| ≥ δ_ℓ`
   simulated once, the coarse path keeping those `≥ δ_{ℓ−1}`) for (2.4) and the correction variance,
@@ -609,7 +618,8 @@ Lean statement or to the reason it is not formalised. The deviations of the new 
   rates are verified for the one-sided stable-like example `ν(dz) = c z^{−1−Y} dz` on `(0, 1]`,
   whose complexity is `ε⁻²` for `Y < 1`, `ε⁻²(log ε)²` for `Y = 1` and `ε^{−2Y/(2−Y)}` for
   `1 < Y < 2`; there the band `|z| ≥ 1` has `ν`-mass `0`, so level `0` is the deterministic `Φ(0)`.
-  Path-dependent payoffs, Table 6.3 and two-sided or non-Lipschitz examples are not covered.
+  Path-dependent payoffs, Table 6.3 and two-sided or non-Lipschitz examples are not covered
+  (round 25: Table 6.3's Asian row for Variance-Gamma laws, `LevyExtras.lean`, below).
 * **The untruncated Karhunen–Loève field (`KarhunenLoeveLimit.lean`, round 24).** Mercer's theorem
   stays a hypothesis: the pointwise theorems assume only the `HasSum` (or summability) expansions of
   `R` at the points involved, with no orthonormality, no `∑ θ_n < ∞` and no eigen-relation, and
@@ -642,6 +652,89 @@ Lean statement or to the reason it is not formalised. The deviations of the new 
   probability measure (it is, by the first conjunct of `ssa_mlmc_unbiased`, so the bound was not
   trivial).  The theorem now states `IsProbabilityMeasure (ssaInputLaw lam Λ T x₀ L)` as its first
   conjunct; the bound is unchanged.
+* **The digital option for every strike, and Theorem 1 for splitting
+  (`GBMDigitalCondExpExtras.lean`, round 25).** As in round 23, `s₀ ≠ 0`, `σ ≠ 0`, `T > 0`
+  (otherwise the conditional standard deviation vanishes and `Φ(x/0)` is a junk value), and
+  Theorem 1 uses `α = 3/4`, `β = 5/4`, `γ = 1`; the factor `25e^{−rT}` is omitted. For `K = 0` the
+  corrections are shown to be `O(h^q)` for every `q` (the paths keep the sign of `s₀` once
+  `4(σ² + 2|r|)h ≤ 1`), not exponentially small, as they are numerically. Splitting:
+  `M_ℓ = ⌈h_ℓ^{−1/2}⌉` sub-samples of the last increment, independent of the path; a level-`ℓ`
+  sample costs `2^ℓ + M_ℓ`, the fine path steps plus one unit per sub-sample (the coarse path and
+  the coarse sub-sample steps, each at most a constant factor, are left out, as the cost `2^ℓ` of
+  `gbm_digital_condExp_theorem1` leaves out the coarse path). "The variance is the same, to leading
+  order" is not proved, only the same rate.
+* **Tau-leaping with unbounded propensities (`TauLeapingLinearGrowth.lean`, round 25).** One
+  reaction with stoichiometry `+1`, a `K`-Lipschitz propensity with no bound `Λ` (on `ℕ` this is the
+  linear growth `λ(x) ≤ λ(0) + Kx`), Lipschitz payoffs of the terminal state, and the cost of the
+  `2^ℓ` fine steps of a level-`ℓ` sample; level `0` makes one step of size `T`. The weak rate
+  `α ≥ ½` is a hypothesis of `tauLeaping_mlmc_theorem1_lipschitz` and `tauLeaping_mlmc_linearBirth`
+  (the paper's `α = 1` compares with the exact chain, which is not constructed for unbounded rates;
+  `TauLeapingExact.lean` uniformises with `Λ < ∞`). For `λ(x) = cx` and `Φ(x) = x` the target of
+  `tauLeaping_mlmc_linearBirth_mean` is `x₀e^{cT}`, the limit of the tau-leaping means; that it is
+  the mean of the exact linear birth process is not formalised. The constants are far from sharp,
+  depend on `x₀` and are exponential in `T²`.
+* **Theorem 1 in a Banach space (`BanachTheorem1.lean`, round 25).** The paper gives no statement
+  for other norms, only the pointer to Banach-space theory (Ledoux and Talagrand, Heinrich); the
+  Lean statements are one way to make it precise. Type 2 is a hypothesis (`HasType2`: the type-2
+  inequality for mutually independent, square-integrable, centred variables on every probability
+  space of the universe of the simulation space), proved only for spaces isomorphic to a subspace of
+  a Hilbert space, finite-dimensional ones included. The samples are mutually independent
+  (`iIndepFun`), not pairwise as in the Hilbert-space case; `V_ℓ = E‖ΔP_ℓ − E[ΔP_ℓ]‖²` replaces the
+  variance; the MSE bound carries the factor `2τ²` on the variance term and `2` on the squared bias
+  (in a Banach space the cross term between the error and the bias does not vanish), even in a
+  Hilbert space, where `mlmc_mse_hilbert` gives the exact identity. For `ℝ × ℝ` with the maximum
+  norm `τ = √2`; that it is the best constant is argued in the docstring of
+  `hasType2_prod_sqrt_two`, not proved. Not formalised: type 2 for other infinite-dimensional spaces
+  (e.g. `L^p`, `2 < p < ∞`), type `p < 2`, the Daun–Heinrich results.
+* **The random digital shift (`DigitalShiftQMC.lean`, round 25).** The paper's "digital scrambling
+  (for Sobol sequences)" usually means Owen's nested scrambling; the Lean statements are for the
+  random digital shift in base 2, which also makes every randomised point uniform, the property that
+  unbiasedness and the confidence interval use. Points are sequences of binary digits (so the shift
+  is defined everywhere and the null set of dyadic rationals with two expansions is avoided), linked
+  to Lebesgue measure on the closed cube `[0, 1]^δ` by `uniformDigits_map_binaryPoint`. The points
+  are arbitrary: Sobol points are not constructed and no QMC error rate is claimed.
+* **Brownian small jumps and Variance-Gamma laws (`LevyExtras.lean`, round 25).** As in
+  `LevyTruncation.lean`, the terminal value `X_T` only, with payoffs `Φ(X_T)`. The Brownian term is
+  `σ_δ W` with one standard normal `W` independent of the jumps (`W = B_T/√T` for a Brownian motion
+  `B`), `σ_δ²` the variance of the neglected compensated small jumps (with the truncation
+  `1_{|z|<1}` and `δ ≤ 1` they have mean `0`, so no drift arises); the fine and the coarse path use
+  the same `W`, scaled by `σ_{δ_ℓ}` and `σ_{δ_{ℓ−1}}`. Since `W` is independent of the true small
+  jumps, the strong error doubles, `E[(X − X̂^δ)²] = 2T ∫_{|z|<δ} z² dν`, and the bias bound
+  obtained through this coupling is not sharp: Dereich's (2011) improvement (a Wasserstein bound
+  between the small jumps and their Gaussian replacement, giving a smaller bias for Lipschitz
+  payoffs and a better complexity when the Blumenthal–Getoor index exceeds 1) is not proved, so
+  Theorem 1 holds with the same `α, β, γ` as with the small jumps neglected; the paper only names
+  the approach and states no rate for it. The cost of a sample is one plus the number of simulated
+  jumps. Table 6.3: the Asian payoff is the trapezoidal average of `JumpProcesses.lean` on the
+  uniform grid, and the target is the limit of the level means, not identified with the continuously
+  averaged price; `T > 0` (a Gamma law needs a positive shape: Mathlib's `gammaMeasure 0 r` is the
+  zero measure); the conditions `M > 2`, resp. `2θκ + 2σ²κ < 1`, are exactly `E e^{2X_T} < ∞`. Only
+  the VG column: the NIG and spectrally negative α-stable laws are not in Mathlib, and the lookback
+  and barrier rows are not covered.
+* **No weak limit without a moment condition (`MarkovNoWeakLimit.lean`, round 25).** A
+  counterexample to the sentence of §10.1, p. 61, as written: on `ℝ`, the step `x/2 + e` of the
+  paper's example with the heavy-tailed noise `ξ = exp(1/U)`. The sentence paraphrases Glynn and
+  Rhee (2014), which is not in `docs/`; their "required conditions" may include more than the
+  paraphrase lists. That completeness of the space is also needed (on `(0, ∞)` the map `x ↦ x/2`
+  contracts, but `δ_{2^{−n}x₀}` has no weak limit in the space; likewise the paper's example read on
+  the rationals) and that for this chain a logarithmic moment `E[log⁺ ξ] < ∞` would suffice are
+  remarks in the module docstring, not theorems.
+* **Deviations of earlier modules, recorded after spot-check 24.** §8 (`PoissonCoupling.lean`,
+  `TauLeapingMLMC.lean`): one reaction `x → x + 1` (Anderson and Higham treat several reactions with
+  stoichiometric vectors); the `O(h)` correction variance and Theorem 1 need a propensity that is
+  both `K`-Lipschitz and bounded by `Λ`, which excludes `λ(x) = cx` (round 25 drops the bound,
+  above), a Lipschitz payoff of the terminal state and a time step `h ≤ 1` in the chain bounds; the
+  cost of a level-`ℓ` sample counts its `2^ℓ` fine steps only (the coarse path adds `2^{ℓ−1}`, a
+  factor `3/2`); the weak rate `α ≥ ½` of `tauLeaping_mlmc_theorem1` is a hypothesis (proved against
+  the exact chain for bounded propensities in `TauLeapingExtensions.lean`). §9.1
+  (`NestedMLMC.lean`): `f` differentiable with a `K`-Lipschitz derivative (for instance `|f″| ≤ K`)
+  in place of the paper's twice differentiable `f`, and `E[g(Z, W)⁴] < ∞`. §10.1
+  (`MarkovChain.lean`, `MarkovLimit.lean`, `MarkovLimitLaw.lean`): `φ_n = φ(·, ξ_n)` with a jointly
+  measurable `φ` and i.i.d. noises, a complete separable metric space, and a finite moment of the
+  first step, `E[d(x₀, φ(x₀, ξ))^p] < ∞` with `p = 2γ`, assumed by `variance_levels_le`,
+  `tendstoInDistribution_fwdIter` and the theorems of `MarkovLimitLaw.lean`; the paper states
+  neither the completeness and separability nor the moment condition, and without the moment
+  condition its weak convergence claim is false (`hc_cannot_be_dropped`, above).
 
 ### Corrections to the papers recorded elsewhere, collected
 
@@ -652,7 +745,7 @@ Lean statement or to the reason it is not formalised. The deviations of the new 
 | G15 | §2.1, p. 7 | "Because of condition i), we have `2^{−αL} = O(ε)`, and hence `C_L = O(ε^{−γ/α})`" | `C_L = O(ε^{−γ/α})` needs `2^{αL} = O(ε⁻¹)`, which holds because `L` is the least level meeting the bias target | `finest_cost_le`, `two_rpow_levelL_le` |
 | G15 | §2.3, p. 11 | expansion `E[P_ℓ] − E[P] = ∑_{n=1}^{L} a_n 2^{−nαℓ} + O(2^{−αℓL})` | the remainder has the order of the `n = L` term, which it absorbs; `O(2^{−αℓ(L+1)})` is the natural form. Harmless: the bias bound is the same | `ml2r_bias_le` (reads the printed form) |
 | G15 | §2.3, p. 11 | weights with `∑ w_ℓ 2^{−nαℓ} = 1` | `= 0` | `ml2r_weights` |
-| G15 | §2.3, p. 12 | bias `O(2^{−αL²})`, exponent `√(\|log₂ ε\|/α)` | `O(2^{−αL(L+1)/2})`, `√(2\|log₂ ε\|/α)` | `ml2r_bias`, `ml2r_bias_le`, `ml2r_theorem_lt`, `ml2r_bias_not_attainable` |
+| G15 | §2.3, p. 12 | bias `O(2^{−αL²})`, exponent `√(\|log₂ ε\|/α)` | `O(2^{−αL(L+1)/2})`, `√(2\|log₂ ε\|/α)`. What is proved: the bias bound `O(2^{−αL(L+1)/2})` uniform in `L` (an upper bound), the cost with the exponent `√(2\|log₂ ε\|/α)` that it gives (an upper bound), and that the printed bias is not attainable under the expansion; no theorem shows that the printed cost exponent fails (no lower bound on the cost of ML2R) | `ml2r_bias`, `ml2r_bias_le`, `ml2r_theorem_lt`, `ml2r_bias_not_attainable` |
 | G15 | §2.4, pp. 13–14 | conditions labelled i), iii), ii), iv), v) | labels as in the Notes | hypothesis names follow the statement |
 | G15 | §2.4, p. 15 | rectangles "optimal order" | only for `O(ε⁻²)` | `mimc_rect_lower_bounds` |
 | G15 | §2.4, pp. 15–16 | for large `D`, standard MLMC has complexity "less (often much less) than the optimal `O(ε⁻²)`" | worse than (of larger order than) `O(ε⁻²)` | `mlmc_optimal_complexity_necessary` |
@@ -661,9 +754,12 @@ Lean statement or to the reason it is not formalised. The deviations of the new 
 | G15 | §3.1, p. 21 | (3.1) gives variance `< ½ε²` | `≤ ½ε²` | `allocation_eq_3_1` |
 | G15 | §3.3, p. 23 | "`p, q → 0` due to weak convergence" | needs `E[X²] → 0` | `consistency_mean` |
 | G15 | §3.3, p. 22 | the check fails with probability `< 0.3%` | only as the sample sizes grow; `> 0.003` for every `N ≤ 274` in an example | `consistency_check_empirical`, `ConsistencyCheck.lean` |
+| G15 | §3.3, p. 22 (l. 1032); §3.4, p. 24 (l. 1113–1114) | "`V_ℓ = V[Y_ℓ]`" | with `Y_ℓ` the level estimator of (2.2), (2.3) has `V[Y_ℓ] = V_ℓ/N_ℓ`; in §3.3–§3.4 `Y_ℓ` is one sample of `P_ℓ − P_{ℓ−1}`, so `V_ℓ` is the variance of one sample (§3.5, p. 27, l. 1200, makes the change of meaning explicit). Notation | — |
 | G15 | §5, p. 29 | `h_ℓ = h₀M^ℓ` | `h₀M^{−ℓ}` | `timestep_rate` |
 | G15 | §5.1, pp. 29–30 | Lipschitz payoffs "(such as European, Asian and lookback options)"; with `h_ℓ = 2^{−ℓ}h₀`, `α = 1` | for a lookback option monitored at the time steps the weak order is `½` (the discrete maximum is biased by about `0.5826 σ h^{1/2}` times the mean maximum); the complexity is unchanged, since `α ≥ ½ min(β, γ)` | `gbm_em_gridLookback_mean_converges` (`α = (1 − δ)/2`; the order `½` is argued in its docstring) |
 | G15 | §5.1, p. 33, Table 5.2 | `O(h^{1/2} log h)` | `O(h^{1/2} \|log h\|)` (`log h < 0`) | — |
+| G15 | §5.1, p. 33 (l. 1441) | `P_ℓ − P_{ℓ−1} = ±1` for the digital option | `±10e^{−rT}` for the payoff `10e^{−rT}H(S_T − K)` of p. 30, l. 1358 (the kurtosis is unchanged; `V_ℓ` and `E[(ΔP)⁴]` scale by `100e^{−2rT}` and `10⁴e^{−4rT}`) | `kurtosis_const_mul` (`SDEExtras.lean`, whose docstring notes the factor); the GBM digital theorems omit it |
+| G15 | §5.1, p. 33 (l. 1443–1444); §5.2, p. 35 (l. 1531), p. 36 (l. 1577) | "`E[(P_ℓ − P_{ℓ−1})⁴] = O(h^{1/2})` and so the kurtosis is `O(h^{−1/2})`"; likewise `O(h⁻¹)` and "approximately `O(h^{−1/2})`" | an upper bound on the fourth moment gives only a lower bound on the kurtosis: for `ΔP ∈ {0, ±1}`, `κ = 1/P(ΔP ≠ 0)`, so `κ = O(h^{−1/2})` needs `P(ΔP ≠ 0) = Θ(h^{1/2})`, a matching lower bound (for the conditional expectation, `V_ℓ = Θ(h^{3/2})`) | `kurtosis_of_ternary`; for GBM only lower bounds on the kurtosis are proved (`GBMDigital.lean`, `GBMStrongLp.lean`) |
 | G15 | §5.2, p. 36 | coarse numerator `b√h_ℓ`; `Φ(…/(b√h_ℓ))`; digital constant `25` | `b ΔW_{N−2}`; `\|b\|` in the denominator; `10` as on p. 30 | `digital_smoothing_coarse`, `integral_digital_final_step`, `gbmDigitalCondCoarse`, `gbmCondMeanCoarse` |
 | G15 | §5.2, p. 38 | "`O(h_ℓ)` difference on average" | `O(h_ℓ^{1/2})` | — |
 | G15 | §5.3, p. 39 | `b(Ŝ^c_n, c_n)` | `b(Ŝ^c_n, t_n)` | — |
@@ -679,6 +775,7 @@ Lean statement or to the reason it is not formalised. The deviations of the new 
 | G15 | §9.2, p. 60 | "Due to the Central Limit Theorem" `Δg_{1,ℓ₂} + Δg_{1,ℓ₂−1} = O(2^{−ℓ₁/2})` and, with first-order strong convergence, `Δg_{1,ℓ₂} − Δg_{1,ℓ₂−1} = O(2^{−ℓ₁/2−ℓ₂})` (and for `2`); hence `V_ℓ = O(2^{−2ℓ₁−2ℓ₂})` for `f` twice differentiable | measured from `E[g(Z, W)]` the sums contain the weak error `O(2^{−ℓ₂})`, so these hold only after re-centring at the conditional means of the inner approximations (the difference of squares is unchanged by it); a rigorous `V_ℓ = O(2^{−2ℓ₁−2ℓ₂})` needs `f″` Lipschitz, not just `f` twice differentiable | `nested_mimc_variance_rate`, `nested_mimc_smooth_variance_rate` |
 | G15 | §9.2, p. 60 | MIMC with a kink: `β₁ = β₂ = 1.5`, cost `O(ε⁻²)` | the rates are false: no `β₁, β₂` with `2β₁ + β₂ > 3` (counterexample); the isotropic rates `β₁ = β₂ = 1` hold, are sharp along `ℓ₁ = 2ℓ₂` and give `O(ε⁻²\|log ε\|⁴)`; whether `O(ε⁻²)` holds is open | `nested_mimc_kink_rates_false`, `nested_mimc_kink_variance_rate`, `nested_mimc_kink_complexity` |
 | G15 | §10.1, p. 61 | decay exponential in `N_ℓ − N_{ℓ−1}` | in `N_{ℓ−1}` | `variance_levels_le`, `markov_linear_levels` |
+| G15 | §10.1, p. 61 (l. 2711–2717) | contraction on average, "`sup_{x≠y} E[(d(φ_n(x), φ_n(y))/d(x, y))^{2γ}] < 1`" … "Under these conditions, it is known that the distribution of `X_n` converges weakly to that of a limit random variable `X_∞`" | false as stated: a moment condition on one step is needed as well (a logarithmic moment suffices for the example below; not formalised), and a complete space. `X_{n+1} = X_n/2 + ξ_n` with `P(ξ > t) = 1/log t` contracts on average for every `γ` but has no weak limit. The sentence paraphrases Glynn and Rhee (2014), not in `docs/`, whose conditions may include more | `tendstoInDistribution_fwdIter` (with `E[d(x₀, φ(x₀, ξ))^p] < ∞` and a complete space), `markov_no_weak_limit`, `hc_cannot_be_dropped` |
 | G15 | §10.2, p. 62 | `U_n = (I_n + ½)/I_max` | `(I_n + ½)/(I_max + 1)` (the printed `U_n` exceeds `1` for `I_n = I_max`) | `tendstoInDistribution_normCDFInv_midpoint` |
 | HG25 | §2.1, p. 3 | the cost of a sample increases with level and for Euler–Maruyama with Lipschitz payoffs `V_ℓ` decreases exponentially, so "the former" (`V_ℓC_ℓ` decreasing) makes MLMC cheaper | with `β = γ = 1`, `V_ℓC_ℓ` is roughly constant, not decreasing; MLMC then costs about `ε⁻²(L+1)²V₀C₀` against `ε⁻²V₀C₀2^L` for plain Monte Carlo, less only for `L ≥ 6` | `optimal_cost_const_product`, `gbm_em_identity_variance_two_sided`, `gbm_em_identity_variance_cost` |
 | HG25 | (21) | `E[δx²] = 4^{e−d−1}` | `≤` | `integral_sq_roundError_le` |
@@ -686,6 +783,7 @@ Lean statement or to the reason it is not formalised. The deviations of the new 
 | HG25 | (27) | derived under perfect correlation | holds for every joint law | `variance_linearised_corr` |
 | HG25 | (28) | factor `1/12` on the MSE term | no factor `1/12` | `variance_extended_indep` |
 | HG25 | (28)–(29), p. 9 | `∑_{i=1}^{m′}` | `m′` is not defined | `variance_extended_indep`, `variance_extended_corr` (finite index sets `s`, `t`) |
+| HG25 | (31), p. 11 | `M_{i,ℓ}` "the number of multiplications … in which the variable `x_i` is involved" | each operand counts, so a square `x_i x_i` counts twice; counted once, (31) gives `½d_i²` where (30) has `d_i²` | `opCost_le_sepCost`, `opCount` |
 | HG25 | Fig. 3, 5 captions | `√(Ṽ/V)` | `√(V^Δ/V)` | `HaasGilesRemarks.lean` |
 | HG25 | §3, p. 4 | "the inverse normal CDF `Φ`" | `Φ⁻¹` (`Φ` is the CDF, as in §3.1) | `normCDF`, `normCDFInv` |
 | HG25 | §3, p. 4 | "The first and the third methods … PWC on uniform intervals … The second … PWL on dyadic intervals" | the numbering does not match §3.1–§3.4, where method 3 is the dyadic one | `LUTLimits.lean`, `LUTAsymptotics.lean` (follow §3.1–§3.4) |
@@ -694,10 +792,11 @@ Lean statement or to the reason it is not formalised. The deviations of the new 
 | HG25 | §3.3–§3.4, pp. 6–7 | `I'_i = [[2^{i−1}, 2^i − 1]]` with `i` the leading non-zero bit of `j`; (19) sums over `j = 1, …, 2^{d−1}`; "for the first two dyadic intervals there are only two points in each" | §3.1 numbers the cells `j = 0, …, 2^{d−1} − 1`: `j = 0` lies in no `I'_i`, `j = 2^{d−1}` is not a cell, and `I'_1 = {1}` has one point; joining `j = 0` to `{1}` makes the statement true (the same mismatch of 1-based and 0-based indices separates (16), with `j = 1, …, 2^d`, from (17)) | `dyadicGroup`, `dyadic_index`, `affine_fit_exact` |
 | HG25 | §3.4, p. 7 | dyadic tables: "the MSE is reduced only in the interval closest to 0" | only asymptotically; the error on every dyadic interval decreases with `d` | `dyadic_groupMSE_eq`, `groupMSE_odd_quadratic` |
 | HG25 | §6.1, p. 12 | cost factor `< 1` ⇒ nested framework cheaper | true for (34); for (32) e.g. `ρ²(1 + ρ²) < 1` | `nestedCost_lt_of_costFactor_le`, `exists_costFactor_lt_one_nestedCost_gt` |
-| HG25 | §6.1, p. 12 | "the resulting function is convex which ensures the existence of an optimum" | the λ-function need not be convex for other parameters (numerically); the optimum exists anyway | `exists_isMinOn_bitLevelCost_of_nonneg` |
+| HG25 | §6.1, p. 12 | "the resulting function is convex which ensures the existence of an optimum" | the λ-function need not be convex for other parameters (numerically); the optimum exists anyway. Convexity alone would not ensure an optimum either (`e^{−λ}` is convex on `(0, ∞)` without a minimum); existence comes from continuity and coercivity | `exists_isMinOn_bitLevelCost_of_nonneg` |
 | HG25 | §6.2, p. 13 | "first round down the solution to `d*_{i,ℓ} = d_{i,ℓ}`" | `d*_{i,ℓ} = ⌊d_{i,ℓ}⌋` | `greedy_rounding_feasible` |
 | HG25 | §6.3, p. 14 | fixed-precision rounding error `O(h⁻¹2^{e−d})` | worst case; root mean square `Θ(h^{−1/2}2^{e−d})` under (22) | `integral_sq_perturbed_path_sub_bounds` |
-| G15, HG25 | trivial typos | G15 §3.3, p. 23: `κ = E[X⁴]/E[X²])²`; §3.4, p. 26: `suml(1:4,L+1) = 0` (`suml` has two rows); §3.5, p. 26: "is gives"; §5.1, p. 30: "The cost ratio 5 − 12, illustrating"; §5.7, p. 46: `C_δ(x) = E[(g((x−P)/δ)]`; §7.3, p. 54: "same as for SDEs The computational cost"; §9.1, p. 58: "a independent agent"; §11, p. 63: "a analytic"; HG25 §6.1, p. 12: "the the resulting function" | `κ = E[X⁴]/(E[X²])²`; `suml(1:2,L+1) = 0`; "is given"; "The cost ratio is 5–12"; `E[g((x−P)/δ)]`; "SDEs. The"; "an independent"; "an analytic"; "the resulting" | — |
+| HG25 | Fig. 7 caption, p. 14 | "Upper bounds `(1/12)E[x̄_i²]4^{e_i−d_i}` on the expected squared errors `E[x̄_i²δx_i²]`" | exact under the uniform model (22) with `δx_i` independent of `x̄_i`; without (22) not upper bounds: `δx = ±2^{e−d−1}` gives `E[x̄²δx²] = ¼E[x̄²]4^{e−d}`, three times the factor (the general bound is (21)) | `integral_sq_uniform_roundError`, `integral_sq_roundError_le` |
+| G15, HG25 | trivial typos | G15 §3.3, p. 23: `κ = E[X⁴]/E[X²])²`; §3.4, p. 26: `suml(1:4,L+1) = 0` (`suml` has two rows); §3.5, p. 26: "is gives"; §5.1, p. 30: "The cost ratio 5 − 12, illustrating"; §5.7, p. 46: `C_δ(x) = E[(g((x−P)/δ)]`; §7.3, p. 54: "same as for SDEs The computational cost"; §8, p. 56: "Numerical examples demonstrating impressive cost savings" (no main verb); §9.1, p. 58: "a independent agent"; §9.1, p. 58: "Anderson & Broadie's dual simulation method (Andersen and Broadie 2004)"; §10.2, p. 62: "(… Korn 2014). which exploits"; §11, p. 63: "a analytic"; HG25 §3.2, p. 6: "a least-squared minimisation"; HG25 §6.1, p. 12: "the the resulting function" | `κ = E[X⁴]/(E[X²])²`; `suml(1:2,L+1) = 0`; "is given"; "The cost ratio is 5–12"; `E[g((x−P)/δ)]`; "SDEs. The"; "Numerical examples demonstrate"; "an independent"; "Andersen & Broadie's"; "Korn 2014), which exploits"; "an analytic"; "least-squares"; "the resulting" | — |
 
 "—" marks typos that no Lean statement depends on.
 

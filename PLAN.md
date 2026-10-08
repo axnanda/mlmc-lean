@@ -148,9 +148,11 @@ items listed under "Not formalised" below.
 - ✅ Theorem 1 for tau-leaping MLMC with the Poisson coupling (§8, `TauLeapingMLMC.lean`): the
   payoffs are square integrable, (2.4) holds, `β = 1` on every level, and the estimator reaches
   MSE `ε²` at cost `O(ε⁻²(log ε)²)` given the weak rate `α ≥ ½` (a property of the exact chain).
-- ✅ The weak convergence of the contracting chain to `X_∞` (§10.1, `MarkovLimit.lean`) and the
-  MSE of the lookup tables as `d → ∞` (Haas–Giles §3.4, `LUTLimits.lean`: `→ 0` for uniform
-  intervals, bounded below by a positive constant for dyadic intervals).
+- ✅ The weak convergence of the contracting chain to `X_∞` (§10.1, `MarkovLimit.lean`; it assumes
+  a finite moment of the first step, which the paper does not state and which cannot be dropped,
+  `MarkovNoWeakLimit.lean`, round 25) and the MSE of the lookup tables as `d → ∞` (Haas–Giles §3.4,
+  `LUTLimits.lean`: `→ 0` for uniform intervals, bounded below by a positive constant for dyadic
+  intervals).
 - ✅ Geometric Brownian motion end to end (§5.1, Figure 5.3, `GBMEulerMaruyama.lean`): the
   strong error of Euler–Maruyama `E[(S_{t_n} − Ŝ_n)²] ≤ C(t_n) h` from the exact solution, the
   weak rate `α = ½` and the variance rate `β = 1` for Lipschitz payoffs, and Theorem 1 with no
@@ -242,21 +244,37 @@ items listed under "Not formalised" below.
   expansion as hypotheses: the level correction, the truncation error, the pointwise law, uniform
   moments of the diffusivity and the covariance (`KarhunenLoeve.lean`); when the change-of-measure
   correction of §5.2 has finite variance (`ChangeOfMeasureVariance.lean`).
-- ✅ Round 24: the small-jump truncation of §6.2 for the terminal value of a pure-jump Lévy
-  process: the large jumps as compound Poisson variables, (2.4), the correction variance from the
-  intermediate range of jump sizes, the `L²` limit and the bias as `δ_ℓ → 0`, the expected cost,
-  and Theorem 1 with `δ_ℓ = 2^{−ℓ}`, including a one-sided stable-like example at cost `O(ε⁻²)`,
+- ✅ Round 24: the small-jump truncation of §6.2 for the terminal value of a pure-jump Lévy process:
+  the large jumps as compound Poisson variables, (2.4), the correction variance from the
+  intermediate range of jump sizes, the `L²` limit and the bias as `δ_ℓ → 0`, the expected cost, and
+  Theorem 1 with `δ_ℓ = 2^{−ℓ}`, including a one-sided stable-like example at cost `O(ε⁻²)`,
   `O(ε⁻²(log ε)²)` or `O(ε^{−2Y/(2−Y)})` (`LevyTruncation.lean`); the untruncated Karhunen–Loève
   field of §7.2 with Mercer's expansion as hypotheses: almost sure convergence, its Gaussian law,
   covariance and joint Gaussianity, the lognormal moments of the diffusivity and their convergence,
   and that the diffusivity is unbounded (`KarhunenLoeveLimit.lean`); sensitivities for GBM (§5.4):
-  the pathwise delta of the call with the digital option's variance rates and Theorem 1 at cost
-  `O(ε^{−3−η})` (Euler–Maruyama) and `O(ε^{−2−η})` (Milstein), and the digital delta from the
-  conditional-expectation payoffs, unbiased and with (2.4) (`GBMSensitivities.lean`); after the
-  round-23 read-back, `variance_ssaCorrection_exact_le` states that its sampling law is a
+  the pathwise delta of the call with upper bounds at the digital option's variance rates and
+  Theorem 1 at cost `O(ε^{−3−η})` (Euler–Maruyama) and `O(ε^{−2−η})` (Milstein), and the digital
+  delta from the conditional-expectation payoffs, unbiased and with (2.4) (`GBMSensitivities.lean`);
+  after the round-23 read-back, `variance_ssaCorrection_exact_le` states that its sampling law is a
   probability measure.
-- Not formalised (each with its reason in `notes/coverage/README.md`): the convergence orders of
-  the discretisations of general SDEs, SPDEs and PDEs (Itô calculus and PDE regularity are not in
+- ✅ Round 25 (after a spot-check of round 24 by two auditors,
+  `notes/coverage/round17_spot_check.md`): the conditional-expectation estimator of the digital
+  option for the strike `K = 0` (corrections `O(h^q)` for every `q`), hence its variance rate and
+  Theorem 1 for every strike, and Theorem 1 for the splitting estimator with `⌈h_ℓ^{−1/2}⌉`
+  sub-samples at cost `O(ε⁻²)` (`GBMDigitalCondExpExtras.lean`); tau-leaping with Lipschitz
+  propensities of linear growth: the moments of the chain, the `O(h)` correction variance and
+  Theorem 1 given the weak rate, and for the linear birth rate `λ(x) = cx` with `Φ(x) = x` Theorem 1
+  with no assumed rate (`TauLeapingLinearGrowth.lean`); Theorem 1 in a Banach space with the type-2
+  inequality as a hypothesis, which holds for Hilbert spaces, spaces isomorphic to a subspace of one
+  and finite-dimensional spaces (`BanachTheorem1.lean`); the random digital shift of QMC points:
+  unbiased, with i.i.d. replicates, and fair binary digits are uniform on the unit cube
+  (`DigitalShiftQMC.lean`); the small jumps of §6.2 replaced by a Brownian term, with Theorem 1 at
+  the rates of the truncation, and Table 6.3's Asian row for Variance-Gamma laws with no assumption
+  left (`LevyExtras.lean`); a counterexample showing that the weak convergence claimed in §10.1
+  needs a moment condition on one step (`MarkovNoWeakLimit.lean`). The spot-check's documentation
+  fixes are the "Round 25" notes in the coverage tables; stale module docstrings were corrected.
+- Not formalised (each with its reason in `notes/coverage/README.md`): the convergence orders of the
+  discretisations of general SDEs, SPDEs and PDEs (Itô calculus and PDE regularity are not in
   Mathlib; the SPDE of §7.3 has multiplicative noise and an absorbing boundary; proved for geometric
   Brownian motion from its exact solution, including weak order one for smooth and polynomial
   payoffs) and of QMC in `d` dimensions (discrepancy theory and the existence of good lattices; the
@@ -270,52 +288,70 @@ items listed under "Not formalised" below.
   option, the endpoints of its rates `O(h^{1/2})`, `O(h)` (every smaller exponent is proved for GBM
   from `L^p` strong errors), and its weak rate `α = 1`, hence the paper's `O(ε^{−2.5})` (Theorem 1
   at cost `O(ε^{−3−η})`, and `O(ε^{−2−η})` with Milstein, is proved for GBM); for the
-  conditional-expectation estimator of the digital option, the endpoints `β = 3/2` and `α = 1` and
-  the kurtosis `O(h^{−1/2})` (every `q < 3/2`, resp. `q < 1`, and Theorem 1 at the paper's cost
-  `O(ε⁻²)` are proved for GBM with `K ≠ 0`), and for splitting the variance "the same, to leading
-  order" as with the conditional expectation (the same rate is proved, with an Euler–Maruyama final
-  step); for the change-of-measure estimator, finite variance after averaging over the paths and its
-  variance rate (finite variance for fixed conditional laws is proved, when the sampling variance
-  exceeds half of the fine and the coarse one); continuously monitored path-dependent payoffs
-  (Brownian-bridge extremes; fixed dates, the barrier option included, and every time step are
-  proved for GBM); real-valued adaptive step sizes (Brownian motion at stopping times; deterministic
-  union grids and adaptive steps on a base grid are proved); for tau-leaping on adaptive grids, the
-  variance rate of the coupling and time-dependent propensities ((2.4) with state-dependent
-  propensities on a base grid is proved), tau-leaping's weak rate for unbounded propensities or
-  payoffs of super-linear growth (bounded propensities with bounded or Lipschitz payoffs are
-  proved); the exact (SSA) coupling on the finest level for several reactions, unbounded
+  conditional-expectation estimator of the digital option, the endpoints `β = 3/2` and `α = 1`, the
+  kurtosis `O(h^{−1/2})` and, for the strike `K = 0`, that the corrections are exponentially small
+  (every `q < 3/2`, resp. `q < 1`, and Theorem 1 at the paper's cost `O(ε⁻²)` are proved for GBM and
+  every strike, and for `K = 0` the corrections are `O(h^q)` for every `q`), and for splitting the
+  variance "the same, to leading order" as with the conditional expectation (the same rate, and
+  Theorem 1 at cost `O(ε⁻²)` with `⌈h_ℓ^{−1/2}⌉` sub-samples, are proved, with an Euler–Maruyama
+  final step); for the change-of-measure estimator, finite variance after averaging over the paths
+  and its variance rate (finite variance for fixed conditional laws is proved, when the sampling
+  variance exceeds half of the fine and the coarse one); continuously monitored path-dependent
+  payoffs (Brownian-bridge extremes), and the barrier option monitored at every time step, whose
+  variance `O(h^{1/2})` (§5.2, p. 38) needs a small-ball bound for the grid maximum near the
+  barrier, uniform in the number of steps (for GBM, Asian and lookback options and the barrier
+  option at fixed monitoring dates, and lookback options monitored at every time step, are proved);
+  real-valued adaptive step sizes (Brownian motion at stopping times; deterministic union grids and
+  adaptive steps on a base grid are proved); for tau-leaping on adaptive grids, the variance rate of
+  the coupling and time-dependent propensities ((2.4) with state-dependent propensities on a base
+  grid is proved), tau-leaping's weak rate for unbounded propensities or payoffs of super-linear
+  growth (bounded propensities with bounded or Lipschitz payoffs are proved; for Lipschitz
+  propensities of linear growth the moments of the chain, the `O(h)` correction variance and
+  Theorem 1 given the weak rate are proved, and for the linear birth rate `λ(x) = cx` with
+  `Φ(x) = x` also the weak rate against the limit of the tau-leaping means and Theorem 1 with no
+  assumed rate); the exact (SSA) coupling on the finest level for several reactions, unbounded
   propensities or unbounded payoffs, and the random cost of the exact level (one reaction with a
   bounded propensity and a bounded payoff, coupled by uniformisation, is proved: the estimator is
   unbiased and costs `O(ε⁻²)` in expectation with a fixed number of levels); the comparison of the
   explicit scheme with the exact solution for super-linear coefficients, and several dimensions (the
   divergence of the scheme's moments is proved for scalar coefficients); the jump-diffusion and
   Lévy-process theory of §6 beyond grid values and terminal values (the Poisson and Lévy processes
-  themselves, path-dependent Lévy payoffs and Table 6.3 beyond the discrete Asian analogue, the
-  Lévy–Khintchine law of the limit of the truncated levels, the Brownian replacement of the small
-  jumps (Dereich) and bounds on the realised rather than the expected cost; the discrete parts are
-  proved, and so is the small-jump truncation for the terminal value of a pure-jump Lévy process,
-  with Theorem 1 for `δ_ℓ = 2^{−ℓ}` and a one-sided stable-like example); Mercer's theorem behind
-  the Karhunen–Loève expansion, the identification of the joint law of the limit field with a
-  multivariate Gaussian, the regularity of `κ` and the moments of `max_x κ` and `1/min_x κ`, and the
-  finite-element analysis of §7.2 (spectral theory of covariance operators and elliptic regularity;
-  with Mercer's expansion as a hypothesis the truncation error, the pointwise law, the moments and
-  the covariance of the truncated field are proved, and for the untruncated field the almost sure
-  convergence, the Gaussian law, joint Gaussianity, the covariance, the moments of `κ` and that it
-  is unbounded, and (2.4) for nested inputs `ξ_ℓ = (ξ_{ℓ−1}, z_ℓ)`); for the sensitivities of §5.4,
-  the variance rate of the digital-delta corrections and Theorem 1 for them (the paper defers to
-  Burgos 2014), sensitivities for general SDEs and Greeks other than the delta (they need the SDE's
-  tangent process), and lower bounds behind "similar difficulties" (for GBM the pathwise delta of
-  the call, with upper bounds matching the digital option's rates and costs, and the unbiased
-  digital delta from the conditional-expectation payoffs are proved); that the limit of the
-  discretised contracting chains is the SDE's invariant law (§10.1; fixed and level-dependent steps
-  are proved for the discretised chains, and for the Ornstein–Uhlenbeck SDE the invariant laws of
-  the scheme tend to `N(0, σ²/(2κ))`); the value of the dyadic limit `C` and the exact halving ratio
-  of the MSE per bit (Haas–Giles §3.4; the existence of `C > 0` and the order `2^{−d}/d` are proved
-  for `Φ⁻¹`, the exact ratio needs finer asymptotics of `Φ⁻¹`); whether MIMC reaches `O(ε⁻²)` for a
-  general piecewise linear `f` (the paper's rates are refuted, the corrected rates give
-  `O(ε⁻²|log ε|⁴)`, and for the counterexample itself MIMC on the two axes reaches `O(ε⁻²)`).
-  Further claims that need theory Mathlib lacks, such as Creutzig et al.'s lower bound, Banach-space
-  norms, the digital scrambling of Sobol points, Feynman–Kac and exit times, the Clark–Cameron bound
+  themselves, path-dependent Lévy payoffs, Table 6.3 beyond its Asian row for Variance-Gamma laws
+  (the NIG and spectrally negative α-stable columns need laws Mathlib does not have, the lookback
+  and barrier rows fluctuation theory), the Lévy–Khintchine law of the limit of the truncated
+  levels, Dereich's improved bias for the Brownian replacement of the small jumps, and bounds on the
+  realised rather than the expected cost; the discrete parts are proved, and so are the small-jump
+  truncation for the terminal value of a pure-jump Lévy process, with Theorem 1 for `δ_ℓ = 2^{−ℓ}`
+  and a one-sided stable-like example, the Brownian replacement of the small jumps with the same
+  rates, and the Asian row of Table 6.3 for Variance-Gamma laws, with exactly simulated increments
+  and the trapezoidal average); Mercer's theorem behind the Karhunen–Loève expansion, the
+  identification of the joint law of the limit field with a multivariate Gaussian, the regularity of
+  `κ` and the moments of `max_x κ` and `1/min_x κ`, and the finite-element analysis of §7.2
+  (spectral theory of covariance operators and elliptic regularity; with Mercer's expansion as a
+  hypothesis the truncation error, the pointwise law, the moments and the covariance of the
+  truncated field are proved, and for the untruncated field the almost sure convergence, the
+  Gaussian law, joint Gaussianity, the covariance, the moments of `κ` and that it is unbounded, and
+  (2.4) for nested inputs `ξ_ℓ = (ξ_{ℓ−1}, z_ℓ)`); for the sensitivities of §5.4, the variance rate
+  of the digital-delta corrections and Theorem 1 for them (the paper defers to Burgos 2014),
+  sensitivities for general SDEs and Greeks other than the delta (they need the SDE's tangent
+  process), and lower bounds behind "similar difficulties" (for GBM the pathwise delta of the call,
+  with upper bounds matching the digital option's rates and costs, and the unbiased digital delta
+  from the conditional-expectation payoffs are proved); that the limit of the discretised
+  contracting chains is the SDE's invariant law (§10.1; fixed and level-dependent steps are proved
+  for the discretised chains, and for the Ornstein–Uhlenbeck SDE the invariant laws of the scheme
+  tend to `N(0, σ²/(2κ))`); for the weak convergence of contracting Markov chains (§10.1),
+  conditions weaker than the finite first-step moment `E[d(x₀, φ(x₀, ξ))^p] < ∞` that the Lean
+  statements assume, such as a logarithmic moment, and the need for a complete space (that the
+  paper's claim fails without any moment condition is proved, `hc_cannot_be_dropped`); the value of
+  the dyadic limit `C` and the exact halving ratio of the MSE per bit (Haas–Giles §3.4; the
+  existence of `C > 0` and the order `2^{−d}/d` are proved for `Φ⁻¹`, the exact ratio needs finer
+  asymptotics of `Φ⁻¹`); whether MIMC reaches `O(ε⁻²)` for a general piecewise linear `f` (the
+  paper's rates are refuted, the corrected rates give `O(ε⁻²|log ε|⁴)`, and for the counterexample
+  itself MIMC on the two axes reaches `O(ε⁻²)`). Further claims that need theory Mathlib lacks, such
+  as Creutzig et al.'s lower bound, type 2 for Banach spaces not isomorphic to a Hilbert space
+  (Theorem 1 with type 2 as a hypothesis, and type 2 for spaces isomorphic to a subspace of a
+  Hilbert space, are proved), Owen's scrambling of Sobol points, their construction and QMC error
+  rates (the random digital shift is proved), Feynman–Kac and exit times, the Clark–Cameron bound
   and the Giles–Szpruch analysis, are in the out-of-scope table of `notes/coverage/README.md`, and a
   few minor sub-claims that are provable but not formalised are noted in the rows of the coverage
   tables. The remaining claims are numerical or empirical (measured rates, figures, run times),

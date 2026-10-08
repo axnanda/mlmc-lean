@@ -44,7 +44,8 @@ coarse steps of the same path, whose increments are the pair sums `Y_{2j} + Y_{2
   steps simulated exactly (the §6.2 approach, not the jump-adapted discretisation of §6.1); all
   hypotheses of `levy_asian_theorem1` are proved (`jumpDiffLaw_conv`,
   `integral_exp_mul_jumpDiffLaw`): a model with jumps where Theorem 1 holds with no assumption at
-  all.
+  all.  `MlmcLean.LevyExtras` does the same for Variance-Gamma increments (the VG column of
+  Table 6.3).
 
 The discrete-time aspect: the paper's Asian option averages `S` continuously over `[0, T]`, which
 involves the Lévy process between the grid points.  With the trapezoidal approximation of the

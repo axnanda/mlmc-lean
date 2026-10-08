@@ -179,6 +179,14 @@ themselves (they are covered through the theorems that use them).
 
 ## MISSING and PARTIAL items (details)
 
+(Round 25: all resolved — see the resolution table of `notes/coverage/README.md` and the "Spot-check
+21" notes in the rows: G2.1-35 and G2.1-36 (fixed `L`) by `tendstoInDistribution_levelEstimator` and
+`tendstoInDistribution_mlmcEstimator` (round 10), G2.1-36 with a growing `L` and G2.1-34 in
+`MLMCCentralLimit.lean` (round 12, the adaptive stopped algorithm aside), G2.2-16 by
+`singleTerm_variance_le_of_sq_le`, G2.3-08 by `ml2r_bias_le` (round 10) and
+`ml2r_bias_not_attainable` (round 22), G2.3-12 and G2.3-13 by `ml2r_theorem_eq`, `ml2r_theorem_lt`
+(round 10).)
+
 1. **G2.1-35** (l.350–351, p.8), MISSING. "the multilevel correction Y_ℓ on each level is
    asymptotically Normally-distributed". The pinned Mathlib (`0df444a`) contains
    `Mathlib/Probability/CentralLimitTheorem.lean` with
@@ -219,6 +227,13 @@ themselves (they are covered through the theorems that use them).
    MSE < ε² and E[cost] ≤ c₄·(…). **Easy glue once item 4 exists**, about 100–150 lines.
 
 ## Misstatements and documentation issues found
+
+(Round 25: resolved. After spot-check 24 the README row for `Richardson.lean` and
+`ML2RComplexity.lean` describes `ml2r_bias` as the exact bias of one expansion and
+`ml2r_complexity_eq`/`_lt` as deterministic cores that take the bias bound as given, and cites
+`ml2r_bias_le`, `ml2r_theorem_eq` and `ml2r_theorem_lt` for the estimator itself; the
+`ML2RComplexity.lean` docstrings cite `ml2r_bias_le`. PLAN no longer claims §1–§3 "in full" and
+lists what is not formalised; both quotations below are corrected in the docstrings.)
 
 No Lean main theorem in this range is false or misaligned with the paper in a way that changes its
 meaning. Theorem 1 matches hypothesis by hypothesis, with c₄ before ε, and the three regimes are

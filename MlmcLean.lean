@@ -197,6 +197,18 @@
 --   law and covariance, and the moments of the untruncated diffusivity
 -- * `MlmcLean.GBMSensitivities` — Giles §5.4: pathwise deltas for GBM; the call delta behaves like a
 --   digital option; the digital delta via the conditional expectation
+-- * `MlmcLean.GBMDigitalCondExpExtras` — Giles §5.2: the conditional-expectation digital for every
+--   strike (K = 0 included) and Theorem 1 for the splitting estimator with M_ℓ = ⌈h_ℓ^{−1/2}⌉
+-- * `MlmcLean.TauLeapingLinearGrowth` — Giles §8: tau-leaping with a Lipschitz propensity of linear
+--   growth: moments, O(h) correction variance, Theorem 1; the linear birth example
+-- * `MlmcLean.BanachTheorem1` — Giles §2.5: Theorem 1 for outputs in a Banach space of type 2;
+--   Hilbert and finite-dimensional spaces have type 2
+-- * `MlmcLean.DigitalShiftQMC` — Giles §3.5: the random digital shift preserves the uniform law;
+--   unbiased replicates of digitally shifted QMC
+-- * `MlmcLean.LevyExtras` — Giles §6.2: small jumps replaced by a Brownian term; Table 6.3,
+--   the Asian row, for Variance-Gamma laws (Gamma convolution, exponential moments, Theorem 1)
+-- * `MlmcLean.MarkovNoWeakLimit` — Giles §10.1: without a first-step moment a chain contracting on
+--   average need not converge weakly (counterexample to a slip)
 import MlmcLean.Allocation
 import MlmcLean.Estimator
 import MlmcLean.LevelDiff
@@ -294,3 +306,9 @@ import MlmcLean.ChangeOfMeasureVariance
 import MlmcLean.LevyTruncation
 import MlmcLean.KarhunenLoeveLimit
 import MlmcLean.GBMSensitivities
+import MlmcLean.GBMDigitalCondExpExtras
+import MlmcLean.TauLeapingLinearGrowth
+import MlmcLean.BanachTheorem1
+import MlmcLean.DigitalShiftQMC
+import MlmcLean.LevyExtras
+import MlmcLean.MarkovNoWeakLimit

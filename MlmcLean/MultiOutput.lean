@@ -26,6 +26,7 @@ Reference: M.B. Giles, *Multilevel Monte Carlo methods*, Acta Numerica 24 (2015)
   `V[P_ℓ − P_{ℓ−1}] → E[‖P_ℓ − P_{ℓ−1} − E[P_ℓ − P_{ℓ−1}]‖²]`" Theorem 1 holds for outputs in any
   real Hilbert space (`giles_theorem1_hilbert`), through the Hilbert-space forms of (2.1) and
   (2.3) (`integral_norm_sub_sq_eq`, `integral_norm_sum_sq_of_indepFun`, `mlmc_mse_hilbert`).
+  For other norms, `MlmcLean.BanachTheorem1` proves Theorem 1 in a Banach space of type 2.
 -/
 
 open MeasureTheory ProbabilityTheory Finset

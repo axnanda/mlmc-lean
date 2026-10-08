@@ -73,15 +73,18 @@ independence of the last increments (`MomentBound.mul_eval`).
 * `K ≠ 0` is assumed for the variance rate and Theorem 1 (near a strike `K ≠ 0` the conditional
   standard deviation `|σŜ|√h` is of order `√h`); also `s₀ ≠ 0`, `σ ≠ 0`, `T > 0`.  `K = 0` is the
   easy case left out to keep the proof uniform: for small `h` the Milstein path keeps the sign of
-  `s₀`, so the corrections are exponentially small (not proved here).
+  `s₀`.  `MlmcLean.GBMDigitalCondExpExtras` treats it (the corrections are `O(h^q)` for every `q`;
+  their exponential smallness is not proved) and gives the variance rate and Theorem 1 for every
+  strike (`gbm_digital_condExp_variance_rate_all`, `gbm_digital_condExp_theorem1_all`).
 * The factor `25 e^{−rT}` of the paper's payoffs is omitted; `b` stands for `|b|` in the
   denominators; the coarse numerator uses the re-used increment `b ΔW_{N−2}` in place of the
   paper's `b √h_ℓ` (the correction of `digital_smoothing_coarse`).
 
 **What is not proved.**  The endpoints `β = 3/2` and `α = 1`; the kurtosis "approximately
 `O(h^{−1/2})`" (l. 1577); for splitting, "the variance is the same, to leading order" as an
-asymptotic equivalence of the variances (only the same rate `O(h^{3/2−η})` is proved), and Theorem 1
-end to end for the splitting estimator (its samples live on `(ℕ → ℝ) × (ℕ → ℝ)`).
+asymptotic equivalence of the variances (only the same rate `O(h^{3/2−η})` is proved).  Theorem 1
+end to end for the splitting estimator is in `MlmcLean.GBMDigitalCondExpExtras`
+(`gbm_digital_split_theorem1`).
 -/
 
 open MeasureTheory ProbabilityTheory Filter Finset
@@ -2042,7 +2045,8 @@ level `0`), `γ = 1` and (2.4) (`gbmDigitalCond_integral_eq`), via
 
 **How close to the paper.**  The complexity `O(ε⁻²)` is the paper's.  The rates used are smaller
 than the paper's (`α = 3/4 < 1`, `β = 5/4 < 3/2`), which only changes the constant `c₄`; any
-`α ∈ [½, 1)` and `β ∈ (1, 3/2)` would do.  `K ≠ 0` is assumed (used for the variance rate); the
+`α ∈ [½, 1)` and `β ∈ (1, 3/2)` would do.  `K ≠ 0` is assumed (used for the variance rate;
+`gbm_digital_condExp_theorem1_all` in `MlmcLean.GBMDigitalCondExpExtras` drops it); the
 factor `25 e^{−rT}` of the paper's payoffs is omitted (the estimator of `25 e^{−rT} E[H(S_T − K)]`
 is `25 e^{−rT}` times this one). -/
 theorem gbm_digital_condExp_theorem1 (r σ : ℝ) {s₀ T K : ℝ} (hs₀ : s₀ ≠ 0) (hσ : σ ≠ 0)

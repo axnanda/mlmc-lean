@@ -9,7 +9,9 @@ import Mathlib.Analysis.Calculus.FDeriv.Mul
 Reference: I.-B. Haas and M.B. Giles, *A nested MLMC framework for efficient simulations on
 FPGAs*, arXiv:2502.07123 (2025), §2 (p. 3), §4.3 (p. 10), §6.1 (pp. 11–12), §6.2 (p. 13) and §6.3
 (pp. 13–14).  `MlmcLean.BitWidth` proves that (35) is a set of uncoupled scalar equations, each
-with exactly one solution, and the derivative identity (36); this file completes §6.
+with exactly one solution, and the derivative identity (36); this file proves the remaining
+statements of §6 listed below (`MlmcLean.BitWidthOptimum` has the optimal `λ`; convergence of
+the paper's iteration on `λ`, §6.1 p. 12, is not formalised).
 
 * **(34) approximates (33)** (§6.1, p. 11).  With `Ṽ_ℓ = V_ℓ` and `C^Δ_ℓ = C_ℓ + C̃_ℓ`, the level
   cost (33) lies between (34) and `√(1 + C̃_ℓ/C_ℓ)` times (34), so the relative error of (34) is

@@ -85,7 +85,7 @@ code correctly does not reproduce).
 | G2.5-09 | 769–771 / p.17 | independent zero-mean scalars: E[(a+b)²] = E[a²] + E[b²] | DONE (stronger) | `integral_add_sq_of_indepFun` | E[a] = 0 alone suffices |
 | G2.5-10 | 772–775 / p.17 | 2-norm: E‖a+b‖² = E‖a‖² + E‖b‖² for independent zero-mean vectors / functions with an inner-product norm | DONE | `integral_norm_add_sq_of_indepFun`, `integral_norm_sum_sq_of_indepFun` | complete real inner-product space; finite sums, pairwise independence |
 | G2.5-11 | 776–781 / p.17 | not for other norms: the combined variance "can not necessarily be expressed … as Σ N_ℓ⁻¹ V_ℓ" | DONE | `sq_norm_add_of_indepFun_fails_sup` | sup norm on ℝ²: 1 vs 2 |
-| G2.5-12 | 782–787 / p.17–18 | "the theory can be extended to the use of other norms by using results from Banach space theory for the sums of independent random variables" | OUT-OF-SCOPE | — | needs type/cotype (Rademacher/Kahane) inequalities, absent from Mathlib; NOT documented as a gap (README, PLAN, notes silent) Spot-check 21: documented since round 10 in the out-of-scope table of `notes/coverage/README.md`. |
+| G2.5-12 | 782–787 / p.17–18 | "the theory can be extended to the use of other norms by using results from Banach space theory for the sums of independent random variables" | OUT-OF-SCOPE | — | needs type/cotype (Rademacher/Kahane) inequalities, absent from Mathlib; NOT documented as a gap (README, PLAN, notes silent) Spot-check 21: documented since round 10 in the out-of-scope table of `notes/coverage/README.md`. Round 25 (`BanachTheorem1.lean`): Theorem 1 in a Banach space with the type-2 inequality `E‖∑ X_i‖² ≤ τ² ∑ E‖X_i‖²` as a hypothesis on the space (`HasType2`): the MSE bound with the factors `2τ²` and `2` (`mlmc_mse_le_of_hasType2`) and Theorem 1 with mutually independent samples (`giles_theorem1_banach`); type 2 is proved for Hilbert spaces (`τ = 1`), for spaces isomorphic to a subspace of a Hilbert space and for finite-dimensional spaces, e.g. `ℝ × ℝ` with the maximum norm with `τ = √2` (`hasType2_of_innerProductSpace`, `hasType2_of_isomorphic_embedding`, `exists_hasType2_of_finiteDimensional`, `exists_hasType2_prod`, `hasType2_prod_sqrt_two`; the optimality of `√2` is not formalised). Type 2 for other infinite-dimensional spaces (e.g. `L^p`, `2 < p < ∞`) is not formalised (resolution table of `notes/coverage/README.md`). |
 | G2.5-13 | 787–790 / p.18 | Daun–Heinrich parametric integration in Banach spaces | N/A | — | literature |
 
 ### §2.6 Non-geometric MLMC (pp. 18–20)
@@ -156,7 +156,7 @@ code correctly does not reproduce).
 | G3.3-04 | 1020–1024 / p.22 | √V[a−b+c] ≤ √V[a] + √V[b] + √V[c] | DONE | `consistency_sd`, `sqrt_variance_add_le`, `sqrt_variance_sub_le`, `covariance_sq_le` | no independence needed |
 | G3.3-05 | 1025–1029 / p.22 | ratio ∣a−b+c∣ / (3(√V_a + √V_b + √V_c)) with V's "empirical estimates"; "The probability of this ratio being greater than unity is less than 0.3%" | PARTIAL | `gaussian_tail_three`, `consistency_check_gaussian`, `consistency_check_chebyshev` | proved with the TRUE variances and exact normality of a−b+c (normality documented); the paper's ratio with empirical V_a, V_b, V_c is not covered and this substitution is not documented; distribution-free bound only 1/9 Round 19: with one sample per level the check fails with probability `1` (atomless laws), with two it fails with probability `(2/π) arctan(√2/3) ≈ 0.280` (biased variance estimate) or `(2/π) arctan(1/3) ≈ 0.205` (unbiased) in the module's Gaussian example (`consistency_check_one_sample`, `consistency_check_two_samples`). |
 | G3.3-06 | 1029–1031 / p.22 | ratio > 1 indicates a programming error or a violation of (2.4) | N/A | — | interpretation (contrapositive of `consistency_mean` + tail bound) |
-| G3.3-07 | 1032–1038 / p.22–23 | "As few as 10 may be sufficient … many more … when there are rare outliers" | N/A | — | empirical |
+| G3.3-07 | 1032–1038 / p.22–23 | "As few as 10 may be sufficient … many more … when there are rare outliers" | N/A | — | empirical Round 25 (spot-check 24): "`V_ℓ = V[Y_ℓ]`" here (and at l. 1113–1114) uses `Y_ℓ` for a single sample, while (2.2)–(2.3) have `V[Y_ℓ] = V_ℓ/N_ℓ`; §3.5, l. 1200, makes the switch explicit (notation; corrections table of `notes/statement-audit.md`). |
 | G3.3-08 | 1038–1042 / p.23 | SD of the sample variance of zero-mean X ≈ √((κ−1)/N) E[X²], κ = E[X⁴]/(E[X²])² | DONE-DEV | `kurtosis`, `sampleVariance_sd`, `powerSum_variance_mean` | exact for the known-mean estimator N⁻¹ΣX_n²; for the driver's s₂/N − (s₁/N)² only its mean (1 − 1/N)V is proved; documented (ErrorAnalysis header) Round 19: the exact variance of the unbiased and biased sample variance and `sd = √((κ − 1)/N) σ²(1 + O(1/N))` (`sampleVar_mean_variance`, `sampleVar_sd`, `tendsto_sampleVar_sd_div`, `empVar_sd`). |
 | G3.3-09 | 1042–1043 / p.23 | "Hence O(κ) samples are required" | DONE | `sampleVariance_relative_sd_le_iff` | relative SD ≤ r ⇔ N ≥ (κ−1)/r² |
 | G3.3-10 | 1043–1045 / p.23 | mlmctest warns if κ_ℓ is very large | N/A | — | — |
@@ -175,7 +175,7 @@ code correctly does not reproduce).
 | G3.4-02 | 1081–1091 / p.24 | mlmc_l returns ΣY, ΣY² for iid Y with mean E[P_0] / E[P_l − P_{l−1}] | N/A | — | interface (= condition ii) of Thm 1) |
 | G3.4-03 | 1092–1101 / p.24 | initialisation: clamp α, β ≥ 0; L = 2; N₀ samples on levels 0,1,2 | N/A | (`alg1Init`) | code |
 | G3.4-04 | 1102–1112 / p.24 | loop while Σ dNl > 0, accumulate sums | N/A | (`alg1Samples`) | code |
-| G3.4-05 | 1113–1114, 1123–1125 / p.24–25 | m_ℓ = ∣s₁/N∣, V_ℓ = max(0, s₂/N − m_ℓ²) | DONE | `powerSum_variance_eq`, `powerSum_variance_nonneg`, `powerSum_variance_mean` | max(0,·) redundant in exact arithmetic; the estimate has bias −V/N |
+| G3.4-05 | 1113–1114, 1123–1125 / p.24–25 | m_ℓ = ∣s₁/N∣, V_ℓ = max(0, s₂/N − m_ℓ²) | DONE | `powerSum_variance_eq`, `powerSum_variance_nonneg`, `powerSum_variance_mean` | max(0,·) redundant in exact arithmetic; the estimate has bias −V/N Round 25 (spot-check 24): `V_ℓ ≡ V[Y_ℓ]` (l. 1113–1114) is the variance of one sample here, not of the level estimator of (2.3) (notation; see G3.3-07). |
 | G3.4-06 | 1114–1115 / p.24 | "one would expect m_ℓ = 2^{−α} m_{ℓ−1}, V_ℓ = 2^{−β} V_{ℓ−1}" | N/A | — | heuristic (exact under exact geometric decay) |
 | G3.4-07 | 1115–1129 / p.24–25 | estimates "not allowed to decrease by more than factor ½ relative to this anticipated value" (ℓ ≥ 2) | DONE | `floorEst`, `le_floorEst`, `floorEst_ge_extrapolation`, `floorEst_le` | — |
 | G3.4-08 | 1130–1140 / p.25 | α, β "estimated by linear regression" of log₂ m_ℓ, log₂ V_ℓ on ℓ = 1..L; clamp at ½ | DONE | `lsSlope`, `lsIntercept`, `lsFit_le`, `lsSlope_affine`, `lsSlope_log_geometric` | clamp max(0.5,·) not modelled (no content) |
@@ -195,7 +195,7 @@ code correctly does not reproduce).
 | G3.5-03 | 1185–1189 / p.26 | best case: QMC error O(N_ℓ⁻¹) instead of the MC O(N_ℓ^{−1/2}) | OUT-OF-SCOPE | (MC half: `variance_sample_mean`) | QMC error theory absent; documented (PLAN "Not formalised … of QMC"; MLQMC.lean header) Round 20, in `d` dimensions (`LatticeRuleD.lean`): for a randomly shifted rank-1 lattice rule the variance is the dual-lattice sum `∑_{k ∈ L^⊥∖{0}} \|f̂(k)\|²` (`hasSum_variance_rank1Lattice`), with unbiased replicates (`rank1Lattice_replicates`) and the bound `\|Q(u) − ∫f\| ≤ ∑_{L^⊥∖{0}} \|f̂(k)\|` for every shift (`abs_rank1Lattice_sub_integral_le`); MLQMC with level-dependent dimension has cost `O(ε^{−p})` with `p < 2` when `g < 2a` and `g < a + b`, assuming dual-lattice sums `≤ (c₂ 2^{−bℓ}/N)²` for `N = 2^m` points (`mlqmcLattice_complexity`, `mlqmcLattice_complexity_of_lt`, `mlqmcLattice_complexity_lt_two`, `mlqmcLattice_complexity_rate`). That good generating vectors exist (the `O(N⁻¹)` itself) is not formalised. Spot-check 21: with round 12 (`QMC1D.lean`, one dimension) and round 20 the row is in effect PARTIAL; what is missing is the existence of good generating vectors. |
 | G3.5-04 | 1190–1191 / p.26 | "one set of N_ℓ points gives good accuracy, but no confidence interval" | N/A | — | descriptive |
 | G3.5-05 | 1191–1193 (+1197–1198, implicit) / p.26–27 | randomised QMC via a random shift (rank-1 lattices) gives independent replicates, "32 random independent values", i.e. unbiased estimates of E[Y_ℓ] | MISSING | — (only assumed: `hmean` of `mlqmc_mse`) | Mathlib-level: a uniform shift mod 1 preserves Lebesgue/Haar measure on the unit torus, so each shifted-rule average is unbiased and independent shifts give iid replicates; not formalised, not documented Spot-check 21: resolved in round 10, `shiftedQMC_unbiased`, `randomShift_replicates` (`RandomShiftQMC.lean`). |
-| G3.5-06 | 1192–1193 / p.26 | digital scrambling (Sobol) serves the same purpose | OUT-OF-SCOPE | — | Owen-scrambling theory absent from Mathlib; not documented Spot-check 21: documented since round 10 in the out-of-scope table of `notes/coverage/README.md`. |
+| G3.5-06 | 1192–1193 / p.26 | digital scrambling (Sobol) serves the same purpose | OUT-OF-SCOPE | — | Owen-scrambling theory absent from Mathlib; not documented Spot-check 21: documented since round 10 in the out-of-scope table of `notes/coverage/README.md`. Round 25 (`DigitalShiftQMC.lean`): the random digital shift in base 2 preserves the fair product measure on digit sequences (`digitalShift_measurePreserving`), so the shifted QMC average is unbiased (`digitalShiftQMC_unbiased`) and independent shifts give i.i.d. replicates with an unbiased variance estimate (`digitalShift_replicates`), and fair binary digits are uniform on `[0, 1]` and `[0, 1]^δ` (`uniformDigits_map_binaryValue`, `uniformDigits_map_binaryPoint`, `digitalShiftQMC_unbiased_cube`). Owen's scrambling, the construction of Sobol points and QMC error rates are not formalised (resolution table of `notes/coverage/README.md`). |
 | G3.5-07 | 1193–1199 / p.26–27 | from the 32 set averages "the variance of their average, V_ℓ, can be estimated in the usual way" | DONE | `variance_sample_mean`, `variance_blockMean`, `powerSum_variance_mean` | generic iid results; MLQMC.lean itself takes V_ℓ exact |
 | G3.5-08 | 1200–1204 / p.27 | (3.2) Σ_{ℓ≤L} V_ℓ ≤ ½ε², V_ℓ the variance of the level average | DONE-DEV | `mlqmc_algorithm`, `mlqmcState_variance`, `mlqmc_mse` | (3.2) proved at exit; V[Y] ≤ ΣV_ℓ is a hypothesis of `mlqmc_mse` (follows from `mlmc_variance` for independent levels) |
 | G3.5-09 | 1205–1206 / p.27 | "Many QMC methods work naturally with N_ℓ as a power of 2" | N/A | (N_ℓ = 2^k in `mlqmcRatio`) | — |
@@ -206,6 +206,12 @@ code correctly does not reproduce).
 | G3.5-14 | (implicit) / p.27 | MSE ≤ ε² at exit | DONE-DEV | `mlqmc_mse` | hypotheses: geometric decay from an anchor, E[Y] = E[P_L], V[Y] ≤ ΣV_ℓ |
 
 ## Details of the PARTIAL and MISSING items
+
+(Round 25: see the resolution table of `notes/coverage/README.md`. Resolved: G2.4-32 (a) by
+`giles_theorem2_indexSet` and `giles_theorem2_boundary_indexSet`; G2.6-09 and G2.6-10 by
+`levelKeep_combined`; G3.3-05 by `consistency_check_empirical` (round 13); G3.5-05 by
+`shiftedQMC_unbiased` and `randomShift_replicates` (round 10). Not formalised: G2.4-32 (b), the
+optimality of the simplex among all index sets (listed in `PLAN.md`).)
 
 * **G2.4-32** (p.15, l.689–692). Missing: (a) a theorem stating that 𝓛 = {θ·ℓ ≤ L(ε)} (θ_d = α_d + (γ_d −
   β_d)/2) itself achieves Theorem 2's bounds — easy, the proof already builds this set
@@ -230,6 +236,12 @@ code correctly does not reproduce).
   in Mathlib) plus the generic `blockMean` lemmas: easy–moderate.
 
 ## Lean statements that misstate the paper
+
+(Round 25: two of the weak spots below are resolved — the consistency check with empirical variances
+is `consistency_check_empirical` (round 13), and Theorem 2 on the simplex is
+`giles_theorem2_indexSet` (round 10); `mlqmc_doubling_level` still encodes (3.3) only under its
+equal-fraction model, as its docstring says. The errata in the next section are all in the
+corrections table of `notes/statement-audit.md`.)
 
 None found. Weak spots worth knowing (not misstatements):
 * `mlqmc_doubling_level` is near-tautological (it encodes (3.3) only under an explicit

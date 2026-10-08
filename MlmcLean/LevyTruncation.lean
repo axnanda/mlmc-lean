@@ -96,10 +96,13 @@ example.  In the example `ν` lives on `(0, 1]`, so band `0 = {|z| ≥ 1}` has `
 (`Λ_0 = 0`): level `0` is almost surely the deterministic `Φ(0)` and all jumps are simulated in the
 correction levels.
 
-**Not proved.**  The alternative of approximating the effect of the small jumps by a Brownian
-diffusion term (l. 2039–2041, citing Dereich 2011, Dereich and Heidenreich 2011 and Marxen 2010;
-l. 2047–2048, "approximated by the same Brownian increment"), path-dependent payoffs and the rates
-of Table 6.3 (p. 48), the Lévy–Khintchine law of the limit `X`, two-sided or non-Lipschitz
+**Not proved here.**  The alternative of approximating the effect of the small jumps by a
+Brownian diffusion term (l. 2039–2041, citing Dereich 2011, Dereich and Heidenreich 2011 and
+Marxen 2010; l. 2047–2048, "approximated by the same Brownian increment") is in
+`MlmcLean.LevyExtras`, with the same rates (Dereich's improved bias is not proved).  Not proved:
+path-dependent payoffs for truncated levels and the rates of Table 6.3 (p. 48; the Asian row with
+exactly simulated increments is in `MlmcLean.JumpProcesses` and `MlmcLean.LevyExtras`), the
+Lévy–Khintchine law of the limit `X`, two-sided or non-Lipschitz
 examples, and bounds on the realised (rather than expected) cost.
 -/
 
