@@ -183,6 +183,14 @@
 --   several kinks and curved pieces; MIMC on the two axes for the kink counterexample
 -- * `MlmcLean.TauLeapingExtensions` — Giles §8: tau-leaping's weak rate for Lipschitz payoffs, and
 --   state-dependent rates on adaptive grids with (2.4)
+-- * `MlmcLean.GBMDigitalCondExp` — Giles §5.2: the conditional-expectation estimator of the digital
+--   option for GBM, V_ℓ = O(h^q) for q < 3/2, Theorem 1 at cost O(ε⁻²); splitting
+-- * `MlmcLean.TauLeapingSSA` — Giles §8: tau-leaping coupled with the exact SSA on the finest level,
+--   an unbiased multilevel estimator at cost O(ε⁻²) with a fixed number of levels
+-- * `MlmcLean.KarhunenLoeve` — Giles §7.2: the truncated Karhunen–Loève field with Mercer's
+--   expansion as hypotheses: truncation error, pointwise law, moments, covariance
+-- * `MlmcLean.ChangeOfMeasureVariance` — Giles §5.2: when the change-of-measure correction has
+--   finite variance (sampling variance more than half the target variances)
 import MlmcLean.Allocation
 import MlmcLean.Estimator
 import MlmcLean.LevelDiff
@@ -273,3 +281,7 @@ import MlmcLean.SpotCheckRemarks
 import MlmcLean.ParabolicExample
 import MlmcLean.NestedKinkCurved
 import MlmcLean.TauLeapingExtensions
+import MlmcLean.GBMDigitalCondExp
+import MlmcLean.TauLeapingSSA
+import MlmcLean.KarhunenLoeve
+import MlmcLean.ChangeOfMeasureVariance
