@@ -521,6 +521,18 @@ Lean statement or to the reason it is not formalised. The deviations of the new 
   at the start of a step, the propensities do not depend on time, and the laws compared are those
   of the state at `T`; the variance rate of the adaptive coupling and Theorem 1 for adaptive
   tau-leaping are not formalised.
+* **Integrability certificates (round 22, after the spot-check after round 21).** 25 end-to-end
+  theorems stated a mean-square-error bound without an `Integrable` conjunct, so the type alone did
+  not exclude a bound holding through the junk value `0` of a non-integrable integral (the squared
+  error was integrable in every case).  They now state it: the GBM theorems (`gbm_mlmc_theorem1`,
+  `gbm_mil_mlmc_theorem1`, `GBMPathDependent`, `GBMGridMax`), `levy_asian_theorem1`,
+  `jumpDiffusion_asian_theorem1`, `tauLeaping_mlmc_theorem1`, `tauLeaping_mlmc_exact`, the nested
+  simulation theorems (`nested_mlmc_complexity(_iid)`, `nested_sde_mlmc_complexity`,
+  `nested_kink_mlmc_complexity`, `nested_kink_sde_mlmc_complexity`,
+  `nested_mimc_smooth_complexity`, `nested_mimc_kink_complexity`) and `markov_mlmc_theorem1`.
+  `variance_levels_le`, `variance_tauCorrection_le`, `tauLeaping_level_variance` and
+  `gbm_correction_variance_le` now also state that the variable is in `L²`.  The abstract
+  Theorem 1 and Theorem 2 statements, whose rates are hypotheses, are unchanged.
 
 ### Corrections to the papers recorded elsewhere, collected
 
