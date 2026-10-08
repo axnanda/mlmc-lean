@@ -27,7 +27,8 @@ Reference: M.B. Giles, *Multilevel Monte Carlo methods*, Acta Numerica 24 (2015)
 any dimension, on the unit torus `𝕋^d = (ℝ/ℤ)^d` (`UnitAddTorus d` for a finite index type `d`,
 with its uniform probability measure `volume`, as in `MlmcLean.RandomShiftQMC`): a function on the
 unit cube `[0, 1)^d` is a function on `𝕋^d`, and the sum `x + u` on `𝕋^d` is `frac(x + u)`
-coordinatewise (`rank1Lattice_add_coe`).
+coordinatewise (`rank1Lattice_add_coe`; `rank1Lattice_cube_randomShift` states the main formula
+for functions on the cube `[0, 1]^d` and a shift uniform on the cube).
 
 **Setting.**  For a generating vector `z ∈ ℤ^d` and `N ≥ 1` the rank-1 lattice is
 `x_i = frac(i z/N)`, `i < N` (`rank1Lattice z N`), and a shift `u ∈ 𝕋^d` gives the randomly
@@ -50,6 +51,8 @@ for the measure `volume` of `UnitAddTorus d` (`hasSum_sq_torusCoeff`,
   character sum), and Parseval's identity gives the formula.
 * `rank1Lattice_randomShift`: with a uniform random shift `U`, every point `x_i + U` is uniform and
   `Q(U)` is an unbiased, square-integrable estimate of `∫ f` with that variance;
+  `rank1Lattice_cube_randomShift`: the same for a function `F` on the unit cube `[0, 1]^d`, the
+  points `frac(i z/N + U)` and a shift `U` uniform on the cube;
   `rank1Lattice_replicates`: `R` independent shifts (the paper's `R = 32`) give an unbiased
   average with variance `∑_{L^⊥ \ {0}} |f̂(k)|²/R`, and an unbiased estimate of it.
 * `variance_rank1Lattice_le_variance`: the variance is at most `Var f = ∑_{k ≠ 0} |f̂(k)|²`, the
@@ -617,6 +620,121 @@ theorem rank1Lattice_replicates {Ω : Type*} [MeasurableSpace Ω] {μ : Measure 
     exact h
   · rw [hest hR2]
     exact h
+
+/-! ### Functions on the unit cube -/
+
+/-- The coordinatewise map `t ↦ t mod 1` from the unit cube `[0, 1]^d` with Lebesgue measure
+onto `𝕋^d` with its uniform measure is measure preserving. -/
+lemma measurePreserving_coe_cube :
+    MeasurePreserving (fun t : d → ℝ => fun j => (t j : UnitAddCircle))
+      (volume.restrict (Set.Icc (0 : d → ℝ) 1)) volume := by
+  have h := measurePreserving_pi (fun _ : d => (volume : Measure ℝ).restrict (Set.Ioc 0 (0 + 1)))
+    (fun _ : d => (volume : Measure UnitAddCircle)) (fun _ => AddCircle.measurePreserving_mk 1 0)
+  rw [← Measure.restrict_pi_pi, zero_add] at h
+  have e : (Measure.pi fun _ : d => (volume : Measure ℝ)).restrict
+      (Set.univ.pi fun _ => Set.Ioc (0 : ℝ) 1) = volume.restrict (Set.Icc (0 : d → ℝ) 1) :=
+    Measure.restrict_congr_set Measure.univ_pi_Ioc_ae_eq_Icc
+  rw [e] at h
+  exact h
+
+/-- Almost every point `t` of the unit cube lies in `[0, 1)^d`, so that `frac(t) = t`
+coordinatewise. -/
+lemma ae_fract_eq_cube :
+    ∀ᵐ t ∂(volume.restrict (Set.Icc (0 : d → ℝ) 1)), (fun j => Int.fract (t j)) = t := by
+  have h1 : ∀ᵐ t ∂(volume : Measure (d → ℝ)), ∀ j, t j ≠ 1 := by
+    rw [ae_all_iff]
+    intro j
+    exact Measure.ae_eval_ne (fun _ : d => (volume : Measure ℝ)) j 1
+  filter_upwards [ae_restrict_mem measurableSet_Icc, ae_restrict_of_ae h1] with t ht ht1
+  funext j
+  exact Int.fract_eq_self.2 ⟨ht.1 j, lt_of_le_of_ne (ht.2 j) (ht1 j)⟩
+
+/-- **The randomly shifted rank-1 lattice rule on the unit cube `[0, 1]^d`: unbiased, with variance
+`∑_{k ∈ L^⊥ \ {0}} |F̂(k)|²`** (Giles 2015, §3.5, p. 26: the points are constructed "using
+well-established QMC techniques such as rank-1 lattices (Dick et al. 2007) … to provide a
+relatively uniform coverage of a unit hypercube integration region"; "To regain a confidence
+interval one uses randomised QMC in which the set of points is gives [sic] a random shift (for
+rank-1 lattice rules)").  The unit-cube form of `rank1Lattice_randomShift`.  Let `F : ℝ^d → ℝ` be
+measurable and square-integrable on the unit cube `[0, 1]^d`, let the shift `U` be uniformly
+distributed on `[0, 1]^d`, `z ∈ ℤ^d` and `N ≥ 1`.  Then the randomly shifted lattice average
+`N⁻¹ ∑_{i<N} F(frac(i z/N + U))` (fractional parts coordinatewise) has mean `∫_{[0,1]^d} F` and
+variance `∑_{k ∈ L^⊥ \ {0}} |F̂(k)|²`, where `F̂(k) = ∫_{[0,1]^d} e^{−2πi k·t} F(t) dt`.  Proof:
+`t ↦ t mod 1` carries the uniform measure of the cube to that of `𝕋^d`
+(`measurePreserving_coe_cube`), so the average is `Q(U mod 1)` for the function
+`f(y) = F(representative of y in [0, 1)^d)` on `𝕋^d`, which agrees with `F` almost everywhere on
+the cube (`ae_fract_eq_cube`); then `rank1Lattice_randomShift`. -/
+theorem rank1Lattice_cube_randomShift {Ω : Type*} [MeasurableSpace Ω] {μ : Measure Ω}
+    {U : Ω → d → ℝ} (hU : MeasurePreserving U μ (volume.restrict (Set.Icc (0 : d → ℝ) 1)))
+    (z : d → ℤ) {F : (d → ℝ) → ℝ} (hFm : Measurable F)
+    (hF : MemLp F 2 (volume.restrict (Set.Icc (0 : d → ℝ) 1))) {N : ℕ} (hN : 0 < N) :
+    ∫ ω, (N : ℝ)⁻¹ * ∑ i ∈ range N, F (fun j => Int.fract ((i : ℝ) * z j / N + U ω j)) ∂μ =
+        ∫ t in Set.Icc (0 : d → ℝ) 1, F t ∧
+      HasSum ((dualLattice z N \ {0}).indicator fun k => ‖∫ t in Set.Icc (0 : d → ℝ) 1,
+          Complex.exp (-(2 * Real.pi * Complex.I * ∑ j, (k j : ℂ) * t j)) * F t‖ ^ 2)
+        (variance (fun ω => (N : ℝ)⁻¹ * ∑ i ∈ range N,
+          F (fun j => Int.fract ((i : ℝ) * z j / N + U ω j))) μ) := by
+  have hπ := measurePreserving_coe_cube (d := d)
+  set rep : UnitAddTorus d → d → ℝ := fun y j => (AddCircle.equivIco 1 0 (y j) : ℝ) with hrep
+  have hrepm : Measurable rep := measurable_pi_lambda _ fun j =>
+    measurable_subtype_coe.comp ((AddCircle.measurableEquivIco 1 0).measurable.comp
+      (measurable_pi_apply j))
+  set f : UnitAddTorus d → ℝ := fun y => F (rep y) with hfdef
+  have hfm : Measurable f := hFm.comp hrepm
+  have hfπ : ∀ s : d → ℝ, f (fun j => (s j : UnitAddCircle)) = F (fun j => Int.fract (s j)) :=
+    fun s => by
+      simp only [hfdef, hrep]
+      congr 1
+      funext j
+      rw [AddCircle.coe_equivIco_mk_apply, div_one, mul_one]
+  have hest : ∀ u : d → ℝ, (N : ℝ)⁻¹ * ∑ i ∈ range N,
+      F (fun j => Int.fract ((i : ℝ) * z j / N + u j)) =
+        shiftedQMC f (rank1Lattice z N) N (fun j => (u j : UnitAddCircle)) := fun u => by
+    unfold shiftedQMC
+    congr 1
+    refine Finset.sum_congr rfl fun i _ => ?_
+    have e : rank1Lattice z N i + (fun j => (u j : UnitAddCircle)) =
+        fun j => (((i : ℝ) * z j / N + u j : ℝ) : UnitAddCircle) := by
+      funext j
+      rw [Pi.add_apply, rank1Lattice, AddCircle.coe_add]
+    rw [e, hfπ]
+  have hae := ae_fract_eq_cube (d := d)
+  have hfF : (fun t : d → ℝ => f (fun j => (t j : UnitAddCircle))) =ᵐ[volume.restrict
+      (Set.Icc (0 : d → ℝ) 1)] F := by
+    filter_upwards [hae] with t ht
+    rw [hfπ, ht]
+  have hf2 : MemLp f 2 volume := by
+    rw [← hπ.map_eq, memLp_map_measure_iff (hπ.map_eq ▸ hfm.aestronglyMeasurable)
+      hπ.measurable.aemeasurable]
+    exact hF.ae_eq hfF.symm
+  obtain ⟨-, -, hmean, hvar⟩ := rank1Lattice_randomShift (hπ.comp hU) z hf2 hN
+  simp only [Function.comp_apply] at hmean hvar
+  have hcoef : ∀ k : d → ℤ, torusCoeff (fun x => (f x : ℂ)) k = ∫ t in Set.Icc (0 : d → ℝ) 1,
+      Complex.exp (-(2 * Real.pi * Complex.I * ∑ j, (k j : ℂ) * t j)) * F t := fun k => by
+    unfold torusCoeff
+    have hmeas : AEStronglyMeasurable (fun x : UnitAddTorus d => torusChar (-k) x * ((f x : ℝ) : ℂ))
+        volume := (torusChar (-k)).continuous.aestronglyMeasurable.mul
+          (Complex.measurable_ofReal.comp hfm).aestronglyMeasurable
+    rw [← hπ.map_eq] at hmeas ⊢
+    rw [integral_map hπ.measurable.aemeasurable hmeas]
+    refine integral_congr_ae ?_
+    filter_upwards [hfF] with t ht
+    rw [ht, torusChar_apply]
+    congr 1
+    have h : ∀ j, fourier ((-k) j) ((t j : ℝ) : UnitAddCircle) =
+        Complex.exp (2 * Real.pi * Complex.I * ((-k) j : ℤ) * (t j : ℂ) / 1) :=
+      fun j => fourier_coe_apply
+    rw [Finset.prod_congr rfl fun j _ => h j, ← Complex.exp_sum]
+    congr 1
+    rw [Finset.mul_sum, ← Finset.sum_neg_distrib]
+    refine Finset.sum_congr rfl fun j _ => ?_
+    rw [Pi.neg_apply, Int.cast_neg]
+    ring
+  refine ⟨?_, ?_⟩
+  · simp only [hest]
+    rw [hmean, ← integral_comp_of_measurePreserving hπ hfm.aestronglyMeasurable]
+    exact integral_congr_ae hfF
+  · simp only [hest]
+    simpa only [hcoef] using hvar
 
 /-! ### Consequences -/
 
