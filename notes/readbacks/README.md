@@ -703,10 +703,39 @@ Findings and what was done:
   constant depends on `L`.  The module and theorem docstrings already said so.  Kept.
 - **`variance_ssaCorrection_exact_le` does not state that its sampling law is a probability
   measure** (it is, by the first conjunct of `ssa_mlmc_unbiased`, so the bound is not trivial).
-  Kept for this round; to be added as a conjunct with the next change to the module.
+  Added as a conjunct in round 24.
 - **The constants of `ssaChain_ne_le` and `ssaChain_abs_le` have a factor 2 of slack.**  Kept.
 - **The KL theorems need fewer hypotheses than the KL setting** (the pointwise results need no
   orthonormality, the `L²` results no eigen-relation); the satisfiability witness is a discrete
   diagonal kernel.  Documented.  Kept.
 - **The converse `not_memLp_two_mul_sub_likelihoodRatio` needs `|g| ≥ c > 0`**, which excludes the
   digital payoff; `g` bounded away from `0` on one tail would suffice.  Documented.  Kept.
+
+**Twenty-fourth round (2026-10-08).** Blind read-backs of the 36 theorems added in round 24:
+`levy_truncation.md` (R42: `LevyTruncation`; 16 theorems), `karhunen_loeve_limit.md` (R43:
+`KarhunenLoeveLimit`; 9) and `gbm_sensitivities.md` (R44: `GBMSensitivities`; 11).  All 36 read back
+as true; none is vacuous and none holds only because of a junk value.  The R42 auditor checked the
+parse of the sums and integrals by printing with explicit parentheses, the compound-Poisson and
+Lévy identities by exact enumeration on discrete examples (agreement to about `10⁻⁴⁰`), the
+stable-like closed forms by quadrature, and that a numerical allocation keeps the cost within the
+bounds `ε⁻²`, `ε⁻²(log ε)²` and `ε^{−2Y/(2−Y)}` for `Y = 0.5, 1, 1.5, 1.9`.  The R43/R44 auditor
+checked that every packet definition is the library's (`rfl`), the lognormal moments, tail variance
+and `L¹` convergence of the KL field numerically, the digital-delta formula for both signs of `s₀`
+with sympy, `E[fine delta] = E[coarse delta]` by quadrature and Monte Carlo, and the variance slopes
+of the call delta (about `½` for Euler–Maruyama and `1` for Milstein).
+Findings and what was done:
+
+- **The limit `X` of the Lévy truncation is existential**, pinned down almost everywhere as the
+  `L²` limit of the truncations; its Lévy–Khintchine law is not stated, and the model is pure-jump
+  at a fixed time.  Documented.  Kept.
+- **Some hypotheses are stronger than needed**: in `bandApprox_sq_sub` `hν` and `hδpos` follow from
+  the band laws, `levy_truncation_limit` does not need `hlarge`, and the summability in `hxy` of
+  `integral_klLimit_mul` follows from `hx`, `hy`.  Kept.
+- **`bandTerm` is not used by any statement.**  Kept (a helper of the definitions).
+- **The weak rates of the call delta are weaker than the classical weak order 1** (`q < ½` for
+  Euler–Maruyama, `q < 1` for Milstein), so the costs `ε^{−3−η}` and `ε^{−2−η}` are weaker than the
+  `ε^{−2.5}` and `ε⁻²(log ε)²` that weak order 1 would give.  Documented.  Kept.
+- **`gbm_digital_condExp_delta_telescope` targets the Milstein path with an Euler–Maruyama last
+  step** (`gbmMilEM`), the scheme of the conditional-expectation technique.  Documented.  Kept.
+- The read-back follow-up of round 23 (`variance_ssaCorrection_exact_le` now states that its input
+  law is a probability measure) is in this round.

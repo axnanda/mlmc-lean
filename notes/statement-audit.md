@@ -437,7 +437,9 @@ Lean statement or to the reason it is not formalised. The deviations of the new 
   the Asian results take i.i.d. increments with the needed exponential moments on uniform steps (a
   discrete analogue of Table 6.3's Asian row; the target is the limit of the level means, not the
   continuously averaged price), and the jump-adapted results take any measurable jump data
-  independent of the Brownian increments.  The thinning results are conditional on the candidates.
+  independent of the Brownian increments.  The thinning results are conditional on the candidates
+  (round 24: the small-jump truncation of §6.2 at a fixed time, from compound Poisson variables,
+  `LevyTruncation.lean`, below).
 * **Estimator remarks (`EstimatorRemarks.lean`, round 19).** G2.1-36 is imprecise rather than wrong:
   with a growing number of levels the inference needs a Lindeberg-type condition, and the
   counterexample shows it can fail.  For the consistency check only `N = 1` and `N = 2` are proved;
@@ -571,7 +573,9 @@ Lean statement or to the reason it is not formalised. The deviations of the new 
   of `ℝ^d`).  The decreasing order of the `θ_n` is not needed and not assumed.  The truncation error
   is `∑_{n≥K} θ_n` (the terms `n < K` are kept), for a limit field in `L²(P ⊗ ν)`; almost sure
   convergence of the series, the law of the limit field, the moments of the untruncated `κ = exp Y`
-  and of `max_x κ`, `1/min_x κ`, and the elliptic PDE analysis are not proved.
+  and of `max_x κ`, `1/min_x κ`, and the elliptic PDE analysis are not proved (round 24: almost
+  sure convergence, the law and the moments of the untruncated field, `KarhunenLoeveLimit.lean`,
+  below).
 * **Change-of-measure variance (`ChangeOfMeasureVariance.lean`, round 23).** The payoff `g` is
   bounded and measurable, as the digital payoff is.  The condition `v_f, v_c < 2v` is sufficient for
   the correction to be in `L²`; it is necessary for a single weight, and for the correction only
@@ -586,6 +590,58 @@ Lean statement or to the reason it is not formalised. The deviations of the new 
   `\"` and `\n` escapes, left by raw strings in earlier generator scripts; they are now real quotes
   and newlines.  LaTeX commands that begin with these letters, such as `\ne` and `\nu`, are
   untouched.
+* **Truncated Lévy processes (`LevyTruncation.lean`, round 24).** Only the terminal value `X_T` of
+  a pure-jump Lévy process is modelled (payoffs `Φ(X_T)`; no drift or Brownian part, and jump times
+  and paths are not simulated), with Lévy measure `ν`, `∫ min(1, z²) dν < ∞`, and the truncation
+  `1_{|z|<1}`; the jump laws enter through `r • μ = T • ν|_B` for any such `r`, `μ`.  The small
+  jumps are neglected; their replacement by a Brownian increment (Dereich 2011, Dereich and
+  Heidenreich 2011, Marxen 2010) is not formalised.  The intermediate range is the half-open
+  `[δ_ℓ, δ_{ℓ−1})`, not the paper's closed interval (a jump of size exactly `δ_{ℓ−1}` is simulated
+  on both paths).  Two realisations of the coupling are used: per level (the jumps `|z| ≥ δ_ℓ`
+  simulated once, the coarse path keeping those `≥ δ_{ℓ−1}`) for (2.4) and the correction variance,
+  and all levels on one space of independent bands of jump sizes for the limit and Theorem 1, where
+  their laws agree (`bandApprox_map_eq`).  The limit `X` is an `L²` limit, not identified as the
+  terminal value of a càdlàg Lévy process; its Lévy–Khintchine law is not derived.  Theorem 1 fixes
+  `δ_ℓ = 2^{−ℓ}` (the paper only asks `δ_ℓ → 0` and gives no rates for this approach), takes
+  `α = β/2` from the mean-square bias bound for Lipschitz payoffs, assumes the large jumps square
+  integrable and the rates `T ∫_{|z|<δ_ℓ} z² dν ≤ a δ_ℓ^{2−Y}`, `T ν(|z| ≥ δ_ℓ) ≤ b δ_ℓ^{−Y}`, and
+  bounds the expected cost `∑_ℓ N_ℓ (1 + T ν(|z| ≥ δ_ℓ))`, not the cost of every realisation.  The
+  rates are verified for the one-sided stable-like example `ν(dz) = c z^{−1−Y} dz` on `(0, 1]`,
+  whose complexity is `ε⁻²` for `Y < 1`, `ε⁻²(log ε)²` for `Y = 1` and `ε^{−2Y/(2−Y)}` for
+  `1 < Y < 2`; there the band `|z| ≥ 1` has `ν`-mass `0`, so level `0` is the deterministic `Φ(0)`.
+  Path-dependent payoffs, Table 6.3 and two-sided or non-Lipschitz examples are not covered.
+* **The untruncated Karhunen–Loève field (`KarhunenLoeveLimit.lean`, round 24).** Mercer's theorem
+  stays a hypothesis: the pointwise theorems assume only the `HasSum` (or summability) expansions of
+  `R` at the points involved, with no orthonormality, no `∑ θ_n < ∞` and no eigen-relation, and
+  `klLimit_ae_eq_L2_limit` assumes the setting of `exists_klField_limit`; `HasSum` forces
+  `R(x, x) ≥ 0`.  `klLimit` is the `limUnder` of the partial sums, unspecified where they diverge (a
+  null set), so every statement about it is an almost sure or distributional one.  A general `R`
+  replaces the stationary `r(x − y)`, and the decreasing order of the `θ_n` is not used.  Joint
+  Gaussianity and the covariance are proved separately; the joint law is not identified with
+  `multivariateGaussian 0 (R(x_i, x_j))`.  "The diffusivity is unbounded" is proved at one point
+  with `R(x, x) > 0` (neither `κ(x)` nor `1/κ(x)` is essentially bounded); the regularity of
+  `x ↦ κ(x)`, the moments of `max_x κ` and `1/min_x κ`, and the elliptic PDE analysis are not
+  proved.
+* **Sensitivities for GBM (`GBMSensitivities.lean`, round 24).** GBM and the delta `∂/∂s₀` only; the
+  paper, citing Burgos and Giles (2012), has general SDEs and Greeks in mind.  For GBM the tangent
+  path is `Ŝ/s₀`, written `Ŝ(1)` (the path from the initial value `1`) to avoid dividing by `s₀`.
+  "Similar difficulties to … a digital option" is formalised by upper bounds matching the digital
+  option's: `V_ℓ = O(h^q)` for every `q < ½` (Euler–Maruyama) and every `q < 1` (Milstein), weak
+  errors `O(h^q)`, and Theorem 1 at cost `O(ε^{−3−η})`, resp. `O(ε^{−2−η})`, for every `η > 0`, with
+  constants depending on `s₀` and `K`; that the delta does no better (a lower bound on `V_ℓ`) and
+  the endpoints `q = ½`, `q = 1` are not proved.  The payoffs are undiscounted.  `T > 0` throughout;
+  `σ ≠ 0` for the derivatives, the weak rates and Theorem 1 (for `σ = 0` they can fail at the kink
+  `s₀ e^{rT} = K`), but not for the variance rates; `s₀ ≠ 0` or `K ≠ 0` for the call, `s₀ ≠ 0` for
+  the conditional-expectation payoffs, which jump at `s₀ = 0`.  For the digital delta only the
+  almost sure derivatives, square integrability, unbiasedness, (2.4) and the telescoping sum are
+  proved; the variance rate of its corrections (the paper gives none and defers to Burgos 2014),
+  Theorem 1 for it and the convergence of the finest-level delta `d/ds₀ P(Ŝ^f_N > K)` to the true
+  digital delta are not.
+* **Read-back follow-up (round 24).** The round-23 read-back noted that
+  `variance_ssaCorrection_exact_le` did not state that its sampling law `ssaInputLaw` is a
+  probability measure (it is, by the first conjunct of `ssa_mlmc_unbiased`, so the bound was not
+  trivial).  The theorem now states `IsProbabilityMeasure (ssaInputLaw lam Λ T x₀ L)` as its first
+  conjunct; the bound is unchanged.
 
 ### Corrections to the papers recorded elsewhere, collected
 

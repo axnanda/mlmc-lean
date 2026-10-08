@@ -242,6 +242,19 @@ items listed under "Not formalised" below.
   expansion as hypotheses: the level correction, the truncation error, the pointwise law, uniform
   moments of the diffusivity and the covariance (`KarhunenLoeve.lean`); when the change-of-measure
   correction of §5.2 has finite variance (`ChangeOfMeasureVariance.lean`).
+- ✅ Round 24: the small-jump truncation of §6.2 for the terminal value of a pure-jump Lévy
+  process: the large jumps as compound Poisson variables, (2.4), the correction variance from the
+  intermediate range of jump sizes, the `L²` limit and the bias as `δ_ℓ → 0`, the expected cost,
+  and Theorem 1 with `δ_ℓ = 2^{−ℓ}`, including a one-sided stable-like example at cost `O(ε⁻²)`,
+  `O(ε⁻²(log ε)²)` or `O(ε^{−2Y/(2−Y)})` (`LevyTruncation.lean`); the untruncated Karhunen–Loève
+  field of §7.2 with Mercer's expansion as hypotheses: almost sure convergence, its Gaussian law,
+  covariance and joint Gaussianity, the lognormal moments of the diffusivity and their convergence,
+  and that the diffusivity is unbounded (`KarhunenLoeveLimit.lean`); sensitivities for GBM (§5.4):
+  the pathwise delta of the call with the digital option's variance rates and Theorem 1 at cost
+  `O(ε^{−3−η})` (Euler–Maruyama) and `O(ε^{−2−η})` (Milstein), and the digital delta from the
+  conditional-expectation payoffs, unbiased and with (2.4) (`GBMSensitivities.lean`); after the
+  round-23 read-back, `variance_ssaCorrection_exact_le` states that its sampling law is a
+  probability measure.
 - Not formalised (each with its reason in `notes/coverage/README.md`): the convergence orders of
   the discretisations of general SDEs, SPDEs and PDEs (Itô calculus and PDE regularity are not in
   Mathlib; the SPDE of §7.3 has multiplicative noise and an absorbing boundary; proved for geometric
@@ -276,23 +289,35 @@ items listed under "Not formalised" below.
   unbiased and costs `O(ε⁻²)` in expectation with a fixed number of levels); the comparison of the
   explicit scheme with the exact solution for super-linear coefficients, and several dimensions (the
   divergence of the scheme's moments is proved for scalar coefficients); the jump-diffusion and
-  Lévy-process theory of §6 beyond grid values (the Poisson and Lévy processes themselves; the
-  discrete parts are proved); Mercer's theorem behind the Karhunen–Loève expansion, the law of the
-  limit field and the finite-element analysis of §7.2 (spectral theory of covariance operators and
-  elliptic regularity; with Mercer's expansion as a hypothesis the truncation error, the pointwise
-  law, the moments and the covariance of the truncated field are proved, and (2.4) for nested inputs
-  `ξ_ℓ = (ξ_{ℓ−1}, z_ℓ)`); that the limit of the discretised contracting chains is the SDE's
-  invariant law (§10.1; fixed and level-dependent steps are proved for the discretised chains, and
-  for the Ornstein–Uhlenbeck SDE the invariant laws of the scheme tend to `N(0, σ²/(2κ))`); the
-  value of the dyadic limit `C` and the exact halving ratio of the MSE per bit (Haas–Giles §3.4; the
-  existence of `C > 0` and the order `2^{−d}/d` are proved for `Φ⁻¹`, the exact ratio needs finer
-  asymptotics of `Φ⁻¹`); whether MIMC reaches `O(ε⁻²)` for a general piecewise linear `f` (the
-  paper's rates are refuted, the corrected rates give `O(ε⁻²|log ε|⁴)`, and for the counterexample
-  itself MIMC on the two axes reaches `O(ε⁻²)`). Further claims that need theory Mathlib lacks, such
-  as Creutzig et al.'s lower bound, Banach-space norms, the digital scrambling of Sobol points, the
-  sensitivities of digital options, Feynman–Kac and exit times, the Clark–Cameron bound and the
-  Giles–Szpruch analysis, are in the out-of-scope table of `notes/coverage/README.md`, and a few
-  minor sub-claims that are provable but not formalised are noted in the rows of the coverage
+  Lévy-process theory of §6 beyond grid values and terminal values (the Poisson and Lévy processes
+  themselves, path-dependent Lévy payoffs and Table 6.3 beyond the discrete Asian analogue, the
+  Lévy–Khintchine law of the limit of the truncated levels, the Brownian replacement of the small
+  jumps (Dereich) and bounds on the realised rather than the expected cost; the discrete parts are
+  proved, and so is the small-jump truncation for the terminal value of a pure-jump Lévy process,
+  with Theorem 1 for `δ_ℓ = 2^{−ℓ}` and a one-sided stable-like example); Mercer's theorem behind
+  the Karhunen–Loève expansion, the identification of the joint law of the limit field with a
+  multivariate Gaussian, the regularity of `κ` and the moments of `max_x κ` and `1/min_x κ`, and the
+  finite-element analysis of §7.2 (spectral theory of covariance operators and elliptic regularity;
+  with Mercer's expansion as a hypothesis the truncation error, the pointwise law, the moments and
+  the covariance of the truncated field are proved, and for the untruncated field the almost sure
+  convergence, the Gaussian law, joint Gaussianity, the covariance, the moments of `κ` and that it
+  is unbounded, and (2.4) for nested inputs `ξ_ℓ = (ξ_{ℓ−1}, z_ℓ)`); for the sensitivities of §5.4,
+  the variance rate of the digital-delta corrections and Theorem 1 for them (the paper defers to
+  Burgos 2014), sensitivities for general SDEs and Greeks other than the delta (they need the SDE's
+  tangent process), and lower bounds behind "similar difficulties" (for GBM the pathwise delta of
+  the call, with upper bounds matching the digital option's rates and costs, and the unbiased
+  digital delta from the conditional-expectation payoffs are proved); that the limit of the
+  discretised contracting chains is the SDE's invariant law (§10.1; fixed and level-dependent steps
+  are proved for the discretised chains, and for the Ornstein–Uhlenbeck SDE the invariant laws of
+  the scheme tend to `N(0, σ²/(2κ))`); the value of the dyadic limit `C` and the exact halving ratio
+  of the MSE per bit (Haas–Giles §3.4; the existence of `C > 0` and the order `2^{−d}/d` are proved
+  for `Φ⁻¹`, the exact ratio needs finer asymptotics of `Φ⁻¹`); whether MIMC reaches `O(ε⁻²)` for a
+  general piecewise linear `f` (the paper's rates are refuted, the corrected rates give
+  `O(ε⁻²|log ε|⁴)`, and for the counterexample itself MIMC on the two axes reaches `O(ε⁻²)`).
+  Further claims that need theory Mathlib lacks, such as Creutzig et al.'s lower bound, Banach-space
+  norms, the digital scrambling of Sobol points, Feynman–Kac and exit times, the Clark–Cameron bound
+  and the Giles–Szpruch analysis, are in the out-of-scope table of `notes/coverage/README.md`, and a
+  few minor sub-claims that are provable but not formalised are noted in the rows of the coverage
   tables. The remaining claims are numerical or empirical (measured rates, figures, run times),
   hardware facts, citations or informal remarks.
 

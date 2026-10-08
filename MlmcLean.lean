@@ -191,6 +191,12 @@
 --   expansion as hypotheses: truncation error, pointwise law, moments, covariance
 -- * `MlmcLean.ChangeOfMeasureVariance` — Giles §5.2: when the change-of-measure correction has
 --   finite variance (sampling variance more than half the target variances)
+-- * `MlmcLean.LevyTruncation` — Giles §6.2: truncation of the small jumps of a Lévy process with
+--   level-dependent cutoffs; coupling, (2.4), the correction variance, the L² limit, Theorem 1
+-- * `MlmcLean.KarhunenLoeveLimit` — Giles §7.2: the untruncated Karhunen–Loève field, its Gaussian
+--   law and covariance, and the moments of the untruncated diffusivity
+-- * `MlmcLean.GBMSensitivities` — Giles §5.4: pathwise deltas for GBM; the call delta behaves like a
+--   digital option; the digital delta via the conditional expectation
 import MlmcLean.Allocation
 import MlmcLean.Estimator
 import MlmcLean.LevelDiff
@@ -285,3 +291,6 @@ import MlmcLean.GBMDigitalCondExp
 import MlmcLean.TauLeapingSSA
 import MlmcLean.KarhunenLoeve
 import MlmcLean.ChangeOfMeasureVariance
+import MlmcLean.LevyTruncation
+import MlmcLean.KarhunenLoeveLimit
+import MlmcLean.GBMSensitivities
