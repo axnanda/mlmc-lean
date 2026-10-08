@@ -597,8 +597,8 @@ propensity be bounded, `0 ≤ λ ≤ Λ` (on `ℕ` this implies the Lipschitz co
 bounded, `|Φ| ≤ M`.  The Poisson-coupled tau-leaping estimator of `tauLeaping_mlmc_theorem1`
 (level `ℓ`: `2^ℓ` steps of size `T 2^{−ℓ}`, independent samples of law `tauInputLaw`, cost `2^ℓ`
 per sample) estimates `E[Φ(X_T)]` for the exact chain `X` (`exactLaw`): there is `c₄ > 0` such
-that for every `0 < ε < e⁻¹` there are `L` and `N_ℓ ≥ 1` with mean square error `< ε²` and cost
-`∑_ℓ N_ℓ 2^ℓ ≤ c₄ ε⁻²(log ε)²`.  The weak rate `α = 1`, a hypothesis of
+that for every `0 < ε < e⁻¹` there are `L` and `N_ℓ ≥ 1` with a square-integrable error, mean square
+error `< ε²`, and cost `∑_ℓ N_ℓ 2^ℓ ≤ c₄ ε⁻²(log ε)²`.  The weak rate `α = 1`, a hypothesis of
 `tauLeaping_mlmc_theorem1`, is proved (`tauLeaping_weak_error_exact`).  Deviation: bounded
 propensities and bounded payoffs only (a bounded payoff on `ℕ` is `2M`-Lipschitz, as
 `tauLeaping_mlmc_theorem1` requires); the paper fixes neither class. -/
@@ -606,6 +606,10 @@ theorem tauLeaping_mlmc_exact {lam : ℕ → ℝ≥0} {Λ : ℝ≥0} (hΛ : ∀ 
     (x₀ : ℕ) {Φ : ℕ → ℝ} {M : ℝ} (hΦ : ∀ x, |Φ x| ≤ M) :
     ∃ c₄ : ℝ, 0 < c₄ ∧ ∀ ε : ℝ, 0 < ε → ε < Real.exp (-1) →
       ∃ (L : ℕ) (N : ℕ → ℕ), (∀ ℓ, 0 < N ℓ) ∧
+        Integrable (fun x => (∑ ℓ ∈ range (L + 1),
+            blockMean (fineCoarseDiff (tauFine Φ) (tauCoarse Φ)) (fun p x => x p) ℓ (N ℓ) x -
+              ∫ y, Φ y ∂(exactLaw lam Λ T x₀)) ^ 2)
+            (Measure.infinitePi fun _ : ℕ × ℕ => tauInputLaw lam T x₀) ∧
         ∫ x, (∑ ℓ ∈ range (L + 1),
             blockMean (fineCoarseDiff (tauFine Φ) (tauCoarse Φ)) (fun p x => x p) ℓ (N ℓ) x -
               ∫ y, Φ y ∂(exactLaw lam Λ T x₀)) ^ 2

@@ -741,12 +741,18 @@ theorem gbm_weak_error_le (r σ s₀ : ℝ) {T : ℝ} (hT : 0 ≤ T) {g : ℝ �
 E[(P − P_ℓ)²] ≤ K² E[‖S − Ŝ_ℓ‖²]` … `V_ℓ ≤ 2(V[P − P_ℓ] + V[P − P_{ℓ−1}])`, and hence
 `V_ℓ = O(h_ℓ)`"; the rate `β = 1` of Theorem 1 (iii)).  The correction on level `ℓ + 1` is the
 payoff of the fine path minus the payoff of the coarse path driven by the summed increments
-`(Z_{2k} + Z_{2k+1})/√2`; its variance is at most `6 K² C(T) T 2^{−(ℓ+1)}`. -/
+`(Z_{2k} + Z_{2k+1})/√2`; it is square integrable and its variance is at most
+`6 K² C(T) T 2^{−(ℓ+1)}`. -/
 theorem gbm_correction_variance_le (r σ s₀ : ℝ) {T : ℝ} (hT : 0 ≤ T) {g : ℝ → ℝ} {K : ℝ}
     (hg : ∀ x y, |g x - g y| ≤ K * |x - y|) (ℓ : ℕ) :
+    MemLp (fun z => g (gbmEM r σ T s₀ (ℓ + 1) z) - g (gbmEM r σ T s₀ ℓ (pairAvg z))) 2
+        stdNormalSeq ∧
     variance (fun z => g (gbmEM r σ T s₀ (ℓ + 1) z) - g (gbmEM r σ T s₀ ℓ (pairAvg z)))
         stdNormalSeq ≤
       6 * K ^ 2 * (gbmStrongConst r σ T s₀ * T) * ((2 : ℝ) ^ (ℓ + 1))⁻¹ := by
+  refine ⟨(memLp_two_comp_of_abs_sub_le hg (memLp_gbmEM r σ T s₀ (ℓ + 1))).sub
+    ((memLp_two_comp_of_abs_sub_le hg (memLp_gbmEM r σ T s₀ ℓ)).comp_measurePreserving
+      measurePreserving_pairAvg), ?_⟩
   obtain ⟨-, hgc⟩ := continuous_of_abs_sub_le hg
   have hm1 := measurable_gbmEM r σ T s₀ (ℓ + 1)
   have hm0 := (measurable_gbmEM r σ T s₀ ℓ).comp measurePreserving_pairAvg.measurable
@@ -808,14 +814,20 @@ Level `ℓ` uses `2^ℓ` Euler–Maruyama steps of size `h_ℓ = T 2^{−ℓ}`; 
 the fine path minus the payoff of the coarse path driven by the summed increments, the samples are
 independent, and a level-`ℓ` sample costs `2^ℓ`.  Then there is `c₄ > 0` such that for every
 `0 < ε < e⁻¹` there are `L` and `N_ℓ ≥ 1` for which the multilevel estimator of
-`E[g(S_T)] = E[g(s₀ e^{(r − σ²/2)T + σ √T Z})]`, `Z ~ N(0,1)`, has mean square error `< ε²` and cost
-`∑_{ℓ≤L} N_ℓ 2^ℓ ≤ c₄ ε⁻²(log ε)²`.  No rate is assumed: the weak rate `α = ½`
-(`gbm_weak_error_le`), the variance rate `β = 1` (`gbm_correction_variance_le`) and (2.4)
+`E[g(S_T)] = E[g(s₀ e^{(r − σ²/2)T + σ √T Z})]`, `Z ~ N(0,1)`, has a square-integrable error with
+mean square `< ε²`, and cost `∑_{ℓ≤L} N_ℓ 2^ℓ ≤ c₄ ε⁻²(log ε)²`.  No rate is assumed: the weak rate
+`α = ½` (`gbm_weak_error_le`), the variance rate `β = 1` (`gbm_correction_variance_le`) and (2.4)
 (`integral_emCoarse`) are proved. -/
 theorem gbm_mlmc_theorem1 (r σ s₀ : ℝ) {T : ℝ} (hT : 0 ≤ T) {g : ℝ → ℝ} {K : ℝ}
     (hg : ∀ x y, |g x - g y| ≤ K * |x - y|) :
     ∃ c₄ : ℝ, 0 < c₄ ∧ ∀ ε : ℝ, 0 < ε → ε < Real.exp (-1) →
       ∃ (L : ℕ) (N : ℕ → ℕ), (∀ ℓ, 0 < N ℓ) ∧
+        Integrable (fun x => (∑ ℓ ∈ range (L + 1),
+            blockMean (fineCoarseDiff (emFine (gbmDrift r) (gbmVol σ) T s₀ (europeanPayoff g))
+              (emCoarse (gbmDrift r) (gbmVol σ) T s₀ (europeanPayoff g))) (fun p x => x p) ℓ
+              (N ℓ) x -
+            ∫ w, g (s₀ * Real.exp ((r - σ ^ 2 / 2) * T + σ * (Real.sqrt T * w)))
+              ∂gaussianReal 0 1) ^ 2) (Measure.infinitePi fun _ : ℕ × ℕ => stdNormalSeq) ∧
         ∫ x, (∑ ℓ ∈ range (L + 1),
             blockMean (fineCoarseDiff (emFine (gbmDrift r) (gbmVol σ) T s₀ (europeanPayoff g))
               (emCoarse (gbmDrift r) (gbmVol σ) T s₀ (europeanPayoff g))) (fun p x => x p) ℓ
@@ -870,7 +882,7 @@ theorem gbm_mlmc_theorem1 (r σ s₀ : ℝ) {T : ℝ} (hT : 0 ≤ T) {g : ℝ �
       rw [← hV₀]
       linarith [mul_nonneg (sq_nonneg K) (mul_nonneg hC hT)]
     | succ ℓ =>
-      have hv := gbm_correction_variance_le r σ s₀ hT hg ℓ
+      have hv := (gbm_correction_variance_le r σ s₀ hT hg ℓ).2
       have e : fineCoarseDiff (emFine (gbmDrift r) (gbmVol σ) T s₀ (europeanPayoff g))
           (emCoarse (gbmDrift r) (gbmVol σ) T s₀ (europeanPayoff g)) (ℓ + 1) =
           fun z => g (gbmEM r σ T s₀ (ℓ + 1) z) - g (gbmEM r σ T s₀ ℓ (pairAvg z)) := by
@@ -891,9 +903,17 @@ theorem gbm_mlmc_theorem1 (r σ s₀ : ℝ) {T : ℝ} (hT : 0 ≤ T) {g : ℝ �
     (γ := 1) (by norm_num) one_pos one_pos hc₁ hc₂ one_pos (by norm_num) hω hind
     (hP.integrable one_le_two) hPfm hPf (fun _ _ => integrable_const _)
     (fun _ _ => by simp only [integral_const, probReal_univ, one_smul]) h_i h_iii h_iv
+  have hPc : ∀ ℓ, MemLp (emCoarse (gbmDrift r) (gbmVol σ) T s₀ (europeanPayoff g) ℓ) 2
+      stdNormalSeq := fun ℓ => by
+    rw [show emCoarse (gbmDrift r) (gbmVol σ) T s₀ (europeanPayoff g) ℓ =
+        emFine (gbmDrift r) (gbmVol σ) T s₀ (europeanPayoff g) ℓ ∘ pairAvg from
+      funext (emCoarse_eq _ _ _ _ _ ℓ)]
+    exact (hPf ℓ).comp_measurePreserving measurePreserving_pairAvg
   refine ⟨c₄, hc₄, fun ε hε hε1 => ?_⟩
   obtain ⟨L, N, hN, hmse, hcost⟩ := h ε hε hε1
-  refine ⟨L, N, hN, ?_, ?_⟩
+  refine ⟨L, N, hN, ?_, ?_, ?_⟩
+  · exact ((memLp_finsetSum _ fun ℓ _ =>
+      memLp_blockMean hω (memLp_fineCoarseDiff hPf hPc) ℓ (N ℓ)).sub (memLp_const _)).integrable_sq
   · rw [← hPint]
     exact hmse
   · simp only [totalCost, Finset.sum_const, Finset.card_range, nsmul_eq_mul, integral_const,

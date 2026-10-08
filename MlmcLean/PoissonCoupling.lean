@@ -973,17 +973,20 @@ theorem variance_coupledChain_le {lam : ℕ → ℝ≥0} {K Λ : ℝ≥0}
 /-- **`β = 1` for tau-leaping MLMC** (Giles 2015, §8, p. 56, with the level structure of
 `tauLeaping_level`): on level `ℓ + 1` the fine path makes `2^{ℓ+1}` steps of size
 `h_{ℓ+1} = T/2^{ℓ+1}` and the coarse path `2^ℓ` steps of size `h_ℓ`, and for a `K`-Lipschitz
-propensity bounded by `Λ` and an `L`-Lipschitz payoff the variance of the correction
-`Φ(x_T) − Φ(x^c_T)` is at most `c 2^{−ℓ}`, as soon as `h_{ℓ+1} ≤ 1`.  With the weak rate `α = 1`
-and the cost rate `γ = 1` this is the regime `β = γ` of Theorem 1, hence the complexity
+propensity bounded by `Λ` and an `L`-Lipschitz payoff the correction `Φ(x_T) − Φ(x^c_T)` is square
+integrable and its variance is at most `c 2^{−ℓ}`, as soon as `h_{ℓ+1} ≤ 1`.  With the weak rate
+`α = 1` and the cost rate `γ = 1` this is the regime `β = γ` of Theorem 1, hence the complexity
 `O(ε⁻²(log ε)²)` (`tauLeaping_complexity`). -/
 theorem tauLeaping_level_variance {lam : ℕ → ℝ≥0} {K Λ : ℝ≥0}
     (hK : ∀ x y : ℕ, |(lam x : ℝ) - lam y| ≤ K * |(x : ℝ) - y|) (hΛ : ∀ x, lam x ≤ Λ)
     (T : ℝ≥0) {Φ : ℕ → ℝ} {L : ℝ} (hΦ : ∀ x y : ℕ, |Φ x - Φ y| ≤ L * |(x : ℝ) - y|) :
     ∃ c : ℝ, 0 ≤ c ∧ ∀ ℓ x₀ : ℕ, (T : ℝ) ≤ 2 ^ (ℓ + 1) →
+      MemLp (fun q : ℕ × ℕ => Φ q.1 - Φ q.2) 2
+        (coupledChain lam (T / 2 ^ (ℓ + 1)) x₀ (2 ^ ℓ)) ∧
       variance (fun q : ℕ × ℕ => Φ q.1 - Φ q.2) (coupledChain lam (T / 2 ^ (ℓ + 1)) x₀ (2 ^ ℓ)) ≤
         c / 2 ^ ℓ := by
   obtain ⟨c, hc, hbd⟩ := variance_coupledChain_le hK hΛ T.coe_nonneg hΦ
+  obtain ⟨_, -, hsq⟩ := coupledChain_sq_le hK hΛ T.coe_nonneg
   refine ⟨c * T / 2, by positivity, fun ℓ x₀ hℓ => ?_⟩
   have hh : ((T / 2 ^ (ℓ + 1) : ℝ≥0) : ℝ) = (T : ℝ) / 2 ^ (ℓ + 1) := by
     rw [NNReal.coe_div, NNReal.coe_pow, NNReal.coe_ofNat]
@@ -995,6 +998,14 @@ theorem tauLeaping_level_variance {lam : ℕ → ℝ≥0} {K Λ : ℝ≥0}
     rw [hh]
     push_cast
     rw [pow_succ', mul_div_cancel₀ _ (by positivity)]
+  have hm : AEStronglyMeasurable (fun q : ℕ × ℕ => Φ q.1 - Φ q.2)
+      (coupledChain lam (T / 2 ^ (ℓ + 1)) x₀ (2 ^ ℓ)) :=
+    Measurable.of_discrete.aestronglyMeasurable
+  refine ⟨(memLp_two_iff_integrable_sq hm).2 ((((hsq _ _ x₀ hh1 hkT).1).const_mul (L ^ 2)).mono'
+    (hm.pow 2) (ae_of_all _ fun q => ?_)), ?_⟩
+  · rw [Real.norm_eq_abs, abs_of_nonneg (sq_nonneg _), ← sq_abs (Φ q.1 - Φ q.2),
+      ← sq_abs ((q.1 : ℝ) - q.2), ← mul_pow]
+    exact pow_le_pow_left₀ (abs_nonneg _) (hΦ q.1 q.2) 2
   calc variance (fun q : ℕ × ℕ => Φ q.1 - Φ q.2) (coupledChain lam (T / 2 ^ (ℓ + 1)) x₀ (2 ^ ℓ))
       ≤ c * ((T / 2 ^ (ℓ + 1) : ℝ≥0) : ℝ) := hbd _ _ _ hh1 hkT
     _ = c * T / 2 / 2 ^ ℓ := by

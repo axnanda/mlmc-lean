@@ -358,7 +358,7 @@ theorem contracting_sde_mlmc {Ω : Type*} [MeasurableSpace Ω] {μ : Measure Ω}
     measurePreserving_eval_infinitePi _ p
   refine ⟨c₄ * K ^ 2, by positivity, fun ε hε hε1 => ?_⟩
   have hεK : 0 < ε / K := div_pos hε hK0
-  obtain ⟨L, M, hM, hmse, hcost⟩ := H (ε / K) hεK
+  obtain ⟨L, M, hM, -, hmse, hcost⟩ := H (ε / K) hεK
     (lt_of_le_of_lt (div_le_self hε.le hK1) hε1)
   have hY : MemLp (mlmcEstimator (fun ℓ (e : ℕ → ℝ) => f (backIter (emStep a b h) (N ℓ) e x₀))
       (fun p x => x p) L M) 2

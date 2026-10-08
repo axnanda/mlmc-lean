@@ -871,11 +871,11 @@ sums of its increments (`levyPairSum`).  A sample is `w = (w_ℓ)_ℓ`, one incr
 (law `⊗_ℓ ν_ℓ^{⊗ℕ}`; level `ℓ` only reads `w_ℓ`), the samples are independent, and a level-`ℓ`
 sample costs `2^ℓ`.  Then `E[P_ℓ]` converges to some `P`, with `|E[P_ℓ] − P| ≤ c 2^{−ℓ}` (`α = 1`,
 from `β = 2` and the telescoping sum), and there is `c₄ > 0` such that for every `0 < ε < e⁻¹`
-there are `L` and `N_ℓ ≥ 1` for which the MLMC estimator of `P` has mean square error `< ε²` and
-cost `∑_{ℓ≤L} N_ℓ 2^ℓ ≤ c₄ ε⁻²`.  No rate is assumed: `β = 2` (`levy_asian_payoff_sq_le`), (2.4)
-(`integral_levyCoarse`) and `α = 1` are proved.  Discrete-time analogue: `P` is the limit of the
-level expectations; that it equals `E[g(T⁻¹ ∫₀ᵀ S_t dt)]` for the continuous-time model is not
-proved here. -/
+there are `L` and `N_ℓ ≥ 1` for which the MLMC estimator of `P` has a square-integrable error with
+mean square `< ε²`, and cost `∑_{ℓ≤L} N_ℓ 2^ℓ ≤ c₄ ε⁻²`.  No rate is assumed: `β = 2`
+(`levy_asian_payoff_sq_le`), (2.4) (`integral_levyCoarse`) and `α = 1` are proved.  Discrete-time
+analogue: `P` is the limit of the level expectations; that it equals `E[g(T⁻¹ ∫₀ᵀ S_t dt)]` for the
+continuous-time model is not proved here. -/
 theorem levy_asian_theorem1 (ν : ℕ → Measure ℝ) [∀ ℓ, IsProbabilityMeasure (ν ℓ)]
     (hconv : ∀ ℓ, ν (ℓ + 1) ∗ ν (ℓ + 1) = ν ℓ)
     (hexp : Integrable (fun x => Real.exp (2 * x)) (ν 0))
@@ -886,6 +886,12 @@ theorem levy_asian_theorem1 (ν : ℕ → Measure ℝ) [∀ ℓ, IsProbabilityMe
         ∂(Measure.infinitePi fun _ : ℕ => ν ℓ) - P| ≤ c / 2 ^ ℓ) ∧
       ∃ c₄ : ℝ, 0 < c₄ ∧ ∀ ε : ℝ, 0 < ε → ε < Real.exp (-1) →
         ∃ (L : ℕ) (N : ℕ → ℕ), (∀ ℓ, 0 < N ℓ) ∧
+          Integrable (fun x => (∑ ℓ ∈ range (L + 1), blockMean (fineCoarseDiff
+              (fun ℓ w => g (levyAsianTrap s₀ (2 ^ ℓ) (w ℓ)))
+              (fun ℓ w => g (levyAsianTrap s₀ (2 ^ ℓ) (levyPairSum (w (ℓ + 1))))))
+              (fun p x => x p) ℓ (N ℓ) x - P) ^ 2)
+            (Measure.infinitePi fun _ : ℕ × ℕ =>
+              Measure.infinitePi fun ℓ => Measure.infinitePi fun _ : ℕ => ν ℓ) ∧
           ∫ x, (∑ ℓ ∈ range (L + 1), blockMean (fineCoarseDiff
               (fun ℓ w => g (levyAsianTrap s₀ (2 ^ ℓ) (w ℓ)))
               (fun ℓ w => g (levyAsianTrap s₀ (2 ^ ℓ) (levyPairSum (w (ℓ + 1))))))
@@ -1093,7 +1099,9 @@ theorem levy_asian_theorem1 (ν : ℕ → Measure ℝ) [∀ ℓ, IsProbabilityMe
     (fun _ _ => by simp only [integral_const, probReal_univ, one_smul]) h_i h_iii h_iv
   refine ⟨c₄, hc₄, fun ε hε hε1 => ?_⟩
   obtain ⟨L, N, hN, hmse, hcost⟩ := h ε hε hε1
-  refine ⟨L, N, hN, ?_, ?_⟩
+  refine ⟨L, N, hN, ?_, ?_, ?_⟩
+  · exact ((memLp_finsetSum _ fun ℓ _ => memLp_blockMean hω (memLp_fineCoarseDiff hPfL hPcL) ℓ
+      (N ℓ)).sub (memLp_const _)).integrable_sq
   · simpa only [integral_const, probReal_univ, one_smul] using hmse
   · simp only [totalCost, Finset.sum_const, Finset.card_range, nsmul_eq_mul, integral_const,
       probReal_univ, one_smul] at hcost
@@ -1208,9 +1216,9 @@ jump-diffusion, not the jump-adapted Euler–Maruyama or Milstein discretisation
 (l. 2014–2019; for its coupling see `jumpAdapted_random_2_4`): the steps do not depend on the jump
 times, and there is no discretisation error between the grid points.  The conclusion of
 `levy_asian_theorem1` holds: the level expectations converge to some `P` at the rate
-`|E[P_ℓ] − P| ≤ c 2^{−ℓ}`, and the MLMC estimator of `P` reaches mean square error `< ε²` at cost
-`O(ε⁻²)`.  Every hypothesis of `levy_asian_theorem1` is proved: the convolution property
-(`jumpDiffLaw_conv`) and `E e^{2X_T} = e^{T(2b + 2σ² + λ(e^{2a} − 1))} < ∞`
+`|E[P_ℓ] − P| ≤ c 2^{−ℓ}`, and the MLMC estimator of `P` has a square-integrable error and reaches
+mean square error `< ε²` at cost `O(ε⁻²)`.  Every hypothesis of `levy_asian_theorem1` is proved: the
+convolution property (`jumpDiffLaw_conv`) and `E e^{2X_T} = e^{T(2b + 2σ² + λ(e^{2a} − 1))} < ∞`
 (`integral_exp_mul_jumpDiffLaw`).  As in `levy_asian_theorem1`, `P` is the limit of the level
 expectations (the continuous-time average is not formalised). -/
 theorem jumpDiffusion_asian_theorem1 (b σ a lam : ℝ) (hlam : 0 ≤ lam) {T : ℝ} (hT : 0 ≤ T)
@@ -1222,6 +1230,13 @@ theorem jumpDiffusion_asian_theorem1 (b σ a lam : ℝ) (hlam : 0 ≤ lam) {T : 
         ∂(Measure.infinitePi fun _ : ℕ => jumpDiffLaw b σ a lam (T / 2 ^ ℓ)) - P| ≤ c / 2 ^ ℓ) ∧
       ∃ c₄ : ℝ, 0 < c₄ ∧ ∀ ε : ℝ, 0 < ε → ε < Real.exp (-1) →
         ∃ (L : ℕ) (N : ℕ → ℕ), (∀ ℓ, 0 < N ℓ) ∧
+          Integrable (fun x => (∑ ℓ ∈ range (L + 1), blockMean (fineCoarseDiff
+              (fun ℓ w => g (levyAsianTrap s₀ (2 ^ ℓ) (w ℓ)))
+              (fun ℓ w => g (levyAsianTrap s₀ (2 ^ ℓ) (levyPairSum (w (ℓ + 1))))))
+              (fun p x => x p) ℓ (N ℓ) x - P) ^ 2)
+            (Measure.infinitePi fun _ : ℕ × ℕ =>
+              Measure.infinitePi fun ℓ => Measure.infinitePi fun _ : ℕ =>
+                jumpDiffLaw b σ a lam (T / 2 ^ ℓ)) ∧
           ∫ x, (∑ ℓ ∈ range (L + 1), blockMean (fineCoarseDiff
               (fun ℓ w => g (levyAsianTrap s₀ (2 ^ ℓ) (w ℓ)))
               (fun ℓ w => g (levyAsianTrap s₀ (2 ^ ℓ) (levyPairSum (w (ℓ + 1))))))

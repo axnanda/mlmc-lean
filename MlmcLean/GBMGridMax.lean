@@ -1906,8 +1906,9 @@ lemma gridPayoff_mean_converges (r σ s₀ : ℝ) {T : ℝ} (hT : 0 ≤ T) (hc :
 
 /-- **Theorem 1 for an every-step payoff of GBM with Euler–Maruyama** (Giles 2015, §2.1,
 Theorem 1, pp. 6–7, and §5.1–§5.2): with `α = (1 − δ)/2`, `β = 1 − δ`, `γ = 1` and
-`δ = η/(2 + η)`, the multilevel estimator with target `Y = lim_ℓ E[Φ_{2^ℓ}(S)]` reaches mean square
-error `< ε²` at cost `O(ε^{−2−η})` (`em_mlmc_theorem1`). -/
+`δ = η/(2 + η)`, the multilevel estimator with target `Y = lim_ℓ E[Φ_{2^ℓ}(S)]` has a
+square-integrable error and reaches mean square error `< ε²` at cost `O(ε^{−2−η})`
+(`em_mlmc_theorem1`). -/
 lemma gridPayoff_theorem1 (r σ s₀ : ℝ) {T : ℝ} (hT : 0 ≤ T) (hc : 0 ≤ c)
     (hΦm : ∀ N, Measurable (Φ N))
     (hΦ1 : ∀ N (a b : ℕ → ℝ), (Φ N a - Φ N b) ^ 2 ≤
@@ -1919,6 +1920,10 @@ lemma gridPayoff_theorem1 (r σ s₀ : ℝ) {T : ℝ} (hT : 0 ≤ T) (hc : 0 ≤
         atTop (𝓝 Y) ∧
       ∀ η : ℝ, 0 < η → ∃ c₄ : ℝ, 0 < c₄ ∧ ∀ ε : ℝ, 0 < ε → ε < Real.exp (-1) →
         ∃ (L : ℕ) (N : ℕ → ℕ), (∀ ℓ, 0 < N ℓ) ∧
+          Integrable (fun x => (∑ ℓ ∈ range (L + 1),
+              blockMean (fineCoarseDiff (emFine (gbmDrift r) (gbmVol σ) T s₀ (fun ℓ => Φ (2 ^ ℓ)))
+                (emCoarse (gbmDrift r) (gbmVol σ) T s₀ (fun ℓ => Φ (2 ^ ℓ)))) (fun p x => x p) ℓ
+                (N ℓ) x - Y) ^ 2) (Measure.infinitePi fun _ : ℕ × ℕ => stdNormalSeq) ∧
           ∫ x, (∑ ℓ ∈ range (L + 1),
               blockMean (fineCoarseDiff (emFine (gbmDrift r) (gbmVol σ) T s₀ (fun ℓ => Φ (2 ^ ℓ)))
                 (emCoarse (gbmDrift r) (gbmVol σ) T s₀ (fun ℓ => Φ (2 ^ ℓ)))) (fun p x => x p) ℓ
@@ -2003,9 +2008,17 @@ lemma gridPayoff_theorem1 (r σ s₀ : ℝ) {T : ℝ} (hT : 0 ≤ T) (hc : 0 ≤
     (β := 1 - δ) (γ := 1) (by linarith) (by linarith) one_pos hc₁ hc₂ one_pos hαβγ hω hind
     (integrable_const Y) hPfm hPf (fun _ _ => integrable_const _)
     (fun _ _ => by simp only [integral_const, probReal_univ, one_smul]) h_i h_iii h_iv
+  have hPc : ∀ ℓ, MemLp (emCoarse (gbmDrift r) (gbmVol σ) T s₀ (fun ℓ => Φ (2 ^ ℓ)) ℓ) 2
+      stdNormalSeq := fun ℓ => by
+    rw [show emCoarse (gbmDrift r) (gbmVol σ) T s₀ (fun ℓ => Φ (2 ^ ℓ)) ℓ =
+        emFine (gbmDrift r) (gbmVol σ) T s₀ (fun ℓ => Φ (2 ^ ℓ)) ℓ ∘ pairAvg from
+      funext (emCoarse_eq _ _ _ _ _ ℓ)]
+    exact (hPf ℓ).comp_measurePreserving measurePreserving_pairAvg
   refine ⟨c₄, hc₄, fun ε hε hε1 => ?_⟩
   obtain ⟨L, N, hN, hmse, hcost⟩ := h ε hε hε1
-  refine ⟨L, N, hN, ?_, ?_⟩
+  refine ⟨L, N, hN, ?_, ?_, ?_⟩
+  · exact ((memLp_finsetSum _ fun ℓ _ =>
+      memLp_blockMean hω (memLp_fineCoarseDiff hPf hPc) ℓ (N ℓ)).sub (memLp_const _)).integrable_sq
   · simpa only [integral_const, probReal_univ, one_smul] using hmse
   · simp only [totalCost, Finset.sum_const, Finset.card_range, nsmul_eq_mul, integral_const,
       probReal_univ, one_smul] at hcost
@@ -2238,8 +2251,8 @@ expectations of the payoff of the exact solution monitored at every step of leve
 `η > 0` there is `c₄ > 0` such that for every `0 < ε < e⁻¹` there are `L` and `N_ℓ ≥ 1` for which
 the multilevel estimator `∑_{ℓ≤L} N_ℓ⁻¹ ∑_n (P^f_ℓ − P^c_{ℓ−1})(ω^{(ℓ,n)})` (level `ℓ`: `2^ℓ`
 Euler–Maruyama steps, the payoff of all `2^ℓ + 1` values; the coarse path driven by the summed
-increments; independent samples) has mean square error `< ε²` about `Y` and cost
-`∑_ℓ N_ℓ 2^ℓ ≤ c₄ ε^{−2−η}`.  The rates are `α = (1 − δ)/2`, `β = 1 − δ`, `γ = 1` with
+increments; independent samples) has a square-integrable error with mean square `< ε²` about `Y`,
+and cost `∑_ℓ N_ℓ 2^ℓ ≤ c₄ ε^{−2−η}`.  The rates are `α = (1 − δ)/2`, `β = 1 − δ`, `γ = 1` with
 `δ = η/(2 + η)`, so `(γ − β)/α = η`.  **Deviation**: the paper's `β = 1` (Table 5.2) would give
 `O(ε⁻²(log ε)²)`, also with the true weak order `α = 1/2` of the discretely monitored payoff
 (`α ≥ min(β, γ)/2`; the paper's `α = 1`, p. 30, does not hold here, see
@@ -2255,6 +2268,12 @@ theorem gbm_em_gridLookback_theorem1 (r σ s₀ : ℝ) {T : ℝ} (hT : 0 ≤ T) 
         ∂stdNormalSeq) atTop (𝓝 Y) ∧
       ∀ η : ℝ, 0 < η → ∃ c₄ : ℝ, 0 < c₄ ∧ ∀ ε : ℝ, 0 < ε → ε < Real.exp (-1) →
         ∃ (L : ℕ) (N : ℕ → ℕ), (∀ ℓ, 0 < N ℓ) ∧
+          Integrable (fun x => (∑ ℓ ∈ range (L + 1),
+              blockMean (fineCoarseDiff
+                (emFine (gbmDrift r) (gbmVol σ) T s₀ (fun ℓ => lookbackPayoff g (2 ^ ℓ)))
+                (emCoarse (gbmDrift r) (gbmVol σ) T s₀ (fun ℓ => lookbackPayoff g (2 ^ ℓ))))
+                (fun p x => x p) ℓ (N ℓ) x - Y) ^ 2)
+              (Measure.infinitePi fun _ : ℕ × ℕ => stdNormalSeq) ∧
           ∫ x, (∑ ℓ ∈ range (L + 1),
               blockMean (fineCoarseDiff
                 (emFine (gbmDrift r) (gbmVol σ) T s₀ (fun ℓ => lookbackPayoff g (2 ^ ℓ)))
@@ -2276,11 +2295,12 @@ informally `Y = E[g(min_{0≤t≤T} S_t)]`), such that for every `η > 0` there 
 for every `0 < ε < e⁻¹` there are `L` and `N_ℓ ≥ 1` for which the multilevel estimator
 `∑_{ℓ≤L} N_ℓ⁻¹ ∑_n (P^f_ℓ − P^c_{ℓ−1})(ω^{(ℓ,n)})` (level `ℓ`: `2^ℓ` Euler–Maruyama steps, the
 payoff of all `2^ℓ + 1` values; the coarse path driven by the summed increments; independent
-samples) has mean square error `< ε²` about `Y` and cost `∑_ℓ N_ℓ 2^ℓ ≤ c₄ ε^{−2−η}`.  The rates are
-`α = (1 − δ)/2`, `β = 1 − δ`, `γ = 1` with `δ = η/(2 + η)`, so `(γ − β)/α = η`.  **Deviation**: the
-paper's `β = 1` (Table 5.2) would give `O(ε⁻²(log ε)²)`, also with the true weak order `α = 1/2`
-of the discretely monitored payoff (`α ≥ min(β, γ)/2`; the paper's `α = 1`, p. 30, does not hold
-here, see `gbm_em_gridLookbackMin_mean_converges`); the loss comes from the monitoring gap
+samples) has a square-integrable error with mean square `< ε²` about `Y`, and cost
+`∑_ℓ N_ℓ 2^ℓ ≤ c₄ ε^{−2−η}`.  The rates are `α = (1 − δ)/2`, `β = 1 − δ`, `γ = 1` with
+`δ = η/(2 + η)`, so `(γ − β)/α = η`.  **Deviation**: the paper's `β = 1` (Table 5.2) would give
+`O(ε⁻²(log ε)²)`, also with the true weak order `α = 1/2` of the discretely monitored payoff
+(`α ≥ min(β, γ)/2`; the paper's `α = 1`, p. 30, does not hold here, see
+`gbm_em_gridLookbackMin_mean_converges`); the loss comes from the monitoring gap
 (`gbm_grid_monitoring_gap_rate`).  The Milstein scheme does not help here, since the monitoring gap
 of the exact solution is already `O(h^{1/2})` in root mean square; the paper's Milstein lookback
 estimator (§5.2, pp. 38–39, `β = 2`) uses the Brownian-bridge interpolant of Giles (2008a) within
@@ -2292,6 +2312,12 @@ theorem gbm_em_gridLookbackMin_theorem1 (r σ s₀ : ℝ) {T : ℝ} (hT : 0 ≤ 
         ∂stdNormalSeq) atTop (𝓝 Y) ∧
       ∀ η : ℝ, 0 < η → ∃ c₄ : ℝ, 0 < c₄ ∧ ∀ ε : ℝ, 0 < ε → ε < Real.exp (-1) →
         ∃ (L : ℕ) (N : ℕ → ℕ), (∀ ℓ, 0 < N ℓ) ∧
+          Integrable (fun x => (∑ ℓ ∈ range (L + 1),
+              blockMean (fineCoarseDiff
+                (emFine (gbmDrift r) (gbmVol σ) T s₀ (fun ℓ => lookbackMinPayoff g (2 ^ ℓ)))
+                (emCoarse (gbmDrift r) (gbmVol σ) T s₀ (fun ℓ => lookbackMinPayoff g (2 ^ ℓ))))
+                (fun p x => x p) ℓ (N ℓ) x - Y) ^ 2)
+              (Measure.infinitePi fun _ : ℕ × ℕ => stdNormalSeq) ∧
           ∫ x, (∑ ℓ ∈ range (L + 1),
               blockMean (fineCoarseDiff
                 (emFine (gbmDrift r) (gbmVol σ) T s₀ (fun ℓ => lookbackMinPayoff g (2 ^ ℓ)))
@@ -2312,11 +2338,12 @@ level `ℓ` (see `gbm_em_gridFloatLookback_mean_converges`; informally
 every `0 < ε < e⁻¹` there are `L` and `N_ℓ ≥ 1` for which the multilevel estimator
 `∑_{ℓ≤L} N_ℓ⁻¹ ∑_n (P^f_ℓ − P^c_{ℓ−1})(ω^{(ℓ,n)})` (level `ℓ`: `2^ℓ` Euler–Maruyama steps, the
 payoff of all `2^ℓ + 1` values; the coarse path driven by the summed increments; independent
-samples) has mean square error `< ε²` about `Y` and cost `∑_ℓ N_ℓ 2^ℓ ≤ c₄ ε^{−2−η}`.  The rates are
-`α = (1 − δ)/2`, `β = 1 − δ`, `γ = 1` with `δ = η/(2 + η)`, so `(γ − β)/α = η`.  **Deviation**: the
-paper's `β = 1` (Table 5.2) would give `O(ε⁻²(log ε)²)`, also with the true weak order `α = 1/2`
-of the discretely monitored payoff (`α ≥ min(β, γ)/2`; the paper's `α = 1`, p. 30, does not hold
-here, see `gbm_em_gridFloatLookback_mean_converges`); the loss comes from the monitoring gap
+samples) has a square-integrable error with mean square `< ε²` about `Y`, and cost
+`∑_ℓ N_ℓ 2^ℓ ≤ c₄ ε^{−2−η}`.  The rates are `α = (1 − δ)/2`, `β = 1 − δ`, `γ = 1` with
+`δ = η/(2 + η)`, so `(γ − β)/α = η`.  **Deviation**: the paper's `β = 1` (Table 5.2) would give
+`O(ε⁻²(log ε)²)`, also with the true weak order `α = 1/2` of the discretely monitored payoff
+(`α ≥ min(β, γ)/2`; the paper's `α = 1`, p. 30, does not hold here, see
+`gbm_em_gridFloatLookback_mean_converges`); the loss comes from the monitoring gap
 (`gbm_grid_monitoring_gap_rate`).  The Milstein scheme does not help here, since the monitoring gap
 of the exact solution is already `O(h^{1/2})` in root mean square; the paper's Milstein lookback
 estimator (§5.2, pp. 38–39, `β = 2`) uses the Brownian-bridge interpolant of Giles (2008a) within
@@ -2328,6 +2355,12 @@ theorem gbm_em_gridFloatLookback_theorem1 (r σ s₀ : ℝ) {T : ℝ} (hT : 0 �
         (gbmGridExact r σ (T / 2 ^ ℓ) s₀ z) ∂stdNormalSeq) atTop (𝓝 Y) ∧
       ∀ η : ℝ, 0 < η → ∃ c₄ : ℝ, 0 < c₄ ∧ ∀ ε : ℝ, 0 < ε → ε < Real.exp (-1) →
         ∃ (L : ℕ) (N : ℕ → ℕ), (∀ ℓ, 0 < N ℓ) ∧
+          Integrable (fun x => (∑ ℓ ∈ range (L + 1),
+              blockMean (fineCoarseDiff
+                (emFine (gbmDrift r) (gbmVol σ) T s₀ (fun ℓ => floatLookbackPayoff g (2 ^ ℓ)))
+                (emCoarse (gbmDrift r) (gbmVol σ) T s₀ (fun ℓ => floatLookbackPayoff g (2 ^ ℓ))))
+                (fun p x => x p) ℓ (N ℓ) x - Y) ^ 2)
+              (Measure.infinitePi fun _ : ℕ × ℕ => stdNormalSeq) ∧
           ∫ x, (∑ ℓ ∈ range (L + 1),
               blockMean (fineCoarseDiff
                 (emFine (gbmDrift r) (gbmVol σ) T s₀ (fun ℓ => floatLookbackPayoff g (2 ^ ℓ)))

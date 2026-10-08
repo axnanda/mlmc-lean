@@ -1501,8 +1501,8 @@ theorem gbm_em_identity_variance_two_sided (r σ s₀ : ℝ) {T : ℝ} (hT : 0 �
   have hlow := sq_covariance_div_le_variance hD hG (by rw [hVG]; exact hn0)
   rw [hcov, hVG] at hlow
   -- the upper bound is `gbm_correction_variance_le` for `g(x) = x`
-  have hup := gbm_correction_variance_le r σ s₀ hT (g := fun x => x) (K := 1)
-    (fun x y => by rw [one_mul]) ℓ
+  have hup := (gbm_correction_variance_le r σ s₀ hT (g := fun x => x) (K := 1)
+    (fun x y => by rw [one_mul]) ℓ).2
   rw [one_pow, mul_one] at hup
   refine ⟨hD, le_trans ?_ hlow, hup⟩
   -- `(1 + rh)^{4(n−1)} ≥ e^{−4|r|T}` as `|r|h ≤ 1/2`
@@ -1711,8 +1711,8 @@ theorem gbm_em_identity_variance_cost (r σ s₀ : ℝ) {T : ℝ} (hT : 0 < T) (
     positivity [hp.trans_le h]
   -- the upper bound at every level
   have hup : ∀ ℓ, f ℓ ≤ 6 * (gbmStrongConst r σ T s₀ * T) := fun ℓ => by
-    have h := gbm_correction_variance_le r σ s₀ hT.le (g := fun x => x) (K := 1)
-      (fun x y => by rw [one_mul]) ℓ
+    have h := (gbm_correction_variance_le r σ s₀ hT.le (g := fun x => x) (K := 1)
+      (fun x y => by rw [one_mul]) ℓ).2
     rw [one_pow, mul_one] at h
     have h2 : (0 : ℝ) < 2 ^ (ℓ + 1) := by positivity
     calc f ℓ ≤ 2 ^ (ℓ + 1) * (6 * (gbmStrongConst r σ T s₀ * T) * ((2 : ℝ) ^ (ℓ + 1))⁻¹) :=

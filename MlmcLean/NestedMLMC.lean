@@ -851,8 +851,8 @@ and `g` measurable with `E[g(Z, W)⁴] < ∞` for independent `Z ~ ν`, `W ~ ρ`
 `ω^{(ℓ,n)}` (an outer sample and its inner samples) be independent with law `ν ⊗ ρ^{⊗ℕ}`, and let
 the `n`-th level-`ℓ` sample cost `cost ℓ n` with mean `C_ℓ ≤ c₃ 2^ℓ` (`M_ℓ = 2^ℓ` inner samples).
 Then there is `c₄ > 0` such that for every `0 < ε < e⁻¹` there are `L` and `N_ℓ ≥ 1` for which the
-MLMC estimator `∑_{ℓ ≤ L} N_ℓ⁻¹ ∑_{n < N_ℓ} Y_ℓ(ω^{(ℓ,n)})` of `E_Z[f(E_W[g(Z, W)])]` has mean
-square error `< ε²` and expected cost `≤ c₄ ε⁻²`. -/
+MLMC estimator `∑_{ℓ ≤ L} N_ℓ⁻¹ ∑_{n < N_ℓ} Y_ℓ(ω^{(ℓ,n)})` of `E_Z[f(E_W[g(Z, W)])]` has a
+square-integrable error with mean square `< ε²`, and expected cost `≤ c₄ ε⁻²`. -/
 theorem nested_mlmc_complexity {Ω : Type*} [MeasurableSpace Ω] {μ : Measure Ω}
     [IsProbabilityMeasure μ] {f f' : ℝ → ℝ} {K : ℝ} (hf : ∀ x, HasDerivAt f (f' x) x)
     (hf' : ∀ x y, x ≤ y → |f' y - f' x| ≤ K * (y - x)) {g : 𝒵 → 𝒲 → ℝ}
@@ -864,6 +864,8 @@ theorem nested_mlmc_complexity {Ω : Type*} [MeasurableSpace Ω] {μ : Measure �
     (hC : ∀ ℓ : ℕ, C ℓ ≤ c₃ * 2 ^ ℓ) :
     ∃ c₄ : ℝ, 0 < c₄ ∧ ∀ ε : ℝ, 0 < ε → ε < Real.exp (-1) →
       ∃ (L : ℕ) (N : ℕ → ℕ), (∀ ℓ, 0 < N ℓ) ∧
+        Integrable (fun x => (∑ ℓ ∈ range (L + 1), blockMean (nestedDelta f g) ω ℓ (N ℓ) x -
+          ∫ z, f (∫ v, g z v ∂ρ) ∂ν) ^ 2) μ ∧
         μ[fun x => (∑ ℓ ∈ range (L + 1), blockMean (nestedDelta f g) ω ℓ (N ℓ) x -
           ∫ z, f (∫ v, g z v ∂ρ) ∂ν) ^ 2] < ε ^ 2 ∧
         μ[totalCost cost L N] ≤ c₄ * ε ^ (-2 : ℝ) := by
@@ -942,21 +944,26 @@ theorem nested_mlmc_complexity {Ω : Type*} [MeasurableSpace Ω] {μ : Measure �
   obtain ⟨L, N, hN, hmse, hcost'⟩ := h ε hε hε1
   rw [hPint] at hmse
   rw [complexityBound_of_lt (by norm_num) ε] at hcost'
-  exact ⟨L, N, hN, hmse, hcost'⟩
+  exact ⟨L, N, hN, ((memLp_finsetSum _ fun ℓ _ => memLp_blockMean hω hΔ ℓ (N ℓ)).sub
+    (memLp_const _)).integrable_sq, hmse, hcost'⟩
 
 /-- **MLMC for nested simulation from independent samples** (Giles 2015, §9.1: "an MLMC
 implementation is straightforward; on level `ℓ` we can use `M_ℓ = 2^ℓ` inner samples", with
 complexity `O(ε⁻²)`).  With independent copies `ω^{(ℓ,n)}` of the nested sample
 `(Z, W⁽⁰⁾, W⁽¹⁾, …)` as the coordinates of the product space `(𝒵 × 𝒲^ℕ)^{ℕ×ℕ}`, and the cost
 `M_ℓ = 2^ℓ` (the number of inner samples) of a level-`ℓ` sample, there is `c₄ > 0` such that for
-every `0 < ε < e⁻¹` there are `L` and `N_ℓ ≥ 1` for which the MLMC estimator has mean square error
-`< ε²` and cost `≤ c₄ ε⁻²`.  Nothing is assumed about the samples: their independence is proved. -/
+every `0 < ε < e⁻¹` there are `L` and `N_ℓ ≥ 1` for which the MLMC estimator has a
+square-integrable error with mean square `< ε²`, and cost `≤ c₄ ε⁻²`.  Nothing is assumed about the
+samples: their independence is proved. -/
 theorem nested_mlmc_complexity_iid {f f' : ℝ → ℝ} {K : ℝ} (hf : ∀ x, HasDerivAt f (f' x) x)
     (hf' : ∀ x y, x ≤ y → |f' y - f' x| ≤ K * (y - x)) {g : 𝒵 → 𝒲 → ℝ}
     (hg : Measurable (Function.uncurry g))
     (hg4 : Integrable (fun p : 𝒵 × 𝒲 => g p.1 p.2 ^ 4) (ν.prod ρ)) :
     ∃ c₄ : ℝ, 0 < c₄ ∧ ∀ ε : ℝ, 0 < ε → ε < Real.exp (-1) →
       ∃ (L : ℕ) (N : ℕ → ℕ), (∀ ℓ, 0 < N ℓ) ∧
+        Integrable (fun x => (∑ ℓ ∈ range (L + 1),
+            blockMean (nestedDelta f g) (fun p x => x p) ℓ (N ℓ) x -
+            ∫ z, f (∫ v, g z v ∂ρ) ∂ν) ^ 2) (Measure.infinitePi fun _ : ℕ × ℕ => nestedLaw ν ρ) ∧
         ∫ x, (∑ ℓ ∈ range (L + 1), blockMean (nestedDelta f g) (fun p x => x p) ℓ (N ℓ) x -
             ∫ z, f (∫ v, g z v ∂ρ) ∂ν) ^ 2
           ∂(Measure.infinitePi fun _ : ℕ × ℕ => nestedLaw ν ρ) < ε ^ 2 ∧

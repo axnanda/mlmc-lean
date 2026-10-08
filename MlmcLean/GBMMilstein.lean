@@ -834,14 +834,19 @@ Theorem 1 and (2.4), §2.1: "`V_ℓ` is now `O(h_ℓ²)`, leading to `α = 1, β
 correction is the payoff of the fine path minus the payoff of the coarse path driven by the summed
 increments, the samples are independent, and a level-`ℓ` sample costs `2^ℓ`.  Then there is
 `c₄ > 0` such that for every `0 < ε < e⁻¹` there are `L` and `N_ℓ ≥ 1` for which the multilevel
-estimator of `E[g(S_T)] = E[g(s₀ e^{(r − σ²/2)T + σ √T Z})]`, `Z ~ N(0,1)`, has mean square error
-`< ε²` and cost `∑_{ℓ≤L} N_ℓ 2^ℓ ≤ c₄ ε⁻²`.  No rate is assumed: the weak rate `α = 1`
-(`gbm_mil_weak_error_le`), the variance rate `β = 2` (`gbm_mil_correction_variance_le`) and (2.4)
-are proved. -/
+estimator of `E[g(S_T)] = E[g(s₀ e^{(r − σ²/2)T + σ √T Z})]`, `Z ~ N(0,1)`, has a
+square-integrable error with mean square `< ε²`, and cost `∑_{ℓ≤L} N_ℓ 2^ℓ ≤ c₄ ε⁻²`.  No rate is
+assumed: the weak rate `α = 1` (`gbm_mil_weak_error_le`), the variance rate `β = 2`
+(`gbm_mil_correction_variance_le`) and (2.4) are proved. -/
 theorem gbm_mil_mlmc_theorem1 (r σ s₀ : ℝ) {T : ℝ} (hT : 0 ≤ T) {g : ℝ → ℝ} {K : ℝ}
     (hg : ∀ x y, |g x - g y| ≤ K * |x - y|) :
     ∃ c₄ : ℝ, 0 < c₄ ∧ ∀ ε : ℝ, 0 < ε → ε < Real.exp (-1) →
       ∃ (L : ℕ) (N : ℕ → ℕ), (∀ ℓ, 0 < N ℓ) ∧
+        Integrable (fun x => (∑ ℓ ∈ range (L + 1),
+            blockMean (fineCoarseDiff (fun ℓ z => g (gbmMil r σ T s₀ ℓ z))
+              (fun ℓ z => g (gbmMil r σ T s₀ ℓ (pairAvg z)))) (fun p x => x p) ℓ (N ℓ) x -
+            ∫ w, g (s₀ * Real.exp ((r - σ ^ 2 / 2) * T + σ * (Real.sqrt T * w)))
+              ∂gaussianReal 0 1) ^ 2) (Measure.infinitePi fun _ : ℕ × ℕ => stdNormalSeq) ∧
         ∫ x, (∑ ℓ ∈ range (L + 1),
             blockMean (fineCoarseDiff (fun ℓ z => g (gbmMil r σ T s₀ ℓ z))
               (fun ℓ z => g (gbmMil r σ T s₀ ℓ (pairAvg z)))) (fun p x => x p) ℓ (N ℓ) x -
@@ -922,7 +927,9 @@ theorem gbm_mil_mlmc_theorem1 (r σ s₀ : ℝ) {T : ℝ} (hT : 0 ≤ T) {g : �
     (fun _ _ => by simp only [integral_const, probReal_univ, one_smul]) h_i h_iii h_iv
   refine ⟨c₄, hc₄, fun ε hε hε1 => ?_⟩
   obtain ⟨L, N, hN, hmse, hcost⟩ := h ε hε hε1
-  refine ⟨L, N, hN, ?_, ?_⟩
+  refine ⟨L, N, hN, ?_, ?_, ?_⟩
+  · exact ((memLp_finsetSum _ fun ℓ _ =>
+      memLp_blockMean hω (memLp_fineCoarseDiff hPf hPc) ℓ (N ℓ)).sub (memLp_const _)).integrable_sq
   · rw [← hPint]
     exact hmse
   · simp only [totalCost, Finset.sum_const, Finset.card_range, nsmul_eq_mul, integral_const,

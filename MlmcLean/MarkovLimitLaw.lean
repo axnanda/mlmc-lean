@@ -1123,8 +1123,8 @@ theorem markov_mlmc_rates (hφm : Measurable fun q : α × E => φ q.1 q.2) {γ 
             f (backIter φ (N ℓ) (fun k => ξ k ω) x₀)) μ
           ≤ C * ρ ^ N ℓ := by
             rw [hC]
-            exact variance_levels_le hφm hφ hξ hξm hlaw hγ0 hγ1 hρ0 hρ1 x₀ hc hfm hf
-              (hN (Nat.le_succ ℓ))
+            exact (variance_levels_le hφm hφ hξ hξm hlaw hγ0 hγ1 hρ0 hρ1 x₀ hc hfm hf
+              (hN (Nat.le_succ ℓ))).2
         _ ≤ C * (2 : ℝ) ^ (-(β * (ℓ : ℝ))) :=
             mul_le_mul_of_nonneg_left (pow_le_two_rpow_of_le hρ0 hρ1.le hρβ (haN ℓ)) hC0
         _ = 2 ^ β * C * (2 : ℝ) ^ (-(β * ((ℓ + 1 : ℕ) : ℝ))) := by
@@ -1241,9 +1241,9 @@ space: consider the standard multilevel estimator whose `n`-th level-`ℓ` sampl
 `f(Z_{N_ℓ}) − f(Z_{N_{ℓ−1}})` (`P_{−1} ≡ 0`) computed from its own independent copy `e^{(ℓ,n)}` of
 the noise sequence (the coordinates of `(E^ℕ)^{ℕ×ℕ}` under `(ν^ℕ)^{ℕ×ℕ}`) and costs `N_ℓ`.  There
 is `c₄ > 0` such that for every `0 < ε < e⁻¹` there are `L` and sample sizes `M_ℓ ≥ 1` for which
-this estimator of `E[f(X_∞)]` has mean square error `< ε²` and cost `∑_{ℓ≤L} M_ℓ N_ℓ ≤ c₄ ε⁻²`
-(Theorem 1 with `α = β/2`, variance rate `β` and cost rate `δ < β`).  The target `E[f(X_∞)]` is
-computed on any probability space carrying the noises and the limit `X_∞`. -/
+this estimator of `E[f(X_∞)]` has a square-integrable error with mean square `< ε²`, and cost
+`∑_{ℓ≤L} M_ℓ N_ℓ ≤ c₄ ε⁻²` (Theorem 1 with `α = β/2`, variance rate `β` and cost rate `δ < β`).  The
+target `E[f(X_∞)]` is computed on any probability space carrying the noises and the limit `X_∞`. -/
 theorem markov_mlmc_theorem1 [CompleteSpace α] (hφm : Measurable fun q : α × E => φ q.1 q.2)
     {γ ρ : ℝ}
     (hφ : ∀ x y, ∫⁻ e, ENNReal.ofReal (dist (φ x e) (φ y e) ^ (2 * γ)) ∂ν ≤
@@ -1258,6 +1258,9 @@ theorem markov_mlmc_theorem1 [CompleteSpace α] (hφm : Measurable fun q : α ×
     (hρβ : ρ ^ a ≤ (2 : ℝ) ^ (-β)) :
     ∃ c₄ : ℝ, 0 < c₄ ∧ ∀ ε : ℝ, 0 < ε → ε < Real.exp (-1) →
       ∃ (L : ℕ) (M : ℕ → ℕ), (∀ ℓ, 0 < M ℓ) ∧
+        Integrable (fun x => (mlmcEstimator (fun ℓ (e : ℕ → E) => f (backIter φ (N ℓ) e x₀))
+            (fun p x => x p) L M x - ∫ ω, f (X ω) ∂μ) ^ 2)
+          (Measure.infinitePi fun _ : ℕ × ℕ => Measure.infinitePi fun _ : ℕ => ν) ∧
         ∫ x, (mlmcEstimator (fun ℓ (e : ℕ → E) => f (backIter φ (N ℓ) e x₀)) (fun p x => x p) L M
             x - ∫ ω, f (X ω) ∂μ) ^ 2
           ∂(Measure.infinitePi fun _ : ℕ × ℕ => Measure.infinitePi fun _ : ℕ => ν) < ε ^ 2 ∧
@@ -1326,9 +1329,13 @@ theorem markov_mlmc_theorem1 [CompleteSpace α] (hφm : Measurable fun q : α ×
       rw [integral_const, probReal_univ, one_smul]
       exact (natCast_le_two_rpow_of_linear hNb hδ ℓ).trans (mul_le_mul_of_nonneg_right
         (le_add_of_nonneg_right zero_le_one) (Real.rpow_nonneg zero_le_two _)))
+  obtain ⟨-, -, hω⟩ := exists_iid_inputs (Measure.infinitePi fun _ : ℕ => ν)
   refine ⟨c₄, hc₄, fun ε hε hε1 => ?_⟩
   obtain ⟨L, M, hM, hmse, hcost⟩ := h ε hε hε1
-  refine ⟨L, M, hM, ?_, ?_⟩
+  refine ⟨L, M, hM, ?_, ?_, ?_⟩
+  · exact ((memLp_finsetSum _ fun ℓ _ => memLp_levelEstimator hω
+      (memLp_level hφm hφ hind hm hl hγ0 hγ1 hρ0 hρ1 x₀ hc hfm hf <| N ·) ℓ (M ℓ)).sub
+      (memLp_const _)).integrable_sq
   · rw [htarget]
     exact hmse
   · rw [complexityBound_of_lt hδβ] at hcost

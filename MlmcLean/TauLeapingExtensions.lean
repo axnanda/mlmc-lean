@@ -697,7 +697,7 @@ theorem tauLeaping_mlmc_exact_lipschitz (hΛ : ∀ x, lam x ≤ Λ) (T : ℝ≥0
   have hD : ∀ ℓ, MemLp (fineCoarseDiff (tauFine Φ) (tauCoarse Φ) ℓ) 2 (tauInputLaw lam T x₀) :=
     memLp_fineCoarseDiff (memLp_tauFine hΛ T x₀ hΦ) (memLp_tauCoarse hΛ T x₀ hΦ)
   refine ⟨c₄, hc₄, fun ε hε hε1 => ?_⟩
-  obtain ⟨L, N, hN, hmse, hcost⟩ := hth ε hε hε1
+  obtain ⟨L, N, hN, -, hmse, hcost⟩ := hth ε hε hε1
   exact ⟨L, N, hN, ((memLp_finsetSum _ fun ℓ _ => memLp_blockMean hω hD ℓ (N ℓ)).sub
     (memLp_const _)).integrable_sq, hmse, hcost⟩
 

@@ -499,14 +499,14 @@ be independent with law `ν ⊗ ρ^{⊗ℕ}`, and let a level-`ℓ` sample cost 
 average.  Then there is `c₄ > 0` such that for every `0 < ε < e⁻¹` there are `Λ ∈ ℝ` and
 `N_ℓ ≥ 1` for which the MIMC estimator `∑_{ℓ∈𝓛} N_ℓ⁻¹ ∑_{n<N_ℓ} Y_ℓ(ω^{(ℓ,n)})` over the simplex
 `𝓛 = indexSet (½, ½) Λ = {ℓ : (ℓ₁ + ℓ₂)/2 ≤ Λ}` (the index set `{θ·ℓ ≤ Λ}`,
-`θ_d = α_d + (γ_d − β_d)/2`, of Theorem 2) has mean square error `< ε²` as an estimator of
-`E_Z[f(E_W[g(Z, W)])]`, at expected cost `≤ c₄ ε⁻²`.  Proof: Theorem 2 in the form
-`giles_theorem2_boundary_indexSet` (the paper's `α_d = ½β_d` is on the boundary of its condition
-`α_d ≥ ½β_d`) with `α = (1, 1)`, `β = (2, 2)`, `γ = (1, 1)`, so `η = −1 < 0` and the bound is `ε⁻²`
-(`nested_mimc_complexity`); the variances on all of `ℕ²` are bounded by
+`θ_d = α_d + (γ_d − β_d)/2`, of Theorem 2) has a square-integrable error and mean square error
+`< ε²` as an estimator of `E_Z[f(E_W[g(Z, W)])]`, at expected cost `≤ c₄ ε⁻²`.  Proof: Theorem 2 in
+the form `giles_theorem2_boundary_indexSet` (the paper's `α_d = ½β_d` is on the boundary of its
+condition `α_d ≥ ½β_d`) with `α = (1, 1)`, `β = (2, 2)`, `γ = (1, 1)`, so `η = −1 < 0` and the bound
+is `ε⁻²` (`nested_mimc_complexity`); the variances on all of `ℕ²` are bounded by
 `nested_mimc_smooth_variance_rate` (with the weak constant `(3/2) c_w` of the level differences,
-`weak_levelDiff_of_weak`) and the means follow from them as in `nested_mimc_smooth_mean_rate`;
-the bias is `nested_mimc_smooth_bias`, and `E[Y_ℓ] = E[ΔP_ℓ]` is `integral_nestedMimcDelta_eq`.
+`weak_levelDiff_of_weak`) and the means follow from them as in `nested_mimc_smooth_mean_rate`; the
+bias is `nested_mimc_smooth_bias`, and `E[Y_ℓ] = E[ΔP_ℓ]` is `integral_nestedMimcDelta_eq`.
 The paper's claim holds as stated, under these hypotheses. -/
 theorem nested_mimc_smooth_complexity {Ω : Type*} [MeasurableSpace Ω] {μ : Measure Ω}
     [IsProbabilityMeasure μ] {f f' f'' : ℝ → ℝ} {K L : ℝ}
@@ -527,6 +527,9 @@ theorem nested_mimc_smooth_complexity {Ω : Type*} [MeasurableSpace Ω] {μ : Me
     (hC : ∀ ℓ : Fin 2 → ℕ, C ℓ ≤ c₃ * 2 ^ (ℓ 0 + ℓ 1)) :
     ∃ c₄ : ℝ, 0 < c₄ ∧ ∀ ε : ℝ, 0 < ε → ε < Real.exp (-1) →
       ∃ (Λ : ℝ) (N : (Fin 2 → ℕ) → ℕ), (∀ ℓ, 0 < N ℓ) ∧
+        Integrable (fun x => (∑ ℓ ∈ indexSet (fun _ => (1 / 2 : ℝ)) Λ,
+          blockMean (fun ℓ : Fin 2 → ℕ => nestedMimcDelta f gh (ℓ 0) (ℓ 1)) ω ℓ (N ℓ) x -
+            ∫ z, f (∫ v, g z v ∂ρ) ∂ν) ^ 2) μ ∧
         μ[fun x => (∑ ℓ ∈ indexSet (fun _ => (1 / 2 : ℝ)) Λ,
           blockMean (fun ℓ : Fin 2 → ℕ => nestedMimcDelta f gh (ℓ 0) (ℓ 1)) ω ℓ (N ℓ) x -
             ∫ z, f (∫ v, g z v ∂ρ) ∂ν) ^ 2] < ε ^ 2 ∧
@@ -680,7 +683,8 @@ theorem nested_mimc_smooth_complexity {Ω : Type*} [MeasurableSpace Ω] {μ : Me
   obtain ⟨Λ, N, hN, hmse, hcost'⟩ := h ε hε hε1
   rw [hPint, hθ] at hmse
   rw [hθ, (nested_mimc_complexity _ _ ε).2.2.1] at hcost'
-  exact ⟨Λ, N, hN, hmse, hcost'⟩
+  exact ⟨Λ, N, hN, ((memLp_finsetSum _ fun ℓ _ => memLp_blockMean hω hΔ ℓ (N ℓ)).sub
+    (memLp_const _)).integrable_sq, hmse, hcost'⟩
 
 end Cost
 
