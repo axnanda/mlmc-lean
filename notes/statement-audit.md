@@ -479,6 +479,48 @@ Lean statement or to the reason it is not formalised. The deviations of the new 
 * **General HJK (`EulerSuperlinearGeneral.lean`, round 21).** Scalar coefficients, a deterministic
   initial value with `b(x₀, 0) ≠ 0`, every `p > 0`; the comparison with the exact solution, random
   initial values and several dimensions are not covered.  HJK (2011) is not in `docs/`.
+* **The digital and the barrier option (`GBMDigitalTheorem1.lean`, round 22).** The weak rate is
+  the mismatch rate `q < ½` (Euler–Maruyama), `q < 1` (Milstein), not the weak order `α = 1` of
+  the digital option that the paper uses (a result of Bally–Talay type, not cited in the paper and
+  out of scope), so Theorem 1 gives `O(ε^{−3−η})`, resp. `O(ε^{−2−η})`, for every `η > 0`, not the
+  paper's `O(ε^{−2.5})`.  `σ ≠ 0` is needed (for `σ = 0` the paths are deterministic and the mean
+  square error can be `1` on every level).  The barrier option is monitored at `m` fixed dates, not
+  continuously, with a Lipschitz `g` and an up-and-out or down-and-out set; the Brownian-bridge
+  rows of Table 5.2 are not covered.  Splitting with a Milstein final step: autonomous coefficients,
+  (2.4) only; the variance of the splitting estimator is not formalised.  The factor `10e^{−rT}` is
+  omitted.
+* **Spot-check items (`SpotCheckRemarks.lean`, round 22).** ML2R: one sequence of level means
+  satisfying the expansion with an `L`-independent constant, which suffices to refute
+  `O(2^{−αL²})` under the hypotheses of `ml2r_theorem_eq`.  §5.7: the variance bound assumes `g`
+  Lipschitz (the paper's `g` is only continuous); the limit as `δ → 0` assumes no atom of `P_ℓ`,
+  `P_{ℓ−1}` at `x`.  §7.1: the Dirichlet instability needs `J ≥ J₀(λ)` (with one interior node the
+  step is stable up to `λ = 1`).  §7.2: (2.4) for nested inputs without the Karhunen–Loève
+  expansion, whose truncation error is not formalised.  §9.1: the bias and variance rates of an
+  outer sample are hypotheses.  §10.1: only the discretised Ornstein–Uhlenbeck chain; that
+  `N(0, σ²/(2κ))` is the stationary law of the SDE is not proved.  §10.2: `I_max` is the index of
+  the sequence.  HG25 §2.1: the explicit lower bound `∝ 2^{−ℓ}` is proved for the levels with
+  `|r|T ≤ 2^ℓ`; at the other levels only `V_ℓ > 0`, which the cost statement needs.
+* **The parabolic example (`ParabolicExample.lean`, round 22).** The target of Theorem 1 is
+  `parabolicLimit`, the limit of the level means (an explicit series), not the SPDE output: that it
+  equals `E ∫₀¹ u(x, ¼)² dx` for the mild solution is the Itô isometry, checked by hand in the blind
+  read-back (`notes/readbacks/parabolic_example.md`) but not formalised.  The solution error
+  `O(2^{−2ℓ})` is not proved; `α = 2` and `β = 4` are proved directly for the level differences,
+  with loose explicit constants.  The coupling (four fine increments summed per coarse one) is that
+  of §5.1, which §7.1 does not spell out; the cost counts the fine path only.
+* **Several kinks and curved pieces (`NestedKinkCurved.lean`, round 22).** `f` is given as
+  `f₀ + ∑ c_i (x − k_i)₊`, not as a continuous, piecewise differentiable function.  With curved
+  pieces the hypotheses add joint fourth moments and first-order strong convergence in `L⁴` (the
+  Milstein level), which exclude Euler–Maruyama, so they do not contain the piecewise linear
+  results, which keep the one-kink hypotheses.  MIMC at cost `O(ε⁻²)` is proved only for the
+  counterexample `kinkInnerApprox` and on the two axes, using that its mixed corrections have mean
+  zero; in general the omitted mixed corrections leave a bias (module docstring), and whether MIMC
+  reaches `O(ε⁻²)` for a general piecewise linear `f` remains open.
+* **Tau-leaping extensions (`TauLeapingExtensions.lean`, round 22).** The weak rate needs bounded
+  propensities (uniformisation) and covers payoffs of linear growth, one reaction.  On adaptive
+  grids the step sizes are multiples of a base spacing, the rules depend on the time and the state
+  at the start of a step, the propensities do not depend on time, and the laws compared are those
+  of the state at `T`; the variance rate of the adaptive coupling and Theorem 1 for adaptive
+  tau-leaping are not formalised.
 
 ### Corrections to the papers recorded elsewhere, collected
 
@@ -489,7 +531,7 @@ Lean statement or to the reason it is not formalised. The deviations of the new 
 | G15 | §2.1, p. 7 | "Because of condition i), we have `2^{−αL} = O(ε)`, and hence `C_L = O(ε^{−γ/α})`" | `C_L = O(ε^{−γ/α})` needs `2^{αL} = O(ε⁻¹)`, which holds because `L` is the least level meeting the bias target | `finest_cost_le`, `two_rpow_levelL_le` |
 | G15 | §2.3, p. 11 | expansion `E[P_ℓ] − E[P] = ∑_{n=1}^{L} a_n 2^{−nαℓ} + O(2^{−αℓL})` | the remainder has the order of the `n = L` term, which it absorbs; `O(2^{−αℓ(L+1)})` is the natural form. Harmless: the bias bound is the same | `ml2r_bias_le` (reads the printed form) |
 | G15 | §2.3, p. 11 | weights with `∑ w_ℓ 2^{−nαℓ} = 1` | `= 0` | `ml2r_weights` |
-| G15 | §2.3, p. 12 | bias `O(2^{−αL²})`, exponent `√(|log₂ ε|/α)` | `O(2^{−αL(L+1)/2})`, `√(2|log₂ ε|/α)` | `ml2r_bias`, `ml2r_bias_le`, `ml2r_theorem_lt` |
+| G15 | §2.3, p. 12 | bias `O(2^{−αL²})`, exponent `√(|log₂ ε|/α)` | `O(2^{−αL(L+1)/2})`, `√(2|log₂ ε|/α)` | `ml2r_bias`, `ml2r_bias_le`, `ml2r_theorem_lt`, `ml2r_bias_not_attainable` |
 | G15 | §2.4, pp. 13–14 | conditions labelled i), iii), ii), iv), v) | labels as in the Notes | hypothesis names follow the statement |
 | G15 | §2.4, p. 15 | rectangles "optimal order" | only for `O(ε⁻²)` | `mimc_rect_lower_bounds` |
 | G15 | §2.4, pp. 15–16 | for large `D`, standard MLMC has complexity "less (often much less) than the optimal `O(ε⁻²)`" | worse than (of larger order than) `O(ε⁻²)` | `mlmc_optimal_complexity_necessary` |
@@ -507,7 +549,7 @@ Lean statement or to the reason it is not formalised. The deviations of the new 
 | G15 | §5.5, p. 43 | exit time `τ = inf_t {t : S_t ∉ V}` in `u(x, t) = E[… \| S_t = x]` | `τ = inf {s ≥ t : S_s ∉ V}` (the bound variable clashes with the time `t` of the conditioning) | — |
 | G15 | §6.1, p. 47 | "this introduces a Radon-Nikodym into the payoff evaluation" | "a Radon–Nikodym derivative" | — |
 | G15 | §7.1, p. 49 | a constant `K` with `|P − P_ℓ| < K h_ℓ²` | impossible for the example (error `∝ Z²`); a random `K` with `E[K²] < ∞` | `elliptic_rates` (literal), `ApplicationExtras.lean` (random `K`), `not_ae_abs_ellipticP_sub_le`, `ellipticPl_error` |
-| G15 | §7.1, p. 51 | `P = ∫₀¹ u²(x, 0.25)` | `P = ∫₀¹ u²(x, 0.25) dx` | — |
+| G15 | §7.1, p. 51 | `P = ∫₀¹ u²(x, 0.25)` | `P = ∫₀¹ u²(x, 0.25) dx` | `parabolicP` (grid quadrature), `parabolicLimit` |
 | G15 | §7.2, p. 53 | "Samples of `log k`"; "`f_n` are the corresponding eigenfunctions" | `log κ`; the `f_n` must be orthonormal in `L²` | — |
 | G15 | §5.6, p. 44 | "a change or variables" | "a change of variables" | — |
 | G15 | §7.3, p. 54 | `√h Z_n` | `√k Z_n` | `ApplicationExtras.lean`, `spdeStep_eq_milstein` |
@@ -516,8 +558,8 @@ Lean statement or to the reason it is not formalised. The deviations of the new 
 | G15 | §9.2, p. 60 | "Due to the Central Limit Theorem" `Δg_{1,ℓ₂} + Δg_{1,ℓ₂−1} = O(2^{−ℓ₁/2})` and, with first-order strong convergence, `Δg_{1,ℓ₂} − Δg_{1,ℓ₂−1} = O(2^{−ℓ₁/2−ℓ₂})` (and for `2`); hence `V_ℓ = O(2^{−2ℓ₁−2ℓ₂})` for `f` twice differentiable | measured from `E[g(Z, W)]` the sums contain the weak error `O(2^{−ℓ₂})`, so these hold only after re-centring at the conditional means of the inner approximations (the difference of squares is unchanged by it); a rigorous `V_ℓ = O(2^{−2ℓ₁−2ℓ₂})` needs `f″` Lipschitz, not just `f` twice differentiable | `nested_mimc_variance_rate`, `nested_mimc_smooth_variance_rate` |
 | G15 | §9.2, p. 60 | MIMC with a kink: `β₁ = β₂ = 1.5`, cost `O(ε⁻²)` | the rates are false: no `β₁, β₂` with `2β₁ + β₂ > 3` (counterexample); the isotropic rates `β₁ = β₂ = 1` hold, are sharp along `ℓ₁ = 2ℓ₂` and give `O(ε⁻²\|log ε\|⁴)`; whether `O(ε⁻²)` holds is open | `nested_mimc_kink_rates_false`, `nested_mimc_kink_variance_rate`, `nested_mimc_kink_complexity` |
 | G15 | §10.1, p. 61 | decay exponential in `N_ℓ − N_{ℓ−1}` | in `N_{ℓ−1}` | `variance_levels_le`, `markov_linear_levels` |
-| G15 | §10.2, p. 62 | `U_n = (I_n + ½)/I_max` | `(I_n + ½)/(I_max + 1)` (the printed `U_n` exceeds `1` for `I_n = I_max`) | — |
-| HG25 | §2.1, p. 3 | the cost of a sample increases with level and for Euler–Maruyama with Lipschitz payoffs `V_ℓ` decreases exponentially, so "the former" (`V_ℓC_ℓ` decreasing) makes MLMC cheaper | with `β = γ = 1`, `V_ℓC_ℓ` is roughly constant, not decreasing; MLMC then costs about `ε⁻²(L+1)²V₀C₀` against `ε⁻²V₀C₀2^L` for plain Monte Carlo, less only for `L ≥ 6` | `optimal_cost_const_product` |
+| G15 | §10.2, p. 62 | `U_n = (I_n + ½)/I_max` | `(I_n + ½)/(I_max + 1)` (the printed `U_n` exceeds `1` for `I_n = I_max`) | `tendstoInDistribution_normCDFInv_midpoint` |
+| HG25 | §2.1, p. 3 | the cost of a sample increases with level and for Euler–Maruyama with Lipschitz payoffs `V_ℓ` decreases exponentially, so "the former" (`V_ℓC_ℓ` decreasing) makes MLMC cheaper | with `β = γ = 1`, `V_ℓC_ℓ` is roughly constant, not decreasing; MLMC then costs about `ε⁻²(L+1)²V₀C₀` against `ε⁻²V₀C₀2^L` for plain Monte Carlo, less only for `L ≥ 6` | `optimal_cost_const_product`, `gbm_em_identity_variance_two_sided`, `gbm_em_identity_variance_cost` |
 | HG25 | (21) | `E[δx²] = 4^{e−d−1}` | `≤` | `integral_sq_roundError_le` |
 | HG25 | (25) | `2 ∑_{i≠j} Cov` | correct over unordered pairs (as (27) reads it); over ordered pairs no factor 2 | `variance_sum_eq` |
 | HG25 | (27) | derived under perfect correlation | holds for every joint law | `variance_linearised_corr` |

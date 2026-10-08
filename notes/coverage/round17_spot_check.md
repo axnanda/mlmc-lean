@@ -105,3 +105,21 @@ strong error uniformly over the grid (R17), the general theorem of Hutzenthaler,
 (`GBMWeakOrder.lean`, `GBMGridMax.lean` with the every-step lookback, `EulerSuperlinearGeneral.lean`);
 the simplex optimality (large) remains open, as does the kurtosis upper bound (anti-concentration).
 
+**Follow-up (round 22).** After round 21 a further spot-check ("spot-check 21"; two independent
+auditors, reports kept outside the repository) re-read both papers against the coverage tables and
+the elaborated Lean statements, about 170 rows, and found no Lean misstatement; its documentation
+fixes are the "Spot-check 21" notes in the coverage tables and in `notes/coverage/README.md`.
+From it, round 22 formalised: Theorem 1 for the digital option of GBM, the barrier option at fixed
+monitoring dates and splitting with a Milstein final step (`GBMDigitalTheorem1.lean`); that the ML2R
+bias `2^{−αL²}` is not attainable, as a theorem, the variance of the smoothed-CDF correction, the
+heat scheme with Dirichlet boundary values, (2.4) for nested inputs, `Θ(ε⁻³)` for standard nested
+Monte Carlo, the Ornstein–Uhlenbeck Euler chain, the corrected §10.2 inputs and `V_ℓC_ℓ` in
+Haas–Giles §2.1 (`SpotCheckRemarks.lean`); the rates and Theorem 1 for the parabolic example of
+§7.1 (`ParabolicExample.lean`); curved pieces and several kinks with inner time steps, and MIMC on
+the two axes for the kink counterexample (`NestedKinkCurved.lean`); tau-leaping against the exact
+chain for Lipschitz payoffs and with state-dependent rates on adaptive grids
+(`TauLeapingExtensions.lean`).  Still open: the digital option's weak order `α = 1` (hence the
+paper's `O(ε^{−2.5})`), the identification of the parabolic limit with the SPDE functional, the
+truncation error of the Karhunen–Loève expansion, the variance rate of adaptive tau-leaping, the
+simplex optimality, the kurtosis upper bound, and whether MIMC reaches `O(ε⁻²)` for a general
+piecewise linear `f`.
