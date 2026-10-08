@@ -35,13 +35,14 @@ table and `notes/statement-audit.md`, which compares every statement with the pa
 - **Haas–Giles (2025) nested estimator, eq. (9)–(12)** (`MlmcLean/Nested.lean`): (12) as the
   least nested cost, the claimed saving factor as an inequality, and the estimator built from
   independent inputs with its mean, variance and expected cost.
-- **Every other formal claim of both papers that follows from probability and algebra** (M5):
-  Giles §1–§3 in full (control variates, Richardson–Romberg MLMC and its complexity, multiple
-  outputs, non-geometric MLMC and the subset search, Algorithms 1 and 2, the implementation
-  checks), the pure steps of the applications in §5, §7, §8 (the Poisson coupling), §9 and §10,
-  and Haas–Giles §2–§6 (the Euler–Maruyama coupling, approximate normals, the rounding-error
-  model, the fixed-point path, the cost model and the bit-width optimisation). The README table
-  lists the modules; `scripts/AxiomCheck.lean` lists the audited theorems.
+- **Every other formal claim of both papers that follows from probability and algebra** (M5),
+  except the items listed under "Not formalised" in M5 below: Giles §1–§3 (control variates,
+  Richardson–Romberg MLMC and its complexity, multiple outputs, non-geometric MLMC and the subset
+  search, Algorithms 1 and 2, the implementation checks), the pure steps of the applications in
+  §5, §7, §8 (the Poisson coupling), §9 and §10, and Haas–Giles §2–§6 (the Euler–Maruyama
+  coupling, approximate normals, the rounding-error model, the fixed-point path, the cost model
+  and the bit-width optimisation). The README table lists the modules; `scripts/AxiomCheck.lean`
+  lists the audited theorems.
 - **Round 10 (2026-09-29): an independent coverage re-audit of both papers** (644 claims,
   `notes/coverage/`) found no misstatement; every claim it found missing or partial is now
   formalised or listed below with its reason (`notes/coverage/README.md`).
@@ -222,28 +223,44 @@ items listed under "Not formalised" below.
   (`EulerSuperlinearGeneral.lean`).
 - Not formalised (each with its reason in `notes/coverage/README.md`): the convergence orders of the
   discretisations of general SDEs, SPDEs and PDEs (Itô calculus and PDE regularity are not in
-  Mathlib; proved for geometric Brownian motion from its exact solution, including weak order one
-  for smooth and polynomial payoffs) and of QMC in `d` dimensions (discrepancy theory and the
-  existence of good lattices; the one-dimensional case, and in `d` dimensions the variance of
-  shifted lattice rules and the MLQMC complexity given the decay of the dual-lattice sums, are
-  proved); the optimality of the simplex among all MIMC index sets; the kurtosis upper bounds of the
-  digital option and the endpoints of its rates `O(h^{1/2})`, `O(h)` (every smaller exponent is
-  proved for GBM from `L^p` strong errors); continuously monitored path-dependent payoffs
-  (Brownian-bridge extremes; fixed dates and every time step are proved for GBM); real-valued
-  adaptive step sizes (Brownian motion at stopping times; deterministic union grids and adaptive
-  steps on a base grid are proved); tau-leaping's weak rate for unbounded payoffs and the pathwise
-  exact (SSA) coupling (bounded payoffs are proved); the comparison of the explicit scheme with the
-  exact solution for super-linear coefficients, and several dimensions (the divergence of the
-  scheme's moments is proved for scalar coefficients); the jump-diffusion and Lévy-process theory of
-  §6 beyond grid values (the Poisson and Lévy processes themselves; the discrete parts are proved);
-  the Karhunen–Loève expansion and the finite-element analysis of §7.2; that the limit of the
-  discretised contracting chains is the SDE's invariant law (§10.1; fixed and level-dependent steps
-  are proved for the discretised chains); the value of the dyadic limit `C` and the exact halving
-  ratio of the MSE per bit (Haas–Giles §3.4; the existence of `C > 0` and the order `2^{−d}/d` are
-  proved for `Φ⁻¹`, the exact ratio needs finer asymptotics of `Φ⁻¹`); whether MIMC reaches `O(ε⁻²)`
-  for a piecewise linear `f` (the paper's rates are refuted and the corrected rates give `O(ε⁻²|log
-  ε|⁴)`); the remaining claims are numerical or empirical (measured rates, figures, run times) or
-  hardware facts.
+  Mathlib; the SPDE of §7.3 has multiplicative noise and an absorbing boundary; proved for geometric
+  Brownian motion from its exact solution, including weak order one for smooth and polynomial
+  payoffs) and of QMC in `d` dimensions (discrepancy theory and the existence of good lattices; the
+  one-dimensional case, and in `d` dimensions the variance of shifted lattice rules and the MLQMC
+  complexity given the decay of the dual-lattice sums, are proved); the parabolic example of §7.1,
+  which needs neither Itô calculus nor PDE theory (one scalar Brownian motion and a linear scheme)
+  but whose rates are not yet formalised (only the complexity bound is evaluated); the optimality of
+  the simplex among all MIMC index sets; the adaptive, stopped algorithm of Collier et al. (their
+  confidence intervals for deterministic numbers of levels and samples are proved); the kurtosis
+  upper bounds of the digital option, the endpoints of its rates `O(h^{1/2})`, `O(h)` (every smaller
+  exponent is proved for GBM from `L^p` strong errors), its weak rate `α = 1` and a Theorem 1
+  instance for it; continuously monitored path-dependent payoffs (Brownian-bridge extremes; fixed
+  dates and every time step are proved for GBM); real-valued adaptive step sizes (Brownian motion at
+  stopping times; deterministic union grids and adaptive steps on a base grid are proved);
+  tau-leaping with state-dependent rates on adaptive grids (not yet formalised; state-dependent
+  rates on deterministic union grids and constant rates on adaptive grids are proved), tau-leaping's
+  weak rate for unbounded payoffs and the pathwise exact (SSA) coupling (bounded payoffs are
+  proved); the comparison of the explicit scheme with the exact solution for super-linear
+  coefficients, and several dimensions (the divergence of the scheme's moments is proved for scalar
+  coefficients); the jump-diffusion and Lévy-process theory of §6 beyond grid values (the Poisson
+  and Lévy processes themselves; the discrete parts are proved); the Karhunen–Loève expansion and
+  the finite-element analysis of §7.2 (Mercer's theorem and elliptic regularity), and the parts of
+  §7.2 that are provable with Mercer's expansion as a hypothesis (the truncation error, and (2.4)
+  for nested inputs `ξ_ℓ = (ξ_{ℓ−1}, z_ℓ)`; not yet formalised); nested simulation with inner time
+  steps for an `f` with curved pieces (§9.2; not yet formalised; with time steps one linear kink is
+  proved, and without them `f₀ + ∑ c_i (x − k_i)₊` with `f₀′` Lipschitz, §9.1); that the limit of
+  the discretised contracting chains is the SDE's invariant law (§10.1; fixed and level-dependent
+  steps are proved for the discretised chains); the value of the dyadic limit `C` and the exact
+  halving ratio of the MSE per bit (Haas–Giles §3.4; the existence of `C > 0` and the order
+  `2^{−d}/d` are proved for `Φ⁻¹`, the exact ratio needs finer asymptotics of `Φ⁻¹`); whether MIMC
+  reaches `O(ε⁻²)` for a piecewise linear `f` (the paper's rates are refuted and the corrected rates
+  give `O(ε⁻²|log ε|⁴)`). Further claims that need theory Mathlib lacks, such as Creutzig et al.'s
+  lower bound, Banach-space norms, the digital scrambling of Sobol points, the sensitivities of
+  digital options, Feynman–Kac and exit times, the Clark–Cameron bound and the Giles–Szpruch
+  analysis, are in the out-of-scope table of `notes/coverage/README.md`, and a few minor sub-claims
+  that are provable but not formalised are noted in the rows of the coverage tables. The remaining
+  claims are numerical or empirical (measured rates, figures, run times), hardware facts, citations
+  or informal remarks.
 
 **M4: Research, needs Alex's sign-off before formalising: nested MLMC with level-dependent
 precision.**
