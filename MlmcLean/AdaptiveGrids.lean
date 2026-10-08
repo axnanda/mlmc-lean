@@ -41,22 +41,29 @@ increments gives `W(t)` at all the times either path needs.
 (new state, remaining noise) so that, for every fixed state, the new state is independent of the
 remaining noise and the remaining noise has its original law, then after `k` steps the joint law
 of (state, remaining noise) is (law of a Markov chain) ⊗ (law of the noise).  For i.i.d. base
-increments the sum of the first `n` of them is independent of the others, which are again i.i.d.
-(`map_blockSum_shiftSeq`), for every `n`, hence also for the predictable `n_k`.
+increments the first `n` of them (their sum, or the whole block) are independent of the others,
+which are again i.i.d. (`map_blockSum_shiftSeq`, `map_usedSeq_shiftSeq`), for every `n`, hence
+also for the predictable `n_k`.
 
 **Results.**
 * `map_adaptivePath_prod`: after `k` steps the unused base increments `(ξ_{τ_k + i})_i` are
-  independent of the path so far and again i.i.d. (the strong Markov property of an i.i.d.
-  sequence at the predictable times `τ_k`); `map_adaptivePath`: the path stopped at step `k` has
-  the law `adaptiveLaw` of the scheme in which the `k`-th increment, given the past, is drawn
-  from the law of a sum of `ν_k(y_k)` base increments.
-* (1) `adaptiveIncr_condLaw_gaussian`, `adaptiveIncr_condDistrib_gaussian`: **given the past, the
-  increment over the chosen step is `N(0, n_k δ)`**; `adaptivePath_law_gaussian`,
+  independent of the path so far and again i.i.d.; `map_adaptivePath`: the path stopped at step `k`
+  has the law `adaptiveLaw` of the scheme in which the `k`-th increment, given the path so far, is
+  drawn from the law of a sum of `ν_k(y_k)` base increments.
+* (1) `adaptiveIncr_condLaw_gaussian`, `adaptiveIncr_condDistrib_gaussian`: **given the path so
+  far, the increment over the chosen step is `N(0, n_k δ)`**; `adaptivePath_law_gaussian`,
   `freshPath_law_gaussian`: the path stopped at step `k` has the same law whether it is driven by
   the summed base increments or by fresh increments `√(h_k) Z_k`; `adaptiveSeq_law_eq_fresh`: the
   same for the law of the whole path; `adaptivePairs_law_eq_fresh`: for the sequence of
   (step, increment) pairs; `adaptiveEM_law_eq_freshEM`: for the adaptive Euler–Maruyama path
   `(t_k, Ŝ_k)`.
+* The whole history: in `histPath` the rules and the updates may depend on the whole past
+  `(y_k, τ_k, H_k)`, where `H_k = (ξ_i)_{i<τ_k}` (`usedSeq`) records all the base increments used so
+  far.  `map_histPath_prod`: the base increments after `τ_k` are independent of this past and again
+  i.i.d. (the strong Markov property of an i.i.d. sequence at the predictable times `τ_k`);
+  `histIncr_condLaw_gaussian`, `histCount_condLaw`: **given the whole past, the increment over the
+  chosen step is `N(0, n_k δ)`**, the count `P(n_k m)`; `adaptiveIncr_condLaw_hist_gaussian`: the
+  same for the adaptive scheme of (1) (`histPath_eq_adaptivePath`).
 * (2) `adaptiveEM_fine_coarse`: the fine and the coarse path, with independent adaptation rules on
   the same base increments, each have the law of their single-level scheme; `adaptiveEM_2_4`:
   hence (2.4) `E[P^f_ℓ] = E[P^c_ℓ]`; `adaptiveEM_mlmc_theorem1`: Giles' Theorem 1 for the
@@ -66,29 +73,38 @@ increments the sum of the first `n` of them is independent of the others, which 
   has the law of the scheme driven by fresh Poisson variates.
 * Algorithm 3 itself (`alg3Fresh`: the loop over the union sub-intervals, a fresh `√h Z` for each
   sub-interval, accumulators `∆W^c`, `∆W^f`): `algorithm3_law`, `algorithm3_EM_law`: **the coarse
-  and the fine path read off Algorithm 3 each have the law of their single-level scheme**.  The
-  proof runs Algorithm 3 on the base increments (it is an adaptive scheme whose steps are the union
-  sub-intervals, so it has the same law as with fresh increments), where an invariant
-  (`alg3Path_inv`) shows that each path is computed exactly as from the base increments directly.
+  and the fine path read off Algorithm 3 each have the law of their single-level scheme**;
+  `algorithm3_joint_law`, `algorithm3_EM_joint_law`: **the pair of paths read off Algorithm 3 has
+  the law of the two single-level paths computed from one sequence of base increments** (the
+  coupling of Figure 5.9).  The proof runs Algorithm 3 on the base increments (it is an adaptive
+  scheme whose steps are the union sub-intervals, so it has the same law as with fresh
+  increments), where each path is computed exactly as from the base increments directly
+  (`alg3CoarseSeq_alg3Path`, `alg3FineSeq_alg3Path`, from the invariant `alg3Path_inv`).
 * The generic forms: `map_adaptiveIncr`, `map_freshPath`, `map_adaptiveSeq_eq_freshSeq`.
 
 **Scope.**  Step sizes are multiples of the fixed base spacing `δ`, i.e. the base grid refines the
 grids of both levels: in the scheme `h_ℓ = 2^{−ℓ} H(Ŝ_n)` this holds when `H` takes values in
 `2^{−m₀}T ℕ` and `δ = 2^{−m₀−ℓ}T` (real-valued path-dependent step sizes would need Brownian motion
 at stopping times, which is not formalised).  The paths are defined for all `k ∈ ℕ`; the
-truncation `t^c := min(t^c + h^c, T)` is part of the rule.  For Algorithm 3 the steps must be at
-least one base interval and the loop runs indefinitely instead of stopping at `T` (a rule that ends
-a step exactly at `T` and continues with positive steps afterwards gives the paths of Algorithm 3
-up to `T`); the first iteration of the paper, with `h = 0`, only computes the first steps and is
-folded into the initial state.  The level paths are Markov in their own state (`ν(x)`, `F(x, ∆W)`)
-in Algorithm 3, and may depend on their whole past in the other results.  For Poisson variates the
-rate is constant (the counts of a Poisson process over the adaptive intervals); tau-leaping with a
-state-dependent propensity and the Anderson–Higham coupling on each union sub-interval
-(`unionChain` of `PoissonGrids.lean`, deterministic grids) is not covered.
+truncation `t^c := min(t^c + h^c, T)` is part of the rule.  Outside the `histPath` results, "the
+past" is the path `y_k` of the scheme (the σ-algebra `σ(y_k)`): the rule sees the base increments
+only through `y_k`, which depends on them only through the step increments `ΔW_j`, `j < k`;
+conditioning on the whole history `(ξ_i)_{i<τ_k}`, with rules that may depend on it, is the
+`histPath` part.  For Algorithm 3 the steps must be at least one base interval and the loop runs
+indefinitely instead of stopping at `T` (a rule that ends a step exactly at `T` and continues with
+positive steps afterwards gives the paths of Algorithm 3 up to `T`); the first iteration of the
+paper, with `h = 0`, only computes the first steps and is folded into the initial state.  The level
+paths are Markov in their own state (`ν(x)`, `F(x, ∆W)`) in Algorithm 3; they may depend on their
+whole past in the generic results (`map_adaptivePath_prod` to `adaptivePairs_law_eq_fresh`,
+`adaptiveCount_*`), and on the history of the base increments too in the `histPath` results; the
+Euler–Maruyama results use a rule `ν(t, S)` of the current state, as in `h_ℓ = 2^{−ℓ} H(Ŝ_n)`.
+For Poisson variates the rate is constant (the counts of a Poisson process over the adaptive
+intervals); tau-leaping with a state-dependent propensity and the Anderson–Higham coupling on each
+union sub-interval (`unionChain` of `PoissonGrids.lean`, deterministic grids) is not covered.
 -/
 
 open MeasureTheory ProbabilityTheory Finset
-open scoped NNReal ENNReal
+open scoped NNReal
 
 namespace MLMC
 
@@ -109,11 +125,11 @@ lemma measurable_map_fst_noiseStep {Q : Measure Ω} [SFinite Q] {φ : X × Ω �
   simp_rw [e]
   exact measurable_measure_prodMk_left (hφ.fst hs)
 
-/-- **One step driven by fresh noise** (the conditioning argument behind Giles 2015, §5.6, p. 44,
-lines 1926–1929: the Brownian increments of a step are "independent" of the past).  Let the
-current state have law `P` and the remaining noise law `Q`, independently.  If one step `φ` maps
-(state, noise) to (new state, remaining noise) so that, for each fixed state `x`, the new state
-and the remaining noise are independent and the remaining noise has law `Q`
+/-- One step driven by fresh noise (the conditioning argument behind Giles 2015, §5.6, p. 44,
+lines 1928–1929: "The independent Brownian increments can be simulated for each time interval").
+Let the current state have law `P` and the remaining noise law `Q`, independently.  If one step
+`φ` maps (state, noise) to (new state, remaining noise) so that, for each fixed state `x`, the new
+state and the remaining noise are independent and the remaining noise has law `Q`
 (`Q.map (φ (x, ·)) = κ x ⊗ Q` with `κ x = Q.map (φ (x, ·)).1`), then after the step the new state
 has the law `P.bind κ` (the state `x ~ P`, then the new state `~ κ x`) and is again independent
 of the remaining noise, which has law `Q`. -/
@@ -144,7 +160,7 @@ noncomputable def noiseChainLaw (κ : ℕ → X → Measure X) (x₀ : X) : ℕ 
   | 0 => Measure.dirac x₀
   | k + 1 => (noiseChainLaw κ x₀ k).bind (κ k)
 
-/-- **A chain driven by fresh noise** (Giles 2015, §5.6, p. 44, lines 1926–1929).  The state and
+/-- A chain driven by fresh noise (Giles 2015, §5.6, p. 44, lines 1926–1929).  The state and
 the remaining noise evolve by `Ψ (k + 1) = step k ∘ Ψ k` from `Ψ 0 ω = (x₀, ω)`, the noise `ω`
 having law `Q`.  If every step leaves the remaining noise fresh (`hfresh`, as in
 `map_prod_eq_bind_prod_of_fresh`), then after `k` steps the state has the law `noiseChainLaw` of
@@ -211,7 +227,7 @@ random number `n` of them). -/
 lemma measurable_shiftSeq_uncurry : Measurable fun p : ℕ × (ℕ → E) => shiftSeq p.1 p.2 :=
   measurable_from_prod_countable_right fun n => measurable_shiftSeq n
 
-/-- **The first `n` base increments are independent of the others** (Giles 2015, §5.6, p. 44:
+/-- The first `n` base increments are independent of the others (Giles 2015, §5.6, p. 44:
 "The independent Brownian increments can be simulated for each time interval"): under the i.i.d.
 law `μ^{⊗ℕ}`, the block `(ξ_i)_{i<n}` and the shifted sequence `σⁿ ξ = (ξ_{n+i})_i` are
 independent. -/
@@ -236,7 +252,7 @@ lemma indepFun_restrict_shiftSeq (μ : Measure E) [IsProbabilityMeasure μ] (n :
     rw [MeasurableSpace.comap_comp]
     exact le_iSup₂_of_le (n + i) (by simp [Set.mem_Ici]) le_rfl
 
-/-- **The first base increment and the shifted sequence** (Giles 2015, §5.6): under `ρ^{⊗ℕ}` the
+/-- The first base increment and the shifted sequence (Giles 2015, §5.6): under `ρ^{⊗ℕ}` the
 pair `(ζ_0, σ¹ζ)` has the law `ρ ⊗ ρ^{⊗ℕ}`; a fresh variate is used and the others stay fresh. -/
 lemma map_head_shiftSeq (ρ : Measure E) [IsProbabilityMeasure ρ] :
     (Measure.infinitePi fun _ => ρ).map (fun ζ => (ζ 0, shiftSeq 1 ζ)) =
@@ -268,7 +284,7 @@ lemma isProbabilityMeasure_blockLaw (μ : Measure E) [IsProbabilityMeasure μ] (
     IsProbabilityMeasure (blockLaw μ n) :=
   Measure.isProbabilityMeasure_map (measurable_blockSum n).aemeasurable
 
-/-- **A block sum is independent of the base increments after the block** (Giles 2015, §5.6,
+/-- A block sum is independent of the base increments after the block (Giles 2015, §5.6,
 p. 44, lines 1927–1929: "The independent Brownian increments can be simulated for each time
 interval, and summed"): under `μ^{⊗ℕ}` the pair `(∑_{i<n} ξ_i, σⁿ ξ)` has the law
 `blockLaw μ n ⊗ μ^{⊗ℕ}`. -/
@@ -326,7 +342,7 @@ def adaptivePath [AddCommMonoid E] (ν : ℕ → (ℕ → X) → ℕ) (G : ℕ �
     let τ := (adaptivePath ν G x₀ ξ k).2
     (extendPath k y (G k y (∑ i ∈ Ico τ (τ + ν k y), ξ i)), τ + ν k y)
 
-/-- **The increment of step `k`** (Giles 2015, §5.6, p. 44, lines 1928–1929: "The independent
+/-- The increment of step `k` (Giles 2015, §5.6, p. 44, lines 1928–1929: "The independent
 Brownian increments can be simulated for each time interval, and summed"): the sum
 `ΔW_k = ∑_{τ_k ≤ i < τ_k + n_k} ξ_i` of the base increments over the `n_k = ν k y_k` base
 intervals of the step. -/
@@ -375,7 +391,7 @@ lemma adaptivePath_step [AddCommMonoid E] (ν : ℕ → (ℕ → X) → ℕ) (G 
 
 variable [MeasurableSpace X] [MeasurableSpace E]
 
-/-- **The law of an adaptive scheme** (Giles 2015, §5.6): the law of the path stopped at step `k`
+/-- The law of an adaptive scheme (Giles 2015, §5.6): the law of the path stopped at step `k`
 when, given the path `y` so far, the `k`-th increment is drawn from `κ k y` and
 `x_{k+1} = G k y (increment)`.  For `κ k y = N(0, h_k(y))` this is the law of the adaptive
 scheme driven by fresh Brownian increments over its steps `h_k`. -/
@@ -449,13 +465,19 @@ lemma map_adaptiveStep (μ : Measure E) [IsProbabilityMeasure μ] {ν : ℕ → 
     ← Measure.map_prod_map _ _ hg measurable_id, Measure.map_id]
 
 /-- **The unused base increments are fresh at the adaptive times** (Giles 2015, §5.6, p. 44,
-lines 1926–1929).  Let the base increments be i.i.d. with law `μ`, the rules `ν k` and the updates
-`G k` measurable.  After `k` steps of the adaptive path the pair
-(path so far `y_k`, unused base increments `σ^{τ_k} ξ`) has the law `L_k ⊗ μ^{⊗ℕ}`: the base
-increments after the random time `τ_k` are independent of the path so far and again i.i.d. with
-law `μ` (the strong Markov property of an i.i.d. sequence at the predictable times `τ_k`).  Here
+lines 1926–1929: "The underlying Brownian path needs to be sampled at a set of times which are the
+union of the simulation times used by the coarse and fine path. The independent Brownian
+increments can be simulated for each time interval, and summed to give `W(t)` at the required
+times").  Let the base increments be i.i.d. with law `μ`, the rules `ν k` and the updates `G k`
+measurable.  After `k` steps of the adaptive path the pair (path so far `y_k`, unused base
+increments `σ^{τ_k} ξ`) has the law `L_k ⊗ μ^{⊗ℕ}`: the base increments after the random time
+`τ_k` are independent of the path so far and again i.i.d. with law `μ`.  Here
 `L_k = adaptiveLaw (fun j y => blockLaw μ (ν j y)) G x₀ k`: given the path so far, the next
-increment is a sum of `ν_j(y)` fresh base increments.  The map is also measurable. -/
+increment is a sum of `ν_j(y)` fresh base increments.  The map is also measurable.  "The path so
+far" is the path `y_k` of the scheme (the σ-algebra `σ(y_k)`): the rule sees the base increments
+only through `y_k`, i.e. through the step increments `ΔW_j`, `j < k`.  Independence from the
+whole history `(ξ_i)_{i<τ_k}`, also for rules that depend on it, is `map_histPath_prod` (with
+`histPath_eq_adaptivePath`). -/
 theorem map_adaptivePath_prod (μ : Measure E) [IsProbabilityMeasure μ]
     {ν : ℕ → (ℕ → X) → ℕ} {G : ℕ → (ℕ → X) → E → X} (hν : ∀ k, Measurable (ν k))
     (hG : ∀ k, Measurable fun p : (ℕ → X) × E => G k p.1 p.2) (x₀ : X) (k : ℕ) :
@@ -478,10 +500,13 @@ theorem map_adaptivePath_prod (μ : Measure E) [IsProbabilityMeasure μ]
   exact map_adaptiveStep_fst μ (hG j) y
 
 /-- **The law of the adaptive path built from summed base increments** (Giles 2015, §5.6, p. 44,
-lines 1917–1929).  With i.i.d. base increments of law `μ` and measurable rules and updates, the
-path stopped at step `k` has the law `adaptiveLaw (fun j y => blockLaw μ (ν j y)) G x₀ k` of the
-scheme in which, given the path `y` so far, the next increment is drawn afresh from the law of a
-sum of `ν_j(y)` base increments.  Step sizes are multiples of the base spacing. -/
+lines 1917–1929: "it uses a completely independent adaptation on each level of refinement, with an
+adaptive timestep of the form `h_ℓ = 2^{−ℓ} H(Ŝ_n)` … The independent Brownian increments can be
+simulated for each time interval, and summed to give `W(t)` at the required times").  With i.i.d.
+base increments of law `μ` and measurable rules and updates, the path stopped at step `k` has the
+law `adaptiveLaw (fun j y => blockLaw μ (ν j y)) G x₀ k` of the scheme in which, given the path `y`
+so far, the next increment is drawn afresh from the law of a sum of `ν_j(y)` base increments.
+Step sizes are multiples of the base spacing. -/
 theorem map_adaptivePath (μ : Measure E) [IsProbabilityMeasure μ]
     {ν : ℕ → (ℕ → X) → ℕ} {G : ℕ → (ℕ → X) → E → X} (hν : ∀ k, Measurable (ν k))
     (hG : ∀ k, Measurable fun p : (ℕ → X) × E => G k p.1 p.2) (x₀ : X) (k : ℕ) :
@@ -495,7 +520,7 @@ theorem map_adaptivePath (μ : Measure E) [IsProbabilityMeasure μ]
 
 end Adaptive
 
-/-! ### The conditional law of the increment given the past -/
+/-! ### The conditional law of the increment given the path so far -/
 
 section CondLaw
 
@@ -540,10 +565,15 @@ variable {X E : Type*} [MeasurableSpace X] [MeasurableSpace E] [AddCommMonoid E]
   [MeasurableAdd₂ E]
 
 /-- **The conditional law of the increment of an adaptive step** (Giles 2015, §5.6, p. 44,
-lines 1926–1929).  With i.i.d. base increments of law `μ`, the pair (path stopped at step `k`,
-increment `ΔW_k` of step `k`) has the law `L ⊗ₘ κ`, where `L` is the law of the path so far and
-`κ y = blockLaw μ (ν k y)`: given the past, the increment over the chosen step is distributed as
-a sum of `ν_k(y)` fresh base increments.  (This is Mathlib's `HasCondDistrib`, unfolded.) -/
+lines 1928–1929: "The independent Brownian increments can be simulated for each time interval,
+and summed to give `W(t)` at the required times").  With i.i.d. base increments of law `μ`, the
+pair (path stopped at step `k`, increment `ΔW_k` of step `k`) has the law `L ⊗ₘ κ`, where `L` is
+the law of the path so far and `κ y = blockLaw μ (ν k y)`: given the path so far, the increment
+over the chosen step is distributed as a sum of `ν_k(y)` fresh base increments.  (This is
+Mathlib's `HasCondDistrib`, unfolded.)  "The path so far" is the path `y_k` of the scheme (the
+σ-algebra `σ(y_k)`): the rule sees the base increments only through `y_k`, i.e. through the step
+increments `ΔW_j`, `j < k`; conditioning on the whole history `(ξ_i)_{i<τ_k}` is
+`map_histIncr`. -/
 theorem map_adaptiveIncr (μ : Measure E) [IsProbabilityMeasure μ]
     {ν : ℕ → (ℕ → X) → ℕ} {G : ℕ → (ℕ → X) → E → X} (hν : ∀ k, Measurable (ν k))
     (hG : ∀ k, Measurable fun p : (ℕ → X) × E => G k p.1 p.2) (x₀ : X) (k : ℕ) :
@@ -577,7 +607,7 @@ section Fresh
 
 variable {X E : Type*}
 
-/-- **The adaptive scheme driven by fresh variates** (Giles 2015, §5.6, Algorithm 3, p. 45:
+/-- The adaptive scheme driven by fresh variates (Giles 2015, §5.6, Algorithm 3, p. 45:
 "`∆W := √h Z`"): `x_{k+1} = G k y_k (ζ_k)` with a fresh variate `ζ_k` for each step, where `y_k`
 is the path stopped at step `k`.  For the Brownian case the update applies `G` to `√(h_k) ζ_k`
 with `ζ_k ~ N(0, 1)`. -/
@@ -689,13 +719,13 @@ section WholePath
 
 variable {X E : Type*}
 
-/-- **The values `x_0, x_1, …` of the adaptive path built from summed base increments** (Giles
+/-- The values `x_0, x_1, …` of the adaptive path built from summed base increments (Giles
 2015, §5.6): `x_k` is the last value of the path stopped at step `k`. -/
 def adaptiveSeq [AddCommMonoid E] (ν : ℕ → (ℕ → X) → ℕ) (G : ℕ → (ℕ → X) → E → X) (x₀ : X)
     (ξ : ℕ → E) : ℕ → X :=
   fun k => (adaptivePath ν G x₀ ξ k).1 k
 
-/-- **The values of the scheme driven by fresh variates** (Giles 2015, §5.6, Algorithm 3). -/
+/-- The values of the scheme driven by fresh variates (Giles 2015, §5.6, Algorithm 3). -/
 def freshSeq (G : ℕ → (ℕ → X) → E → X) (x₀ : X) (ζ : ℕ → E) : ℕ → X :=
   fun k => freshPath G x₀ ζ k k
 
@@ -843,11 +873,14 @@ variable {X E E' : Type*} [MeasurableSpace X] [MeasurableSpace E] [MeasurableSpa
   [AddCommMonoid E] [MeasurableAdd₂ E]
 
 /-- **Summed base increments or fresh variates: the same law of the whole path** (Giles 2015,
-§5.6, p. 44, lines 1917–1929, and Algorithm 3).  The base increments `ξ_i` are i.i.d. with law
-`μ`, the variates `ζ_k` i.i.d. with law `ρ`, and the fresh scheme applies the update to
-`s k y (ζ_k)`.  If `s k y (ζ)` has, for every path `y` so far, the law of a sum of `ν_k(y)` base
-increments (`hρ`), then the whole adaptive path `(x_k)_{k∈ℕ}` built from the summed base
-increments and the whole path of the fresh scheme have the same law (a measure on `ℕ → X`). -/
+§5.6, p. 44, lines 1924–1929, and Algorithm 3: "It may appear that this would cause difficulties
+in the MLMC implementation, but Figure 5.9 tries to illustrate that it does not. … The independent
+Brownian increments can be simulated for each time interval, and summed to give `W(t)` at the
+required times").  The base increments `ξ_i` are i.i.d. with law `μ`, the variates `ζ_k` i.i.d.
+with law `ρ`, and the fresh scheme applies the update to `s k y (ζ_k)`.  If `s k y (ζ)` has, for
+every path `y` so far, the law of a sum of `ν_k(y)` base increments (`hρ`), then the whole
+adaptive path `(x_k)_{k∈ℕ}` built from the summed base increments and the whole path of the fresh
+scheme have the same law (a measure on `ℕ → X`). -/
 theorem map_adaptiveSeq_eq_freshSeq (μ : Measure E) [IsProbabilityMeasure μ] (ρ : Measure E')
     [IsProbabilityMeasure ρ] {ν : ℕ → (ℕ → X) → ℕ} {G : ℕ → (ℕ → X) → E → X}
     (hν : ∀ k, Measurable (ν k)) (hG : ∀ k, Measurable fun p : (ℕ → X) × E => G k p.1 p.2)
@@ -919,7 +952,7 @@ end IntegralTransfer
 
 section Gaussian
 
-/-- **A sum of `n` independent `N(0, δ)` base increments is `N(0, nδ)`** (Giles 2015, §5.6, p. 44,
+/-- A sum of `n` independent `N(0, δ)` base increments is `N(0, nδ)` (Giles 2015, §5.6, p. 44,
 lines 1928–1929: the Brownian increments of the base intervals "summed to give `W(t)`"). -/
 lemma blockLaw_gaussianReal (δ : ℝ≥0) (n : ℕ) :
     blockLaw (gaussianReal 0 δ) n = gaussianReal 0 (n * δ) := by
@@ -959,17 +992,22 @@ lemma isMarkovKernel_gaussianStepKernel (δ : ℝ≥0) : IsMarkovKernel (gaussia
 variable {X : Type*} [MeasurableSpace X] {Ω Ω' : Type*} [MeasurableSpace Ω] [MeasurableSpace Ω']
   {P : Measure Ω} {P' : Measure Ω'} {δ : ℝ≥0} {ξ : ℕ → Ω → ℝ} {ζ : ℕ → Ω' → ℝ}
 
-/-- **Given the past, the Brownian increment over an adaptively chosen step is `N(0, n_k δ)`**
-(Giles 2015, §5.6, p. 44, lines 1917–1929: steps "`h_ℓ = 2^{−ℓ} H(Ŝ_n)`" that depend on the path,
-and "The independent Brownian increments can be simulated for each time interval, and summed").
-The base increments `ξ_0, ξ_1, …` are independent `N(0, δ)` (the Brownian increments over a fixed
-base grid of spacing `δ`), and step `k` takes `n_k = ν_k(y_k)` base intervals chosen from the path
-`y_k` so far (any measurable rule `ν_k`; the update `G_k` is any measurable function).  Then the
-pair (path so far, increment `ΔW_k` over the chosen step) has the law `L_k ⊗ₘ κ_k`, where `L_k` is
-the law of the path so far and `κ_k(y) = N(0, ν_k(y) δ)`: given the past, `ΔW_k ~ N(0, h_k)` with
-`h_k = n_k δ` the chosen step.  (This is Mathlib's `HasCondDistrib ΔW_k y_k κ_k P`, unfolded;
-`adaptiveIncr_condDistrib_gaussian` states it with `condDistrib`.)  Step sizes are multiples of
-the base spacing `δ`. -/
+/-- **Given the path so far, the Brownian increment over an adaptively chosen step is
+`N(0, n_k δ)`** (Giles 2015, §5.6, p. 44, lines 1917–1929: steps "`h_ℓ = 2^{−ℓ} H(Ŝ_n)`" that
+depend on the path, and "The independent Brownian increments can be simulated for each time
+interval, and summed").  The base increments `ξ_0, ξ_1, …` are independent `N(0, δ)` (the
+Brownian increments over a fixed base grid of spacing `δ`), and step `k` takes `n_k = ν_k(y_k)`
+base intervals chosen from the path `y_k` so far (any measurable rule `ν_k`; the update `G_k` is
+any measurable function).  Then the pair (path so far, increment `ΔW_k` over the chosen step) has
+the law `L_k ⊗ₘ κ_k`, where `L_k` is the law of the path so far and `κ_k(y) = N(0, ν_k(y) δ)`:
+given the path so far, `ΔW_k ~ N(0, h_k)` with `h_k = n_k δ` the chosen step.  (This is
+Mathlib's `HasCondDistrib ΔW_k y_k κ_k P`, unfolded; `adaptiveIncr_condDistrib_gaussian` states
+it with `condDistrib`.)  Step sizes are multiples of the base spacing `δ`.  "The path so far" is
+the path `y_k` of the scheme (the σ-algebra `σ(y_k)`): the rule sees the base increments only
+through `y_k`, i.e. through the step increments `ΔW_j`, `j < k`.  Given the whole history
+`(ξ_i)_{i<τ_k}` of the base increments the increment is still `N(0, n_k δ)`
+(`adaptiveIncr_condLaw_hist_gaussian`), also for rules that depend on that history
+(`histIncr_condLaw_gaussian`). -/
 theorem adaptiveIncr_condLaw_gaussian (hind : iIndepFun ξ P)
     (hξ : ∀ i, HasLaw (ξ i) (gaussianReal 0 δ) P) {ν : ℕ → (ℕ → X) → ℕ}
     {G : ℕ → (ℕ → X) → ℝ → X} (hν : ∀ k, Measurable (ν k))
@@ -987,9 +1025,13 @@ theorem adaptiveIncr_condLaw_gaussian (hind : iIndepFun ξ P)
     map_adaptiveIncr _ hν hG x₀ k, blockKernel_gaussianReal]
 
 /-- **The conditional distribution of an adaptive Brownian increment** (Giles 2015, §5.6, p. 44,
-lines 1917–1929).  In the setting of `adaptiveIncr_condLaw_gaussian`, the conditional
-distribution of the increment `ΔW_k` over the chosen step given the path `y_k` so far is, for
-almost every `y` (under the law of `y_k`), the normal law `N(0, ν_k(y) δ)`. -/
+lines 1917–1929: "an adaptive timestep of the form `h_ℓ = 2^{−ℓ} H(Ŝ_n)` … The independent Brownian
+increments can be simulated for each time interval").  In the setting of
+`adaptiveIncr_condLaw_gaussian`, the conditional distribution of the increment `ΔW_k` over the
+chosen step given the path `y_k` so far is, for almost every `y` (under the law of `y_k`), the
+normal law `N(0, ν_k(y) δ)`.  The conditioning is on the path `y_k` of the scheme (the σ-algebra
+`σ(y_k)`), through which alone the rule sees the base increments; for the whole history
+`(ξ_i)_{i<τ_k}` see `adaptiveIncr_condLaw_hist_gaussian`. -/
 theorem adaptiveIncr_condDistrib_gaussian [IsProbabilityMeasure P] (hind : iIndepFun ξ P)
     (hξ : ∀ i, HasLaw (ξ i) (gaussianReal 0 δ) P) {ν : ℕ → (ℕ → X) → ℕ}
     {G : ℕ → (ℕ → X) → ℝ → X} (hν : ∀ k, Measurable (ν k))
@@ -1006,9 +1048,11 @@ theorem adaptiveIncr_condDistrib_gaussian [IsProbabilityMeasure P] (hind : iInde
     (adaptiveIncr_condLaw_gaussian hind hξ hν hG x₀ k)
 
 /-- **The law of the adaptive path built from summed Brownian increments** (Giles 2015, §5.6,
-p. 44, lines 1917–1929).  With independent `N(0, δ)` base increments, the path stopped at step `k`
-has the law `adaptiveLaw (fun j y => N(0, ν_j(y) δ)) G x₀ k` of the scheme whose `j`-th increment,
-given the past `y`, is `N(0, h_j)` with the chosen step `h_j = ν_j(y) δ`. -/
+p. 44, lines 1917–1929: "with an adaptive timestep of the form `h_ℓ = 2^{−ℓ} H(Ŝ_n)` … The
+independent Brownian increments can be simulated for each time interval, and summed to give
+`W(t)` at the required times").  With independent `N(0, δ)` base increments, the path stopped at
+step `k` has the law `adaptiveLaw (fun j y => N(0, ν_j(y) δ)) G x₀ k` of the scheme whose `j`-th
+increment, given the path `y` so far, is `N(0, h_j)` with the chosen step `h_j = ν_j(y) δ`. -/
 theorem adaptivePath_law_gaussian (hind : iIndepFun ξ P)
     (hξ : ∀ i, HasLaw (ξ i) (gaussianReal 0 δ) P) {ν : ℕ → (ℕ → X) → ℕ}
     {G : ℕ → (ℕ → X) → ℝ → X} (hν : ∀ k, Measurable (ν k))
@@ -1081,11 +1125,13 @@ theorem adaptiveSeq_law_eq_fresh (hind : iIndepFun ξ P)
   rw [h, blockLaw_gaussianReal]
 
 /-- **The (step, increment) pairs of an adaptive scheme** (Giles 2015, §5.6, p. 44,
-lines 1917–1929).  Here the path records the pairs: `x_0 = (0, 0)` and `x_{j+1} = (n_j, ΔW_j)`,
-where the number `n_j = ν_j(y_j)` of base intervals of step `j` is chosen by a measurable rule from
-the earlier pairs.  Built from independent `N(0, δ)` base increments (`ΔW_j` the sum over the step)
-or from fresh increments `ΔW_j = √(n_j δ) ζ_j` with independent standard normal `ζ_j`, the
-sequences of pairs have the same law; in particular so do the first `K` pairs, for every `K`. -/
+lines 1917–1929: "an adaptive timestep of the form `h_ℓ = 2^{−ℓ} H(Ŝ_n)` … The independent Brownian
+increments can be simulated for each time interval, and summed to give `W(t)` at the required
+times").  Here the path records the pairs: `x_0 = (0, 0)` and `x_{j+1} = (n_j, ΔW_j)`, where the
+number `n_j = ν_j(y_j)` of base intervals of step `j` is chosen by a measurable rule from the
+earlier pairs.  Built from independent `N(0, δ)` base increments (`ΔW_j` the sum over the step) or
+from fresh increments `ΔW_j = √(n_j δ) ζ_j` with independent standard normal `ζ_j`, the sequences
+of pairs have the same law; in particular so do the first `K` pairs, for every `K`. -/
 theorem adaptivePairs_law_eq_fresh (hind : iIndepFun ξ P)
     (hξ : ∀ i, HasLaw (ξ i) (gaussianReal 0 δ) P) (hζind : iIndepFun ζ P')
     (hζ : ∀ i, HasLaw (ζ i) (gaussianReal 0 1) P') {ν : ℕ → (ℕ → ℕ × ℝ) → ℕ}
@@ -1123,7 +1169,7 @@ noncomputable def adaptiveEM (a b : ℝ → ℝ → ℝ) (ν : ℝ × ℝ → �
   adaptiveSeq (fun k y => ν (y k)) (fun k y dW => adaptiveEMStep a b (ν (y k) * δ) (y k) dW)
     (0, S₀) ξ
 
-/-- **The adaptive Euler–Maruyama scheme with fresh Brownian increments** (Giles 2015, §5.6 and
+/-- The adaptive Euler–Maruyama scheme with fresh Brownian increments (Giles 2015, §5.6 and
 Algorithm 3: "`∆W := √h Z`"): the step from `(t_k, Ŝ_k)` is `h_k = H(t_k, Ŝ_k)` and its Brownian
 increment is `√(h_k) Z_k` with a fresh `Z_k`. -/
 noncomputable def freshEM (a b : ℝ → ℝ → ℝ) (H : ℝ × ℝ → ℝ≥0) (S₀ : ℝ) (ζ : ℕ → ℝ) :
@@ -1160,12 +1206,15 @@ lemma measurable_adaptiveEM {a b : ℝ → ℝ → ℝ} (ha : Measurable (Functi
   exact measurable_adaptiveSeq hν' hG (0, S₀)
 
 /-- **The adaptive Euler–Maruyama path has the law of the single-level adaptive scheme** (Giles
-2015, §5.6, p. 44, lines 1917–1930, Figure 5.9 and Algorithm 3).  The drift `a(S, t)` and the
-volatility `b(S, t)` are measurable, the base increments `ξ_i` independent `N(0, δ)`, the rule `ν`
-measurable, and `H = ν δ` is the step as a function of `(t, S)`.  Then the whole adaptive
-Euler–Maruyama path `(t_k, Ŝ_k)_{k∈ℕ}` built from the summed base increments has the law of the
-adaptive scheme with steps `H(t_k, Ŝ_k)` driven by fresh increments `√(H(t_k, Ŝ_k)) ζ_k`, with
-independent standard normal `ζ_k`.  Step sizes are multiples of `δ`. -/
+2015, §5.6, p. 44, lines 1917–1930, Figure 5.9 and Algorithm 3: "with an adaptive timestep of the
+form `h_ℓ = 2^{−ℓ} H(Ŝ_n)`, where `H(S)` is independent of level … The independent Brownian
+increments can be simulated for each time interval, and summed to give `W(t)` at the required
+times").  The drift `a(S, t)` and the volatility `b(S, t)` are measurable, the base increments
+`ξ_i` independent `N(0, δ)`, the rule `ν` measurable, and `H = ν δ` is the step as a function of
+`(t, S)`.  Then the whole adaptive Euler–Maruyama path `(t_k, Ŝ_k)_{k∈ℕ}` built from the summed
+base increments has the law of the adaptive scheme with steps `H(t_k, Ŝ_k)` driven by fresh
+increments `√(H(t_k, Ŝ_k)) ζ_k`, with independent standard normal `ζ_k`.  Step sizes are
+multiples of `δ`. -/
 theorem adaptiveEM_law_eq_freshEM {a b : ℝ → ℝ → ℝ} (ha : Measurable (Function.uncurry a))
     (hb : Measurable (Function.uncurry b)) {ν : ℝ × ℝ → ℕ} (hν : Measurable ν)
     {H : ℝ × ℝ → ℝ≥0} (hH : ∀ x, H x = ν x * δ) (hind : iIndepFun ξ P)
@@ -1197,7 +1246,8 @@ but Figure 5.9 tries to illustrate that it does not").  The fine path uses the r
 coarse path the rule `νc` (steps `Hf = νf δ`, `Hc = νc δ`), both computed from the same
 independent `N(0, δ)` base increments `ξ_i` (this is the coupling of the two levels).  Each of the
 two paths has the law of its own adaptive scheme driven by fresh Brownian increments.  The
-statement gives each path's own law, not their joint law. -/
+statement gives each path's own law; their joint law is the law of the pair computed from the
+same `ξ`, which Algorithm 3 produces (`algorithm3_EM_joint_law`). -/
 theorem adaptiveEM_fine_coarse {a b : ℝ → ℝ → ℝ} (ha : Measurable (Function.uncurry a))
     (hb : Measurable (Function.uncurry b)) {νf νc : ℝ × ℝ → ℕ} (hνf : Measurable νf)
     (hνc : Measurable νc) {Hf Hc : ℝ × ℝ → ℝ≥0} (hHf : ∀ x, Hf x = νf x * δ)
@@ -1268,21 +1318,21 @@ lemma iIndepFun_sqrt_mul_coord (δ : ℝ≥0) :
   have h := hasLaw_sqrt_mul δ.coe_nonneg (hZ1 i)
   rwa [Real.toNNReal_coe] at h
 
-/-- **The fine payoff on level `ℓ`** (Giles 2015, §5.6 and §2.1): the payoff `Φ ℓ` of the
+/-- The fine payoff on level `ℓ` (Giles 2015, §5.6 and §2.1): the payoff `Φ ℓ` of the
 level-`ℓ` adaptive Euler–Maruyama path in the level-`ℓ` sample, computed on the base grid of
-spacing `δ ℓ` (fine enough for levels `ℓ` and `ℓ − 1`) with the level-`ℓ` rule `νr ℓ ℓ` in units
-of `δ ℓ`, from the base increments `√(δ ℓ) z_i`, `z ~ stdNormalSeq`. -/
-noncomputable def adaptiveEMFine (a b : ℝ → ℝ → ℝ) (νr : ℕ → ℕ → ℝ × ℝ → ℕ) (δ : ℕ → ℝ≥0)
+spacing `δ ℓ` (fine enough for levels `ℓ` and `ℓ − 1`) with the level-`ℓ` rule `νf ℓ` in units of
+`δ ℓ`, from the base increments `√(δ ℓ) z_i`, `z ~ stdNormalSeq`. -/
+noncomputable def adaptiveEMFine (a b : ℝ → ℝ → ℝ) (νf : ℕ → ℝ × ℝ → ℕ) (δ : ℕ → ℝ≥0)
     (S₀ : ℝ) (Φ : ℕ → (ℕ → ℝ × ℝ) → ℝ) (ℓ : ℕ) (z : ℕ → ℝ) : ℝ :=
-  Φ ℓ (adaptiveEM a b (νr ℓ ℓ) (δ ℓ) S₀ fun i => Real.sqrt (δ ℓ) * z i)
+  Φ ℓ (adaptiveEM a b (νf ℓ) (δ ℓ) S₀ fun i => Real.sqrt (δ ℓ) * z i)
 
-/-- **The coarse payoff on level `ℓ`** (Giles 2015, §5.6 and §2.1): the payoff `Φ ℓ` of the
+/-- The coarse payoff on level `ℓ` (Giles 2015, §5.6 and §2.1): the payoff `Φ ℓ` of the
 level-`ℓ` adaptive Euler–Maruyama path in the level-`(ℓ + 1)` sample, computed on the finer base
-grid `δ (ℓ + 1)` with the level-`ℓ` rule `νr ℓ (ℓ + 1)` in units of `δ (ℓ + 1)`, from the same
-inputs `z` as the fine path of level `ℓ + 1`. -/
-noncomputable def adaptiveEMCoarse (a b : ℝ → ℝ → ℝ) (νr : ℕ → ℕ → ℝ × ℝ → ℕ) (δ : ℕ → ℝ≥0)
+grid `δ (ℓ + 1)` with the level-`ℓ` rule `νc ℓ` in units of `δ (ℓ + 1)`, from the same inputs `z`
+as the fine path of level `ℓ + 1`. -/
+noncomputable def adaptiveEMCoarse (a b : ℝ → ℝ → ℝ) (νc : ℕ → ℝ × ℝ → ℕ) (δ : ℕ → ℝ≥0)
     (S₀ : ℝ) (Φ : ℕ → (ℕ → ℝ × ℝ) → ℝ) (ℓ : ℕ) (z : ℕ → ℝ) : ℝ :=
-  Φ ℓ (adaptiveEM a b (νr ℓ (ℓ + 1)) (δ (ℓ + 1)) S₀ fun i => Real.sqrt (δ (ℓ + 1)) * z i)
+  Φ ℓ (adaptiveEM a b (νc ℓ) (δ (ℓ + 1)) S₀ fun i => Real.sqrt (δ (ℓ + 1)) * z i)
 
 /-- The adaptive Euler–Maruyama path from scaled inputs is measurable (Giles 2015, §5.6). -/
 lemma measurable_adaptiveEM_scaled {a b : ℝ → ℝ → ℝ} (ha : Measurable (Function.uncurry a))
@@ -1294,79 +1344,78 @@ lemma measurable_adaptiveEM_scaled {a b : ℝ → ℝ → ℝ} (ha : Measurable 
 /-- The fine and the coarse payoff of level `ℓ` have the same law (Giles 2015, §5.6 and (2.4)),
 when the two rules of level `ℓ` give the same step on the two base grids. -/
 lemma map_adaptiveEMFine_eq_coarse {a b : ℝ → ℝ → ℝ} (ha : Measurable (Function.uncurry a))
-    (hb : Measurable (Function.uncurry b)) {νr : ℕ → ℕ → ℝ × ℝ → ℕ}
-    (hνr : ∀ ℓ j, Measurable (νr ℓ j)) {δ : ℕ → ℝ≥0}
-    (hcons : ∀ ℓ x, (νr ℓ ℓ x : ℝ≥0) * δ ℓ = νr ℓ (ℓ + 1) x * δ (ℓ + 1)) (S₀ : ℝ)
-    {Φ : ℕ → (ℕ → ℝ × ℝ) → ℝ} (hΦ : ∀ ℓ, Measurable (Φ ℓ)) (ℓ : ℕ) :
-    stdNormalSeq.map (adaptiveEMFine a b νr δ S₀ Φ ℓ) =
-      stdNormalSeq.map (adaptiveEMCoarse a b νr δ S₀ Φ ℓ) := by
+    (hb : Measurable (Function.uncurry b)) {νf νc : ℕ → ℝ × ℝ → ℕ} {δ : ℕ → ℝ≥0} {ℓ : ℕ}
+    (hνf : Measurable (νf ℓ)) (hνc : Measurable (νc ℓ))
+    (hcons : ∀ x, (νf ℓ x : ℝ≥0) * δ ℓ = νc ℓ x * δ (ℓ + 1)) (S₀ : ℝ)
+    {Φ : ℕ → (ℕ → ℝ × ℝ) → ℝ} (hΦ : Measurable (Φ ℓ)) :
+    stdNormalSeq.map (adaptiveEMFine a b νf δ S₀ Φ ℓ) =
+      stdNormalSeq.map (adaptiveEMCoarse a b νc δ S₀ Φ ℓ) := by
   have hZ : iIndepFun (fun i (z : ℕ → ℝ) => z i) stdNormalSeq :=
     iIndepFun_infinitePi (X := fun _ (x : ℝ) => x) fun _ => measurable_id
   have hZ1 : ∀ i, HasLaw (fun z : ℕ → ℝ => z i) (gaussianReal 0 1) stdNormalSeq := fun i =>
     ⟨(measurable_pi_apply i).aemeasurable, Measure.infinitePi_map_eval _ i⟩
   obtain ⟨hi₁, hl₁⟩ := iIndepFun_sqrt_mul_coord (δ ℓ)
   obtain ⟨hi₂, hl₂⟩ := iIndepFun_sqrt_mul_coord (δ (ℓ + 1))
-  have h₁ := adaptiveEM_law_eq_freshEM ha hb (hνr ℓ ℓ) (H := fun x => νr ℓ ℓ x * δ ℓ)
+  have h₁ := adaptiveEM_law_eq_freshEM ha hb hνf (H := fun x => νf ℓ x * δ ℓ)
     (fun x => rfl) hi₁ hl₁ hZ hZ1 S₀
-  have h₂ := adaptiveEM_law_eq_freshEM ha hb (hνr ℓ (ℓ + 1)) (H := fun x => νr ℓ ℓ x * δ ℓ)
-    (hcons ℓ) hi₂ hl₂ hZ hZ1 S₀
-  have e₁ : adaptiveEMFine a b νr δ S₀ Φ ℓ =
-      Φ ℓ ∘ fun z => adaptiveEM a b (νr ℓ ℓ) (δ ℓ) S₀ fun i => Real.sqrt (δ ℓ) * z i := rfl
-  have e₂ : adaptiveEMCoarse a b νr δ S₀ Φ ℓ =
-      Φ ℓ ∘ fun z => adaptiveEM a b (νr ℓ (ℓ + 1)) (δ (ℓ + 1)) S₀
+  have h₂ := adaptiveEM_law_eq_freshEM ha hb hνc (H := fun x => νf ℓ x * δ ℓ)
+    hcons hi₂ hl₂ hZ hZ1 S₀
+  have e₁ : adaptiveEMFine a b νf δ S₀ Φ ℓ =
+      Φ ℓ ∘ fun z => adaptiveEM a b (νf ℓ) (δ ℓ) S₀ fun i => Real.sqrt (δ ℓ) * z i := rfl
+  have e₂ : adaptiveEMCoarse a b νc δ S₀ Φ ℓ =
+      Φ ℓ ∘ fun z => adaptiveEM a b (νc ℓ) (δ (ℓ + 1)) S₀
         fun i => Real.sqrt (δ (ℓ + 1)) * z i := rfl
-  rw [e₁, e₂, ← Measure.map_map (hΦ ℓ) (measurable_adaptiveEM_scaled ha hb (hνr ℓ ℓ) _ S₀),
-    ← Measure.map_map (hΦ ℓ) (measurable_adaptiveEM_scaled ha hb (hνr ℓ (ℓ + 1)) _ S₀),
-    h₁, h₂]
+  rw [e₁, e₂, ← Measure.map_map hΦ (measurable_adaptiveEM_scaled ha hb hνf _ S₀),
+    ← Measure.map_map hΦ (measurable_adaptiveEM_scaled ha hb hνc _ S₀), h₁, h₂]
 
 /-- **Theorem 1 for the non-nested adaptive Euler–Maruyama estimator** (Giles 2015, §2.1, (2.4)
 and Theorem 1; §5.6, p. 44, lines 1917–1930: "a completely independent adaptation on each level
 of refinement … It may appear that this would cause difficulties in the MLMC implementation, but
 Figure 5.9 tries to illustrate that it does not").  The level-`ℓ` correction is
-`P^f_ℓ − P^c_{ℓ−1}` on one input `z ~ stdNormalSeq`: the level-`ℓ` path (rule `νr ℓ ℓ`) and the
-level-`(ℓ−1)` path (rule `νr (ℓ−1) ℓ`) both built from the base increments `√(δ ℓ) z_i` of the
+`P^f_ℓ − P^c_{ℓ−1}` on one input `z ~ stdNormalSeq`: the level-`ℓ` path (rule `νf ℓ`) and the
+level-`(ℓ−1)` path (rule `νc (ℓ−1)`) are both built from the base increments `√(δ ℓ) z_i` of the
 level-`ℓ` base grid; the inputs `ω^{(ℓ,n)}` of the samples are independent with law
-`stdNormalSeq`.  The rule of level `ℓ` gives the same step on the base grids of the samples ℓ and
-`ℓ + 1` (`hcons`), so (2.4) holds (proved, not assumed), and the coarse payoffs are square
-integrable when the fine ones are.  Hence under (i), (iii), (iv) with `α ≥ ½ min(β, γ)` there is
-`c₄ > 0` such that for every `0 < ε < e⁻¹` there are `L` and `N_ℓ ≥ 1` with `MSE < ε²` and
-`E[C] ≤ c₄ · bound(ε)`.  The rates (i), (iii), (iv) are assumed; step sizes are multiples of the
-base spacings. -/
+`stdNormalSeq`.  The two rules of level `ℓ` give the same step on the base grids of the samples
+`ℓ` and `ℓ + 1` (`hcons`: `νf ℓ x · δ ℓ = νc ℓ x · δ (ℓ + 1)`), so (2.4) holds (proved, not
+assumed), and the coarse payoffs are square integrable when the fine ones are.  Hence under (i),
+(iii), (iv) with `α ≥ ½ min(β, γ)` there is `c₄ > 0` such that for every `0 < ε < e⁻¹` there are
+`L` and `N_ℓ ≥ 1` with `MSE < ε²` and `E[C] ≤ c₄ · bound(ε)`.  The rates (i), (iii), (iv) are
+assumed; step sizes are multiples of the base spacings. -/
 theorem adaptiveEM_mlmc_theorem1 {Ω : Type*} [MeasurableSpace Ω] {μ : Measure Ω}
     [IsProbabilityMeasure μ] {a b : ℝ → ℝ → ℝ} (ha : Measurable (Function.uncurry a))
-    (hb : Measurable (Function.uncurry b)) {νr : ℕ → ℕ → ℝ × ℝ → ℕ}
-    (hνr : ∀ ℓ j, Measurable (νr ℓ j)) {δ : ℕ → ℝ≥0}
-    (hcons : ∀ ℓ x, (νr ℓ ℓ x : ℝ≥0) * δ ℓ = νr ℓ (ℓ + 1) x * δ (ℓ + 1)) (S₀ : ℝ)
+    (hb : Measurable (Function.uncurry b)) {νf νc : ℕ → ℝ × ℝ → ℕ}
+    (hνf : ∀ ℓ, Measurable (νf ℓ)) (hνc : ∀ ℓ, Measurable (νc ℓ)) {δ : ℕ → ℝ≥0}
+    (hcons : ∀ ℓ x, (νf ℓ x : ℝ≥0) * δ ℓ = νc ℓ x * δ (ℓ + 1)) (S₀ : ℝ)
     {Φ : ℕ → (ℕ → ℝ × ℝ) → ℝ} (hΦ : ∀ ℓ, Measurable (Φ ℓ)) (P : (ℕ → ℝ) → ℝ)
     (ω : ℕ × ℕ → Ω → ℕ → ℝ) (cost : ℕ → ℕ → Ω → ℝ) (C : ℕ → ℝ)
     {α β γ c₁ c₂ c₃ : ℝ} (hα : 0 < α) (hβ : 0 < β) (hγ : 0 < γ)
     (hc₁ : 0 < c₁) (hc₂ : 0 < c₂) (hc₃ : 0 < c₃) (hαβγ : min β γ / 2 ≤ α)
     (hω : ∀ p, MeasurePreserving (ω p) μ stdNormalSeq) (hind : iIndepFun ω μ)
     (hP : Integrable P stdNormalSeq)
-    (hPf : ∀ ℓ, MemLp (adaptiveEMFine a b νr δ S₀ Φ ℓ) 2 stdNormalSeq)
+    (hPf : ∀ ℓ, MemLp (adaptiveEMFine a b νf δ S₀ Φ ℓ) 2 stdNormalSeq)
     (hcost : ∀ ℓ n, Integrable (cost ℓ n) μ) (hcostC : ∀ ℓ n, μ[cost ℓ n] = C ℓ)
-    (h_i : ∀ ℓ : ℕ, |∫ z, adaptiveEMFine a b νr δ S₀ Φ ℓ z - P z ∂stdNormalSeq| ≤
+    (h_i : ∀ ℓ : ℕ, |∫ z, adaptiveEMFine a b νf δ S₀ Φ ℓ z - P z ∂stdNormalSeq| ≤
       c₁ * (2 : ℝ) ^ (-(α * (ℓ : ℝ))))
-    (h_iii : ∀ ℓ, variance (fineCoarseDiff (adaptiveEMFine a b νr δ S₀ Φ)
-      (adaptiveEMCoarse a b νr δ S₀ Φ) ℓ) stdNormalSeq ≤ c₂ * (2 : ℝ) ^ (-(β * (ℓ : ℝ))))
+    (h_iii : ∀ ℓ, variance (fineCoarseDiff (adaptiveEMFine a b νf δ S₀ Φ)
+      (adaptiveEMCoarse a b νc δ S₀ Φ) ℓ) stdNormalSeq ≤ c₂ * (2 : ℝ) ^ (-(β * (ℓ : ℝ))))
     (h_iv : ∀ ℓ, C ℓ ≤ c₃ * (2 : ℝ) ^ (γ * (ℓ : ℝ))) :
     ∃ c₄ : ℝ, 0 < c₄ ∧ ∀ ε : ℝ, 0 < ε → ε < Real.exp (-1) →
       ∃ (L : ℕ) (N : ℕ → ℕ), (∀ ℓ, 0 < N ℓ) ∧
         μ[fun x => (∑ ℓ ∈ range (L + 1),
-          blockMean (fineCoarseDiff (adaptiveEMFine a b νr δ S₀ Φ)
-            (adaptiveEMCoarse a b νr δ S₀ Φ)) ω ℓ (N ℓ) x -
+          blockMean (fineCoarseDiff (adaptiveEMFine a b νf δ S₀ Φ)
+            (adaptiveEMCoarse a b νc δ S₀ Φ)) ω ℓ (N ℓ) x -
             ∫ z, P z ∂stdNormalSeq) ^ 2] < ε ^ 2 ∧
         μ[totalCost cost L N] ≤ c₄ * complexityBound α β γ ε := by
-  have hPfm : ∀ ℓ, Measurable (adaptiveEMFine a b νr δ S₀ Φ ℓ) := fun ℓ =>
-    (hΦ ℓ).comp (measurable_adaptiveEM_scaled ha hb (hνr ℓ ℓ) _ S₀)
-  have hPcm : ∀ ℓ, Measurable (adaptiveEMCoarse a b νr δ S₀ Φ ℓ) := fun ℓ =>
-    (hΦ ℓ).comp (measurable_adaptiveEM_scaled ha hb (hνr ℓ (ℓ + 1)) _ S₀)
-  have hid : ∀ ℓ, IdentDistrib (adaptiveEMFine a b νr δ S₀ Φ ℓ)
-      (adaptiveEMCoarse a b νr δ S₀ Φ ℓ) stdNormalSeq stdNormalSeq := fun ℓ =>
+  have hPfm : ∀ ℓ, Measurable (adaptiveEMFine a b νf δ S₀ Φ ℓ) := fun ℓ =>
+    (hΦ ℓ).comp (measurable_adaptiveEM_scaled ha hb (hνf ℓ) _ S₀)
+  have hPcm : ∀ ℓ, Measurable (adaptiveEMCoarse a b νc δ S₀ Φ ℓ) := fun ℓ =>
+    (hΦ ℓ).comp (measurable_adaptiveEM_scaled ha hb (hνc ℓ) _ S₀)
+  have hid : ∀ ℓ, IdentDistrib (adaptiveEMFine a b νf δ S₀ Φ ℓ)
+      (adaptiveEMCoarse a b νc δ S₀ Φ ℓ) stdNormalSeq stdNormalSeq := fun ℓ =>
     ⟨(hPfm ℓ).aemeasurable, (hPcm ℓ).aemeasurable,
-      map_adaptiveEMFine_eq_coarse ha hb hνr hcons S₀ hΦ ℓ⟩
-  exact giles_theorem1_fineCoarse P (adaptiveEMFine a b νr δ S₀ Φ)
-    (adaptiveEMCoarse a b νr δ S₀ Φ) ω cost C hα hβ hγ hc₁ hc₂ hc₃ hαβγ hω hind hP hPfm hPcm
+      map_adaptiveEMFine_eq_coarse ha hb (hνf ℓ) (hνc ℓ) (hcons ℓ) S₀ (hΦ ℓ)⟩
+  exact giles_theorem1_fineCoarse P (adaptiveEMFine a b νf δ S₀ Φ)
+    (adaptiveEMCoarse a b νc δ S₀ Φ) ω cost C hα hβ hγ hc₁ hc₂ hc₃ hαβγ hω hind hP hPfm hPcm
     hPf (fun ℓ => (hid ℓ).memLp_snd (hPf ℓ)) (fun ℓ => (hid ℓ).integral_eq) hcost hcostC h_i
     h_iii h_iv
 
@@ -1376,7 +1425,7 @@ end Theorem1
 
 section Poisson
 
-/-- **A sum of `n` independent `P(m)` counts is `P(nm)`** (Giles 2015, §8, p. 55: "the sum of two
+/-- A sum of `n` independent `P(m)` counts is `P(nm)` (Giles 2015, §8, p. 55: "the sum of two
 independent Poisson variates `P(t₁)`, `P(t₂)` is equivalent in distribution to `P(t₁ + t₂)`"). -/
 lemma blockLaw_poisson (m : ℝ≥0) (n : ℕ) :
     blockLaw (poissonMeasure m) n = poissonMeasure (n * m) := by
@@ -1409,8 +1458,11 @@ increments").  The base counts `N_i` of a Poisson process of rate `λ` over the 
 length `δ` are independent `P(m)`, `m = λδ`; step `k` takes `ν_k(y_k)` base intervals chosen from
 the path `y_k` so far, and its count is the sum of the base counts over them.  Then the pair
 (path so far, count of step `k`) has the law `L_k ⊗ₘ κ_k` with `κ_k(y) = P(ν_k(y) m)`: given the
-past, the count over the chosen step `h_k = n_k δ` is Poisson with mean `λ h_k`.  The rate `λ` is
-constant; step sizes are multiples of `δ`. -/
+path so far, the count over the chosen step `h_k = n_k δ` is Poisson with mean `λ h_k`.  The rate
+`λ` is constant; step sizes are multiples of `δ`.  "The path so far" is the path `y_k` of the
+scheme (the σ-algebra `σ(y_k)`), through which alone the rule sees the base counts; given the
+whole history `(N_i)_{i<τ_k}` of the base counts the count is still `P(λ h_k)`, also for rules
+that depend on that history (`histCount_condLaw`). -/
 theorem adaptiveCount_condLaw (hind : iIndepFun N P)
     (hN : ∀ i, HasLaw (N i) (poissonMeasure m) P) {ν : ℕ → (ℕ → X) → ℕ}
     {G : ℕ → (ℕ → X) → ℕ → X} (hν : ∀ k, Measurable (ν k))
@@ -1428,11 +1480,12 @@ theorem adaptiveCount_condLaw (hind : iIndepFun N P)
     map_adaptiveIncr _ hν hG x₀ k, blockKernel_poisson]
 
 /-- **The path built from counts over adaptive intervals has the law of the scheme driven by
-fresh Poisson variates** (Giles 2015, §8, p. 56, lines 2442–2447, and §5.6).  The base counts
-`N_i` are independent `P(m)`.  For the fresh scheme, each step `k` has its own independent family
-`ζ_k = (ζ_k(n))_n` of independent Poisson variates `ζ_k(n) ~ P(nm)`, and step `k` uses
-`ζ_k(ν_k(y_k))`: a fresh Poisson variate with the mean of the chosen step.  The whole paths of the
-two schemes have the same law. -/
+fresh Poisson variates** (Giles 2015, §8, p. 56, lines 2442–2447, and §5.6: "the construction is
+exactly the same as illustrated in Figure 5.9, but with Poisson variates for each time interval
+instead of Brownian increments").  The base counts `N_i` are independent `P(m)`.  For the fresh
+scheme, each step `k` has its own independent family `ζ_k = (ζ_k(n))_n` of independent Poisson
+variates `ζ_k(n) ~ P(nm)`, and step `k` uses `ζ_k(ν_k(y_k))`: a fresh Poisson variate with the
+mean of the chosen step.  The whole paths of the two schemes have the same law. -/
 theorem adaptiveCount_law_eq_fresh (hind : iIndepFun N P)
     (hN : ∀ i, HasLaw (N i) (poissonMeasure m) P) {ζ : ℕ → Ω' → ℕ → ℕ}
     (hζind : iIndepFun ζ P')
@@ -1455,6 +1508,445 @@ theorem adaptiveCount_law_eq_fresh (hind : iIndepFun N P)
 
 end Poisson
 
+/-! ### Conditioning on the whole history of the base increments
+
+The results above condition on the path `y_k` of the scheme.  Here the past at step `k` is
+`(y_k, τ_k, H_k)` with the history `H_k = (ξ_i)_{i<τ_k}` of all the base increments used so far
+(padded with zeros, `usedSeq`), the rules and the updates may depend on it (`histPath`), and the
+base increments after `τ_k` are independent of it (`map_histPath_prod`, the strong Markov property
+of an i.i.d. sequence at the predictable times `τ_k`). -/
+
+section History
+
+variable {X E : Type*}
+
+/-- The base increments used before base interval `τ`, padded with zeros (Giles 2015, §5.6, p. 44,
+lines 1928–1929: the Brownian increments "simulated for each time interval" so far):
+`usedSeq τ ξ i = ξ_i` for `i < τ` and `= 0` for `i ≥ τ`.  With `τ`, it is the history
+`(ξ_i)_{i<τ}`. -/
+def usedSeq [Zero E] (τ : ℕ) (ξ : ℕ → E) : ℕ → E := fun i => if i < τ then ξ i else 0
+
+/-- The history `H` of the first `τ` base increments, continued by the first `n` entries of `ω`
+(Giles 2015, §5.6): `usedSeq (τ + n) ξ = appendBlock τ (usedSeq τ ξ) n (σ^τ ξ)`
+(`usedSeq_add`). -/
+def appendBlock [Zero E] (τ : ℕ) (H : ℕ → E) (n : ℕ) (ω : ℕ → E) : ℕ → E :=
+  fun i => if i < τ then H i else usedSeq n ω (i - τ)
+
+/-- Before the first step no base increment has been used (Giles 2015, §5.6). -/
+lemma usedSeq_zero [Zero E] (ξ : ℕ → E) : usedSeq 0 ξ = 0 := by
+  funext i
+  exact if_neg (Nat.not_lt_zero i)
+
+/-- The history after a step of `n` base intervals (Giles 2015, §5.6). -/
+lemma usedSeq_add [Zero E] (τ n : ℕ) (ξ : ℕ → E) :
+    usedSeq (τ + n) ξ = appendBlock τ (usedSeq τ ξ) n (shiftSeq τ ξ) := by
+  funext i
+  show (if i < τ + n then ξ i else 0) =
+    if i < τ then (if i < τ then ξ i else 0) else if i - τ < n then ξ (τ + (i - τ)) else 0
+  by_cases h : i < τ
+  · rw [if_pos (by omega), if_pos h, if_pos h]
+  · rw [if_neg h]
+    by_cases h' : i < τ + n
+    · rw [if_pos h', if_pos (by omega), Nat.add_sub_of_le (by omega)]
+    · rw [if_neg h', if_neg (by omega)]
+
+/-- Padding the padded block again changes nothing (Giles 2015, §5.6). -/
+lemma usedSeq_usedSeq [Zero E] (n : ℕ) (ω : ℕ → E) : usedSeq n (usedSeq n ω) = usedSeq n ω := by
+  funext i
+  show (if i < n then (if i < n then ω i else 0) else 0) = if i < n then ω i else 0
+  by_cases h : i < n
+  · rw [if_pos h, if_pos h]
+  · rw [if_neg h, if_neg h]
+
+/-- **The adaptive path with rules that see the whole history** (Giles 2015, §5.6, p. 44,
+lines 1917–1929: "an adaptive timestep of the form `h_ℓ = 2^{−ℓ} H(Ŝ_n)`"; "The independent
+Brownian increments can be simulated for each time interval, and summed to give `W(t)` at the
+required times").  As `adaptivePath`, but the value at step `k` is the whole past
+`p_k = (y_k, τ_k, H_k)`: the path stopped at step `k`, the number `τ_k` of base intervals used so
+far, and the history `H_k = usedSeq τ_k ξ` of the base increments used so far.  Step `k` takes
+`n_k = ν k p_k` base intervals; its increment is `ΔW_k = ∑_{τ_k ≤ i < τ_k + n_k} ξ_i`
+(`histIncr`), and `x_{k+1} = G k p_k ΔW_k`.  Step sizes are multiples of the base spacing. -/
+def histPath [AddCommMonoid E] (ν : ℕ → (ℕ → X) × ℕ × (ℕ → E) → ℕ)
+    (G : ℕ → (ℕ → X) × ℕ × (ℕ → E) → E → X) (x₀ : X) (ξ : ℕ → E) :
+    ℕ → (ℕ → X) × ℕ × (ℕ → E)
+  | 0 => (fun _ => x₀, 0, 0)
+  | k + 1 =>
+    let p := histPath ν G x₀ ξ k
+    (extendPath k p.1 (G k p (∑ i ∈ Ico p.2.1 (p.2.1 + ν k p), ξ i)), p.2.1 + ν k p,
+      usedSeq (p.2.1 + ν k p) ξ)
+
+/-- The increment of step `k` of `histPath` (Giles 2015, §5.6, p. 44, lines 1928–1929): the sum
+`ΔW_k = ∑_{τ_k ≤ i < τ_k + n_k} ξ_i` of the base increments over the `n_k` base intervals of the
+step. -/
+def histIncr [AddCommMonoid E] (ν : ℕ → (ℕ → X) × ℕ × (ℕ → E) → ℕ)
+    (G : ℕ → (ℕ → X) × ℕ × (ℕ → E) → E → X) (x₀ : X) (ξ : ℕ → E) (k : ℕ) : E :=
+  ∑ i ∈ Ico (histPath ν G x₀ ξ k).2.1
+    ((histPath ν G x₀ ξ k).2.1 + ν k (histPath ν G x₀ ξ k)), ξ i
+
+/-- One step of `histPath`, in terms of `histIncr` (Giles 2015, §5.6). -/
+lemma histPath_succ [AddCommMonoid E] (ν : ℕ → (ℕ → X) × ℕ × (ℕ → E) → ℕ)
+    (G : ℕ → (ℕ → X) × ℕ × (ℕ → E) → E → X) (x₀ : X) (ξ : ℕ → E) (k : ℕ) :
+    histPath ν G x₀ ξ (k + 1) =
+      (extendPath k (histPath ν G x₀ ξ k).1 (G k (histPath ν G x₀ ξ k) (histIncr ν G x₀ ξ k)),
+        (histPath ν G x₀ ξ k).2.1 + ν k (histPath ν G x₀ ξ k),
+        usedSeq ((histPath ν G x₀ ξ k).2.1 + ν k (histPath ν G x₀ ξ k)) ξ) := rfl
+
+/-- The third component of `histPath` is the history of the base increments used so far (Giles
+2015, §5.6): `H_k = usedSeq τ_k ξ`. -/
+lemma histPath_hist [AddCommMonoid E] (ν : ℕ → (ℕ → X) × ℕ × (ℕ → E) → ℕ)
+    (G : ℕ → (ℕ → X) × ℕ × (ℕ → E) → E → X) (x₀ : X) (ξ : ℕ → E) :
+    ∀ k, (histPath ν G x₀ ξ k).2.2 = usedSeq (histPath ν G x₀ ξ k).2.1 ξ
+  | 0 => (usedSeq_zero ξ).symm
+  | _ + 1 => rfl
+
+/-- The increment of step `k` of `histPath` is the sum of the first `n_k` base increments not used
+yet (Giles 2015, §5.6): `ΔW_k = ∑_{i<n_k} (σ^{τ_k} ξ)_i`. -/
+lemma histIncr_eq [AddCommMonoid E] (ν : ℕ → (ℕ → X) × ℕ × (ℕ → E) → ℕ)
+    (G : ℕ → (ℕ → X) × ℕ × (ℕ → E) → E → X) (x₀ : X) (ξ : ℕ → E) (k : ℕ) :
+    histIncr ν G x₀ ξ k = ∑ i ∈ range (ν k (histPath ν G x₀ ξ k)),
+      shiftSeq (histPath ν G x₀ ξ k).2.1 ξ i := by
+  rw [histIncr, Finset.sum_Ico_eq_sum_range, Nat.add_sub_cancel_left]
+  rfl
+
+/-- `adaptivePath` is `histPath` with rules and updates that ignore the history (Giles 2015,
+§5.6): its past `(y_k, τ_k, usedSeq τ_k ξ)` is the value of `histPath`. -/
+lemma histPath_eq_adaptivePath [AddCommMonoid E] (ν : ℕ → (ℕ → X) → ℕ)
+    (G : ℕ → (ℕ → X) → E → X) (x₀ : X) (ξ : ℕ → E) :
+    ∀ k, histPath (fun k p => ν k p.1) (fun k p e => G k p.1 e) x₀ ξ k =
+      ((adaptivePath ν G x₀ ξ k).1, (adaptivePath ν G x₀ ξ k).2,
+        usedSeq (adaptivePath ν G x₀ ξ k).2 ξ)
+  | 0 => by
+    show ((fun _ => x₀, 0, 0) : (ℕ → X) × ℕ × (ℕ → E)) = (fun _ => x₀, 0, usedSeq 0 ξ)
+    rw [usedSeq_zero]
+  | k + 1 => by
+    rw [histPath_succ, histIncr, histPath_eq_adaptivePath ν G x₀ ξ k]
+    rfl
+
+/-- The increment of `adaptivePath` is that of `histPath` with rules and updates that ignore the
+history (Giles 2015, §5.6). -/
+lemma histIncr_eq_adaptiveIncr [AddCommMonoid E] (ν : ℕ → (ℕ → X) → ℕ)
+    (G : ℕ → (ℕ → X) → E → X) (x₀ : X) (ξ : ℕ → E) (k : ℕ) :
+    histIncr (fun k p => ν k p.1) (fun k p e => G k p.1 e) x₀ ξ k = adaptiveIncr ν G x₀ ξ k := by
+  rw [histIncr, histPath_eq_adaptivePath]
+  rfl
+
+/-- One step of `histPath` acting on (past, unused base increments) (Giles 2015, §5.6): the step
+uses the first `ν k p` unused base increments, appends them to the history and leaves the
+others. -/
+def histStep [AddCommMonoid E] (ν : ℕ → (ℕ → X) × ℕ × (ℕ → E) → ℕ)
+    (G : ℕ → (ℕ → X) × ℕ × (ℕ → E) → E → X) (k : ℕ)
+    (p : ((ℕ → X) × ℕ × (ℕ → E)) × (ℕ → E)) : ((ℕ → X) × ℕ × (ℕ → E)) × (ℕ → E) :=
+  ((extendPath k p.1.1 (G k p.1 (∑ i ∈ range (ν k p.1), p.2 i)), p.1.2.1 + ν k p.1,
+    appendBlock p.1.2.1 p.1.2.2 (ν k p.1) p.2), shiftSeq (ν k p.1) p.2)
+
+/-- `histPath` with its unused base increments evolves by `histStep` (Giles 2015, §5.6). -/
+lemma histPath_step [AddCommMonoid E] (ν : ℕ → (ℕ → X) × ℕ × (ℕ → E) → ℕ)
+    (G : ℕ → (ℕ → X) × ℕ × (ℕ → E) → E → X) (x₀ : X) (ξ : ℕ → E) (k : ℕ) :
+    (histPath ν G x₀ ξ (k + 1), shiftSeq (histPath ν G x₀ ξ (k + 1)).2.1 ξ) =
+      histStep ν G k (histPath ν G x₀ ξ k, shiftSeq (histPath ν G x₀ ξ k).2.1 ξ) := by
+  have h1 : (histPath ν G x₀ ξ (k + 1)).2.1 =
+      (histPath ν G x₀ ξ k).2.1 + ν k (histPath ν G x₀ ξ k) := rfl
+  rw [h1, histPath_succ, histIncr_eq, shiftSeq_add, usedSeq_add, ← histPath_hist]
+  rfl
+
+variable [MeasurableSpace X] [MeasurableSpace E]
+
+omit [MeasurableSpace X] in
+/-- The padded block `ω ↦ usedSeq n ω` is measurable (Giles 2015, §5.6). -/
+lemma measurable_usedSeq [Zero E] (n : ℕ) : Measurable (usedSeq (E := E) n) := by
+  refine measurable_pi_lambda _ fun i => ?_
+  by_cases h : i < n
+  · simp only [usedSeq, h, ↓reduceIte]
+    exact measurable_pi_apply i
+  · simp only [usedSeq, h, ↓reduceIte]
+    exact measurable_const
+
+omit [MeasurableSpace X] in
+/-- `appendBlock` is jointly measurable in the two lengths, the history and the remaining base
+increments (Giles 2015, §5.6). -/
+lemma measurable_appendBlock [Zero E] :
+    Measurable fun q : (ℕ × ℕ) × (ℕ → E) × (ℕ → E) => appendBlock q.1.1 q.2.1 q.1.2 q.2.2 := by
+  refine measurable_from_prod_countable_right fun p => measurable_pi_lambda _ fun i => ?_
+  by_cases h : i < p.1
+  · simp only [appendBlock, h, ↓reduceIte]
+    exact (measurable_pi_apply i).comp measurable_fst
+  · simp only [appendBlock, h, ↓reduceIte]
+    exact (measurable_pi_apply (i - p.1)).comp ((measurable_usedSeq p.2).comp measurable_snd)
+
+omit [MeasurableSpace X] in
+/-- The padded block of the first `n` base increments is independent of the base increments after
+it, which are again i.i.d. (Giles 2015, §5.6, p. 44, lines 1928–1929): under `μ^{⊗ℕ}`, the pair
+`(g(usedSeq n ξ), σⁿ ξ)` has the law `Law(g(usedSeq n ξ)) ⊗ μ^{⊗ℕ}`. -/
+lemma map_usedSeq_shiftSeq [Zero E] (μ : Measure E) [IsProbabilityMeasure μ] (n : ℕ) {Y : Type*}
+    [MeasurableSpace Y] {g : (ℕ → E) → Y} (hg : Measurable g) :
+    (Measure.infinitePi fun _ => μ).map (fun ω => (g (usedSeq n ω), shiftSeq n ω)) =
+      ((Measure.infinitePi fun _ => μ).map fun ω => g (usedSeq n ω)).prod
+        (Measure.infinitePi fun _ => μ) := by
+  have hpad : Measurable fun v : Fin n → E => fun i : ℕ => if h : i < n then v ⟨i, h⟩ else 0 := by
+    refine measurable_pi_lambda _ fun i => ?_
+    by_cases h : i < n
+    · simp only [h, ↓reduceDIte]
+      exact measurable_pi_apply _
+    · simp only [h, ↓reduceDIte]
+      exact measurable_const
+  have hind : IndepFun (fun ω : ℕ → E => g (usedSeq n ω)) (shiftSeq n)
+      (Measure.infinitePi fun _ => μ) :=
+    (indepFun_restrict_shiftSeq μ n).comp (hg.comp hpad) measurable_id
+  have hm : Measurable fun ω : ℕ → E => g (usedSeq n ω) := hg.comp (measurable_usedSeq n)
+  rw [(indepFun_iff_map_prod_eq_prod_map_map hm.aemeasurable
+      (measurable_shiftSeq n).aemeasurable).1 hind, (measurePreserving_shiftSeq μ n).map_eq]
+
+variable [AddCommMonoid E] [MeasurableAdd₂ E]
+
+/-- One step of `histPath` is measurable for a measurable rule and update (Giles 2015, §5.6). -/
+lemma measurable_histStep {ν : ℕ → (ℕ → X) × ℕ × (ℕ → E) → ℕ}
+    {G : ℕ → (ℕ → X) × ℕ × (ℕ → E) → E → X} {k : ℕ} (hν : Measurable (ν k))
+    (hG : Measurable fun p : ((ℕ → X) × ℕ × (ℕ → E)) × E => G k p.1 p.2) :
+    Measurable (histStep ν G k) := by
+  have hn : Measurable fun p : ((ℕ → X) × ℕ × (ℕ → E)) × (ℕ → E) => ν k p.1 :=
+    hν.comp measurable_fst
+  have h0 : Measurable fun p : ((ℕ → X) × ℕ × (ℕ → E)) × (ℕ → E) => (ν k p.1, p.2) :=
+    hn.prodMk measurable_snd
+  have h1 : Measurable fun p : ((ℕ → X) × ℕ × (ℕ → E)) × (ℕ → E) =>
+      ∑ i ∈ range (ν k p.1), p.2 i :=
+    measurable_blockSum_uncurry.comp h0
+  have hτ : Measurable fun p : ((ℕ → X) × ℕ × (ℕ → E)) × (ℕ → E) => p.1.2.1 :=
+    measurable_fst.snd.fst
+  have h3 : Measurable fun p : ((ℕ → X) × ℕ × (ℕ → E)) × (ℕ → E) =>
+      appendBlock p.1.2.1 p.1.2.2 (ν k p.1) p.2 :=
+    measurable_appendBlock.comp ((hτ.prodMk hn).prodMk (measurable_fst.snd.snd.prodMk
+      measurable_snd))
+  exact (((measurable_extendPath k).comp (measurable_fst.fst.prodMk
+    (hG.comp (measurable_fst.prodMk h1)))).prodMk ((hτ.add hn).prodMk h3)).prodMk
+    (measurable_shiftSeq_uncurry.comp h0)
+
+/-- For a fixed past, one step of `histPath` leaves the unused base increments fresh and
+independent of the new past (Giles 2015, §5.6). -/
+lemma map_histStep (μ : Measure E) [IsProbabilityMeasure μ]
+    {ν : ℕ → (ℕ → X) × ℕ × (ℕ → E) → ℕ} {G : ℕ → (ℕ → X) × ℕ × (ℕ → E) → E → X} {k : ℕ}
+    (hG : Measurable fun p : ((ℕ → X) × ℕ × (ℕ → E)) × E => G k p.1 p.2)
+    (s : (ℕ → X) × ℕ × (ℕ → E)) :
+    (Measure.infinitePi fun _ => μ).map (fun ω => histStep ν G k (s, ω)) =
+      ((Measure.infinitePi fun _ => μ).map fun ω => (histStep ν G k (s, ω)).1).prod
+        (Measure.infinitePi fun _ => μ) := by
+  have hg : Measurable fun b : ℕ → E =>
+      ((extendPath k s.1 (G k s (∑ i ∈ range (ν k s), b i)), s.2.1 + ν k s,
+        appendBlock s.2.1 s.2.2 (ν k s) b) : (ℕ → X) × ℕ × (ℕ → E)) :=
+    ((measurable_extendPath k).comp (measurable_const.prodMk (hG.comp
+      (measurable_const.prodMk (measurable_blockSum (ν k s)))))).prodMk
+      (measurable_const.prodMk (measurable_appendBlock.comp
+        (f := fun b => ((s.2.1, ν k s), (s.2.2, b)))
+        (measurable_const.prodMk (measurable_const.prodMk measurable_id))))
+  have e : ∀ ω : ℕ → E, histStep ν G k (s, ω) =
+      ((extendPath k s.1 (G k s (∑ i ∈ range (ν k s), usedSeq (ν k s) ω i)), s.2.1 + ν k s,
+        appendBlock s.2.1 s.2.2 (ν k s) (usedSeq (ν k s) ω)), shiftSeq (ν k s) ω) := fun ω => by
+    have h1 : ∑ i ∈ range (ν k s), ω i = ∑ i ∈ range (ν k s), usedSeq (ν k s) ω i :=
+      Finset.sum_congr rfl fun i hi => (if_pos (Finset.mem_range.1 hi)).symm
+    have h2 : appendBlock s.2.1 s.2.2 (ν k s) ω =
+        appendBlock s.2.1 s.2.2 (ν k s) (usedSeq (ν k s) ω) := by
+      unfold appendBlock
+      rw [usedSeq_usedSeq]
+    rw [← h1, ← h2]
+    rfl
+  simp_rw [e]
+  exact map_usedSeq_shiftSeq μ (ν k s) hg
+
+/-- **The base increments after the adaptive times are independent of the whole past** (Giles
+2015, §5.6, p. 44, lines 1926–1929: "The underlying Brownian path needs to be sampled at a set of
+times which are the union of the simulation times used by the coarse and fine path. The
+independent Brownian increments can be simulated for each time interval, and summed to give
+`W(t)` at the required times").  Let the base increments be i.i.d. with law `μ`, and let the
+rules `ν k` and the updates `G k` of `histPath` be measurable functions of the whole past
+`p_k = (y_k, τ_k, H_k)` (path so far, base intervals used so far, history `H_k = (ξ_i)_{i<τ_k}`
+padded with zeros).  Then the unused base increments `σ^{τ_k} ξ = (ξ_{τ_k + i})_i` are independent
+of `p_k` and again i.i.d. with law `μ`: `Law(p_k, σ^{τ_k} ξ) = Law(p_k) ⊗ μ^{⊗ℕ}`.  This is the
+strong Markov property of an i.i.d. sequence at the predictable times `τ_k` (the stopping time
+`τ_k` and the history `H_k` generate the σ-algebra of the base increments before `τ_k`).  For rules
+that ignore the history, `histPath` is `adaptivePath` (`histPath_eq_adaptivePath`). -/
+theorem map_histPath_prod (μ : Measure E) [IsProbabilityMeasure μ]
+    {ν : ℕ → (ℕ → X) × ℕ × (ℕ → E) → ℕ} {G : ℕ → (ℕ → X) × ℕ × (ℕ → E) → E → X}
+    (hν : ∀ k, Measurable (ν k))
+    (hG : ∀ k, Measurable fun p : ((ℕ → X) × ℕ × (ℕ → E)) × E => G k p.1 p.2) (x₀ : X) (k : ℕ) :
+    (Measure.infinitePi fun _ => μ).map
+        (fun ξ => (histPath ν G x₀ ξ k, shiftSeq (histPath ν G x₀ ξ k).2.1 ξ)) =
+      ((Measure.infinitePi fun _ => μ).map fun ξ => histPath ν G x₀ ξ k).prod
+        (Measure.infinitePi fun _ => μ) := by
+  have h := map_noiseChain (Measure.infinitePi fun _ => μ) (histStep ν G)
+    (fun j => measurable_histStep (hν j) (hG j)) (fun j s => map_histStep μ (hG j) s)
+    ((fun _ => x₀, 0, 0) : (ℕ → X) × ℕ × (ℕ → E))
+    (fun k ξ => (histPath ν G x₀ ξ k, shiftSeq (histPath ν G x₀ ξ k).2.1 ξ))
+    (fun ξ => by
+      show ((fun _ => x₀, 0, 0), shiftSeq 0 ξ) = ((fun _ => x₀, 0, 0), ξ)
+      rw [shiftSeq_zero]) (fun j ξ => histPath_step ν G x₀ ξ j) k
+  have e : (fun ξ => histPath ν G x₀ ξ k) =
+      Prod.fst ∘ fun ξ => (histPath ν G x₀ ξ k, shiftSeq (histPath ν G x₀ ξ k).2.1 ξ) := rfl
+  rw [h.2, e, ← Measure.map_map measurable_fst h.1, h.2, Measure.map_fst_prod, measure_univ,
+    one_smul]
+
+/-- `histPath` with its unused base increments is a measurable function of the base increments
+(Giles 2015, §5.6). -/
+lemma measurable_histPath {ν : ℕ → (ℕ → X) × ℕ × (ℕ → E) → ℕ}
+    {G : ℕ → (ℕ → X) × ℕ × (ℕ → E) → E → X} (hν : ∀ k, Measurable (ν k))
+    (hG : ∀ k, Measurable fun p : ((ℕ → X) × ℕ × (ℕ → E)) × E => G k p.1 p.2) (x₀ : X) :
+    ∀ k, Measurable fun ξ : ℕ → E =>
+      (histPath ν G x₀ ξ k, shiftSeq (histPath ν G x₀ ξ k).2.1 ξ)
+  | 0 => by
+    have e : (fun ξ : ℕ → E => (histPath ν G x₀ ξ 0, shiftSeq (histPath ν G x₀ ξ 0).2.1 ξ)) =
+        fun ξ => (((fun _ => x₀, 0, 0) : (ℕ → X) × ℕ × (ℕ → E)), ξ) := by
+      funext ξ
+      show ((fun _ => x₀, 0, 0), shiftSeq 0 ξ) = ((fun _ => x₀, 0, 0), ξ)
+      rw [shiftSeq_zero]
+    rw [e]
+    exact measurable_const.prodMk measurable_id
+  | k + 1 => by
+    have e : (fun ξ : ℕ → E =>
+        (histPath ν G x₀ ξ (k + 1), shiftSeq (histPath ν G x₀ ξ (k + 1)).2.1 ξ)) =
+        histStep ν G k ∘ fun ξ => (histPath ν G x₀ ξ k, shiftSeq (histPath ν G x₀ ξ k).2.1 ξ) :=
+      funext fun ξ => histPath_step ν G x₀ ξ k
+    rw [e]
+    exact (measurable_histStep (hν k) (hG k)).comp (measurable_histPath hν hG x₀ k)
+
+/-- The increment of step `k` of `histPath` is a measurable function of the base increments (Giles
+2015, §5.6). -/
+lemma measurable_histIncr {ν : ℕ → (ℕ → X) × ℕ × (ℕ → E) → ℕ}
+    {G : ℕ → (ℕ → X) × ℕ × (ℕ → E) → E → X} (hν : ∀ k, Measurable (ν k))
+    (hG : ∀ k, Measurable fun p : ((ℕ → X) × ℕ × (ℕ → E)) × E => G k p.1 p.2) (x₀ : X)
+    (k : ℕ) : Measurable fun ξ => histIncr ν G x₀ ξ k := by
+  have hf : Measurable fun p : ((ℕ → X) × ℕ × (ℕ → E)) × (ℕ → E) =>
+      ∑ i ∈ range (ν k p.1), p.2 i :=
+    measurable_blockSum_uncurry.comp (((hν k).comp measurable_fst).prodMk measurable_snd)
+  have e : (fun ξ => histIncr ν G x₀ ξ k) =
+      (fun p : ((ℕ → X) × ℕ × (ℕ → E)) × (ℕ → E) => ∑ i ∈ range (ν k p.1), p.2 i) ∘
+        fun ξ => (histPath ν G x₀ ξ k, shiftSeq (histPath ν G x₀ ξ k).2.1 ξ) :=
+    funext fun ξ => histIncr_eq ν G x₀ ξ k
+  rw [e]
+  exact hf.comp (measurable_histPath hν hG x₀ k)
+
+/-- Given the whole past, the increment of a step of `histPath` is distributed as a sum of
+`ν_k(p_k)` fresh base increments (Giles 2015, §5.6, p. 44, lines 1926–1929): the pair (past,
+increment) has the law `Law(p_k) ⊗ₘ κ` with `κ p = blockLaw μ (ν k p)`. -/
+lemma map_histIncr (μ : Measure E) [IsProbabilityMeasure μ]
+    {ν : ℕ → (ℕ → X) × ℕ × (ℕ → E) → ℕ} {G : ℕ → (ℕ → X) × ℕ × (ℕ → E) → E → X}
+    (hν : ∀ k, Measurable (ν k))
+    (hG : ∀ k, Measurable fun p : ((ℕ → X) × ℕ × (ℕ → E)) × E => G k p.1 p.2) (x₀ : X) (k : ℕ) :
+    (Measure.infinitePi fun _ => μ).map (fun ξ => (histPath ν G x₀ ξ k, histIncr ν G x₀ ξ k)) =
+      ((Measure.infinitePi fun _ => μ).map fun ξ => histPath ν G x₀ ξ k) ⊗ₘ
+        (blockKernel μ).comap (ν k) (hν k) := by
+  have := isMarkovKernel_blockKernel μ
+  have hf : Measurable fun p : ((ℕ → X) × ℕ × (ℕ → E)) × (ℕ → E) =>
+      ∑ i ∈ range (ν k p.1), p.2 i :=
+    measurable_blockSum_uncurry.comp (((hν k).comp measurable_fst).prodMk measurable_snd)
+  have e : (fun ξ => (histPath ν G x₀ ξ k, histIncr ν G x₀ ξ k)) =
+      (fun p : ((ℕ → X) × ℕ × (ℕ → E)) × (ℕ → E) => (p.1, ∑ i ∈ range (ν k p.1), p.2 i)) ∘
+        fun ξ => (histPath ν G x₀ ξ k, shiftSeq (histPath ν G x₀ ξ k).2.1 ξ) := by
+    funext ξ
+    rw [histIncr_eq]
+    rfl
+  rw [e, ← Measure.map_map (measurable_fst.prodMk hf) (measurable_histPath hν hG x₀ k),
+    map_histPath_prod μ hν hG x₀ k,
+    map_pair_prod_eq_compProd _ _ ((blockKernel μ).comap (ν k) (hν k)) hf
+      (fun y => by rw [Kernel.comap_apply]; rfl)]
+
+end History
+
+section HistoryLaws
+
+variable {X : Type*} [MeasurableSpace X] {Ω : Type*} [MeasurableSpace Ω] {P : Measure Ω}
+
+/-- **Given the whole history, the Brownian increment over an adaptively chosen step is
+`N(0, n_k δ)`** (Giles 2015, §5.6, p. 44, lines 1917–1929: "an adaptive timestep of the form
+`h_ℓ = 2^{−ℓ} H(Ŝ_n)`"; "The independent Brownian increments can be simulated for each time
+interval, and summed to give `W(t)` at the required times").  The base increments `ξ_0, ξ_1, …`
+are independent `N(0, δ)`, and the rule `ν_k` and the update `G_k` of `histPath` are measurable
+functions of the whole past `p_k = (y_k, τ_k, H_k)`: the path so far, the number of base intervals
+used so far and the history `H_k = (ξ_i)_{i<τ_k}` of all the base increments used so far.  Then
+the pair (past, increment `ΔW_k` over the chosen step) has the law `Law(p_k) ⊗ₘ κ_k` with
+`κ_k(p) = N(0, ν_k(p) δ)`: given the whole past, `ΔW_k ~ N(0, h_k)` with `h_k = n_k δ`.  Step
+sizes are multiples of the base spacing `δ`. -/
+theorem histIncr_condLaw_gaussian {δ : ℝ≥0} {ξ : ℕ → Ω → ℝ} (hind : iIndepFun ξ P)
+    (hξ : ∀ i, HasLaw (ξ i) (gaussianReal 0 δ) P) {ν : ℕ → (ℕ → X) × ℕ × (ℕ → ℝ) → ℕ}
+    {G : ℕ → (ℕ → X) × ℕ × (ℕ → ℝ) → ℝ → X} (hν : ∀ k, Measurable (ν k))
+    (hG : ∀ k, Measurable fun p : ((ℕ → X) × ℕ × (ℕ → ℝ)) × ℝ => G k p.1 p.2) (x₀ : X)
+    (k : ℕ) :
+    P.map (fun ω => (histPath ν G x₀ (fun i => ξ i ω) k, histIncr ν G x₀ (fun i => ξ i ω) k)) =
+      (P.map fun ω => histPath ν G x₀ (fun i => ξ i ω) k) ⊗ₘ
+        (gaussianStepKernel δ).comap (ν k) (hν k) := by
+  have h1 : Measurable fun ξ : ℕ → ℝ => histPath ν G x₀ ξ k :=
+    (measurable_histPath hν hG x₀ k).fst
+  have h2 : Measurable fun ξ : ℕ → ℝ => (histPath ν G x₀ ξ k, histIncr ν G x₀ ξ k) :=
+    h1.prodMk (measurable_histIncr hν hG x₀ k)
+  rw [map_comp_of_iid hind hξ h2, map_comp_of_iid hind hξ h1, map_histIncr _ hν hG x₀ k,
+    blockKernel_gaussianReal]
+
+/-- **Given the whole history, the increment of the adaptive scheme over its chosen step is
+`N(0, n_k δ)`** (Giles 2015, §5.6, p. 44, lines 1917–1929: "an adaptive timestep of the form
+`h_ℓ = 2^{−ℓ} H(Ŝ_n)`"; "The independent Brownian increments can be simulated for each time
+interval, and summed to give `W(t)` at the required times").  In the setting of
+`adaptiveIncr_condLaw_gaussian` (independent `N(0, δ)` base increments, measurable rules
+`ν_k(y_k)` of the path so far and measurable updates), the increment `ΔW_k` over the chosen step
+is `N(0, ν_k(y_k) δ)` given the whole past `(y_k, τ_k, H_k)`, where `H_k = (ξ_i)_{i<τ_k}` is the
+history of all the base increments used so far, not only given the path `y_k`: the pair has the
+law `Law(y_k, τ_k, H_k) ⊗ₘ κ_k` with the kernel `κ_k(y, τ, H) = N(0, ν_k(y) δ)`. -/
+theorem adaptiveIncr_condLaw_hist_gaussian {δ : ℝ≥0} {ξ : ℕ → Ω → ℝ} (hind : iIndepFun ξ P)
+    (hξ : ∀ i, HasLaw (ξ i) (gaussianReal 0 δ) P) {ν : ℕ → (ℕ → X) → ℕ}
+    {G : ℕ → (ℕ → X) → ℝ → X} (hν : ∀ k, Measurable (ν k))
+    (hG : ∀ k, Measurable fun p : (ℕ → X) × ℝ => G k p.1 p.2) (x₀ : X) (k : ℕ) :
+    P.map (fun ω => (((adaptivePath ν G x₀ (fun i => ξ i ω) k).1,
+        (adaptivePath ν G x₀ (fun i => ξ i ω) k).2,
+        usedSeq (adaptivePath ν G x₀ (fun i => ξ i ω) k).2 (fun i => ξ i ω)),
+        adaptiveIncr ν G x₀ (fun i => ξ i ω) k)) =
+      (P.map fun ω => ((adaptivePath ν G x₀ (fun i => ξ i ω) k).1,
+        (adaptivePath ν G x₀ (fun i => ξ i ω) k).2,
+        usedSeq (adaptivePath ν G x₀ (fun i => ξ i ω) k).2 (fun i => ξ i ω))) ⊗ₘ
+        ((gaussianStepKernel δ).comap (ν k) (hν k)).prodMkRight (ℕ × (ℕ → ℝ)) := by
+  have hν' : ∀ k, Measurable fun p : (ℕ → X) × ℕ × (ℕ → ℝ) => ν k p.1 :=
+    fun k => (hν k).comp measurable_fst
+  have hG' : ∀ k, Measurable fun p : ((ℕ → X) × ℕ × (ℕ → ℝ)) × ℝ => G k p.1.1 p.2 :=
+    fun k => (hG k).comp (measurable_fst.fst.prodMk measurable_snd)
+  have h := histIncr_condLaw_gaussian (ν := fun k p => ν k p.1) (G := fun k p e => G k p.1 e)
+    hind hξ hν' hG' x₀ k
+  have e1 : (fun ω => histPath (fun k p => ν k p.1) (fun k p e => G k p.1 e) x₀
+      (fun i => ξ i ω) k) = fun ω => ((adaptivePath ν G x₀ (fun i => ξ i ω) k).1,
+        (adaptivePath ν G x₀ (fun i => ξ i ω) k).2,
+        usedSeq (adaptivePath ν G x₀ (fun i => ξ i ω) k).2 (fun i => ξ i ω)) :=
+    funext fun ω => histPath_eq_adaptivePath ν G x₀ _ k
+  have e2 : (fun ω => (histPath (fun k p => ν k p.1) (fun k p e => G k p.1 e) x₀
+      (fun i => ξ i ω) k, histIncr (fun k p => ν k p.1) (fun k p e => G k p.1 e) x₀
+      (fun i => ξ i ω) k)) = fun ω => (((adaptivePath ν G x₀ (fun i => ξ i ω) k).1,
+        (adaptivePath ν G x₀ (fun i => ξ i ω) k).2,
+        usedSeq (adaptivePath ν G x₀ (fun i => ξ i ω) k).2 (fun i => ξ i ω)),
+        adaptiveIncr ν G x₀ (fun i => ξ i ω) k) :=
+    funext fun ω => by rw [histPath_eq_adaptivePath, histIncr_eq_adaptiveIncr]
+  rw [e2, e1] at h
+  exact h
+
+/-- **The counts over adaptively chosen intervals are Poisson given the whole history** (Giles
+2015, §8, p. 56, lines 2442–2447: "The non-nested adaptive timestepping approach described in
+Section 5.6 for SDEs is equally applicable in this setting … the construction is exactly the same
+as illustrated in Figure 5.9, but with Poisson variates for each time interval instead of Brownian
+increments").  The base counts `N_i` of a Poisson process of rate `λ` over the base intervals of
+length `δ` are independent `P(m)`, `m = λδ`, and the rule `ν_k` and the update `G_k` of
+`histPath` are measurable functions of the whole past `p_k = (y_k, τ_k, H_k)` (with the history
+`H_k = (N_i)_{i<τ_k}` of all the base counts so far).  Then the pair (past, count of step `k`) has
+the law `Law(p_k) ⊗ₘ κ_k` with `κ_k(p) = P(ν_k(p) m)`: given the whole past, the count over the
+chosen step `h_k = n_k δ` is Poisson with mean `λ h_k`.  The rate `λ` is constant; step sizes are
+multiples of `δ`. -/
+theorem histCount_condLaw {m : ℝ≥0} {N : ℕ → Ω → ℕ} (hind : iIndepFun N P)
+    (hN : ∀ i, HasLaw (N i) (poissonMeasure m) P) {ν : ℕ → (ℕ → X) × ℕ × (ℕ → ℕ) → ℕ}
+    {G : ℕ → (ℕ → X) × ℕ × (ℕ → ℕ) → ℕ → X} (hν : ∀ k, Measurable (ν k))
+    (hG : ∀ k, Measurable fun p : ((ℕ → X) × ℕ × (ℕ → ℕ)) × ℕ => G k p.1 p.2) (x₀ : X)
+    (k : ℕ) :
+    P.map (fun ω => (histPath ν G x₀ (fun i => N i ω) k, histIncr ν G x₀ (fun i => N i ω) k)) =
+      (P.map fun ω => histPath ν G x₀ (fun i => N i ω) k) ⊗ₘ
+        (poissonStepKernel m).comap (ν k) (hν k) := by
+  have h1 : Measurable fun N : ℕ → ℕ => histPath ν G x₀ N k :=
+    (measurable_histPath hν hG x₀ k).fst
+  have h2 : Measurable fun N : ℕ → ℕ => (histPath ν G x₀ N k, histIncr ν G x₀ N k) :=
+    h1.prodMk (measurable_histIncr hν hG x₀ k)
+  rw [map_comp_of_iid hind hN h2, map_comp_of_iid hind hN h1, map_histIncr _ hν hG x₀ k,
+    blockKernel_poisson]
+
+end HistoryLaws
 
 /-! ### Algorithm 3: the loop over the union sub-intervals
 
@@ -1479,12 +1971,13 @@ abbrev Alg3State (X : Type*) := Alg3Part X × Alg3Part X
 
 variable {X : Type*}
 
-/-- **One level over one union sub-interval** (Giles 2015, §5.6, Algorithm 3: "`∆W^c := ∆W^c +
-∆W`; if `t = t^c` then update coarse path using `∆W^c`, compute adapted coarse path timestep
-`h^c`, `t^c := t^c + h^c`, `∆W^c := 0`").  The sub-interval has `n` base intervals and the
-Brownian increment `e`.  If it reaches the level's next update time (`r ≤ n`), the level's state
-`x = y_k` is updated to `F(x, A + e)`, its next step `ν(F(x, A + e))` is computed and the
-accumulator is reset; otherwise `e` is accumulated and `r` decreases by `n`. -/
+/-- One level over one union sub-interval (Giles 2015, §5.6, Algorithm 3, p. 45,
+lines 1951–1957: "`∆W^c := ∆W^c + ∆W` … if `t = t^c` then update coarse path using `∆W^c`, compute
+adapted coarse path timestep `h^c`, `t^c := min(t^c + h^c, T)`, `∆W^c := 0`"; here the truncation
+at `T` is part of the rule `ν`, see the module docstring).  The sub-interval has `n` base
+intervals and the Brownian increment `e`.  If it reaches the level's next update time (`r ≤ n`),
+the level's state `x = y_k` is updated to `F(x, A + e)`, its next step `ν(F(x, A + e))` is
+computed and the accumulator is reset; otherwise `e` is accumulated and `r` decreases by `n`. -/
 def alg3Level (ν : X → ℕ) (F : X → ℝ → X) (n : ℕ) (e : ℝ) (p : Alg3Part X) : Alg3Part X :=
   if p.2.2.2 ≤ n then
     (extendPath p.2.1 p.1 (F (p.1 p.2.1) (p.2.2.1 + e)), p.2.1 + 1, 0,
@@ -1496,7 +1989,7 @@ path (Giles 2015, §5.6, Algorithm 3: "`t := min(t^c, t^f)`, `h := t − t_old`"
 def alg3Len (s : Alg3State X) : ℕ :=
   min s.1.2.2.2 s.2.2.2.2
 
-/-- **One iteration of Algorithm 3** (Giles 2015, §5.6): both levels see the same Brownian
+/-- One iteration of Algorithm 3 (Giles 2015, §5.6): both levels see the same Brownian
 increment `e` of the union sub-interval. -/
 def alg3Update (νc νf : X → ℕ) (Fc Ff : X → ℝ → X) (s : Alg3State X) (e : ℝ) : Alg3State X :=
   (alg3Level νc Fc (alg3Len s) e s.1, alg3Level νf Ff (alg3Len s) e s.2)
@@ -1554,7 +2047,7 @@ lemma alg3Inv_init (ν : X → ℕ) (F : X → ℝ → X) (x₀ : X) (ξ : ℕ �
   · show (0 : ℝ) = ∑ i ∈ Ico 0 0, ξ i
     simp
 
-/-- **The invariant is preserved by a union sub-interval** (Giles 2015, §5.6, Algorithm 3): if the
+/-- The invariant is preserved by a union sub-interval (Giles 2015, §5.6, Algorithm 3): if the
 sub-interval of `n` base intervals does not pass the level's next update time, then after adding
 the sum of the base increments over it the invariant holds again; when the update time is
 reached, the accumulated increment is the increment of the level's step, so the level's update is
@@ -1613,7 +2106,7 @@ lemma alg3Path_succ_snd (νc νf : X → ℕ) (Fc Ff : X → ℝ → X) (xc₀ x
     (alg3Path νc νf Fc Ff xc₀ xf₀ ξ (j + 1)).2 = (alg3Path νc νf Fc Ff xc₀ xf₀ ξ j).2 +
       alg3Len ((alg3Path νc νf Fc Ff xc₀ xf₀ ξ j).1 j) := rfl
 
-/-- **Algorithm 3 computes the single-level paths** (Giles 2015, §5.6, p. 44: "The independent
+/-- Algorithm 3 keeps the invariant (Giles 2015, §5.6, p. 44, lines 1928–1929: "The independent
 Brownian increments can be simulated for each time interval, and summed to give `W(t)` at the
 required times"): driven by the base increments, after every iteration both levels' parts satisfy
 the invariant; in particular each level's path is its single-level path on the base grid, stopped
@@ -1734,20 +2227,27 @@ lemma le_alg3FirstReach {κ : ℕ → ℕ} {k : ℕ} (h : ∃ j, k ≤ κ j) :
   · obtain ⟨j, hj⟩ := h
     exact absurd hj (Nat.not_le.2 (h1 j))
 
-/-- **The coarse path read off Algorithm 3** (Giles 2015, §5.6): its `k`-th value is the coarse
+/-- The coarse path read off Algorithm 3 (Giles 2015, §5.6): its `k`-th value is the coarse
 state after the coarse path's `k`-th update, read at the first iteration after that update (if the
 coarse path never makes `k` steps, which positive steps exclude, it is read at iteration `0`). -/
 noncomputable def alg3CoarseSeq (traj : ℕ → Alg3State X) (k : ℕ) : X :=
   (traj (alg3FirstReach (fun j => (traj j).1.2.1) k)).1.1 k
 
-/-- **The fine path read off Algorithm 3** (Giles 2015, §5.6): its `k`-th value is the fine state
+/-- The fine path read off Algorithm 3 (Giles 2015, §5.6): its `k`-th value is the fine state
 after the fine path's `k`-th update, read at the first iteration after that update. -/
 noncomputable def alg3FineSeq (traj : ℕ → Alg3State X) (k : ℕ) : X :=
   (traj (alg3FirstReach (fun j => (traj j).2.2.1) k)).2.1 k
 
-/-- Driven by the base increments, the coarse path read off Algorithm 3 is the single-level
-coarse path (Giles 2015, §5.6). -/
-lemma alg3CoarseSeq_alg3Path {νc νf : X → ℕ} {Fc Ff : X → ℝ → X} (hνc : ∀ x, 1 ≤ νc x)
+/-- **Run on the base increments, Algorithm 3 computes the single-level coarse path** (Giles 2015,
+§5.6, p. 44, lines 1926–1929: "The underlying Brownian path needs to be sampled at a set of times
+which are the union of the simulation times used by the coarse and fine path. The independent
+Brownian increments can be simulated for each time interval, and summed to give `W(t)` at the
+required times").  Let each union sub-interval of Algorithm 3 receive the sum of the base
+increments `ξ_i` over it (`alg3Path`), and let the steps of both levels be at least one base
+interval.  Then, for every `ξ`, the coarse path read off Algorithm 3 (`alg3CoarseSeq`, its state
+after each of its updates) is the single-level coarse path on the base grid: steps of `νc(x_k)`
+base intervals, each updated by `Fc` with the sum of the base increments over the step. -/
+theorem alg3CoarseSeq_alg3Path {νc νf : X → ℕ} {Fc Ff : X → ℝ → X} (hνc : ∀ x, 1 ≤ νc x)
     (hνf : ∀ x, 1 ≤ νf x) (xc₀ xf₀ : X) (ξ : ℕ → ℝ) :
     alg3CoarseSeq (fun j => (alg3Path νc νf Fc Ff xc₀ xf₀ ξ j).1 j) =
       adaptiveSeq (fun k y => νc (y k)) (fun k y e => Fc (y k) e) xc₀ ξ := by
@@ -1761,9 +2261,15 @@ lemma alg3CoarseSeq_alg3Path {νc νf : X → ℕ} {Fc Ff : X → ℝ → X} (h�
   show (adaptivePath (fun k y => νc (y k)) (fun k y e => Fc (y k) e) xc₀ ξ _).1 k = _
   rw [adaptivePath_fst_apply, min_eq_left hJ]
 
-/-- Driven by the base increments, the fine path read off Algorithm 3 is the single-level fine
-path (Giles 2015, §5.6). -/
-lemma alg3FineSeq_alg3Path {νc νf : X → ℕ} {Fc Ff : X → ℝ → X} (hνc : ∀ x, 1 ≤ νc x)
+/-- **Run on the base increments, Algorithm 3 computes the single-level fine path** (Giles 2015,
+§5.6, p. 44, lines 1926–1929: "The underlying Brownian path needs to be sampled at a set of times
+which are the union of the simulation times used by the coarse and fine path. The independent
+Brownian increments can be simulated for each time interval, and summed to give `W(t)` at the
+required times").  As `alg3CoarseSeq_alg3Path`, for the fine path: driven by the base increments
+`ξ_i` (`alg3Path`), with steps of at least one base interval, the fine path read off Algorithm 3
+(`alg3FineSeq`) is, for every `ξ`, the single-level fine path on the base grid: steps of `νf(x_k)`
+base intervals, each updated by `Ff` with the sum of the base increments over the step. -/
+theorem alg3FineSeq_alg3Path {νc νf : X → ℕ} {Fc Ff : X → ℝ → X} (hνc : ∀ x, 1 ≤ νc x)
     (hνf : ∀ x, 1 ≤ νf x) (xc₀ xf₀ : X) (ξ : ℕ → ℝ) :
     alg3FineSeq (fun j => (alg3Path νc νf Fc Ff xc₀ xf₀ ξ j).1 j) =
       adaptiveSeq (fun k y => νf (y k)) (fun k y e => Ff (y k) e) xf₀ ξ := by
@@ -1877,6 +2383,52 @@ lemma measurable_alg3FineSeq : Measurable (alg3FineSeq : (ℕ → Alg3State X) �
 
 variable {Ω' : Type*} [MeasurableSpace Ω'] {P' : Measure Ω'} {ζ : ℕ → Ω' → ℝ}
 
+/-- A measurable read-out of the states of Algorithm 3 has the same law whether the union
+sub-intervals receive fresh increments `√h ζ_j` (`alg3Fresh`) or the sums of i.i.d. `N(0, δ)` base
+increments over them (`alg3Path`) (Giles 2015, §5.6, p. 44, lines 1928–1929: "The independent
+Brownian increments can be simulated for each time interval"): Algorithm 3 is itself an adaptive
+scheme on the base grid whose steps are the union sub-intervals (`adaptiveSeq_law_eq_fresh`). -/
+lemma map_alg3Fresh_readout (hζind : iIndepFun ζ P')
+    (hζ : ∀ i, HasLaw (ζ i) (gaussianReal 0 1) P') {νc νf : X → ℕ} {Fc Ff : X → ℝ → X}
+    (hνc : Measurable νc) (hνf : Measurable νf) (hFc : Measurable (Function.uncurry Fc))
+    (hFf : Measurable (Function.uncurry Ff)) (δ : ℝ≥0) (xc₀ xf₀ : X) {Z : Type*}
+    [MeasurableSpace Z] {R : (ℕ → Alg3State X) → Z} (hR : Measurable R) :
+    P'.map (fun ω => R (alg3Fresh νc νf Fc Ff δ xc₀ xf₀ fun i => ζ i ω)) =
+      (Measure.infinitePi fun _ => gaussianReal 0 δ).map fun ξ =>
+        R fun j => (alg3Path νc νf Fc Ff xc₀ xf₀ ξ j).1 j := by
+  have hξind : iIndepFun (fun i (ξ : ℕ → ℝ) => ξ i)
+      (Measure.infinitePi fun _ => gaussianReal 0 δ) :=
+    iIndepFun_infinitePi (X := fun _ (x : ℝ) => x) fun _ => measurable_id
+  have hξ : ∀ i, HasLaw (fun ξ : ℕ → ℝ => ξ i) (gaussianReal 0 δ)
+      (Measure.infinitePi fun _ => gaussianReal 0 δ) := fun i =>
+    ⟨(measurable_pi_apply i).aemeasurable, Measure.infinitePi_map_eval _ i⟩
+  have hlen : ∀ j, Measurable fun z : ℕ → Alg3State X => alg3Len (z j) := fun j =>
+    measurable_alg3Len.comp (measurable_pi_apply j)
+  have hupd := measurable_alg3Update hνc hνf hFc hFf
+  have hA := adaptiveSeq_law_eq_fresh hξind hξ hζind hζ (ν := fun j z => alg3Len (z j))
+    (G := fun j z e => alg3Update νc νf Fc Ff (z j) e) hlen hupd (alg3Init νc νf xc₀ xf₀)
+  have hupd' : ∀ j, Measurable fun p : (ℕ → Alg3State X) × ℝ =>
+      alg3Update νc νf Fc Ff (p.1 j) (Real.sqrt (alg3Len (p.1 j) * δ) * p.2) := fun j =>
+    (hupd j).comp (measurable_fst.prodMk
+      ((((measurable_from_nat.comp ((hlen j).comp measurable_fst)).mul_const _).sqrt).mul
+        measurable_snd))
+  have hmF : Measurable (alg3Fresh νc νf Fc Ff δ xc₀ xf₀) := measurable_freshSeq hupd' _
+  have hmB : Measurable fun ξ : ℕ → ℝ => fun j => (alg3Path νc νf Fc Ff xc₀ xf₀ ξ j).1 j :=
+    measurable_adaptiveSeq (ν := fun j z => alg3Len (z j))
+      (G := fun j z e => alg3Update νc νf Fc Ff (z j) e) hlen hupd _
+  have hlaw : P'.map (fun ω => alg3Fresh νc νf Fc Ff δ xc₀ xf₀ fun i => ζ i ω) =
+      (Measure.infinitePi fun _ => gaussianReal 0 δ).map fun ξ =>
+        fun j => (alg3Path νc νf Fc Ff xc₀ xf₀ ξ j).1 j := hA.symm
+  have hmζ : AEMeasurable (fun ω i => ζ i ω) P' :=
+    aemeasurable_pi_iff.2 fun i => (hζ i).aemeasurable
+  have e1 : (fun ω => R (alg3Fresh νc νf Fc Ff δ xc₀ xf₀ fun i => ζ i ω)) =
+      R ∘ fun ω => alg3Fresh νc νf Fc Ff δ xc₀ xf₀ fun i => ζ i ω := rfl
+  have e2 : (fun ξ : ℕ → ℝ => R fun j => (alg3Path νc νf Fc Ff xc₀ xf₀ ξ j).1 j) =
+      R ∘ fun ξ : ℕ → ℝ => fun j => (alg3Path νc νf Fc Ff xc₀ xf₀ ξ j).1 j := rfl
+  rw [e1, e2, ← AEMeasurable.map_map_of_aemeasurable (g := R)
+    (f := fun ω => alg3Fresh νc νf Fc Ff δ xc₀ xf₀ fun i => ζ i ω) hR.aemeasurable
+    (hmF.comp_aemeasurable hmζ), hlaw, Measure.map_map hR hmB]
+
 /-- **Algorithm 3 is correct: each path read off the union-grid loop has its single-level law**
 (Giles 2015, §5.6, pp. 44–45, lines 1924–1966: "It may appear that this would cause difficulties
 in the MLMC implementation, but Figure 5.9 tries to illustrate that it does not. The underlying
@@ -1890,10 +2442,10 @@ update time is reached is updated with its accumulator (`Fc`, `Ff`), computes it
 `νf` base intervals of length `δ`, at least one, from its new state) and resets its accumulator.
 Then the coarse path read off the loop (`alg3CoarseSeq`, its state after each of its updates) has
 the law of the single-level adaptive scheme `x_{k+1} = Fc(x_k, √(νc(x_k) δ) Z_k)` driven by fresh
-standard normal `Z_k`, and likewise the fine path: coupled through the shared union increments,
-each path has its own single-level law, which gives (2.4).  Step sizes are positive multiples of
-`δ`, and the loop runs indefinitely (a rule that ends a step exactly at `T` and continues with
-positive steps afterwards gives the paths of Algorithm 3 up to `T`). -/
+standard normal `Z_k`, and likewise the fine path, which gives (2.4).  The joint law of the two
+paths is `algorithm3_joint_law`.  Step sizes are positive multiples of `δ`, and the loop runs
+indefinitely (a rule that ends a step exactly at `T` and continues with positive steps afterwards
+gives the paths of Algorithm 3 up to `T`). -/
 theorem algorithm3_law (hζind : iIndepFun ζ P') (hζ : ∀ i, HasLaw (ζ i) (gaussianReal 0 1) P')
     {νc νf : X → ℕ} {Fc Ff : X → ℝ → X} (hνc : Measurable νc) (hνf : Measurable νf)
     (hFc : Measurable (Function.uncurry Fc)) (hFf : Measurable (Function.uncurry Ff))
@@ -1910,44 +2462,6 @@ theorem algorithm3_law (hζind : iIndepFun ζ P') (hζ : ∀ i, HasLaw (ζ i) (g
   have hξ : ∀ i, HasLaw (fun ξ : ℕ → ℝ => ξ i) (gaussianReal 0 δ)
       (Measure.infinitePi fun _ => gaussianReal 0 δ) := fun i =>
     ⟨(measurable_pi_apply i).aemeasurable, Measure.infinitePi_map_eval _ i⟩
-  have hlen : ∀ j, Measurable fun z : ℕ → Alg3State X => alg3Len (z j) := fun j =>
-    measurable_alg3Len.comp (measurable_pi_apply j)
-  have hupd := measurable_alg3Update hνc hνf hFc hFf
-  -- Algorithm 3 with fresh increments has the law of Algorithm 3 with summed base increments
-  have hA := adaptiveSeq_law_eq_fresh hξind hξ hζind hζ (ν := fun j z => alg3Len (z j))
-    (G := fun j z e => alg3Update νc νf Fc Ff (z j) e) hlen hupd (alg3Init νc νf xc₀ xf₀)
-  have hupd' : ∀ j, Measurable fun p : (ℕ → Alg3State X) × ℝ =>
-      alg3Update νc νf Fc Ff (p.1 j) (Real.sqrt (alg3Len (p.1 j) * δ) * p.2) := fun j =>
-    (hupd j).comp (measurable_fst.prodMk
-      ((((measurable_from_nat.comp ((hlen j).comp measurable_fst)).mul_const _).sqrt).mul
-        measurable_snd))
-  have hmF : Measurable (alg3Fresh νc νf Fc Ff δ xc₀ xf₀) := measurable_freshSeq hupd' _
-  have hmB : Measurable fun ξ : ℕ → ℝ => adaptiveSeq (fun j z => alg3Len (z j))
-      (fun j z e => alg3Update νc νf Fc Ff (z j) e) (alg3Init νc νf xc₀ xf₀) ξ :=
-    measurable_adaptiveSeq (ν := fun j z => alg3Len (z j))
-      (G := fun j z e => alg3Update νc νf Fc Ff (z j) e) hlen hupd _
-  have hlaw : P'.map (fun ω => alg3Fresh νc νf Fc Ff δ xc₀ xf₀ fun i => ζ i ω) =
-      (Measure.infinitePi fun _ => gaussianReal 0 δ).map fun ξ =>
-        adaptiveSeq (fun j z => alg3Len (z j)) (fun j z e => alg3Update νc νf Fc Ff (z j) e)
-          (alg3Init νc νf xc₀ xf₀) ξ := hA.symm
-  have hmζ : AEMeasurable (fun ω i => ζ i ω) P' :=
-    aemeasurable_pi_iff.2 fun i => (hζ i).aemeasurable
-  -- a measurable read-out of the states has the same law in both versions of Algorithm 3
-  have hcomp : ∀ {E : (ℕ → Alg3State X) → ℕ → X}, Measurable E →
-      P'.map (fun ω => E (alg3Fresh νc νf Fc Ff δ xc₀ xf₀ fun i => ζ i ω)) =
-        (Measure.infinitePi fun _ => gaussianReal 0 δ).map fun ξ =>
-          E (adaptiveSeq (fun j z => alg3Len (z j))
-            (fun j z e => alg3Update νc νf Fc Ff (z j) e) (alg3Init νc νf xc₀ xf₀) ξ) := by
-    intro E hE
-    have e1 : (fun ω => E (alg3Fresh νc νf Fc Ff δ xc₀ xf₀ fun i => ζ i ω)) =
-        E ∘ fun ω => alg3Fresh νc νf Fc Ff δ xc₀ xf₀ fun i => ζ i ω := rfl
-    have e2 : (fun ξ : ℕ → ℝ => E (adaptiveSeq (fun j z => alg3Len (z j))
-        (fun j z e => alg3Update νc νf Fc Ff (z j) e) (alg3Init νc νf xc₀ xf₀) ξ)) =
-        E ∘ fun ξ => adaptiveSeq (fun j z => alg3Len (z j))
-          (fun j z e => alg3Update νc νf Fc Ff (z j) e) (alg3Init νc νf xc₀ xf₀) ξ := rfl
-    rw [e1, e2, ← AEMeasurable.map_map_of_aemeasurable (g := E)
-      (f := fun ω => alg3Fresh νc νf Fc Ff δ xc₀ xf₀ fun i => ζ i ω) hE.aemeasurable
-      (hmF.comp_aemeasurable hmζ), hlaw, Measure.map_map hE hmB]
   have hνc' : ∀ k, Measurable fun y : ℕ → X => νc (y k) :=
     fun k => hνc.comp (measurable_pi_apply k)
   have hνf' : ∀ k, Measurable fun y : ℕ → X => νf (y k) :=
@@ -1959,22 +2473,73 @@ theorem algorithm3_law (hζind : iIndepFun ζ P') (hζ : ∀ i, HasLaw (ζ i) (g
   have hFf' : ∀ k, Measurable fun p : (ℕ → X) × ℝ => Ff (p.1 k) p.2 :=
     fun k => hFf.comp (hpk k)
   constructor
-  · rw [hcomp measurable_alg3CoarseSeq,
+  · rw [map_alg3Fresh_readout hζind hζ hνc hνf hFc hFf δ xc₀ xf₀ measurable_alg3CoarseSeq,
       ← adaptiveSeq_law_eq_fresh hξind hξ hζind hζ hνc' hFc' xc₀]
     congr 1
     funext ξ
     exact alg3CoarseSeq_alg3Path hposc hposf xc₀ xf₀ ξ
-  · rw [hcomp measurable_alg3FineSeq,
+  · rw [map_alg3Fresh_readout hζind hζ hνc hνf hFc hFf δ xc₀ xf₀ measurable_alg3FineSeq,
       ← adaptiveSeq_law_eq_fresh hξind hξ hζind hζ hνf' hFf' xf₀]
     congr 1
     funext ξ
     exact alg3FineSeq_alg3Path hposc hposf xc₀ xf₀ ξ
+
+/-- **Algorithm 3 produces the coupling of Figure 5.9: the pair of paths it computes has the law
+of the two single-level paths driven by one Brownian path sampled on the base grid** (Giles 2015,
+§5.6, pp. 44–45, lines 1926–1966, Figure 5.9 "Generation of Brownian increments for a multilevel
+simulation with adaptive timestepping": "The underlying Brownian path needs to be sampled at a set
+of times which are the union of the simulation times used by the coarse and fine path. The
+independent Brownian increments can be simulated for each time interval, and summed to give `W(t)`
+at the required times").  Algorithm 3 (`alg3Fresh`) is driven by independent standard normal
+`ζ_j` on `(Ω', P')`, as in `algorithm3_law`.  On `(Ω, P)`, let `ξ_0, ξ_1, …` be independent
+`N(0, δ)` (the Brownian increments over the base grid), and run both single-level paths on them:
+the coarse path with steps of `νc(x_k)` base intervals and the update `Fc`, the fine path with
+steps of `νf(x_k)` base intervals and `Ff`, each step's increment being the sum of the base
+increments over it.  Then the pair (coarse path, fine path) read off Algorithm 3 has the same law
+as this pair (a law on `(ℕ → X) × (ℕ → X)`).  Step sizes are positive multiples of `δ`, and the
+loop runs indefinitely. -/
+theorem algorithm3_joint_law {Ω : Type*} [MeasurableSpace Ω] {P : Measure Ω} {δ : ℝ≥0}
+    {ξ : ℕ → Ω → ℝ} (hind : iIndepFun ξ P) (hξ : ∀ i, HasLaw (ξ i) (gaussianReal 0 δ) P)
+    (hζind : iIndepFun ζ P') (hζ : ∀ i, HasLaw (ζ i) (gaussianReal 0 1) P')
+    {νc νf : X → ℕ} {Fc Ff : X → ℝ → X} (hνc : Measurable νc) (hνf : Measurable νf)
+    (hFc : Measurable (Function.uncurry Fc)) (hFf : Measurable (Function.uncurry Ff))
+    (hposc : ∀ x, 1 ≤ νc x) (hposf : ∀ x, 1 ≤ νf x) (xc₀ xf₀ : X) :
+    P'.map (fun ω => (alg3CoarseSeq (alg3Fresh νc νf Fc Ff δ xc₀ xf₀ fun i => ζ i ω),
+        alg3FineSeq (alg3Fresh νc νf Fc Ff δ xc₀ xf₀ fun i => ζ i ω))) =
+      P.map (fun ω => (adaptiveSeq (fun k y => νc (y k)) (fun k y e => Fc (y k) e) xc₀
+          (fun i => ξ i ω),
+        adaptiveSeq (fun k y => νf (y k)) (fun k y e => Ff (y k) e) xf₀ (fun i => ξ i ω))) := by
+  have hpk : ∀ k, Measurable fun p : (ℕ → X) × ℝ => (p.1 k, p.2) :=
+    fun k => ((measurable_pi_apply k).comp measurable_fst).prodMk measurable_snd
+  have hS : Measurable fun ξ : ℕ → ℝ =>
+      (adaptiveSeq (fun k y => νc (y k)) (fun k y e => Fc (y k) e) xc₀ ξ,
+        adaptiveSeq (fun k y => νf (y k)) (fun k y e => Ff (y k) e) xf₀ ξ) :=
+    (measurable_adaptiveSeq (fun k => hνc.comp (measurable_pi_apply k))
+      (fun k => hFc.comp (hpk k)) xc₀).prodMk
+      (measurable_adaptiveSeq (fun k => hνf.comp (measurable_pi_apply k))
+        (fun k => hFf.comp (hpk k)) xf₀)
+  rw [map_alg3Fresh_readout hζind hζ hνc hνf hFc hFf δ xc₀ xf₀
+      (measurable_alg3CoarseSeq.prodMk measurable_alg3FineSeq), map_comp_of_iid hind hξ hS]
+  congr 1
+  funext ξ
+  exact Prod.ext (alg3CoarseSeq_alg3Path hposc hposf xc₀ xf₀ ξ)
+    (alg3FineSeq_alg3Path hposc hposf xc₀ xf₀ ξ)
 
 end Algorithm3Law
 
 section Algorithm3EM
 
 variable {Ω' : Type*} [MeasurableSpace Ω'] {P' : Measure Ω'} {ζ : ℕ → Ω' → ℝ}
+
+/-- The Euler–Maruyama update `(x, ∆W) ↦ adaptiveEMStep a b (ν(x) δ) x ∆W` of a level with the
+step rule `ν` is jointly measurable (Giles 2015, §5.6, Algorithm 3: "update coarse path using
+`∆W^c`"). -/
+lemma measurable_adaptiveEMStep_rule {a b : ℝ → ℝ → ℝ} (ha : Measurable (Function.uncurry a))
+    (hb : Measurable (Function.uncurry b)) {ν : ℝ × ℝ → ℕ} (hν : Measurable ν) (δ : ℝ≥0) :
+    Measurable (Function.uncurry fun x dW => adaptiveEMStep a b (ν x * δ) x dW) :=
+  (measurable_adaptiveEMStep ha hb).comp
+    (((measurable_from_nat.comp (hν.comp measurable_fst)).mul_const _).prodMk
+      (measurable_fst.prodMk measurable_snd))
 
 /-- **Algorithm 3 for the adaptive Euler–Maruyama scheme** (Giles 2015, §5.6, pp. 44–45,
 lines 1917–1966: "a completely independent adaptation on each level of refinement, with an
@@ -1998,13 +2563,9 @@ theorem algorithm3_EM_law (hζind : iIndepFun ζ P') (hζ : ∀ i, HasLaw (ζ i)
         (fun x dW => adaptiveEMStep a b (νc x * δ) x dW)
         (fun x dW => adaptiveEMStep a b (νf x * δ) x dW) δ (0, S₀) (0, S₀) fun i => ζ i ω)) =
         P'.map (fun ω => freshEM a b (fun x => νf x * δ) S₀ fun i => ζ i ω) := by
-  have hF : ∀ {ν : ℝ × ℝ → ℕ}, Measurable ν →
-      Measurable (Function.uncurry fun x dW => adaptiveEMStep a b (ν x * δ) x dW) :=
-    fun hν => (measurable_adaptiveEMStep ha hb).comp
-      (((measurable_from_nat.comp (hν.comp measurable_fst)).mul_const _).prodMk
-        (measurable_fst.prodMk measurable_snd))
-  obtain ⟨h1, h2⟩ := algorithm3_law hζind hζ hνc hνf (hF hνc) (hF hνf) hposc hposf δ
-    (0, S₀) (0, S₀)
+  obtain ⟨h1, h2⟩ := algorithm3_law hζind hζ hνc hνf
+    (measurable_adaptiveEMStep_rule ha hb hνc δ) (measurable_adaptiveEMStep_rule ha hb hνf δ)
+    hposc hposf δ (0, S₀) (0, S₀)
   have e : ∀ ν : ℝ × ℝ → ℕ, (fun k (y : ℕ → ℝ × ℝ) z =>
       adaptiveEMStep a b (ν (y k) * δ) (y k) (Real.sqrt (ν (y k) * δ) * z)) =
       fun k y z => adaptiveEMStep a b ((fun x => (ν x : ℝ≥0) * δ) (y k)) (y k)
@@ -2017,6 +2578,33 @@ theorem algorithm3_EM_law (hζind : iIndepFun ζ P') (hζ : ∀ i, HasLaw (ζ i)
     rw [e νc]
   · unfold freshEM
     rw [e νf]
+
+/-- **Algorithm 3 computes the MLMC coupling of the adaptive Euler–Maruyama paths** (Giles 2015,
+§5.6, pp. 44–45, lines 1917–1966: "a completely independent adaptation on each level of
+refinement, with an adaptive timestep of the form `h_ℓ = 2^{−ℓ} H(Ŝ_n)` … The underlying Brownian
+path needs to be sampled at a set of times which are the union of the simulation times used by the
+coarse and fine path. The independent Brownian increments can be simulated for each time interval,
+and summed to give `W(t)` at the required times").  In the setting of `algorithm3_EM_law`, the
+pair (coarse, fine) of Euler–Maruyama paths `(t, Ŝ)` read off Algorithm 3 has the law of the pair
+`(adaptiveEM` with `νc`, `adaptiveEM` with `νf)` of adaptive Euler–Maruyama paths computed from the
+same independent `N(0, δ)` base increments `ξ_i`, i.e. from one Brownian path sampled on the base
+grid.  Step sizes are positive multiples of `δ`. -/
+theorem algorithm3_EM_joint_law {Ω : Type*} [MeasurableSpace Ω] {P : Measure Ω} {δ : ℝ≥0}
+    {ξ : ℕ → Ω → ℝ} (hind : iIndepFun ξ P) (hξ : ∀ i, HasLaw (ξ i) (gaussianReal 0 δ) P)
+    (hζind : iIndepFun ζ P') (hζ : ∀ i, HasLaw (ζ i) (gaussianReal 0 1) P')
+    {a b : ℝ → ℝ → ℝ} (ha : Measurable (Function.uncurry a))
+    (hb : Measurable (Function.uncurry b)) {νc νf : ℝ × ℝ → ℕ} (hνc : Measurable νc)
+    (hνf : Measurable νf) (hposc : ∀ x, 1 ≤ νc x) (hposf : ∀ x, 1 ≤ νf x) (S₀ : ℝ) :
+    P'.map (fun ω => (alg3CoarseSeq (alg3Fresh νc νf
+        (fun x dW => adaptiveEMStep a b (νc x * δ) x dW)
+        (fun x dW => adaptiveEMStep a b (νf x * δ) x dW) δ (0, S₀) (0, S₀) fun i => ζ i ω),
+      alg3FineSeq (alg3Fresh νc νf
+        (fun x dW => adaptiveEMStep a b (νc x * δ) x dW)
+        (fun x dW => adaptiveEMStep a b (νf x * δ) x dW) δ (0, S₀) (0, S₀) fun i => ζ i ω))) =
+      P.map (fun ω => (adaptiveEM a b νc δ S₀ (fun i => ξ i ω),
+        adaptiveEM a b νf δ S₀ (fun i => ξ i ω))) :=
+  algorithm3_joint_law hind hξ hζind hζ hνc hνf (measurable_adaptiveEMStep_rule ha hb hνc δ)
+    (measurable_adaptiveEMStep_rule ha hb hνf δ) hposc hposf (0, S₀) (0, S₀)
 
 end Algorithm3EM
 
