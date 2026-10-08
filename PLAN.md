@@ -273,6 +273,15 @@ items listed under "Not formalised" below.
   left (`LevyExtras.lean`); a counterexample showing that the weak convergence claimed in §10.1
   needs a moment condition on one step (`MarkovNoWeakLimit.lean`). The spot-check's documentation
   fixes are the "Round 25" notes in the coverage tables; stale module docstrings were corrected.
+- ✅ Round 26 (three more items from the spot-check-24 lists,
+  `notes/coverage/round17_spot_check.md`): the digital option for GBM with Euler–Maruyama at the
+  endpoint of Table 5.2's analysis column: the mismatch probability, `V_ℓ` and `E[(ΔP)⁴]` are
+  `O((h log(1/h))^{1/2})`, hence `O(h^{1/2} log h)`, uniformly in `S₀` and `K`, from Gaussian-type
+  tails of the log error (`GBMDigitalEndpoint.lean`); the exact halving of the method-1 MSE of
+  `Φ⁻¹` per bit, `MSE(d + 1)/MSE(d) → ½`, from `MSE(d) ~ κ 2^{−d}/d` with
+  `κ = (∑_{j≥0} V_j)/log 2 ≈ 1.5586` (Haas–Giles §3.4, `LUTHalving.lean`); the variance of the
+  digital-delta corrections of §5.4 for GBM, `V_ℓ = O(h^q)` for every `q < ½`
+  (`GBMDigitalDeltaVariance.lean`). Module docstrings that called these unproved were corrected.
 - Not formalised (each with its reason in `notes/coverage/README.md`): the convergence orders of the
   discretisations of general SDEs, SPDEs and PDEs (Itô calculus and PDE regularity are not in
   Mathlib; the SPDE of §7.3 has multiplicative noise and an absorbing boundary; proved for geometric
@@ -286,8 +295,10 @@ items listed under "Not formalised" below.
   index sets; the adaptive, stopped algorithm of Collier et al. (their confidence intervals for
   deterministic numbers of levels and samples are proved); the kurtosis upper bounds of the digital
   option, the endpoints of its rates `O(h^{1/2})`, `O(h)` (every smaller exponent is proved for GBM
-  from `L^p` strong errors), and its weak rate `α = 1`, hence the paper's `O(ε^{−2.5})` (Theorem 1
-  at cost `O(ε^{−3−η})`, and `O(ε^{−2−η})` with Milstein, is proved for GBM); for the
+  from `L^p` strong errors, and with Euler–Maruyama the endpoint up to a factor `(log(1/h))^{1/2}`,
+  i.e. Table 5.2's analysis rate `O(h^{1/2} log h)`, from the tails of the log error), and its weak
+  rate `α = 1`, hence the paper's `O(ε^{−2.5})` (Theorem 1 at cost `O(ε^{−3−η})`, and
+  `O(ε^{−2−η})` with Milstein, is proved for GBM); for the
   conditional-expectation estimator of the digital option, the endpoints `β = 3/2` and `α = 1`, the
   kurtosis `O(h^{−1/2})` and, for the strike `K = 0`, that the corrections are exponentially small
   (every `q < 3/2`, resp. `q < 1`, and Theorem 1 at the paper's cost `O(ε⁻²)` are proved for GBM and
@@ -331,31 +342,33 @@ items listed under "Not formalised" below.
   hypothesis the truncation error, the pointwise law, the moments and the covariance of the
   truncated field are proved, and for the untruncated field the almost sure convergence, the
   Gaussian law, joint Gaussianity, the covariance, the moments of `κ` and that it is unbounded, and
-  (2.4) for nested inputs `ξ_ℓ = (ξ_{ℓ−1}, z_ℓ)`); for the sensitivities of §5.4, the variance rate
-  of the digital-delta corrections and Theorem 1 for them (the paper defers to Burgos 2014),
-  sensitivities for general SDEs and Greeks other than the delta (they need the SDE's tangent
-  process), and lower bounds behind "similar difficulties" (for GBM the pathwise delta of the call,
-  with upper bounds matching the digital option's rates and costs, and the unbiased digital delta
-  from the conditional-expectation payoffs are proved); that the limit of the discretised
+  (2.4) for nested inputs `ξ_ℓ = (ξ_{ℓ−1}, z_ℓ)`); for the sensitivities of §5.4, the endpoint
+  `q = ½` of the variance rate of the digital-delta corrections (the paper states no rate and defers
+  to Burgos 2014; every `q < ½` is proved for GBM) and Theorem 1 for them (it needs the convergence
+  of the density of the discretised `S_T` at the strike), sensitivities for general SDEs and Greeks
+  other than the delta (they need the SDE's tangent process), and lower bounds behind "similar
+  difficulties" (for GBM the pathwise delta of the call, with upper bounds matching the digital
+  option's rates and costs, and the unbiased digital delta from the conditional-expectation payoffs,
+  with the variance rate of its corrections, are proved); that the limit of the discretised
   contracting chains is the SDE's invariant law (§10.1; fixed and level-dependent steps are proved
   for the discretised chains, and for the Ornstein–Uhlenbeck SDE the invariant laws of the scheme
   tend to `N(0, σ²/(2κ))`); for the weak convergence of contracting Markov chains (§10.1),
   conditions weaker than the finite first-step moment `E[d(x₀, φ(x₀, ξ))^p] < ∞` that the Lean
   statements assume, such as a logarithmic moment, and the need for a complete space (that the
   paper's claim fails without any moment condition is proved, `hc_cannot_be_dropped`); the value of
-  the dyadic limit `C` and the exact halving ratio of the MSE per bit (Haas–Giles §3.4; the
-  existence of `C > 0` and the order `2^{−d}/d` are proved for `Φ⁻¹`, the exact ratio needs finer
-  asymptotics of `Φ⁻¹`); whether MIMC reaches `O(ε⁻²)` for a general piecewise linear `f` (the
-  paper's rates are refuted, the corrected rates give `O(ε⁻²|log ε|⁴)`, and for the counterexample
-  itself MIMC on the two axes reaches `O(ε⁻²)`). Further claims that need theory Mathlib lacks, such
-  as Creutzig et al.'s lower bound, type 2 for Banach spaces not isomorphic to a Hilbert space
-  (Theorem 1 with type 2 as a hypothesis, and type 2 for spaces isomorphic to a subspace of a
-  Hilbert space, are proved), Owen's scrambling of Sobol points, their construction and QMC error
-  rates (the random digital shift is proved), Feynman–Kac and exit times, the Clark–Cameron bound
-  and the Giles–Szpruch analysis, are in the out-of-scope table of `notes/coverage/README.md`, and a
-  few minor sub-claims that are provable but not formalised are noted in the rows of the coverage
-  tables. The remaining claims are numerical or empirical (measured rates, figures, run times),
-  hardware facts, citations or informal remarks.
+  the dyadic limit `C` (Haas–Giles §3.4; the existence of `C > 0` is proved for `Φ⁻¹`, and so is the
+  exact halving of the method-1 MSE per bit as a limit, `MSE(d + 1)/MSE(d) → ½`, with the constant
+  `κ` of `MSE(d) ~ κ 2^{−d}/d` as a series, not in closed form); whether MIMC reaches `O(ε⁻²)` for
+  a general piecewise linear `f` (the paper's rates are refuted, the corrected rates give
+  `O(ε⁻²|log ε|⁴)`, and for the counterexample itself MIMC on the two axes reaches `O(ε⁻²)`).
+  Further claims that need theory Mathlib lacks, such as Creutzig et al.'s lower bound, type 2 for
+  Banach spaces not isomorphic to a Hilbert space (Theorem 1 with type 2 as a hypothesis, and type 2
+  for spaces isomorphic to a subspace of a Hilbert space, are proved), Owen's scrambling of Sobol
+  points, their construction and QMC error rates (the random digital shift is proved), Feynman–Kac
+  and exit times, the Clark–Cameron bound and the Giles–Szpruch analysis, are in the out-of-scope
+  table of `notes/coverage/README.md`, and a few minor sub-claims that are provable but not
+  formalised are noted in the rows of the coverage tables. The remaining claims are numerical or
+  empirical (measured rates, figures, run times), hardware facts, citations or informal remarks.
 
 **M4: Research, needs Alex's sign-off before formalising: nested MLMC with level-dependent
 precision.**

@@ -52,11 +52,13 @@ using the Milstein approximation for the final timestep").  Geometric Brownian m
 **What is not proved.**  The paper's weak order `α = 1` of Euler–Maruyama for the digital option
 (a result of Bally–Talay type, not cited in the paper, out of scope here), hence its `O(ε^{−2.5})`:
 here `α` is the mismatch rate `q < ½`, which gives `O(ε^{−3−η})`.  The endpoints `q = ½`, `q = 1`
-(and Avikainen's `O(h^{1/2} log h)` of Table 5.2) are not proved, so the costs carry the loss
-`η > 0`.  The barrier option of the paper is continuously monitored; its analysis (Giles, Higham and
-Mao 2009) and the Milstein rows `O(h^{3/2})` of Table 5.2 (Brownian-bridge estimators) are out of
-reach here; for the discretely monitored option with the natural estimators the rates are those of
-the digital option.  The variance of the splitting estimator with a Milstein final step
+are not proved, so the costs carry the loss `η > 0`; Table 5.2's analysis rate `O(h^{1/2} log h)`
+(Avikainen) for the Euler–Maruyama variance is proved in `MlmcLean.GBMDigitalEndpoint`
+(`gbm_em_digital_endpoint_log`) but not used here.  The barrier option of the paper is
+continuously monitored; its analysis (Giles, Higham and Mao 2009) and the Milstein rows
+`O(h^{3/2})` of Table 5.2 (Brownian-bridge estimators) are out of reach here; for the discretely
+monitored option with the natural estimators the rates are those of the digital option.  The
+variance of the splitting estimator with a Milstein final step
 (l. 1597–1600, "the variance is the same, to leading order") is not formalised; with an
 Euler–Maruyama final step its rate (the rate of the conditional expectation, not the same variance
 to leading order) is in `MlmcLean.GBMDigitalCondExp` (`gbm_digital_split_variance_rate`,
@@ -451,9 +453,10 @@ mean square `< ε²`, at cost `∑_{ℓ≤L} N_ℓ 2^ℓ ≤ c₄ ε^{−3−η}
 **How close to the paper.**  The paper's `O(ε^{−2.5})` uses the weak order `α = 1` of
 Euler–Maruyama for the digital option (a result of Bally–Talay type for non-smooth payoffs, not
 cited in the paper; a Malliavin-calculus argument that is out of scope here) together with
-`β = ½`.  Here `α` is only the mismatch rate `q < ½`, and `β = q < ½` (the endpoint `β = ½` is not
-proved either, `gbm_em_digital_rate`), so Theorem 1 gives `ε^{−2−(1−q)/q}`, i.e. `ε^{−3−η}` with
-`η > 0` arbitrary but not `0`.  The constant `c₄` depends on `η`.
+`β = ½`.  Here `α` is only the mismatch rate `q < ½`, and `β = q < ½` (`gbm_em_digital_rate`; the
+endpoint `β = ½` is proved only up to a factor `(log(1/h))^{1/2}`, `gbm_em_digital_endpoint`, which
+is not used here), so Theorem 1 gives `ε^{−2−(1−q)/q}`, i.e. `ε^{−3−η}` with `η > 0` arbitrary but
+not `0`.  The constant `c₄` depends on `η`.
 
 **`σ ≠ 0` is needed.**  For `σ = 0`, `s₀ = −1`, `r = T = 1`, the paths are deterministic,
 `Ŝ_ℓ = −(1 + 2^{−ℓ})^{2^ℓ} > −e = S_T`, so with `K = −e` the estimator is `H(Ŝ_L − K) = 1` for

@@ -66,11 +66,13 @@ is linear in `s₀`, `Ŝ(s₀) = s₀ Ŝ(1)` (`gbmEM_eq_mul_one`, `gbmMil_eq_mul
   the call (for `s₀ = K = 0` the call price is not differentiable at `0`); `s₀ ≠ 0` for the
   conditional-expectation payoffs (which jump at `s₀ = 0`).
 
-**What is not proved.**  The variance of the digital-delta corrections `∂P^f_ℓ/∂s₀ −
+**What is not proved here.**  The variance of the digital-delta corrections `∂P^f_ℓ/∂s₀ −
 ∂P^c_{ℓ−1}/∂s₀` (the paper gives no rate: it defers to Burgos 2014, l. 1834–1835; heuristically
-and numerically `V_ℓ ≈ O(h^{1/2})`) and Theorem 1 for them; the convergence of
+and numerically `V_ℓ ≈ O(h^{1/2})`): `MlmcLean.GBMDigitalDeltaVariance` proves `V_ℓ = O(h_ℓ^q)`
+for every `q < 1/2` (`gbm_digital_condExp_delta_corrections_rate`), not the endpoint `q = 1/2`.
+Proved in neither module: Theorem 1 for the digital delta, and the convergence of
 `d/ds₀ P(Ŝ^f_N > K)` to the true digital delta as `L → ∞` (a convergence of densities at the
-strike).
+strike, which the weak rate of Theorem 1 needs).
 -/
 
 open MeasureTheory ProbabilityTheory Filter Finset
@@ -606,8 +608,9 @@ so `D_ℓ = (1_{Ŝ^f > K} Ŝ^f − 1_{Ŝ^c > K} Ŝ^c)/s₀` for `s₀ ≠ 0`), i
 `V[D_ℓ] ≤ C h_{ℓ+1}^q`.  Proof: `1_{x > K} x = (x − K)⁺ + K 1_{x > K}`, so `D_ℓ` is `s₀⁻¹` times a
 call correction (`V = O(h)`, `gbm_correction_variance_le`) plus `K/s₀` times a digital correction
 (`V = O(h^q)`, `gbm_em_digital_rate`, for `σ ≠ 0`); for `σ = 0` the paths are deterministic and
-`V[D_ℓ] = 0`.  The endpoint `q = ½` is not proved (as for the digital option).  `C` depends on
-`s₀` and `K` (through `K/s₀`). -/
+`V[D_ℓ] = 0`.  The endpoint `q = ½` is not proved (for the digital option it holds up to a factor
+`(log(1/h))^{1/2}`, `gbm_em_digital_endpoint`; that bound is not stated for the call delta).  `C`
+depends on `s₀` and `K` (through `K/s₀`). -/
 theorem gbm_em_call_delta_rate (r σ : ℝ) {T : ℝ} (hT : 0 < T) {q : ℝ}
     (hq : q < 1 / 2) (s₀ K : ℝ) :
     ∃ C : ℝ, 0 ≤ C ∧ ∀ ℓ : ℕ,
@@ -1466,8 +1469,10 @@ finest-level digital price.
 
 **Not proved.**  The convergence of `d/ds₀ P(Ŝ^f_N > K)` to the true delta `d/ds₀ P(S_T > K)` as
 `L → ∞` (a convergence of densities at the strike, not implied by the weak convergence of the
-prices); the variance of the corrections (the paper gives no rate: it defers to Burgos 2014,
-l. 1834–1835; heuristically and numerically `V_ℓ ≈ O(h^{1/2})`). -/
+prices).  The variance of the corrections (the paper gives no rate: it defers to Burgos 2014,
+l. 1834–1835; heuristically and numerically `V_ℓ ≈ O(h^{1/2})`) is not proved here; it is
+`O(h_ℓ^q)` for every `q < 1/2` by `gbm_digital_condExp_delta_corrections_rate`
+(`MlmcLean.GBMDigitalDeltaVariance`). -/
 theorem gbm_digital_condExp_delta_telescope (r σ : ℝ) {s₀ T : ℝ} (hs₀ : s₀ ≠ 0) (hσ : σ ≠ 0)
     (hT : 0 < T) (K : ℝ) (L : ℕ) :
     (∀ ℓ, MemLp (fineCoarseDiff (gbmDigitalCondFineDelta r σ T s₀ K)

@@ -71,7 +71,8 @@ them.
 Deviations: `normCDFInv` is `0` outside `(0, 1)` (a junk value; every statement about the tables
 only uses `Φ⁻¹` on `(0, 1)` up to null sets, and the value `0` keeps `Φ⁻¹(1 − u) = −Φ⁻¹(u)` exact
 for all `u`, as `exists_tendsto_method3MSE` asks); for H3-30 only the order `2^{−d}/d` (and the
-halving on average) is proved, not the exact ratio `MSE(d + 1)/MSE(d) → 1/2`; the dyadic lower
+halving on average) is proved here, and the exact ratio `MSE(d + 1)/MSE(d) → 1/2` is in
+`MlmcLean.LUTHalving` (`tendsto_method1MSE_succ_div_normCDFInv`); the dyadic lower
 bounds are proved for the intervals `[2^{−(k+1)}, 2^{−k}]` with `k ≥ 2`, which suffices for H3-25
 and H3-34; the other deviations are those of the general theorems that are instantiated here.
 -/
@@ -976,9 +977,10 @@ H3-30: "both method 1 and 2 have their MSE divided by 2 each time `d` increases 
 theoretically expected for method 1"). There are `c, K > 0` such that for every `d ≥ 2`,
 `c 2^{−d}/d ≤ ∑_{j<2^d} ∫_{I_j} (Z_j − Φ⁻¹)² ≤ K 2^{−d}/d` (with `c = 1/(256 e⁴)` and
 `K = 48 (4 + φ(1)⁻²)`): `method1MSE_order` with `f = Φ⁻¹`, whose block hypotheses are proved by
-Mills-ratio estimates (`normCDFInv_block_bounds`). Deviation: only the order is proved, so the exact
-halving `MSE(d + 1)/MSE(d) → 1/2` is not (see `tendsto_log_method1MSE_normCDFInv` for the halving on
-average). -/
+Mills-ratio estimates (`normCDFInv_block_bounds`). Deviation: only the order is proved here, which
+gives the halving only up to a bounded factor (`tendsto_log_method1MSE_normCDFInv`: the halving on
+average); the exact halving `MSE(d + 1)/MSE(d) → 1/2` is `tendsto_method1MSE_succ_div_normCDFInv`
+(`MlmcLean.LUTHalving`). -/
 theorem method1MSE_order_normCDFInv : ∃ c K : ℝ, 0 < c ∧ 0 < K ∧ ∀ d : ℕ, 2 ≤ d →
     c * ((2 ^ d)⁻¹ / d) ≤ method1MSE normCDFInv d ∧
       method1MSE normCDFInv d ≤ K * ((2 ^ d)⁻¹ / d) := by

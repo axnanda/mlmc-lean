@@ -209,6 +209,12 @@
 --   the Asian row, for Variance-Gamma laws (Gamma convolution, exponential moments, Theorem 1)
 -- * `MlmcLean.MarkovNoWeakLimit` — Giles §10.1: without a first-step moment a chain contracting on
 --   average need not converge weakly (counterexample to a slip)
+-- * `MlmcLean.GBMDigitalEndpoint` — Giles §5.1, Table 5.2: the digital option with
+--   Euler–Maruyama for GBM has V_ℓ = O((h log(1/h))^{1/2}), uniformly in s₀ and K
+-- * `MlmcLean.LUTHalving` — Haas–Giles §3.4: the method-1 lookup-table MSE for Φ⁻¹ halves
+--   as d increases by 1, MSE(d) ~ κ 2^{−d}/d
+-- * `MlmcLean.GBMDigitalDeltaVariance` — Giles §5.4: the variance of the digital-delta
+--   corrections (conditional expectation, GBM) is O(h^q) for every q < 1/2
 import MlmcLean.Allocation
 import MlmcLean.Estimator
 import MlmcLean.LevelDiff
@@ -312,3 +318,6 @@ import MlmcLean.BanachTheorem1
 import MlmcLean.DigitalShiftQMC
 import MlmcLean.LevyExtras
 import MlmcLean.MarkovNoWeakLimit
+import MlmcLean.GBMDigitalEndpoint
+import MlmcLean.LUTHalving
+import MlmcLean.GBMDigitalDeltaVariance

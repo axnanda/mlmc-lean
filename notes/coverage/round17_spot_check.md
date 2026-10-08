@@ -199,3 +199,34 @@ calculus, the reflection principle, Clark–Cameron, Lévy areas and Giles–Szp
 complexity, Feynman–Kac and exit times, Rademacher type beyond spaces isomorphic to a subspace of a
 Hilbert space, Sobol nets and Owen's scrambling, general tangent processes, Lévy path functionals
 and Wiener–Hopf factorisation.
+
+**Follow-up (round 26).** From the spot-check-24 lists still open after round 25, round 26
+formalised three items: the Euler–Maruyama digital endpoint for GBM, the mismatch probability, `V_ℓ`
+and `E[(ΔP)⁴]` at most `C (h_{ℓ+1}(ℓ + 1))^{1/2}`, i.e. `O(√(h log(1/h)))`, uniformly in `S₀` and
+`K`, hence Table 5.2's analysis rate `O(h^{1/2} log h)` (`GBMDigitalEndpoint.lean`; from
+Gaussian-type tails of the log error, not Avikainen's argument); the exact halving ratio of HG25
+§3.4 for `Φ⁻¹`, `MSE(d + 1)/MSE(d) → ½`, as a limit, from `MSE(d) ~ κ 2^{−d}/d` with
+`κ = (∑_{j≥0} V_j)/log 2 ≈ 1.5586` (`LUTHalving.lean`); the variance rate of the digital-delta
+corrections for GBM, `V_ℓ = O(h^q)` for every `q < ½` (`GBMDigitalDeltaVariance.lean`; the paper
+states no rate, and Burgos 2014 was not consulted). The module docstrings that called these unproved
+(`LUTAsymptotics.lean`, `InverseNormal.lean`, `GBMSensitivities.lean`, `GBMDigital.lean`,
+`GBMStrongLp.lean`, `GBMDigitalTheorem1.lean`, `SDEDigital.lean`) now point to them, and the "Round
+26" notes in the coverage tables record them. Still open from the lists: Theorem 1 for the digital
+delta (it needs the convergence of the density of the discretised `S_T` at the strike) and the
+endpoint `q = ½` of its variance rate; the observed `O(h^{1/2})` of the Euler–Maruyama digital
+option without the logarithm; the barrier option monitored at every time step (it needs a small-ball
+bound for the grid maximum, uniform in the number of steps); the lower bounds `P(ΔP ≠ 0) ≥ c√h`
+(Euler–Maruyama) and `≥ ch` (Milstein), hence the kurtosis rates and the splitting variance "the
+same, to leading order"; the existence of good lattice generating vectors; Dereich's improved bias;
+the NIG column of Table 6.3; the non-convexity of the λ-function of HG25 §6.1 (numerical in the
+corrections table). Still open from earlier rounds: the digital option's weak order `α = 1` (hence
+the paper's `O(ε^{−2.5})`), the endpoints `β = 3/2`, `α = 1` of the conditional-expectation
+estimator and the exponential smallness for `K = 0`; the weak rate of tau-leaping for unbounded
+propensities; Mercer's theorem and the law of the limit field; the SSA coupling for several
+reactions and unbounded propensities; the identification of the parabolic limit with the SPDE
+functional, the variance rate of adaptive tau-leaping, the simplex optimality, and whether MIMC
+reaches `O(ε⁻²)` for a general piecewise linear `f`. Out of reach, as before: Itô calculus, the
+reflection principle, Clark–Cameron, Lévy areas and Giles–Szpruch, information-based complexity,
+Feynman–Kac and exit times, Rademacher type beyond spaces isomorphic to a subspace of a Hilbert
+space, Sobol nets and Owen's scrambling, general tangent processes, Lévy path functionals and
+Wiener–Hopf factorisation.
