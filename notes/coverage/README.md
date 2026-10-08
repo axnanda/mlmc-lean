@@ -32,6 +32,7 @@ round-10 classification itself:
 | G5.1-27, G5.2-15, G5.2-30, G5.5-07 | spot-check 21 | DONE | PARTIAL | only the complexity bound is evaluated |
 | G7.1-12 | spot-check 21 | DONE | DONE-DEV | the heat scheme is on `ℤ`, without the paper's Dirichlet boundary |
 | H3-22 | spot-check 21 | DONE | DONE-DEV | the two-point groups are those of the Lean grouping, which joins `j = 0` to `{1}` |
+| G9.2-04 | spot-check 24 | DONE (corrected) | PARTIAL | the row cites only the evaluation of the complexity bound (`nested_complexity`); the estimator-level result is `nested_sde_mlmc_complexity` (resolution entry G9.2-02, -04) |
 
 ## Resolution of the missing and partial items
 
