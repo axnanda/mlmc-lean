@@ -1,0 +1,9 @@
+# Qodo Merge (the `qodo-code-review` GitHub App) reads this file from the default branch.
+# It turns off the app's automatic PR summaries and reviews on this repository.
+# To remove Qodo completely, uninstall the GitHub App: GitHub → Settings → Applications →
+# Installed GitHub Apps → Qodo → Configure → remove this repository (or Uninstall).
+[github_app]
+handle_pr_actions = []
+pr_commands = []
+handle_push_trigger = false
+push_commands = []
