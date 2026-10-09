@@ -330,13 +330,14 @@ items listed under "Not formalised" below.
   themselves, path-dependent Lévy payoffs, Table 6.3 beyond its Asian row for Variance-Gamma laws
   (the NIG and spectrally negative α-stable columns need laws Mathlib does not have, the lookback
   and barrier rows fluctuation theory), the Lévy–Khintchine law of the limit of the truncated
-  levels, Dereich's improved bias for the Brownian replacement of the small jumps, and bounds on the
+  levels (not yet formalised, though reachable from `charFun_cpSum`), Dereich's improved bias for the Brownian replacement of the small jumps, and bounds on the
   realised rather than the expected cost; the discrete parts are proved, and so are the small-jump
   truncation for the terminal value of a pure-jump Lévy process, with Theorem 1 for `δ_ℓ = 2^{−ℓ}`
   and a one-sided stable-like example, the Brownian replacement of the small jumps with the same
   rates, and the Asian row of Table 6.3 for Variance-Gamma laws, with exactly simulated increments
   and the trapezoidal average); Mercer's theorem behind the Karhunen–Loève expansion, the
-  identification of the joint law of the limit field with a multivariate Gaussian, the regularity of
+  identification of the joint law of the limit field with a multivariate Gaussian (this needs no
+  spectral theory: Mathlib has `multivariateGaussian`; not yet formalised), the regularity of
   `κ` and the moments of `max_x κ` and `1/min_x κ`, and the finite-element analysis of §7.2
   (spectral theory of covariance operators and elliptic regularity; with Mercer's expansion as a
   hypothesis the truncation error, the pointwise law, the moments and the covariance of the

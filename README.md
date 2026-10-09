@@ -19,7 +19,7 @@ Machine-checked proofs (Lean 4 + Mathlib) of the complexity results for MLMC fro
   Richardson–Romberg MLMC, multiple outputs, non-geometric MLMC, MLQMC), §3 (Algorithms 1 and 2
   and the implementation), and the parts of the applications in §5 (SDEs), §6 (jump processes),
   §7 (PDEs), §8 (continuous-time Markov chains), §9 (nested simulation) and §10 (Markov chain
-  equilibria) that follow from probability and algebra.
+  equilibria and variable-precision arithmetic) that follow from probability and algebra.
 * **[HG25]** I.-B. Haas, M.B. Giles, *A nested MLMC framework for efficient simulations on
   FPGAs*, arXiv:2502.07123 (2025). §2 (eq. (2)–(13)), §3 (approximate normals, (14)–(19)),
   §4 (rounding errors, (20)–(29)), §5–§6 (the cost model and the bit-width optimisation,

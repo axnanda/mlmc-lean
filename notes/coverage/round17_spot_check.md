@@ -191,7 +191,8 @@ improved bias; the NIG column of Table 6.3; the exact halving ratio of HG25 §3.
 of the λ-function of HG25 §6.1 (numerical in the corrections table). Still open from earlier rounds:
 the digital option's weak order `α = 1` (hence the paper's `O(ε^{−2.5})`), the endpoints `β = 3/2`,
 `α = 1` of the conditional-expectation estimator and the exponential smallness for `K = 0`; the weak
-rate of tau-leaping for unbounded propensities; Mercer's theorem and the law of the limit field; the
+rate of tau-leaping for unbounded propensities; Mercer's theorem and the
+identification of the joint law of the limit field with `multivariateGaussian`; the
 SSA coupling for several reactions and unbounded propensities; the identification of the parabolic
 limit with the SPDE functional, the variance rate of adaptive tau-leaping, the simplex optimality,
 and whether MIMC reaches `O(ε⁻²)` for a general piecewise linear `f`. Out of reach, as before: Itô
@@ -222,7 +223,8 @@ the NIG column of Table 6.3; the non-convexity of the λ-function of HG25 §6.1 
 corrections table). Still open from earlier rounds: the digital option's weak order `α = 1` (hence
 the paper's `O(ε^{−2.5})`), the endpoints `β = 3/2`, `α = 1` of the conditional-expectation
 estimator and the exponential smallness for `K = 0`; the weak rate of tau-leaping for unbounded
-propensities; Mercer's theorem and the law of the limit field; the SSA coupling for several
+propensities; Mercer's theorem and the
+identification of the joint law of the limit field with `multivariateGaussian`; the SSA coupling for several
 reactions and unbounded propensities; the identification of the parabolic limit with the SPDE
 functional, the variance rate of adaptive tau-leaping, the simplex optimality, and whether MIMC
 reaches `O(ε⁻²)` for a general piecewise linear `f`. Out of reach, as before: Itô calculus, the

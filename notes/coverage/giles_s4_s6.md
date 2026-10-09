@@ -24,6 +24,9 @@ Every theorem named below is listed in `scripts/AxiomCheck.lean`, and "(def)" ma
   README's scope list names §1–§3, §5 and §7–§10 but not §6 (round-10 state; §6 has been in the
   README and PLAN since round 10).
 
+These labels record the documentation at round 10; since round 25 every out-of-scope item is
+documented in `PLAN.md` ("Not formalised") and in the out-of-scope table of `README.md`.
+
 ## Table
 
 | id | line / page | claim (short quote) | status | Lean name(s) | notes |

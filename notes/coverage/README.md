@@ -11,7 +11,7 @@ the docstrings, and treated the README and `notes/` as unverified leads.
 | `giles_s1_s2.3.md` | G15 §1–§2.3 | 118 | 64 | 12 | 4 | 2 | 2 | 34 |
 | `giles_s2.4_s3.md` | G15 §2.4–§3.5 | 132 | 60 | 14 | 4 | 1 | 4 | 49 |
 | `giles_s4_s6.md` | G15 §4–§6 | 140 | 23 | 8 | 10 | 13 | 40 | 46 |
-| `giles_s7_s11.md` | G15 §7–§11 | 125 | 26 | 18 | 12 | 8 | 10 | 51 |
+| `giles_s7_s11.md` | G15 §7–§11 | 125 | 25 | 18 | 13 | 8 | 10 | 51 |
 | `haas_giles.md` | HG25, all | 129 | 56 | 15 | 7 | 0 | 12 | 39 |
 
 No Lean statement misstates a paper. The tables are the state **before** round 10; every item
