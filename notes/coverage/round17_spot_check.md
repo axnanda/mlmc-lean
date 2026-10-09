@@ -253,17 +253,21 @@ stale remarks of `TauLeapingMLMC.lean` and `PoissonGrids.lean` point to results 
 tables record the new results. Still open from the lists: Theorem 1 for the digital delta (it needs
 the convergence of the density of the discretised `S_T` at the strike), the endpoint `q = ½` of
 its variance rate and the endpoint `β = 3/2` of the conditional-expectation estimator, possibly up
-to logarithms; the observed `O(h^{1/2})` of the Euler–Maruyama digital option without the
+to logarithms (done in round 28 up to a logarithm, `GBMDigitalCondExpEndpoint.lean`); the observed
+`O(h^{1/2})` of the Euler–Maruyama digital option without the
 logarithm, and the cases `β ≥ γ` of Theorem 1 with logarithmic factors in the rates; the barrier
 option monitored at every time step; the lower bounds `P(ΔP ≠ 0) ≥ c√h` (Euler–Maruyama) and `≥ ch`
 (Milstein), hence the kurtosis rates and the splitting variance "the same, to leading order"; the
-random cost of the exact (SSA) level; the change-of-measure variance after averaging over the paths;
-a lower bound on the cost of ML2R; that a logarithmic moment suffices for the chain of
-`MarkovNoWeakLimit.lean`; the existence of good lattice generating vectors; Dereich's improved bias;
+random cost of the exact (SSA) level (done in round 28, `TauLeapingSSACost.lean`); the
+change-of-measure variance after averaging over the paths; a lower bound on the cost of ML2R (done
+in round 28, `ML2RLowerBound.lean`); that a logarithmic moment suffices for the chain of
+`MarkovNoWeakLimit.lean` (done in round 28, `MarkovLogMoment.lean`); the existence of good lattice
+generating vectors; Dereich's improved bias;
 the NIG column of Table 6.3; the non-convexity of the λ-function of HG25 §6.1 (numerical in the
 corrections table). Still open from earlier rounds: the digital option's weak order `α = 1` (hence
-the paper's `O(ε^{−2.5})`), the endpoints `β = 3/2`, `α = 1` of the conditional-expectation
-estimator and the exponential smallness for `K = 0`; the weak rate of tau-leaping for unbounded
+the paper's `O(ε^{−2.5})`), the endpoints `β = 3/2` (done in round 28 up to a logarithm,
+`GBMDigitalCondExpEndpoint.lean`), `α = 1` of the conditional-expectation estimator and the
+exponential smallness for `K = 0`; the weak rate of tau-leaping for unbounded
 propensities; Mercer's theorem; the SSA coupling for several reactions and unbounded propensities;
 the identification of the parabolic limit with the SPDE functional, the variance rate of adaptive
 tau-leaping, the simplex optimality, and whether MIMC reaches `O(ε⁻²)` for a general piecewise
@@ -271,3 +275,29 @@ linear `f`. Out of reach, as before: Itô calculus, the reflection principle, Cl
 areas and Giles–Szpruch, information-based complexity, Feynman–Kac and exit times, Rademacher type
 beyond spaces isomorphic to a subspace of a Hilbert space, Sobol nets and Owen's scrambling, general
 tangent processes, Lévy path functionals and Wiener–Hopf factorisation.
+
+**Follow-up (round 28).** From the spot-check-26 list still open after round 27, round 28 formalised
+four items: the random cost of the exact (SSA) level of §8: each exact-level sample carries the tick
+count `K ~ P(ΛT)` of its own uniformisation clock and costs `2^L + K`, with mean `2^L + ΛT` and
+variance `ΛT`, and with a fixed number of levels the total random cost `C` has `E[C] ≤ cε⁻²` and
+`P(C ≥ 2cε⁻²) ≤ ε²/c` at MSE `< ε²` (`TauLeapingSSACost.lean`; one unit per tau-leaping step and per
+clock tick); for §10.1, that a logarithmic moment of the noise suffices for the affine chain
+`X_{n+1} = cX_n + ξ_n` on `ℝ` with `|c| < 1` (the step `x/2 + e` of `MarkovNoWeakLimit.lean` among
+them, whose noise there has `E[log ξ] = ∞`), and is strictly weaker than the first-step moment of
+`tendstoInDistribution_fwdIter` for the half step (`MarkovLogMoment.lean`); for §2.3, a lower bound
+on the cost of ML2R: when the bias is at least `b 2^{−αL(L+1)/2}` for every `L`, `V_ℓ ≥ c₂2^{−βℓ}`
+and `C_ℓ ≥ c₃2^{γℓ}`, then for `0 < ε < 1` every number of levels and all sample sizes `N_ℓ ≥ 1`
+fixed in advance with MSE `≤ ε²` cost at least `cε⁻²2^{(γ−β)√(2 log₂(1/ε)/α)}`, and for `0 < γ`,
+`β < γ` a Gaussian example that satisfies the paper's weak-error expansion has matching upper and
+lower bounds with this exponent, so the printed `O(ε⁻²2^{(γ−β)√(|log₂ ε|/α)})` is false
+(`ML2RLowerBound.lean`; `β = γ` is not addressed); and, for §5.2, the endpoint `β = 3/2` of the
+conditional-expectation estimator of the digital option up to a logarithm: for `σ ≠ 0`, `T > 0` and
+one `C` depending only on `r`, `σ` and `T`, `E[(P^f_{ℓ+1} − P^c_ℓ)²] ≤ C h^{3/2}(ℓ + 1)^{5/2}`,
+`h = T 2^{−(ℓ+1)}`, for every `s₀ ≠ 0`, every strike and every level, i.e.
+`O(h^{3/2}(log(1/h))^{5/2})` (`GBMDigitalCondExpEndpoint.lean`; by Chernoff's bound for the log
+error of the Milstein path in place of the `L^p` matching; `O(h^{3/2})` without the logarithm is not
+proved). The module docstrings that called these unproved (`TauLeapingSSA.lean`,
+`MarkovNoWeakLimit.lean`, `MarkovLimit.lean`, `GBMDigitalCondExp.lean`,
+`GBMDigitalCondExpExtras.lean`) now point to them, the docstrings of `ML2RTheorem.lean` point to the
+lower bound, and the "Round 28" notes in the coverage tables record them. The other items of the
+lists above remain open.

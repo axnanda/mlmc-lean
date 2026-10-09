@@ -23,6 +23,10 @@ The model is that of `MlmcLean/MarkovChain.lean`: `φ_n = φ(·, ξ_n)` with a j
 state space `α` is a complete separable metric space.  The paper states neither the moment
 condition nor completeness, but neither can be dropped (`hc_cannot_be_dropped` in
 `MlmcLean.MarkovNoWeakLimit`, `completeSpace_cannot_be_dropped` in `MlmcLean.LimitLawExtras`).
+The moment condition is sufficient, not necessary: for the affine step `x ↦ cx + e` on `ℝ` with
+`|c| < 1` a logarithmic moment of the noise suffices (`tendstoInDistribution_fwdIter_affine` in
+`MlmcLean.MarkovLogMoment`), and for `c = ½` this is strictly weaker than the moment condition
+(`halfStep_log_moment_strictly_weaker`).
 
 * `fwdIter`: the chain `X_0 = x₀`, `X_{n+1} = φ(X_n, ξ_n)`.
 * `backIter_eq_fwdIter_rev`, `map_backIter_eq_map_fwdIter`: the chain started `n` steps in the

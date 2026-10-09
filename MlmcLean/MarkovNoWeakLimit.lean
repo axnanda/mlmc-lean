@@ -21,11 +21,13 @@ proves the weak convergence under the extra hypothesis
 `hc : E[d(x₀, φ(x₀, ξ))^p] < ∞`; this file shows that `hc` cannot be dropped.  (The sentence
 paraphrases Glynn and Rhee (2014), whose paper is not in `docs/`; their "required conditions",
 l. 2720, may include more than the paraphrase lists.  `hc` is sufficient, not necessary: for the
-chain below a logarithmic moment `E[log⁺ ξ] < ∞` would already do; this is not formalised.
-Completeness of the space is also needed: on `(0, ∞)` the deterministic map `x ↦ x/2` satisfies
-`hc`, but `δ_{2^{−n}x₀}` has no weak limit in the space; `tendstoInDistribution_fwdIter` assumes
-`CompleteSpace`, and `completeSpace_cannot_be_dropped` (`MlmcLean.LimitLawExtras`) proves that
-this hypothesis cannot be dropped.)
+step `x/2 + e` used below, a logarithmic moment `E[log⁺ |ξ|] < ∞` of the noise already does, and it
+is strictly weaker than `hc`: `tendstoInDistribution_fwdIter_halfStep_of_log` and
+`halfStep_log_moment_strictly_weaker` in `MlmcLean.MarkovLogMoment`; the noise here has
+`E[log ξ] = E[1/U] = ∞`.  Completeness of the space is also needed: on `(0, ∞)` the deterministic
+map `x ↦ x/2` satisfies `hc`, but `δ_{2^{−n}x₀}` has no weak limit in the space;
+`tendstoInDistribution_fwdIter` assumes `CompleteSpace`, and `completeSpace_cannot_be_dropped`
+(`MlmcLean.LimitLawExtras`) proves that this hypothesis cannot be dropped.)
 
 **The counterexample.**  On `ℝ` take the step `φ(x, e) = x/2 + e` of the example quoted by Giles
 (`halfStep`; "An example they offer", l. 2720–2722), but drive it by heavy-tailed noise:

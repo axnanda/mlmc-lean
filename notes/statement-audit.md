@@ -239,10 +239,11 @@ Lean statement or to the reason it is not formalised. The deviations of the new 
   bias is at most `C_α K 2^{−αL(L+1)/2}` (`ml2r_bias_le`); the printed `O(2^{−αL²})` cannot hold
   uniformly (`ml2r_bias`: the expansion `2^{−α(L+1)ℓ}` has bias exactly `±2^{−αL(L+1)/2}`), so
   the `β < γ` cost exponent that the proved bias bound gives is `√(2|log₂ ε|/α)`, `√2` times the
-  printed one (that the printed exponent itself fails, a lower bound on the cost of ML2R, is not
-  proved). The complexity
-  (`ml2r_theorem_eq`, `ml2r_theorem_lt`) is stated for the mean square error of the estimator
-  itself; the earlier `ml2r_complexity_eq`/`_lt` are its deterministic core.
+  printed one (that the printed exponent itself fails, a lower bound on the cost of ML2R, was not
+  proved in this round; round 28: `ml2r_cost_lower_sqrt`, `ml2r_printed_cost_fails` and the
+  example `ml2r_instance_cost`, `ml2r_instance_printed_cost_false` in `ML2RLowerBound.lean`, below).
+  The complexity (`ml2r_theorem_eq`, `ml2r_theorem_lt`) is stated for the mean square error of the
+  estimator itself; the earlier `ml2r_complexity_eq`/`_lt` are its deterministic core.
 * **Theorem 2's index set (G15 §2.4, p. 15).** `giles_theorem2_indexSet` and
   `giles_theorem2_boundary_indexSet` state Theorem 2 on the simplex `{θ·ℓ ≤ L}`,
   `θ_d = α_d + (γ_d − β_d)/2` (the paper's "of the form `ℓ·n ≤ L`"; it does not say which `n`).
@@ -554,7 +555,9 @@ Lean statement or to the reason it is not formalised. The deviations of the new 
 * **The digital option with the conditional expectation (`GBMDigitalCondExp.lean`, round 23).** `β`
   is every `q < 3/2` and `α` every `q < 1`, not the paper's `3/2` ("approximately") and `1`: the
   `O(h)` matching of the conditional means and standard deviations holds in every `L^p`, not on
-  every path, so the tails cost an arbitrarily small loss, and `α` is derived from the strong error
+  every path, so the tails cost an arbitrarily small loss (round 28: only a logarithmic factor,
+  `V_ℓ = O(h^{3/2}(log(1/h))^{5/2})` uniformly in `s₀` and `K`, by Chernoff's bound for the log
+  error, `GBMDigitalCondExpEndpoint.lean`, below), and `α` is derived from the strong error
   and the bounded density of `S_T`, not from a weak-order analysis.  Neither loss changes the
   complexity: Theorem 1 holds at the paper's `O(ε⁻²)` with `α = 3/4`, `β = 5/4`, `γ = 1`.  `K ≠ 0`
   is assumed for the variance rate and Theorem 1 (near the strike the conditional standard deviation
@@ -576,10 +579,11 @@ Lean statement or to the reason it is not formalised. The deviations of the new 
   joint law `ssaTick` of one tick; it is not Anderson and Higham's split coupling of unit-rate
   Poisson processes, although for one reaction it has the same jump rates and so is theirs in law (a
   remark, not proved).  The cost of an exact-level sample is its expected value `2^L + ΛT`; the
-  random cost is not modelled.  `ε ≤ 1`, and the constant `c` depends on `L`.  The rate `O(ε⁻²)`
-  uses only that the estimator is unbiased with finitely many levels of finite variance (plain Monte
-  Carlo on the exact chain has it too); the coupling only makes the exact-level variance
-  `O(2^{−L})`.
+  random cost is not modelled here (round 28: `ssa_mlmc_complexity_random_cost`,
+  `TauLeapingSSACost.lean`, below).  `ε ≤ 1`, and the constant `c` depends on `L`.  The rate
+  `O(ε⁻²)` uses only that the estimator is unbiased with finitely many levels of finite variance
+  (plain Monte Carlo on the exact chain has it too); the coupling only makes the exact-level
+  variance `O(2^{−L})`.
 * **The truncated Karhunen–Loève field (`KarhunenLoeve.lean`, round 23).** Mercer's theorem is not
   formalised; what it provides is assumed: an s-finite `(D, ν)`, orthonormal `f_n ∈ L²(ν)`, summable
   `θ_n ≥ 0` and, where needed, the pointwise expansion `R(x, y) = ∑ θ_n f_n(x) f_n(y)`, for a
@@ -728,10 +732,11 @@ Lean statement or to the reason it is not formalised. The deviations of the new 
   Rhee (2014), which is not in `docs/`; their "required conditions" may include more than the
   paraphrase lists. That completeness of the space is also needed (on `(0, ∞)` the map `x ↦ x/2`
   contracts, but `δ_{2^{−n}x₀}` has no weak limit in the space; likewise the paper's example read on
-  the rationals) and that for this chain a logarithmic moment `E[log⁺ ξ] < ∞` would suffice are
+  the rationals) and that for this chain a logarithmic moment `E[log⁺ ξ] < ∞` would suffice were
   remarks in the module docstring, not theorems (round 27: the `(0, ∞)` counterexample is proved,
-  `completeSpace_cannot_be_dropped` in `LimitLawExtras.lean`, below; the rationals and the
-  logarithmic moment remain remarks).
+  `completeSpace_cannot_be_dropped` in `LimitLawExtras.lean`, below; round 28: the logarithmic
+  moment suffices, `tendstoInDistribution_fwdIter_halfStep_of_log` in `MarkovLogMoment.lean`,
+  below; the rationals remain a remark).
 * **Deviations of earlier modules, recorded after spot-check 24.** §8 (`PoissonCoupling.lean`,
   `TauLeapingMLMC.lean`): one reaction `x → x + 1` (Anderson and Higham treat several reactions with
   stoichiometric vectors); the `O(h)` correction variance and Theorem 1 need a propensity that is
@@ -831,8 +836,9 @@ Lean statement or to the reason it is not formalised. The deviations of the new 
   `completeSpace_cannot_be_dropped` the noise law is `δ_0` on `ℝ`. The refuted statement is
   `tendstoInDistribution_fwdIter` without `CompleteSpace`, with the moment hypothesis `hc` kept and
   the weaker conclusion that some `X_∞` on the same space is a limit in distribution. Not
-  formalised: the paper's example read on the rationals, and that for the chain of
-  `MarkovNoWeakLimit.lean` a logarithmic moment would suffice.
+  formalised: the paper's example read on the rationals. That for the chain of
+  `MarkovNoWeakLimit.lean` a logarithmic moment suffices is proved in round 28
+  (`MarkovLogMoment.lean`, below).
 * **The Lévy–Khintchine law of the truncation limit (`LevyKhintchineLimit.lean`, round 27).** The
   paper states no law for the limit (§6.2, p. 47, l. 2038–2043). Only the law of the terminal value
   `X_T` is identified, through its characteristic function
@@ -844,6 +850,94 @@ Lean statement or to the reason it is not formalised. The deviations of the new 
   band laws `Λ_k • M_k = T • ν|_{band k}`); `exists_unique_levyKhintchine_law` uses the cutoffs
   `2^{−ℓ}`, and its uniqueness is among finite measures. The quadratic bound
   `|e^{ix} − 1 − ix| ≤ 2x²` is used instead of the sharp `x²/2`.
+* **The random cost of the exact SSA level (`TauLeapingSSACost.lean`, round 28).** The setting and
+  the deviations are those of `TauLeapingSSA.lean` (above): one reaction, a bounded propensity
+  `λ ≤ Λ`, a bounded payoff `|Φ| ≤ M`, the exact chain by uniformisation, `ε ≤ 1`. Complexity is
+  read in the sense of Theorem 1, a bound on the expected value of the random total cost (p. 6,
+  l. 273–274; p. 7, l. 294–295). The cost model counts one unit per tau-leaping step and one per
+  tick of the rate-`Λ` uniformisation clock (one uniform and one propensity evaluation): the cost of
+  the uniformised simulation. Gillespie's algorithm, which the paper names (§8, p. 56,
+  l. 2411–2415), simulates only the reactions of the exact path, at most `K` of them; that
+  comparison is not formalised. Only the exact level has a random cost: the tau-leaping levels keep
+  the deterministic cost `2^ℓ` per sample of `ssa_mlmc_complexity` (and carry the count `0`). The
+  tick counts are added to the sampling space of `ssa_mlmc_unbiased` as one more coordinate, so the
+  estimator and the cost are functions on one probability space, and the cost of the `n`-th
+  exact-level sample depends on the same coordinate as its correction; forgetting the counts gives
+  the sampling measure of `ssa_mlmc_complexity`. The constant `c` of
+  `ssa_mlmc_complexity_random_cost` depends on `L` (and on `λ`, `Λ`, `T`, `x₀`, `Φ`). The tail bound
+  `P(C ≥ 2cε⁻²) ≤ ε²/c` is Chebyshev's, from `V[C] = N_{L+1}ΛT ≤ E[C]`; exponential (Poisson) tail
+  bounds are not proved, nor are several reactions, unbounded propensities or payoffs and Anderson
+  and Higham's sharper variance analysis.
+* **A logarithmic moment for the affine chain (`MarkovLogMoment.lean`, round 28).** Giles' sentence
+  (§10.1, p. 61, l. 2707–2717) concerns i.i.d. random maps on a metric space; the positive result is
+  proved only for the affine step `x ↦ cx + e` on `ℝ` with a deterministic coefficient `|c| < 1` and
+  independent real noises of a common law (for `c = ½` the step of Giles' example, l. 2720–2722,
+  with general noise in place of the fair coin flips). General metric spaces, general random maps
+  `φ` and random coefficients are not covered: the proof uses the explicit series `∑_j c^j ξ_j`.
+  `|c| < 1` is exactly the range in which this step contracts on average in the sense of
+  `tendstoInDistribution_fwdIter` (with `ρ = |c|^p`). The moment is stated as the finite Lebesgue
+  integral `∫ log(1 + |e|) dν`, which for a finite law is equivalent to `E[log⁺ |ξ|] < ∞`
+  (`lintegral_log_one_add_abs_ne_top_iff`, with `ENNReal.ofReal (log |e|)` as `log⁺ |e|`). The
+  conclusion has the form of that of `tendstoInDistribution_fwdIter`, from every start `x₀`: almost
+  sure convergence of the chains started in the past and convergence in distribution of `X_n` to
+  their almost sure limit, here the sum of the series. "Strictly weaker" is proved for the half step
+  only, against the hypothesis `hc` of `tendstoInDistribution_fwdIter` for every `p > 0` and `x₀`;
+  the witness law, `exp(1/√U)` with `P(ξ > t) = 1/(log t)²` for `t ≥ e`, is not in the paper. Not
+  formalised: the converse, that for nonnegative noises `E[log⁺ ξ] = ∞` prevents weak convergence
+  (`MarkovNoWeakLimit.lean` proves it only for the law with `P(ξ > t) = 1/log t`), and the
+  identification of the limit law as the unique invariant law under the logarithmic moment alone
+  (`MarkovLimitLaw.lean` does it under `hc`).
+* **A lower bound on the cost of ML2R (`ML2RLowerBound.lean`, round 28).** The paper states only
+  upper bounds (§2.3, p. 12, l. 559–564); the lower bound and the example are this formalisation's.
+  The setting is that of `ml2r_theorem_lt`: mutually independent inputs, the estimator
+  `ml2rEstimator` with the weights `ml2rWeight α L` for the `α` of the expansion (the paper's second
+  weight condition read as "`= 0`"), and the cost `∑_{ℓ≤L} N_ℓ C_ℓ` with sample sizes `N_ℓ ≥ 1`
+  fixed in advance; random or adaptive sample sizes, other weights and other estimators are not
+  covered. The bias hypothesis, a lower bound `b 2^{−αL(L+1)/2}` on the bias of the extrapolated
+  mean for every `L`, is not in the paper: it says that the upper bound of `ml2r_bias_le` is
+  attained, and it holds for the example (with `b = e^{−1/(1−2^{−α})}`) and for the level means of
+  `ml2r_bias_not_attainable`. The lower bounds cover every `L` and `N_ℓ ≥ 1` with mean square error
+  `≤ ε²`, a weaker requirement than the `< ε²` of the upper bounds, which makes the lower bounds and
+  the refutations stronger. `ml2r_cost_lower_sqrt` needs `0 < b ≤ 1`, `β ≤ γ`, `c₂, c₃ > 0` and
+  `0 < ε < 1` (so that `log₂(1/ε) > 0` under the square root); its constants
+  `κ = ½ + √(2 log₂(1/b)/α)` and `c₂c₃ 2^{−(γ−β)κ}` depend only on `α`, `β`, `γ`, `b`, `c₂`, `c₃`,
+  and the constants `c₄`, `c₅`, `κ` of `ml2r_instance_cost` only on `α`, `β`, `γ`. The printed
+  bound is refuted, for `β < γ`, in the quantified sense of `ml2r_printed_cost_fails` and
+  `ml2r_instance_printed_cost_false`: there are no `c` and `ε₀ > 0` such that for every
+  `0 < ε < ε₀` some `L` and `N_ℓ ≥ 1` reach mean square error `≤ ε²` at cost
+  `≤ c ε⁻² 2^{(γ−β)√(|log₂ ε|/α)}`. The case `β = γ` is not addressed: there the lower bound gives
+  only `ε⁻²`, not the `ε⁻²|log ε|` of `ml2r_theorem_eq`. The example `ml2rInstPl` has one standard
+  normal input per sample, per-sample costs `C_ℓ = 2^{γℓ}` and as target the number `0`; its weak
+  error `x_ℓ/(1 + x_ℓ)` has the paper's expansion with `a_n = (−1)^{n+1} ≠ 0` and the
+  `L`-independent constant `K = 1`. The limit `P` is not part of the statements (for `β > 0` the
+  `P_ℓ` converge in `L²` to `P = s_∞ z`, with `E[P] = 0`: a remark, not formalised), since the
+  setting of `ml2r_theorem_lt` uses only the number `E[P]`.
+* **The endpoint `β = 3/2` up to a logarithm (`GBMDigitalCondExpEndpoint.lean`, round 28).** The
+  setting and the estimator are those of `GBMDigitalCondExp.lean` (above): GBM with `s₀ ≠ 0`,
+  `σ ≠ 0`, `T > 0`, the coarse numerator with the re-used increment `b ΔW_{N−2}`, `b` for `|b|` in
+  the denominators; the strike is arbitrary. The paper's "a variance which is approximately
+  `O(h^{3/2})`" (§5.2, p. 36, l. 1575–1577) is proved up to a logarithmic factor, which sharpens
+  Table 5.2's analysis entry `o(h^{3/2−δ})` (p. 33, l. 1431):
+  `E[(P^f_{ℓ+1} − P^c_ℓ)²] ≤ C h^{3/2} (ℓ + 1)^{5/2}`, `h = T 2^{−(ℓ+1)}`, on every level
+  (`gbm_digital_condExp_variance_endpoint`; for a fixed `s₀`,
+  `gbm_digital_condExp_variance_rate_endpoint`), and `≤ C' h^{3/2} (log(1/h))^{5/2}` on the levels
+  with `h < e⁻¹` (`gbm_digital_condExp_variance_endpoint_log`, `C' = C((1 + |log T|)/log 2)^{5/2}`,
+  from `(ℓ + 1) log 2 = log T + log(1/h)`); the same bounds hold for `V_{ℓ+1}`. The factor
+  `(ℓ + 1)^{5/2}` comes from the truncation of the increments at `4(ℓ + 1)^{1/2}` and the Gaussian
+  tail at `t = 2(ℓ + 1)^{1/2}` in the proof and is not claimed to be sharp; `O(h^{3/2})` without it
+  is not proved. `C` depends only on `r`, `σ` and `T`: the paths are compared with the exact
+  solution through the logarithms of their ratios, and `log|S_T|` has a density bounded uniformly in
+  `s₀`, so the bound is uniform in `s₀ ≠ 0` and `K`, `K = 0` included (there is no window then: on
+  the good event the paths keep the sign of `s₀`). The factor `25e^{−rT}` of the payoffs is omitted
+  (it multiplies `C` by `625e^{−2rT}`). The constant is explicit in the proof but enormous, of order
+  `10³²` at `r = 0.05`, `σ = 0.2`, `T = 1`, so the bound is below `1` only from about level `83`,
+  while a Monte Carlo check (not part of the proof; `10⁵` samples per level, `s₀ = K = 1`) puts
+  `V_ℓ/h^{3/2}` near `0.0045` for `h = 2^{−4}, …, 2^{−8}`. Not proved: the kurtosis "approximately
+  `O(h^{−1/2})`" (l. 1577), which needs lower bounds; the weak order `α = 1` (l. 1578; every `q < 1`
+  is proved); the endpoint for the splitting estimator. Theorem 1 (l. 1578: "Since `β > γ`, the MLMC
+  complexity is `O(ε⁻²)`") was already proved without a logarithmic factor, with `β = 5/4`
+  (`gbm_digital_condExp_theorem1`, `gbm_digital_condExp_theorem1_all`), so the endpoint changes no
+  complexity statement.
 
 ### Corrections to the papers recorded elsewhere, collected
 
@@ -854,7 +948,7 @@ Lean statement or to the reason it is not formalised. The deviations of the new 
 | G15 | §2.1, p. 7 | "Because of condition i), we have `2^{−αL} = O(ε)`, and hence `C_L = O(ε^{−γ/α})`" | `C_L = O(ε^{−γ/α})` needs `2^{αL} = O(ε⁻¹)`, which holds because `L` is the least level meeting the bias target | `finest_cost_le`, `two_rpow_levelL_le` |
 | G15 | §2.3, p. 11 | expansion `E[P_ℓ] − E[P] = ∑_{n=1}^{L} a_n 2^{−nαℓ} + O(2^{−αℓL})` | the remainder has the order of the `n = L` term, which it absorbs; `O(2^{−αℓ(L+1)})` is the natural form. Harmless: the bias bound is the same | `ml2r_bias_le` (reads the printed form) |
 | G15 | §2.3, p. 11 | weights with `∑ w_ℓ 2^{−nαℓ} = 1` | `= 0` | `ml2r_weights` |
-| G15 | §2.3, p. 12 | bias `O(2^{−αL²})`, exponent `√(\|log₂ ε\|/α)` | `O(2^{−αL(L+1)/2})`, `√(2\|log₂ ε\|/α)`. What is proved: the bias bound `O(2^{−αL(L+1)/2})` uniform in `L` (an upper bound), the cost with the exponent `√(2\|log₂ ε\|/α)` that it gives (an upper bound), and that the printed bias is not attainable under the expansion; no theorem shows that the printed cost exponent fails (no lower bound on the cost of ML2R) | `ml2r_bias`, `ml2r_bias_le`, `ml2r_theorem_lt`, `ml2r_bias_not_attainable` |
+| G15 | §2.3, p. 12 (l. 539–543, 559–564) | bias `O(2^{−αL²})`, exponent `√(\|log₂ ε\|/α)` | `O(2^{−αL(L+1)/2})`, `√(2\|log₂ ε\|/α)`. What is proved: the bias bound `O(2^{−αL(L+1)/2})` uniform in `L` (an upper bound), the cost with the exponent `√(2\|log₂ ε\|/α)` that it gives (an upper bound), and that the printed bias is not attainable under the expansion; round 28: the printed cost exponent fails, by a lower bound on the cost of ML2R (when the bias is at least `b 2^{−αL(L+1)/2}` for every `L`, every `L` and `N_ℓ ≥ 1` with MSE `≤ ε²` cost at least `c ε⁻² 2^{(γ−β)√(2 log₂(1/ε)/α)}`), and on an example with the paper's expansion the least cost is of exact order `ε⁻² 2^{(γ−β)√(2 log₂(1/ε)/α)}` for `β < γ`, `γ > 0`, so this exponent is sharp | `ml2r_bias`, `ml2r_bias_le`, `ml2r_theorem_lt`, `ml2r_bias_not_attainable`, `ml2r_cost_lower_sqrt`, `ml2r_printed_cost_fails`, `ml2r_instance_cost`, `ml2r_instance_printed_cost_false` |
 | G15 | §2.4, pp. 13–14 | conditions labelled i), iii), ii), iv), v) | labels as in the Notes | hypothesis names follow the statement |
 | G15 | §2.4, p. 15 | rectangles "optimal order" | only for `O(ε⁻²)` | `mimc_rect_lower_bounds` |
 | G15 | §2.4, pp. 15–16 | for large `D`, standard MLMC has complexity "less (often much less) than the optimal `O(ε⁻²)`" | worse than (of larger order than) `O(ε⁻²)` | `mlmc_optimal_complexity_necessary` |
@@ -884,7 +978,7 @@ Lean statement or to the reason it is not formalised. The deviations of the new 
 | G15 | §9.2, p. 60 | "Due to the Central Limit Theorem" `Δg_{1,ℓ₂} + Δg_{1,ℓ₂−1} = O(2^{−ℓ₁/2})` and, with first-order strong convergence, `Δg_{1,ℓ₂} − Δg_{1,ℓ₂−1} = O(2^{−ℓ₁/2−ℓ₂})` (and for `2`); hence `V_ℓ = O(2^{−2ℓ₁−2ℓ₂})` for `f` twice differentiable | measured from `E[g(Z, W)]` the sums contain the weak error `O(2^{−ℓ₂})`, so these hold only after re-centring at the conditional means of the inner approximations (the difference of squares is unchanged by it); a rigorous `V_ℓ = O(2^{−2ℓ₁−2ℓ₂})` needs `f″` Lipschitz, not just `f` twice differentiable | `nested_mimc_variance_rate`, `nested_mimc_smooth_variance_rate` |
 | G15 | §9.2, p. 60 | MIMC with a kink: `β₁ = β₂ = 1.5`, cost `O(ε⁻²)` | the rates are false: no `β₁, β₂` with `2β₁ + β₂ > 3` (counterexample); the isotropic rates `β₁ = β₂ = 1` hold, are sharp along `ℓ₁ = 2ℓ₂` and give `O(ε⁻²\|log ε\|⁴)`; whether `O(ε⁻²)` holds is open | `nested_mimc_kink_rates_false`, `nested_mimc_kink_variance_rate`, `nested_mimc_kink_complexity` |
 | G15 | §10.1, p. 61 | decay exponential in `N_ℓ − N_{ℓ−1}` | in `N_{ℓ−1}` | `variance_levels_le`, `markov_linear_levels` |
-| G15 | §10.1, p. 61 (l. 2711–2717) | contraction on average, "`sup_{x≠y} E[(d(φ_n(x), φ_n(y))/d(x, y))^{2γ}] < 1`" … "Under these conditions, it is known that the distribution of `X_n` converges weakly to that of a limit random variable `X_∞`" | false as stated: a moment condition on one step is needed as well (a logarithmic moment suffices for the example below; not formalised), and a complete space (round 27: on `(0, ∞)` the step `x ↦ x/2` contracts and has every first-step moment, but `X_n = x₀/2ⁿ` has no weak limit in the space). `X_{n+1} = X_n/2 + ξ_n` with `P(ξ > t) = 1/log t` contracts on average for every `γ` but has no weak limit. The sentence paraphrases Glynn and Rhee (2014), not in `docs/`, whose conditions may include more | `tendstoInDistribution_fwdIter` (with `E[d(x₀, φ(x₀, ξ))^p] < ∞` and a complete space), `markov_no_weak_limit`, `hc_cannot_be_dropped`, `completeSpace_cannot_be_dropped` |
+| G15 | §10.1, p. 61 (l. 2711–2717) | contraction on average, "`sup_{x≠y} E[(d(φ_n(x), φ_n(y))/d(x, y))^{2γ}] < 1`" … "Under these conditions, it is known that the distribution of `X_n` converges weakly to that of a limit random variable `X_∞`" | false as stated: a moment condition on one step is needed as well (a logarithmic moment suffices for the example below; round 28: proved for the affine step `x ↦ cx + e` on `ℝ` with `−1 < c < 1`, the half step included, and for the half step strictly weaker than the first-step moment), and a complete space (round 27: on `(0, ∞)` the step `x ↦ x/2` contracts and has every first-step moment, but `X_n = x₀/2ⁿ` has no weak limit in the space). `X_{n+1} = X_n/2 + ξ_n` with `P(ξ > t) = 1/log t` contracts on average for every `γ` but has no weak limit. The sentence paraphrases Glynn and Rhee (2014), not in `docs/`, whose conditions may include more | `tendstoInDistribution_fwdIter` (with `E[d(x₀, φ(x₀, ξ))^p] < ∞` and a complete space), `markov_no_weak_limit`, `hc_cannot_be_dropped`, `completeSpace_cannot_be_dropped`, `tendstoInDistribution_fwdIter_halfStep_of_log`, `halfStep_log_moment_strictly_weaker` |
 | G15 | §10.2, p. 62 | `U_n = (I_n + ½)/I_max` | `(I_n + ½)/(I_max + 1)` (the printed `U_n` exceeds `1` for `I_n = I_max`) | `tendstoInDistribution_normCDFInv_midpoint` |
 | HG25 | §2.1, p. 3 | the cost of a sample increases with level and for Euler–Maruyama with Lipschitz payoffs `V_ℓ` decreases exponentially, so "the former" (`V_ℓC_ℓ` decreasing) makes MLMC cheaper | with `β = γ = 1`, `V_ℓC_ℓ` is roughly constant, not decreasing; MLMC then costs about `ε⁻²(L+1)²V₀C₀` against `ε⁻²V₀C₀2^L` for plain Monte Carlo, less only for `L ≥ 6` | `optimal_cost_const_product`, `gbm_em_identity_variance_two_sided`, `gbm_em_identity_variance_cost` |
 | HG25 | (21) | `E[δx²] = 4^{e−d−1}` | `≤` | `integral_sq_roundError_le` |

@@ -835,3 +835,46 @@ covariance with sympy, mpmath and Monte Carlo.  Findings and what was done:
   `stdNormalSeq`); the auditors printed them with `#print` without reading any source.  The script
   that builds the packets missed names written with a following `.` (`HasType2.{u}`,
   `stdNormalSeq.map`); it is fixed for later rounds.
+
+**Twenty-eighth round (2026-10-09).** Blind read-backs of the 26 theorems added in round 28:
+`markov_log_moment.md` (R53: `MarkovLogMoment`; 10 theorems and the definition `logSqTailLaw`),
+`ssa_random_cost.md` (R54: `TauLeapingSSACost`; 6 theorems and 5 definitions),
+`ml2r_lower_bound.md` (R55: `ML2RLowerBound`; 7 theorems and the definition `ml2rInstPl`) and
+`gbm_digital_condexp_endpoint.md` (R56: `GBMDigitalCondExpEndpoint`; 3 theorems and the definition
+`gbmMilLogRatio`).  All 26 read back as true; none is vacuous and none holds only because of a junk value.  The R53 auditor
+proved the existence statement for i.i.d. noises of the new law in Lean, checked the tail formula
+against exact values (15 digits) and Monte Carlo, computed `E[log(1 + ξ)] ≈ 2.1941` and showed
+that the power moments are infinite.  The R54 auditor checked every law identity of the counting
+chain numerically (to about `2·10⁻¹⁶`), confirmed that the exact-level cost reads the tick count of
+the same sample that feeds the estimator, and confirmed in Lean that the product measure is not the
+zero measure (each factor is a probability measure under `λ ≤ Λ`).  The R55 auditor proved in Lean,
+without `sorry`, that the Gaussian instance satisfies the measure-preservation, independence,
+measurability and `L²` hypotheses of the general lower bound, and confirmed with 400-digit
+arithmetic the weight identity, the matching upper and lower bounds and the divergence from the
+printed bound (cost ratios of `2·10²¹` to `8·10⁵⁹`).  The R56 auditor simulated the
+conditional-expectation corrections as defined (`E[Δ²]/h^{3/2}` is flat at about `0.0045` from
+level 4 on, for `s₀ = K = 1`, `r = 0.05`, `σ = 0.2`, `T = 1`), cross-checked by exact quadrature at
+level 0 and by a crude Monte Carlo at level 4, proved the square integrability of the correction in
+Lean, and confirmed that the uniformity in `s₀` and `K` reduces to the ratio `K/s₀` (the Milstein
+path is linear in `s₀`).  Findings and what was done:
+
+- **Hypotheses that are needed.** Without `λ ≤ Λ` the joint-law identity fails (the auditor gave
+  a counterexample), without `0 < N` the tick count vanishes, and `t ≥ e` is needed in the tail
+  formula of the new noise law.  `IsFiniteMeasure` is needed in the log-moment comparisons (the
+  auditor gave infinite-measure counterexamples).  No change needed.
+- **Hypotheses that are stronger than needed**: `α > 0` where `α ≠ 0` suffices in the weight
+  identity, `c₂ > 0` in `ml2r_cost_lower_sqrt` and `γ > 0` in `ml2r_instance_cost`.  Kept.
+- **Scope of the ML2R refutation.** `ml2r_printed_cost_fails` and
+  `ml2r_instance_printed_cost_false` refute the printed bound for the repository's ML2R family
+  (nodes `2^{−αℓ}`, levels `0, …, L`, the Richardson–Romberg weights, fixed `N_ℓ ≥ 1`), which is
+  the setting of §2.3; the general lower bound assumes a lower bound on the bias, and the link to
+  the paper's own hypotheses is the instance, which satisfies the expansion hypothesis of
+  `ml2r_theorem_lt`.  Documented in the module and in `notes/statement-audit.md`.
+- **The endpoint bound is slack, not wrong**: the observed rate is `h^{3/2}` without a logarithm;
+  the factor `(ℓ + 1)^{5/2}` comes from the proof.  The hypothesis `h < e^{−1}` of
+  `gbm_digital_condExp_variance_endpoint_log` is needed (at `h ≥ 1` the right-hand side is `0`),
+  and `s₀ ≠ 0`, `σ ≠ 0` exclude only cases where the correction vanishes by the division
+  convention.  Documented.  Kept.
+- **`ssa_mlmc_complexity_random_cost` is a fixed-`L` statement**: the constant depends on `L`, and
+  the statement says nothing about the choice of `L` or a comparison with plain exact simulation.
+  Documented.

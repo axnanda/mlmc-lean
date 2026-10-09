@@ -296,6 +296,36 @@ items listed under "Not formalised" below.
   Lévy–Khintchine law, through its characteristic function, for the terminal value only
   (`LevyKhintchineLimit.lean`). Module docstrings that called these unproved were corrected, and so
   were stale remarks in `TauLeapingMLMC.lean`, `PoissonGrids.lean` and `SPDEStability.lean`.
+- ✅ Round 28 (four more items from the provable remainder of spot-check 26,
+  `notes/coverage/round17_spot_check.md`): the random cost of the exact (SSA) level of Anderson and
+  Higham's unbiased estimator (§8): the coupled chain carries the number `K` of ticks of the
+  uniformisation clock, `K ~ P(ΛT)`, an exact-level sample costs `2^L + K`, with mean `2^L + ΛT`
+  (the cost charged by `ssa_mlmc_complexity`) and variance `ΛT`, and with a fixed number of levels
+  the same estimator reaches MSE `< ε²` with a random total cost `C` such that `E[C] ≤ cε⁻²` and
+  `P(C ≥ 2cε⁻²) ≤ ε²/c` (`TauLeapingSSACost.lean`; one unit per tau-leaping step and per clock tick,
+  not per reaction of Gillespie's algorithm); for the affine chain `X_{n+1} = cX_n + ξ_n` on `ℝ`
+  with `|c| < 1` and i.i.d. noises, Giles' half-step example of §10.1 among them, a logarithmic
+  moment `E[log(1 + |ξ|)] < ∞` suffices for convergence in distribution, from every start, to the
+  almost sure sum `∑_j c^j ξ_j`, and for the half step it is strictly weaker than the first-step
+  moment assumed by `tendstoInDistribution_fwdIter` (`MarkovLogMoment.lean`); a lower bound on the
+  cost of ML2R (§2.3): if the bias is at least `b 2^{−αL(L+1)/2}` for every `L` (`0 < b ≤ 1`),
+  `V_ℓ ≥ c₂2^{−βℓ}` and `C_ℓ ≥ c₃2^{γℓ}` (`c₂, c₃ > 0`, `β ≤ γ`), then for `0 < ε < 1` every number
+  of levels `L` and all fixed sample sizes `N_ℓ ≥ 1` with MSE `≤ ε²` have `L ≥ √(2 log₂(1/ε)/α) − κ`
+  and cost at least `cε⁻²2^{(γ−β)√(2 log₂(1/ε)/α)}`, and a Gaussian example that satisfies the
+  paper's weak-error expansion has, for `0 < γ` and `β < γ`, matching upper and lower bounds with
+  this exponent, so the printed cost `O(ε⁻²2^{(γ−β)√(|log₂ ε|/α)})` is false and the exponent
+  `√(2|log₂ ε|/α)` of `ml2r_theorem_lt` is sharp (`ML2RLowerBound.lean`; the case `β = γ` is not
+  addressed); the endpoint `β = 3/2` of the conditional-expectation estimator of the digital option
+  for GBM (§5.2), up to a logarithm: for `σ ≠ 0`, `T > 0` there is `C`, depending only on `r`, `σ`
+  and `T`, such that for every `s₀ ≠ 0`, every strike and every level `E[(P^f_{ℓ+1} − P^c_ℓ)²]` and
+  `V_{ℓ+1}` are at most `C h^{3/2}(ℓ + 1)^{5/2}`, `h = T 2^{−(ℓ+1)}`, hence
+  `O(h^{3/2}(log(1/h))^{5/2})`, which sharpens Table 5.2's analysis entry `o(h^{3/2−δ})`
+  (`GBMDigitalCondExpEndpoint.lean`, by Chernoff's bound for the logarithm of the ratio of the
+  Milstein path to the exact solution; `O(h^{3/2})` without the logarithm, the kurtosis and `α = 1`
+  are not proved). The module docstrings that called these unproved (`TauLeapingSSA.lean`,
+  `MarkovNoWeakLimit.lean`, `MarkovLimit.lean`, `GBMDigitalCondExp.lean`,
+  `GBMDigitalCondExpExtras.lean`) were corrected, and the docstrings of `ML2RTheorem.lean` now point
+  to the lower bound.
 - Not formalised (each with its reason in `notes/coverage/README.md`): the convergence orders of the
   discretisations of general SDEs, SPDEs and PDEs (Itô calculus and PDE regularity are not in
   Mathlib; the SPDE of §7.3 has multiplicative noise and an absorbing boundary; proved for geometric
@@ -314,10 +344,11 @@ items listed under "Not formalised" below.
   rate `α = 1`, hence the paper's `O(ε^{−2.5})` (Theorem 1 at cost `O(ε^{−3−η})`, and
   `O(ε^{−2−η})` with Milstein, is proved for GBM, and with Euler–Maruyama at cost
   `O(ε⁻³|log ε|)`, the weak error bounded by the mismatch probability); for the
-  conditional-expectation estimator of the digital option, the endpoints `β = 3/2` and `α = 1`, the
-  kurtosis `O(h^{−1/2})` and, for the strike `K = 0`, that the corrections are exponentially small
-  (every `q < 3/2`, resp. `q < 1`, and Theorem 1 at the paper's cost `O(ε⁻²)` are proved for GBM and
-  every strike, and for `K = 0` the corrections are `O(h^q)` for every `q`), and for splitting the
+  conditional-expectation estimator of the digital option, the endpoint `α = 1` and, without a
+  logarithmic factor, `β = 3/2`, the kurtosis `O(h^{−1/2})` and, for the strike `K = 0`, that the
+  corrections are exponentially small (`V_ℓ = O(h^{3/2}(log(1/h))^{5/2})` uniformly in `s₀` and `K`,
+  the weak rate `q < 1` and Theorem 1 at the paper's cost `O(ε⁻²)` are proved for GBM and every
+  strike, and for `K = 0` the corrections are `O(h^q)` for every `q`), and for splitting the
   variance "the same, to leading order" as with the conditional expectation (the same rate, and
   Theorem 1 at cost `O(ε⁻²)` with `⌈h_ℓ^{−1/2}⌉` sub-samples, are proved, with an Euler–Maruyama
   final step); for the change-of-measure estimator, finite variance after averaging over the paths
@@ -336,9 +367,10 @@ items listed under "Not formalised" below.
   Theorem 1 given the weak rate are proved, and for the linear birth rate `λ(x) = cx` with
   `Φ(x) = x` also the weak rate against the limit of the tau-leaping means and Theorem 1 with no
   assumed rate); the exact (SSA) coupling on the finest level for several reactions, unbounded
-  propensities or unbounded payoffs, and the random cost of the exact level (one reaction with a
-  bounded propensity and a bounded payoff, coupled by uniformisation, is proved: the estimator is
-  unbiased and costs `O(ε⁻²)` in expectation with a fixed number of levels); the comparison of the
+  propensities or unbounded payoffs (one reaction with a bounded propensity and a bounded payoff,
+  coupled by uniformisation, is proved: the estimator is unbiased and costs `O(ε⁻²)` in expectation
+  with a fixed number of levels, also with the random number of clock ticks of the exact level
+  charged, whose total has mean `≤ cε⁻²` and a Chebyshev tail bound); the comparison of the
   explicit scheme with the exact solution for super-linear coefficients, and several dimensions (the
   divergence of the scheme's moments is proved for scalar coefficients); the jump-diffusion and
   Lévy-process theory of §6 beyond grid values and terminal values (the Poisson and Lévy processes
@@ -367,10 +399,12 @@ items listed under "Not formalised" below.
   payoffs, with the variance rate of its corrections, are proved); that the limit of the discretised
   contracting chains is the SDE's invariant law (§10.1; fixed and level-dependent steps are proved
   for the discretised chains, and for the Ornstein–Uhlenbeck SDE the invariant laws of the scheme
-  tend to `N(0, σ²/(2κ))`); for the weak convergence of contracting Markov chains (§10.1),
-  conditions weaker than the finite first-step moment `E[d(x₀, φ(x₀, ξ))^p] < ∞` that the Lean
-  statements assume, such as a logarithmic moment (that the paper's claim fails without any moment
-  condition, and without completeness, is proved: `hc_cannot_be_dropped`,
+  tend to `N(0, σ²/(2κ))`); for the weak convergence of contracting Markov chains (§10.1) with
+  general random maps `φ` on general metric spaces, conditions weaker than the finite first-step
+  moment `E[d(x₀, φ(x₀, ξ))^p] < ∞` that the Lean statements assume (for the affine step
+  `x ↦ cx + e` on `ℝ` with `|c| < 1` a logarithmic moment of the noise is proved to suffice, and for
+  the half step to be strictly weaker, `MarkovLogMoment.lean`; that the paper's claim fails without
+  any moment condition, and without completeness, is proved: `hc_cannot_be_dropped`,
   `completeSpace_cannot_be_dropped`); the value of the dyadic limit `C` (Haas–Giles §3.4; the
   existence of `C > 0` is proved for `Φ⁻¹`, and so is the exact halving of the method-1 MSE per bit
   as a limit, `MSE(d + 1)/MSE(d) → ½`, with the constant `κ` of `MSE(d) ~ κ 2^{−d}/d` as a series,

@@ -71,7 +71,9 @@ So `E[(G_f − G_c)²] = O(√h/v⁸) = O(h^{1/2 − 8δ})`; `δ = (1/2 − max(
 **Deviations.**
 * The exponent is every `q < 1/2`, not `1/2` itself; the loss comes from the tails (the `O(h)`
   matching holds in every `L^{2p}`, not on every path), as for the payoff (`q < 3/2`,
-  `gbm_digital_condExp_variance_rate`).  The constant depends on `s₀`, `K`, `r`, `σ`, `T` and `q`.
+  `gbm_digital_condExp_variance_rate`; the payoff's endpoint `3/2` is proved up to a logarithmic
+  factor in `MlmcLean.GBMDigitalCondExpEndpoint`, the delta's endpoint `1/2` is not).  The constant
+  depends on `s₀`, `K`, `r`, `σ`, `T` and `q`.
 * GBM and the delta only (the paper and Burgos treat general SDEs and Greeks); the factor
   `e^{−rT}` is omitted.  `s₀ ≠ 0`, `σ ≠ 0`, `T > 0` are the hypotheses under which the formulas are
   the pathwise derivatives (`gbm_digital_condExp_delta`); `K = 0` is allowed (both sensitivities

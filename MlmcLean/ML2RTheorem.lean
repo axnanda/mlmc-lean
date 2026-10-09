@@ -33,6 +33,14 @@ hypothesis and states the complexity for the mean square error of the estimator 
   `E[(Y − E[P])²] < ε²` at cost `O(ε⁻² |log ε|)` if `β = γ`, and
   `O(ε⁻² 2^{(γ−β)√(2 log₂(1/ε)/α)})` if `β < γ` (the exponent is `√2` times the printed one,
   because the bias is `2^{−αL(L+1)/2}`), with no assumed bias constant.
+
+`MlmcLean/ML2RLowerBound.lean` proves that this exponent cannot be improved in general and that
+the printed one fails: if the bias is at least `b 2^{−αL(L+1)/2}` for every `L` (`0 < b ≤ 1`)
+and `V_ℓ`, `C_ℓ` are at least positive multiples of `2^{−βℓ}`, `2^{γℓ}`, then for `0 < ε < 1`
+every `L` and `N_ℓ ≥ 1` with `E[(Y − E[P])²] ≤ ε²` cost at least a positive multiple of
+`ε⁻² 2^{(γ−β)√(2 log₂(1/ε)/α)}` (`ml2r_cost_lower_sqrt`, `ml2r_printed_cost_fails`), and an
+example that satisfies the expansion with an `L`-independent constant has such a bias
+(`ml2r_instance_hypotheses`, `ml2r_instance_cost`).
 -/
 
 open MeasureTheory ProbabilityTheory Finset
@@ -369,11 +377,18 @@ for every `0 < ε < e⁻¹` there are `L` and `N_ℓ ≥ 1` with `E[(Y − EP)²
 **Correction.** The exponent is `√(2|log₂ ε|/α)`, `√2` times the printed `√(|log₂ ε|/α)`: the
 printed exponent comes from the printed bias `O(2^{−αL²})`, but the bias is only
 `O(2^{−αL(L+1)/2})` (`ml2r_bias_le`, sharp by `ml2r_bias`), so a weak error `ε` needs
-`L ≈ √(2 log₂(1/ε)/α)` levels in general, and the cost is of order `ε⁻² 2^{(γ−β)L}`.  The
-exponent is still `o(log(1/ε))`, so the cost is `O(ε^{−2−δ})` for every `δ > 0`, against
-`ε^{−2−(γ−β)/α}` for standard MLMC (`giles_theorem1`).  As in `ml2r_theorem_eq`, the uniformity
-of the `O(2^{−αℓL})` in `L` is an explicit hypothesis, and no sign condition on `K` or on `C_ℓ`
-is needed. -/
+`L ≈ √(2 log₂(1/ε)/α)` levels in general, and the cost is of order `ε⁻² 2^{(γ−β)L}`.  Both are
+proved as lower bounds in `MlmcLean.ML2RLowerBound`: if moreover the bias is at least
+`b 2^{−αL(L+1)/2}` for every `L` (`0 < b ≤ 1`) and `V_ℓ`, `C_ℓ` are at least positive multiples
+of `2^{−βℓ}`, `2^{γℓ}`, then for `0 < ε < 1` every `L` and `N_ℓ ≥ 1` with `E[(Y − EP)²] ≤ ε²`
+have `L ≥ √(2 log₂(1/ε)/α) − κ` and cost at least a positive multiple of
+`ε⁻² 2^{(γ−β)√(2 log₂(1/ε)/α)}` (`ml2r_cost_lower_sqrt`), so the printed exponent fails
+(`ml2r_printed_cost_fails`); an example satisfies these hypotheses and those above, and on it
+the least cost of mean square error `ε²` is of exact order `ε⁻² 2^{(γ−β)√(2 log₂(1/ε)/α)}`
+(`ml2r_instance_cost`, `ml2r_instance_printed_cost_false`).  The exponent is still
+`o(log(1/ε))`, so the cost is `O(ε^{−2−δ})` for every `δ > 0`, against `ε^{−2−(γ−β)/α}` for
+standard MLMC (`giles_theorem1`).  As in `ml2r_theorem_eq`, the uniformity of the `O(2^{−αℓL})`
+in `L` is an explicit hypothesis, and no sign condition on `K` or on `C_ℓ` is needed. -/
 theorem ml2r_theorem_lt [IsProbabilityMeasure μ] (hω : ∀ p, MeasurePreserving (ω p) μ ν)
     (hind : iIndepFun ω μ) (hPlm : ∀ ℓ, Measurable (Pl ℓ)) (hPl : ∀ ℓ, MemLp (Pl ℓ) 2 ν)
     {EP K α β γ c₂ c₃ : ℝ} {a C : ℕ → ℝ} (hα : 0 < α) (hγ : 0 < γ) (hβγ : β < γ)

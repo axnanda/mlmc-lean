@@ -71,12 +71,15 @@ their split coupling (common jumps at rate `min(λ(X_t), λ(Z_{t_n}))`, single j
 parts of the difference), so it is their coupling in law; this identification is a remark, not
 proved here.  The cost of an exact-level sample is its expected value
 `2^L + ΛT` (`2^L` tau-leaping steps and `E[P(ΛT)] = ΛT` clock ticks); the random cost is not
-modelled.  `ε ≤ 1`, and `c` depends on `L`.  `Bin(n, p)` is defined here by its masses.
+modelled here; see `ssa_mlmc_complexity_random_cost` (`MlmcLean.TauLeapingSSACost`), where the
+tick count of each exact-level sample is part of the sample and `E[C] ≤ c ε⁻²` for the random total
+cost `C`.  `ε ≤ 1`, and `c` depends on `L`.  `Bin(n, p)` is defined here by its masses.
 
-**Not proved.**  Several reactions, unbounded propensities, unbounded (e.g. Lipschitz) payoffs, the
-random cost of the exact level, and Anderson and Higham's sharper variance analysis; the contrast
-with the biased SDE estimators is only the statement that the bias here is zero (the tau-leaping
-estimator alone has the `O(2^{−L})` bias of `tauLeaping_weak_error_exact`).
+**Not proved.**  Several reactions, unbounded propensities, unbounded (e.g. Lipschitz) payoffs, and
+Anderson and Higham's sharper variance analysis (the random cost of the exact level is in
+`MlmcLean.TauLeapingSSACost`); the contrast with the biased SDE estimators is only the statement
+that the bias here is zero (the tau-leaping estimator alone has the `O(2^{−L})` bias of
+`tauLeaping_weak_error_exact`).
 -/
 
 open MeasureTheory ProbabilityTheory Finset
@@ -1121,13 +1124,14 @@ numbers `N_ℓ ≥ 1` (the rounded-up allocation (1.1) of `fixed_levels_cost` fo
 a tau-leaping sample of level `ℓ` costs its `2^ℓ` fine steps, as in `tauLeaping_mlmc_exact`; an
 exact-level sample costs its `2^L` tau-leaping steps plus the expected number `E[P(ΛT)] = ΛT` of
 ticks of the uniformisation clock (the sum of the `2^L` independent `P(ΛT 2^{−L})` tick counts),
-each one uniform and one propensity evaluation.  The cost is this expected value; the random cost
-is not modelled.  Deviations: one reaction, bounded propensity, bounded payoff, exact chain by
-uniformisation; the constant `c` depends on `L` (and on `λ`, `Λ`, `T`, `x₀`, `Φ`).  The rate
-`ε⁻²` uses only that the estimator is unbiased with finitely many levels of finite variance and
-cost; it would hold as well with an independently sampled exact level, or for plain Monte Carlo
-on the exact chain.  The coupling affects the constant: the exact-level variance is `O(2^{−L})`
-(`variance_ssaCorrection_exact_le`), whose effect on `c` is not tracked here. -/
+each one uniform and one propensity evaluation.  The cost is this expected value; the random cost is
+not modelled here; see `ssa_mlmc_complexity_random_cost` (`MlmcLean.TauLeapingSSACost`), whose
+expected random cost equals this cost.  Deviations: one reaction, bounded propensity, bounded
+payoff, exact chain by uniformisation; the constant `c` depends on `L` (and on `λ`, `Λ`, `T`, `x₀`,
+`Φ`).  The rate `ε⁻²` uses only that the estimator is unbiased with finitely many levels of finite
+variance and cost; it would hold as well with an independently sampled exact level, or for plain
+Monte Carlo on the exact chain.  The coupling affects the constant: the exact-level variance is
+`O(2^{−L})` (`variance_ssaCorrection_exact_le`), whose effect on `c` is not tracked here. -/
 theorem ssa_mlmc_complexity {lam : ℕ → ℝ≥0} {Λ : ℝ≥0} (hΛ : ∀ x, lam x ≤ Λ) (T : ℝ≥0) (x₀ : ℕ)
     {Φ : ℕ → ℝ} {M : ℝ} (hΦ : ∀ x, |Φ x| ≤ M) (L : ℕ) :
     IsProbabilityMeasure (Measure.infinitePi fun _ : ℕ × ℕ => ssaInputLaw lam Λ T x₀ L) ∧

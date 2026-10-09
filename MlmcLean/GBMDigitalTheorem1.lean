@@ -60,8 +60,10 @@ the weak error `O((h log(1/h))^{1/2})` from the mismatch probability, Theorem 1 
 factors gives the Euler–Maruyama digital option the cost `O(ε⁻³ |log ε|)`
 (`gbm_em_digital_theorem1_log`, `MlmcLean.GBMDigitalTheorem1Log`); the Milstein digital option
 and the barrier options keep the loss `η`.  The barrier option of the paper is
-continuously monitored; its analysis (Giles, Higham and Mao 2009) and the Milstein rows
-`O(h^{3/2})` of Table 5.2 (Brownian-bridge estimators) are out of reach here; for the discretely
+continuously monitored; its analysis (Giles, Higham and Mao 2009) and the Milstein barrier row
+`O(h^{3/2})` of Table 5.2 (Brownian-bridge estimators) are out of reach here (the Milstein digital
+row `O(h^{3/2})`, for the conditional-expectation estimator, is proved up to a logarithmic factor
+in `MlmcLean.GBMDigitalCondExpEndpoint`); for the discretely
 monitored option with the natural estimators the rates are those of the digital option.  The
 variance of the splitting estimator with a Milstein final step
 (l. 1597–1600, "the variance is the same, to leading order") is not formalised; with an

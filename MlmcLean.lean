@@ -223,6 +223,14 @@
 --   Gaussian marginals; completeness cannot be dropped from the Markov-chain limit theorem
 -- * `MlmcLean.LevyKhintchineLimit` — Giles §6.2: the L² limit of the small-jump truncations
 --   has the Lévy–Khintchine law
+-- * `MlmcLean.MarkovLogMoment` — Giles §10.1: for the affine (half-step) chain a logarithmic
+--   moment suffices for weak convergence and is strictly weaker than the first-step moment
+-- * `MlmcLean.TauLeapingSSACost` — Giles §8: the random cost of the exact (SSA) level, Poisson
+--   clock ticks of the same coupled sample; complexity with the random cost
+-- * `MlmcLean.ML2RLowerBound` — Giles §2.3: a lower bound on the cost of ML2R; the printed
+--   cost exponent √(|log₂ ε|/α) fails, √(2|log₂ ε|/α) is sharp on an instance
+-- * `MlmcLean.GBMDigitalCondExpEndpoint` — Giles §5.2: the conditional-expectation digital
+--   correction for GBM has V_ℓ = O(h^{3/2} (ℓ+1)^{5/2}), uniformly in s₀ and K
 import MlmcLean.Allocation
 import MlmcLean.Estimator
 import MlmcLean.LevelDiff
@@ -333,3 +341,7 @@ import MlmcLean.GBMDigitalTheorem1Log
 import MlmcLean.SpotCheck26Extras
 import MlmcLean.LimitLawExtras
 import MlmcLean.LevyKhintchineLimit
+import MlmcLean.MarkovLogMoment
+import MlmcLean.TauLeapingSSACost
+import MlmcLean.ML2RLowerBound
+import MlmcLean.GBMDigitalCondExpEndpoint

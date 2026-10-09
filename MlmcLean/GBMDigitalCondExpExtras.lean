@@ -57,8 +57,10 @@ strike `K ≠ 0`, and the variance rate of the splitting estimator, but not Theo
 **What is not proved.**  For splitting, "the variance is the same, to leading order" as an
 asymptotic equivalence of the variances: only the same rate `O(h^q)`, `q < 3/2`, as the
 conditional-expectation estimator (with `M_ℓ = ⌈h_ℓ^{−1/2}⌉` the excess is of the same order, see
-`gbm_digital_split_sqrt_rate`).  An exponential rate for `K = 0`, and the endpoints `β = 3/2`,
-`α = 1`.  The every-step digital barrier is out of scope.
+`gbm_digital_split_sqrt_rate`).  An exponential rate for `K = 0`, the endpoint `α = 1`, and the
+endpoint `β = 3/2` without a logarithmic factor (`MlmcLean.GBMDigitalCondExpEndpoint` proves
+`V_ℓ = O(h^{3/2} (log(1/h))^{5/2})` for the conditional-expectation estimator, not for splitting).
+The every-step digital barrier is out of scope.
 -/
 
 open MeasureTheory ProbabilityTheory Filter Finset
@@ -378,7 +380,9 @@ Proof: `K ≠ 0` is `gbm_digital_condExp_variance_rate`; `K = 0` is
 `gbm_digital_condExp_variance_rate_zero_strike`.
 
 **Deviation.**  The exponent is every `q < 3/2`, not `3/2` (as in
-`gbm_digital_condExp_variance_rate`); the factor `25 e^{−rT}` is omitted. -/
+`gbm_digital_condExp_variance_rate`; the endpoint up to a factor `(ℓ + 1)^{5/2}` is
+`gbm_digital_condExp_variance_endpoint` in `MlmcLean.GBMDigitalCondExpEndpoint`); the factor
+`25 e^{−rT}` is omitted. -/
 theorem gbm_digital_condExp_variance_rate_all (r σ : ℝ) {s₀ T K : ℝ} (hs₀ : s₀ ≠ 0)
     (hσ : σ ≠ 0) (hT : 0 < T) {q : ℝ} (hq : q < 3 / 2) :
     ∃ C : ℝ, 0 ≤ C ∧ ∀ ℓ : ℕ,
