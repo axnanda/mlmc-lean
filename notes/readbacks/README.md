@@ -803,3 +803,35 @@ Findings and what was done:
   Documented.  Kept.
 - **The hypotheses `v < 1/2` and `t > 0` of the `Φ⁻¹` bounds are necessary** (the auditor gave
   counterexamples through the junk values at `v = 1/2` and `t ≤ 0`).  No change needed.
+
+**Twenty-seventh round (2026-10-09).** Blind read-backs of the 29 theorems added in round 27:
+`theorem1_log_digital_type2.md` (R51: `GBMDigitalTheorem1Log` and `SpotCheck26Extras`; 5 + 5
+theorems) and `limit_laws_kl_levy_completeness.md` (R52: `LimitLawExtras` and
+`LevyKhintchineLimit`; 12 + 7 theorems, and the definition `posHalfStep`).  All 29 read back as
+true; none is vacuous and none holds only because of a junk value.  The R51 auditor checked the
+quantifier order of every constant against `ε` (`c₄` is chosen before `ε`, only `L` and `N_ℓ`
+depend on it), recomputed the optimal-allocation cost with logarithmic rates numerically, measured
+by Monte Carlo that `sup_K P(differ)/√(h(ℓ + 1))` stays bounded for the Euler–Maruyama digital
+option, and confirmed the Rademacher example that makes `√2` optimal for `ℝ × ℝ` with the maximum
+norm.  The R52 auditor proved in Lean that on the complete space `ℝ` the halving chain satisfies
+every hypothesis and the conclusion of the statement negated by `completeSpace_cannot_be_dropped`
+(so the negation is not cheap), and checked the stable-like `L²` rate, the compound-Poisson
+characteristic function, the convergence to the Lévy–Khintchine form and the Karhunen–Loève
+covariance with sympy, mpmath and Monte Carlo.  Findings and what was done:
+
+- **The cost `ε^{−3}|log ε|` of the Euler–Maruyama digital option is weaker than the paper's
+  `ε^{−5/2}`**, because the weak error is bounded at the strong-type scale `√(h(ℓ + 1))`; the
+  paper's rate needs weak order 1, which is not proved for the digital payoff.  Documented in the
+  module and in `notes/statement-audit.md`.  No change needed.
+- **The log exponent `max(b + a(γ − β)/α, aγ/α)` is not sharp** when `β < 2α` (the second term
+  then matters only at `β = 2α`).  Documented in the module as not formalised.  Kept.
+- **`hδ1 : δ_0 ≤ 1` is not needed** in `levy_limit_charFun` and `levy_limit_map_eq` (the cutoffs
+  are eventually `≤ 1`) but is needed in `levy_truncation_limit_charFun` for the exact `L²`
+  identity (the auditor gave a counterexample without it).  Kept.
+- **`stableLike_limit_charFun` allows `Y ≤ 0`**, where the measure is finite rather than
+  stable-like; it is still true.  `posHalfStep_no_weak_limit` does not assume a probability
+  measure, but its hypothesis forces total mass 1.  No change needed.
+- **The read-back packets omitted two definitions used from other modules** (`HasType2`,
+  `stdNormalSeq`); the auditors printed them with `#print` without reading any source.  The script
+  that builds the packets missed names written with a following `.` (`HasType2.{u}`,
+  `stdNormalSeq.map`); it is fixed for later rounds.

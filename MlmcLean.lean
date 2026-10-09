@@ -215,6 +215,14 @@
 --   as d increases by 1, MSE(d) ~ κ 2^{−d}/d
 -- * `MlmcLean.GBMDigitalDeltaVariance` — Giles §5.4: the variance of the digital-delta
 --   corrections (conditional expectation, GBM) is O(h^q) for every q < 1/2
+-- * `MlmcLean.GBMDigitalTheorem1Log` — Giles §2.1, §5.1: Theorem 1 with log factors in the
+--   rates; the Euler–Maruyama digital option for GBM at cost O(ε⁻³|log ε|)
+-- * `MlmcLean.SpotCheck26Extras` — Giles §2.5, §5.4: the type-2 constant √2 of ℝ × ℝ with
+--   the max norm is optimal; the level-0 digital-delta correction vanishes
+-- * `MlmcLean.LimitLawExtras` — Giles §7.2, §10.1: the KL limit field has multivariate
+--   Gaussian marginals; completeness cannot be dropped from the Markov-chain limit theorem
+-- * `MlmcLean.LevyKhintchineLimit` — Giles §6.2: the L² limit of the small-jump truncations
+--   has the Lévy–Khintchine law
 import MlmcLean.Allocation
 import MlmcLean.Estimator
 import MlmcLean.LevelDiff
@@ -321,3 +329,7 @@ import MlmcLean.MarkovNoWeakLimit
 import MlmcLean.GBMDigitalEndpoint
 import MlmcLean.LUTHalving
 import MlmcLean.GBMDigitalDeltaVariance
+import MlmcLean.GBMDigitalTheorem1Log
+import MlmcLean.SpotCheck26Extras
+import MlmcLean.LimitLawExtras
+import MlmcLean.LevyKhintchineLimit

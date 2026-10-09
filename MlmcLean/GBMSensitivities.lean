@@ -53,9 +53,12 @@ is linear in `s₀`, `Ŝ(s₀) = s₀ Ŝ(1)` (`gbmEM_eq_mul_one`, `gbmMil_eq_mul
   details, l. 1833–1835) treats general SDEs and Greeks; for GBM the tangent process is `Ŝ/s₀`.
   It is written `Ŝ(1)` (the path from the initial value `1`), which avoids a division by `s₀`.
 * The rates are those of the digital option up to an arbitrarily small loss in the exponent
-  (`q < ½`, `q < 1`, not the endpoints), and the costs carry the loss `η > 0`; the constants depend
-  on `s₀` and `K`.  "Similar difficulties" is formalised by these upper bounds; that the call delta
-  is not better than the digital option (a lower bound on `V_ℓ`) is not proved.
+  (`q < ½`, `q < 1`, not the endpoints), and the costs carry the loss `η > 0` (for the digital
+  option itself with Euler–Maruyama the loss is removed, cost `O(ε⁻³ |log ε|)`,
+  `gbm_em_digital_theorem1_log` in `MlmcLean.GBMDigitalTheorem1Log`; not for the call delta); the
+  constants depend on `s₀` and `K`.  "Similar difficulties" is formalised by these upper bounds;
+  that the call delta is not better than the digital option (a lower bound on `V_ℓ`) is not
+  proved.
 * The payoffs are undiscounted (the factor `e^{−rT}` is omitted).  The hypotheses: `T > 0`
   throughout; `σ ≠ 0` for the derivatives (otherwise the paths are deterministic and the payoff
   is not differentiable at the `s₀` with `Ŝ(s₀) = K`), the weak rates and Theorem 1 (for `σ = 0`,
@@ -917,8 +920,10 @@ independent and a level-`ℓ` sample costs `2^ℓ`.  Then there is `c₄ > 0` su
 `E[1_{S_T(s₀) > K} S_T(1)] = ∫ 1_{s₀ e^{(r−σ²/2)T + σ√T w} > K} e^{(r−σ²/2)T + σ√T w} dN(0,1)(w)`
 (`S_T(1)` the exact path from the initial value `1`; this is the delta `d/ds₀ E[(S_T − K)⁺]` when
 `s₀ ≠ 0 ∨ K ≠ 0`, `gbm_call_delta`) has a square-integrable error with mean square `< ε²`, at
-cost `∑_{ℓ≤L} N_ℓ 2^ℓ ≤ c₄ ε^{−3−η}`.  The bound proved is that of the digital option
-(`gbm_em_digital_theorem1`); the `O(ε⁻²(log ε)²)` of the call price is not claimed for the delta.
+cost `∑_{ℓ≤L} N_ℓ 2^ℓ ≤ c₄ ε^{−3−η}`.  The bound proved is that of `gbm_em_digital_theorem1`
+for the digital option (whose sharper `O(ε⁻³ |log ε|)`, `gbm_em_digital_theorem1_log` in
+`MlmcLean.GBMDigitalTheorem1Log`, is not derived for the delta); the `O(ε⁻²(log ε)²)` of the call
+price is not claimed for the delta.
 Theorem 1 with `α = β = q = 1/(2 + η)`, `γ = 1` (`theorem1_pairAvg_of_rate`,
 `gbm_em_call_delta_weak_rate`, `gbm_em_call_delta_rate`).  The rates proved are `α = β = q` for
 every `q < ½`; Theorem 1 with `α = 1`, `β = ½` (the paper's rates for the Euler–Maruyama digital

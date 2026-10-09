@@ -155,10 +155,11 @@ digital delta from the conditional-expectation payoffs, unbiased and with (2.4)
 paper's `O(ε^{−2.5})`) and, for the conditional-expectation estimator, the endpoints `β = 3/2`,
 `α = 1`; the splitting variance "the same, to leading order"; the variance rate of the digital-delta
 corrections and sensitivities for general SDEs; Mercer's theorem, the identification of the joint
-law of the limit field with a multivariate Gaussian, the regularity of `κ` and the moments of
-`max_x κ` and `1/min_x κ`; the Brownian replacement of the small jumps, the Lévy–Khintchine law of
-the truncation limit and path-dependent Lévy payoffs; the SSA coupling for several reactions and
-unbounded propensities; the identification of the parabolic limit with the SPDE functional, the
+law of the limit field with a multivariate Gaussian (done in round 27, `LimitLawExtras.lean`), the
+regularity of `κ` and the moments of `max_x κ` and `1/min_x κ`; the Brownian replacement of the
+small jumps, the Lévy–Khintchine law of the truncation limit (done in round 27,
+`LevyKhintchineLimit.lean`) and path-dependent Lévy payoffs; the SSA coupling for several reactions
+and unbounded propensities; the identification of the parabolic limit with the SPDE functional, the
 variance rate of adaptive tau-leaping, the simplex optimality, the kurtosis upper bound, and whether
 MIMC reaches `O(ε⁻²)` for a general piecewise linear `f`.
 
@@ -191,8 +192,8 @@ improved bias; the NIG column of Table 6.3; the exact halving ratio of HG25 §3.
 of the λ-function of HG25 §6.1 (numerical in the corrections table). Still open from earlier rounds:
 the digital option's weak order `α = 1` (hence the paper's `O(ε^{−2.5})`), the endpoints `β = 3/2`,
 `α = 1` of the conditional-expectation estimator and the exponential smallness for `K = 0`; the weak
-rate of tau-leaping for unbounded propensities; Mercer's theorem and the
-identification of the joint law of the limit field with `multivariateGaussian`; the
+rate of tau-leaping for unbounded propensities; Mercer's theorem and the identification of the joint
+law of the limit field with `multivariateGaussian` (done in round 27, `LimitLawExtras.lean`); the
 SSA coupling for several reactions and unbounded propensities; the identification of the parabolic
 limit with the SPDE functional, the variance rate of adaptive tau-leaping, the simplex optimality,
 and whether MIMC reaches `O(ε⁻²)` for a general piecewise linear `f`. Out of reach, as before: Itô
@@ -223,8 +224,8 @@ the NIG column of Table 6.3; the non-convexity of the λ-function of HG25 §6.1 
 corrections table). Still open from earlier rounds: the digital option's weak order `α = 1` (hence
 the paper's `O(ε^{−2.5})`), the endpoints `β = 3/2`, `α = 1` of the conditional-expectation
 estimator and the exponential smallness for `K = 0`; the weak rate of tau-leaping for unbounded
-propensities; Mercer's theorem and the
-identification of the joint law of the limit field with `multivariateGaussian`; the SSA coupling for several
+propensities; Mercer's theorem and the identification of the joint law of the limit field with
+`multivariateGaussian` (done in round 27, `LimitLawExtras.lean`); the SSA coupling for several
 reactions and unbounded propensities; the identification of the parabolic limit with the SPDE
 functional, the variance rate of adaptive tau-leaping, the simplex optimality, and whether MIMC
 reaches `O(ε⁻²)` for a general piecewise linear `f`. Out of reach, as before: Itô calculus, the
@@ -232,3 +233,41 @@ reflection principle, Clark–Cameron, Lévy areas and Giles–Szpruch, informat
 Feynman–Kac and exit times, Rademacher type beyond spaces isomorphic to a subspace of a Hilbert
 space, Sobol nets and Owen's scrambling, general tangent processes, Lévy path functionals and
 Wiener–Hopf factorisation.
+
+**Follow-up (round 27).** After round 26 a further spot-check ("spot-check 26"; two auditors,
+reports not in the repository) led to the documentation fixes at the end of round 26 and listed
+claims that are provable but not formalised. From that list and the lists above, round 27
+formalised: Theorem 1 with factors `(ℓ + 1)^a`, `(ℓ + 1)^b` in the bias and variance bounds, in the
+case `β < γ`, and with it Theorem 1 for the GBM digital option with Euler–Maruyama at cost
+`O(ε⁻³|log ε|)`, the weak error being bounded by the mismatch probability `O((h log(1/h))^{1/2})`
+(`GBMDigitalTheorem1Log.lean`); the optimality of the type-2 constant `√2` of `ℝ × ℝ` with the
+maximum norm, and `V_0 = 0` for the digital delta (`SpotCheck26Extras.lean`); the identification of
+the joint law of the Karhunen–Loève limit field with `multivariateGaussian`, and a counterexample on
+`(0, ∞)` showing that completeness cannot be dropped from the weak convergence of §10.1
+(`LimitLawExtras.lean`); the Lévy–Khintchine law of the truncation limit of §6.2, for the terminal
+value only (`LevyKhintchineLimit.lean`). The module docstrings that called these unproved
+(`BanachTheorem1.lean`, `KarhunenLoeveLimit.lean`, `MarkovNoWeakLimit.lean`, `MarkovLimit.lean`,
+`LevyTruncation.lean`, `GBMDigitalTheorem1.lean`, `GBMSensitivities.lean`) now point to them, the
+stale remarks of `TauLeapingMLMC.lean` and `PoissonGrids.lean` point to results of earlier rounds,
+`spde_meanSquare_stable` notes its trivial case `h = 0`, and the "Round 27" notes in the coverage
+tables record the new results. Still open from the lists: Theorem 1 for the digital delta (it needs
+the convergence of the density of the discretised `S_T` at the strike), the endpoint `q = ½` of
+its variance rate and the endpoint `β = 3/2` of the conditional-expectation estimator, possibly up
+to logarithms; the observed `O(h^{1/2})` of the Euler–Maruyama digital option without the
+logarithm, and the cases `β ≥ γ` of Theorem 1 with logarithmic factors in the rates; the barrier
+option monitored at every time step; the lower bounds `P(ΔP ≠ 0) ≥ c√h` (Euler–Maruyama) and `≥ ch`
+(Milstein), hence the kurtosis rates and the splitting variance "the same, to leading order"; the
+random cost of the exact (SSA) level; the change-of-measure variance after averaging over the paths;
+a lower bound on the cost of ML2R; that a logarithmic moment suffices for the chain of
+`MarkovNoWeakLimit.lean`; the existence of good lattice generating vectors; Dereich's improved bias;
+the NIG column of Table 6.3; the non-convexity of the λ-function of HG25 §6.1 (numerical in the
+corrections table). Still open from earlier rounds: the digital option's weak order `α = 1` (hence
+the paper's `O(ε^{−2.5})`), the endpoints `β = 3/2`, `α = 1` of the conditional-expectation
+estimator and the exponential smallness for `K = 0`; the weak rate of tau-leaping for unbounded
+propensities; Mercer's theorem; the SSA coupling for several reactions and unbounded propensities;
+the identification of the parabolic limit with the SPDE functional, the variance rate of adaptive
+tau-leaping, the simplex optimality, and whether MIMC reaches `O(ε⁻²)` for a general piecewise
+linear `f`. Out of reach, as before: Itô calculus, the reflection principle, Clark–Cameron, Lévy
+areas and Giles–Szpruch, information-based complexity, Feynman–Kac and exit times, Rademacher type
+beyond spaces isomorphic to a subspace of a Hilbert space, Sobol nets and Owen's scrambling, general
+tangent processes, Lévy path functionals and Wiener–Hopf factorisation.

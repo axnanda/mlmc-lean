@@ -314,7 +314,9 @@ for independent standard normal `Z_m` the scheme started from the mode `e^{ijθ}
 Deviations: the mode lives on the whole grid `ℤ`, not on the half line `x > 0` with
 `p(0, t) = 0` of the paper (von Neumann analysis, a necessary-type condition for the half-line
 problem); and the condition `λ(1 + 2ρ²) ≤ 1` is derived here, since Giles 2015 states none and
-Giles and Reisinger (2012) is not available. -/
+Giles and Reisinger (2012) is not available.  There is no hypothesis `h ≠ 0`: at `h = 0` the
+coefficients `k/h²`, `·/(2h)` and `·/(2h²)` are `0` by Lean's division convention, the scheme is
+the identity and both bounds read `1 ≤ 1`, so the statement is trivial there. -/
 theorem spde_meanSquare_stable {mu rho k h T : ℝ} (hρ0 : 0 ≤ rho) (hρ1 : rho ≤ 1) (hk : 0 ≤ k)
     (hlam : k / h ^ 2 * (1 + 2 * rho ^ 2) ≤ 1) (θ : ℝ) {n : ℕ} (hT : n * k ≤ T) (j : ℤ) :
     ∫ Z, Complex.normSq (spdePath mu rho k h (fourierMode θ) Z n j) ∂stdNormalSeq ≤

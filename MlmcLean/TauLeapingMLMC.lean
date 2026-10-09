@@ -28,8 +28,14 @@ coupled with the fine path by the Poisson coupling (`coupledChain`).  The payoff
   tau-leaping payoff is `|E[Φ(x^{h_ℓ}_T)] − E[P]| ≤ c₁ 2^{−αℓ}` with `α ≥ ½`, then for every
   `0 < ε < e⁻¹` there are `L` and `N_ℓ ≥ 1` such that the multilevel estimator with independent
   samples has mean square error `< ε²` at cost `∑_ℓ N_ℓ 2^ℓ ≤ c₄ ε⁻²(log ε)²`.  The weak rate
-  (`α = 1` for tau-leaping) compares with the exact continuous-time chain, which is not formalised
-  here, so it is a hypothesis; `β = 1` and `γ = 1` are proved.
+  (`α = 1` for tau-leaping) compares with the exact continuous-time chain, which is not
+  constructed here, so it is a hypothesis; `β = 1` and `γ = 1` are proved.  The exact chain and
+  the weak rate against it are proved elsewhere for bounded propensities, with Theorem 1 and no
+  assumed rate for bounded payoffs (`tauLeaping_mlmc_exact`, `MlmcLean.TauLeapingExact`) and for
+  Lipschitz payoffs (`tauLeaping_mlmc_exact_lipschitz`, `MlmcLean.TauLeapingExtensions`);
+  Lipschitz propensities of linear growth, with the weak rate as a hypothesis, and the linear birth
+  rate `λ(x) = cx` with `Φ(x) = x` and no assumed rate, are in `MlmcLean.TauLeapingLinearGrowth`
+  (`tauLeaping_mlmc_theorem1_lipschitz`, `tauLeaping_mlmc_linearBirth_mean`).
 -/
 
 open MeasureTheory ProbabilityTheory Finset
