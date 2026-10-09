@@ -211,7 +211,8 @@ themselves (they are covered through the theorems that use them).
    documented, but no O-bound is proved under any hypothesis whose constants are independent of L.
    Needed:
    - (a) the sharp weight bound `|w_ℓ| ≤ B²·r^{(L−ℓ)(L−ℓ+1)/2}` (r = 2^{−α}). The exact product
-     `∏_{k=ℓ+1}^{L} r^{k−ℓ}` is what `prod_ml2r_factor_gt_le` currently weakens to `r^{L−ℓ}`.
+     `∏_{k=ℓ+1}^{L} r^{k−ℓ}` is what `prod_ml2r_factor_gt_le` (a helper lemma, not in the axiom
+     audit) currently weakens to `r^{L−ℓ}`.
    - (b) If `|R_ℓ| ≤ K·2^{−αℓL}` (or `2^{−αℓ(L+1)}`) for ℓ ≤ L with K independent of L, then
      `|∑w_ℓR_ℓ| ≤ K·B²·C·2^{−αL(L+1)/2}`. The exponent `(L−ℓ)(L−ℓ+1)/2 + ℓL` is minimised at
      ℓ ∈ {0, 1}.

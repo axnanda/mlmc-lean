@@ -15,23 +15,25 @@ in `scripts/AxiomCheck.lean`. Documentation checked: README (table + "Modelling 
 
 Status legend: DONE / DONE-DEV / PARTIAL / MISSING / OOS (out of scope; "doc" = documented,
 "NOT doc" = not documented, "generic" = only covered by the README's generic scope sentence) / N/A.
+These labels record the documentation at round 10; since round 25 every out-of-scope item is
+documented in `PLAN.md` ("Not formalised") and in the out-of-scope table of `README.md`.
 
 ## Counts
 
 | Status | # |
 |---|---|
-| DONE | 26 |
+| DONE | 25 |
 | DONE-DEV | 18 |
-| PARTIAL | 12 |
+| PARTIAL | 13 |
 | MISSING | 8 |
-| OOS | 10 (6 documented, of which 1 only vaguely; 3 NOT documented; 1 generic only) |
+| OOS | 10 (round 10: 6 documented, of which 1 only vaguely; 3 NOT documented; 1 generic only; all documented since round 25, see the out-of-scope table in `README.md` and `PLAN.md`) |
 | N/A | 51 |
 | **Total** | **125** |
 
 The counts follow the status column as corrected after round 10: G9.2-12 (spot-check after round
 15) and G7.1-07, -17, -18, G7.3-08 (spot-check after round 17) became PARTIAL, and G7.1-12
-(spot-check 21) DONE-DEV (see `README.md`). The round-10 counts were DONE 30, DONE-DEV 19 and
-PARTIAL 7.
+(spot-check 21) DONE-DEV, and G9.2-04 (spot-check 24) PARTIAL (see `README.md`). The round-10
+counts were DONE 30, DONE-DEV 19 and PARTIAL 7.
 
 ## Table
 
@@ -119,7 +121,7 @@ PARTIAL 7.
 | G9.2-01 | 2570–2574 / p.59 | g(Z,W) no longer O(1) cost; W a Brownian path approximated with timesteps | N/A | — | setting |
 | G9.2-02 | 2574–2576 | "on level ℓ … 2^ℓ timesteps. When using the Milstein discretisation (giving first order weak and strong convergence) this would still give α = 1, β = 2" | MISSING | — | The implication [first-order weak/strong convergence of the inner approximation g_ℓ, as hypotheses] ⇒ [α = 1, β = 2 for Y_ℓ = f(mean_{2M} g_ℓ) − ½f(mean_M g_{ℓ−1}) − ½f(mean'_M g_{ℓ−1})] is not formalised and not documented; the premise (Milstein's orders) is OOS and documented (README l.28–30). Medium (extends `NestedMLMC`). Round 25 (spot-check 24): resolved in round 10, with the inner Milstein orders as hypotheses (`nestedSdeP`, `nestedSdeDelta`, `integral_nestedSdeDelta`, `nested_sde_bias_rate`, `nested_sde_mean_rate`, `nested_sde_variance_rate`, `NestedRates.lean`; resolution table of `notes/coverage/README.md`). |
 | G9.2-03 | 2576–2578 | "we would now have γ = 2, because the work on successive levels would go up by factor 4×" | DONE-DEV | `nested_complexity` (input γ = 2) | cost-model input |
-| G9.2-04 | 2578–2579 | "an overall MLMC complexity which is O(ε⁻²(log ε)⁻²)" | DONE (corrected) | `nested_complexity` (complexityBound 1 2 2 = ε⁻²(log ε)²) | PAPER TYPO (typeset p.59 verified): exponent of log ε must be +2 (β = γ). Flagged only in the `nested_complexity` docstring. Round 25 (spot-check 24): by the spot-check-21 standard the round-10 status should read PARTIAL, since `nested_complexity` only evaluates the complexity bound (the status column keeps the round-10 value). The claim itself is proved end to end, with the inner Milstein orders as hypotheses, by `nested_sde_mlmc_complexity` (round 10, `NestedRates.lean`: MSE `< ε²` at expected cost `≤ c₄ ε⁻²(log ε)²`; resolution entry "G9.2-02, -04"), so the current state is: done under those hypotheses. The typo is in the corrections table of `notes/statement-audit.md`. |
+| G9.2-04 | 2578–2579 | "an overall MLMC complexity which is O(ε⁻²(log ε)⁻²)" | PARTIAL | `nested_complexity` (complexityBound 1 2 2 = ε⁻²(log ε)²) | PAPER TYPO (typeset p.59 verified): exponent of log ε must be +2 (β = γ). Flagged only in the `nested_complexity` docstring. Round 25 (spot-check 24): by the spot-check-21 standard the round-10 status should read PARTIAL, since `nested_complexity` only evaluates the complexity bound (status corrected to PARTIAL by spot-check 24, applied in round 26). The claim itself is proved end to end, with the inner Milstein orders as hypotheses, by `nested_sde_mlmc_complexity` (round 10, `NestedRates.lean`: MSE `< ε²` at expected cost `≤ c₄ ε⁻²(log ε)²`; resolution entry "G9.2-02, -04"), so the current state is: done under those hypotheses. The typo is in the corrections table of `notes/statement-audit.md`. |
 | G9.2-05 | 2580–2621 | MIMC: 2^{ℓ1} inner samples, ~2^{ℓ2} timesteps; the 6-term estimator Y_ℓ (ℓ1, ℓ2 > 0) | N/A | — | definition; not defined in Lean Now defined: `nestedMimcDelta` (`NestedRates.lean`). |
 | G9.2-06 | 2622–2637 / p.60 | "Taylor series expansion around E[g(Z⁽ⁿ⁾,W)] … Y_ℓ ≈ −1/(4N_ℓ)Σ f″(E g){(Δg_{1,ℓ2}−Δg_{2,ℓ2})² − (Δg_{1,ℓ2−1}−Δg_{2,ℓ2−1})²}" | PARTIAL | `antithetic_quadratic` (the §9.1 form) | Same factor-2 error (typeset p.60 verified: should be −1/8). Y_ℓ is a difference of two §9.1 antithetic differences, so the correction carries over, but no §9.2 statement exists and README/PLAN mention only one −1/4. Trivial. Round 25 (spot-check 24): resolved in round 10 (`mimc_antithetic_quadratic`, with the coefficient `−1/8`, `abs_mimc_antithetic_taylor_le`, `abs_mimc_antithetic_le`, `NestedRates.lean`; resolution table of `notes/coverage/README.md`); the §9.2 `−1/4` is in the corrections table of `notes/statement-audit.md`. |
 | G9.2-07 | 2638–2659 | "The difference of squares can be re-arranged as ((Δ_{1,ℓ2}+Δ_{1,ℓ2−1}) − (Δ_{2,ℓ2}+Δ_{2,ℓ2−1})) × ((Δ_{1,ℓ2}−Δ_{1,ℓ2−1}) − (Δ_{2,ℓ2}−Δ_{2,ℓ2−1}))" | DONE | `mimc_diff_sq` | — |

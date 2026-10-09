@@ -29,7 +29,8 @@ proves the probabilistic and analytic steps that these sections rely on.
   geometric Brownian motion with the Euler–Maruyama estimator, `V_ℓ = O(h_ℓ^{1/3})` with explicit
   constants.  The paper's `V_ℓ = O(h_ℓ^{1/2})` is reached up to an arbitrarily small loss in
   `MlmcLean.GBMStrongLp` (`gbm_em_digital_rate`: `O(h_ℓ^q)` for every `q < ½`, from the `L^{2m}`
-  errors).
+  errors), and up to a factor `(log(1/h_ℓ))^{1/2}` in `MlmcLean.GBMDigitalEndpoint`
+  (`gbm_em_digital_endpoint`, from Gaussian-type tails of the log error).
 * **§5.2, conditional expectation.**  `integral_digital_final_step`:
   `E[1_{x + ah + b√h Z > K}] = Φ((x + ah − K)/(|b|√h))` for `Z ∼ N(0,1)`;
   `condExp_digital_last_step`, `digital_smoothing`: given the path before the last step, the
@@ -479,7 +480,10 @@ Gaussian-type tails, `P(|X − Y| > δ) ≤ A e^{−δ²/(Bh)}` for all `δ > 0`
 is a hypothesis: for the Euler–Maruyama scheme it is SDE theory, not proved here.  Only the value
 `δ = (B h log(1/h))^{1/2}` is used.  The bound holds, for example, when `Y − X` is `√h` times a
 standard Gaussian; it does not hold for all `δ` for the Euler–Maruyama error of geometric Brownian
-motion, whose tails are lognormal, and that case is `gbm_digital_variance_le`. -/
+motion, whose tails are lognormal, and that case is `gbm_digital_variance_le`.  The log-scale
+version for GBM, with Gaussian-type tails of the error of `log |Ŝ|` in place of those of `Ŝ`, is
+`MlmcLean.GBMDigitalEndpoint` (`gbm_em_exact_mismatch_le`, `gbm_em_digital_endpoint`): the same
+rate `O((h log(1/h))^{1/2})`. -/
 theorem digital_mismatch_le_of_tail [IsProbabilityMeasure μ] {X Y : Ω → ℝ} (hX : Measurable X)
     (hY : Measurable Y) {K ρ A B h : ℝ}
     (hρ : ∀ δ, 0 < δ → μ.real {ω | |X ω - K| ≤ δ} ≤ 2 * ρ * δ) (hB : 0 < B) (hh : 0 < h)

@@ -1169,6 +1169,22 @@ import MlmcLean
 #print axioms MLMC.not_tendstoInDistribution_fwdIter_halfStep
 #print axioms MLMC.exists_iid_logTailLaw
 #print axioms MLMC.hc_cannot_be_dropped
+#print axioms MLMC.gbm_em_exact_mismatch_le
+#print axioms MLMC.gbm_em_digital_endpoint
+#print axioms MLMC.gbm_em_digital_endpoint_log
+#print axioms MLMC.neg_mul_gaussianPDFReal_le_one_add_sq_mul
+#print axioms MLMC.normCDFInv_sub_mul_le
+#print axioms MLMC.log_sub_le_normCDFInv_sub_mul
+#print axioms MLMC.tendsto_lutScaled
+#print axioms MLMC.tendsto_natCast_div_sq_normCDFInv
+#print axioms MLMC.tendsto_method1CellErr_normCDFInv
+#print axioms MLMC.summable_logCellVar
+#print axioms MLMC.tendsto_mul_method1MSE_normCDFInv
+#print axioms MLMC.method1MSE_normCDFInv_const_pos
+#print axioms MLMC.tendsto_method1MSE_succ_div_normCDFInv
+#print axioms MLMC.isEquivalent_method1MSE_normCDFInv
+#print axioms MLMC.gbm_digital_condExp_delta_variance_rate
+#print axioms MLMC.gbm_digital_condExp_delta_corrections_rate
 -- helper lemmas that the prove2.me generator promotes to nodes
 #print axioms MLMC.sqrt_Vb_mul_Cb
 #print axioms MLMC.two_rpow_levelL_le

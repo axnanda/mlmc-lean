@@ -50,8 +50,11 @@ every exponent below `1/2` (resp. `1`); these `L^p` bounds are proved for GBM in
 `MlmcLean.GBMStrongLp` (`gbm_em_moment_error`, `gbm_mil_moment_error`), which gives every such
 exponent (`gbm_em_digital_rate`, `gbm_mil_digital_rate`); the endpoints are not proved.  The
 Gaussian-tail version `digital_mismatch_le_of_tail` does not apply to GBM, whose discretisation
-error has lognormal tails.  The kurtosis rates (an upper bound on `κ`) need a lower bound on the
-mismatch probability, which is not proved either.
+error has lognormal tails; for Euler–Maruyama, Gaussian-type tails of the log error give the
+endpoint up to a factor `(log(1/h))^{1/2}`, `O((h log(1/h))^{1/2})`, hence Table 5.2's analysis
+rate `O(h^{1/2} log h)` (not the observed `O(h^{1/2})`), in `MlmcLean.GBMDigitalEndpoint`
+(`gbm_em_digital_endpoint`, `gbm_em_digital_endpoint_log`).  The kurtosis rates (an upper bound
+on `κ`) need a lower bound on the mismatch probability, which is not proved either.
 
 `Φ` is `cdf (gaussianReal 0 1)` and the digital payoff `H(x − K)` is `(Set.Ioi K).indicator 1 x`;
 the constant factors `10 e^{−rT}` (§5.1) and `25 e^{−rT}` (§5.2) of the paper's payoffs are omitted
@@ -275,8 +278,11 @@ every exponent below `1/2`, through `digital_mismatch_le_of_moment`; these `L^p`
 for GBM in `MlmcLean.GBMStrongLp` (`gbm_em_digital_rate`; the endpoint is not proved).
 `digital_mismatch_le_of_tail` would give `O((h log(1/h))^{1/2})`, but its
 hypothesis (Gaussian tails of the error, for all `δ > 0`) fails for GBM, whose Euler–Maruyama error
-has lognormal tails, so it is not used.  The kurtosis rate `κ = O(h^{−1/2})` of the paper (an upper
-bound on `κ`) needs a lower bound on `P(D ≠ 0)`, which is not proved. -/
+has lognormal tails, so it is not used; that rate is proved for GBM from the tails of the log error
+in `MlmcLean.GBMDigitalEndpoint` (`gbm_em_digital_endpoint`: `E[D⁴] = P(D ≠ 0)` is at most
+`C (h_{ℓ+1} (ℓ + 1))^{1/2}`; the observed `O(h^{1/2})` is not proved).  The kurtosis rate
+`κ = O(h^{−1/2})` of the paper (an upper bound on `κ`) needs a lower bound on `P(D ≠ 0)`, which is
+not proved. -/
 theorem gbm_em_digital_fourth_moment_le (r σ : ℝ) {s₀ T : ℝ} (hs₀ : s₀ ≠ 0) (hσ : σ ≠ 0)
     (hT : 0 < T) (K : ℝ) (ℓ : ℕ) :
     ∫ z, ((Set.Ioi K).indicator (1 : ℝ → ℝ) (gbmEM r σ T s₀ (ℓ + 1) z) -

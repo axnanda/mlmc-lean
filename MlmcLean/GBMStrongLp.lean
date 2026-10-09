@@ -55,11 +55,14 @@ every `L^{2m}`, proved for GBM, which gives every exponent below the paper's.
   every `S_0`, with `P(P_ℓ ≠ P_{ℓ−1})`, `V_ℓ` and `E[(P_ℓ − P_{ℓ−1})⁴]` at most `C h_ℓ^q`.
 
 **How close to the paper.**  The paper's exponents `½` (Euler–Maruyama) and `1` (natural Milstein
-estimator) are reached up to an arbitrarily small loss; the endpoints, and the `O(h^{1/2} log h)` of
-Table 5.2 (Avikainen 2009), are not proved.  The kurtosis bounds are lower bounds `κ ≥ c h^{−q}`;
-the paper's `O(h^{−1/2})`, `O(h^{−1})` are upper bounds and need a lower bound on the mismatch
-probability, which is not proved.  The improvement on the exponents `1/3`, `2/3` of
-`MlmcLean.GBMDigital` is asymptotic: the explicit bounds are larger on coarse levels (below).
+estimator) are reached up to an arbitrarily small loss; the endpoints are not proved, and neither is
+the `O(h^{1/2} log h)` of Table 5.2 (Avikainen 2009) here: for Euler–Maruyama it is in
+`MlmcLean.GBMDigitalEndpoint` (`gbm_em_digital_endpoint_log`, from the tails of the log error
+rather than from moments; the observed `O(h^{1/2})` is not proved).  The kurtosis bounds are
+lower bounds `κ ≥ c h^{−q}`; the paper's `O(h^{−1/2})`, `O(h^{−1})` are upper bounds and need a
+lower bound on the mismatch probability, which is not proved.  The improvement on the exponents
+`1/3`, `2/3` of `MlmcLean.GBMDigital` is asymptotic: the explicit bounds are larger on coarse
+levels (below).
 
 **The constants** are explicit: `C_m(t) = S_0^{2m} t J e^{(ω + 1)t}` (`gbmEMMomentConst`,
 `gbmMilMomentConst`), where `ω` (`gbmLpRate`, `gbmMilLpRate`) bounds the exponential rate of the
@@ -2827,8 +2830,10 @@ large `ℓ`, so with `K` the value on level `ℓ` (`s₀ > 0`; on level `ℓ + 1
 
 **How close to the paper.**  These are the paper's rates (the `O(h^{1/2})` fraction of samples,
 `V_ℓ = O(h^{1/2})` and `E[(P_ℓ − P_{ℓ−1})⁴] = O(h^{1/2})`) up to an arbitrarily small loss in the
-exponent; the endpoint `q = ½` (and Avikainen's `O(h^{1/2} log h)` of Table 5.2) is not proved:
-moment bounds of the strong error give only exponents below `½`.  `C` is explicit in the proof
+exponent; the endpoint `q = ½` is not proved: moment bounds of the strong error give only
+exponents below `½`.  Avikainen's `O(h^{1/2} log h)` of Table 5.2 is proved in the form
+`O((h log(1/h))^{1/2})` from the tails of the log error, `gbm_em_digital_endpoint_log`
+(`MlmcLean.GBMDigitalEndpoint`); the observed `O(h^{1/2})` is not.  `C` is explicit in the proof
 but large, and it grows as `q → ½` (see `gbm_em_digital_fourth_moment_le_of_four` for `q = 2/5`).
 The kurtosis statement is a lower bound; the paper's upper bound `O(h^{−1/2})` needs a lower bound
 on `P(D_ℓ ≠ 0)`, which is not proved. -/

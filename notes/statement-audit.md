@@ -281,7 +281,9 @@ Lean statement or to the reason it is not formalised. The deviations of the new 
   bounded density (`variance_call_antithetic_le`); marginal information alone gives a weaker rate
   (`variance_call_antithetic_le_holder`; that it cannot give `3/2` is shown by a counterexample in
   that docstring, not by a theorem). For GBM, `β = 1/3` holds with no assumption
-  (`gbm_digital_variance_le`).
+  (`gbm_digital_variance_le`; rounds 20 and 26: every exponent below `½` from `L^p` strong errors,
+  and with Euler–Maruyama `O(√(h log(1/h)))` from the tails of the log error, `GBMStrongLp.lean`,
+  `GBMDigitalEndpoint.lean`, below).
 * **Super-linear drift (G15 §5.6; `SDEMisc.lean`).** Deterministic analogues: the explicit Euler
   step for the drift `−S³` diverges iff `h S₀² > 2` (`eulerCubic_growth`,
   `eulerCubic_tendsto_atTop`, `eulerCubic_bounded`), and the tamed step stays bounded
@@ -380,7 +382,8 @@ Lean statement or to the reason it is not formalised. The deviations of the new 
   asymptotic: the error on every dyadic interval decreases with `d` (exactly, for quadratic
   pieces, by `f′(c_k)²|D_k|4^{−d}/12`). Method 1: under block-wise bounds on the increments of
   `f` (which `Φ⁻¹` satisfies) the MSE is of order `2^{−d}/d`, so `log(MSE)/d → −log 2`; the exact
-  halving ratio and method 2 are not formalised.
+  halving ratio and method 2 are not formalised (round 26: the exact halving for `Φ⁻¹`,
+  `LUTHalving.lean`, below).
 * **Super-linear drift (G15 §5.6, p. 44; `EulerSuperlinear.lean`, round 15).** The paper cites
   Hutzenthaler, Jentzen and Kloeden for "numerical instability if a uniform timestep is used"; the
   Lean statements are their divergence theorem for the paper's example `dS = −S³dt + dW` only
@@ -414,6 +417,8 @@ Lean statement or to the reason it is not formalised. The deviations of the new 
 * **SPDE stability (`SPDEStability.lean`, round 17).** The paper states no condition and cites
   Giles–Reisinger (2012), not in `docs/`; the condition `λ(1 + 2ρ²) ≤ 1`, `λ = k/h²`, is derived
   here (von Neumann analysis on `ℤ` and on periodic grids, not on the half line with `p(0) = 0`).
+  `spde_meanSquare_stable` has no hypothesis `h ≠ 0`; at `h = 0` the coefficients `k/h²`, `1/(2h)`
+  and `1/(2h²)` are `0` by Lean's division convention and the bound holds trivially (spot-check 26).
 * **Drift-implicit methods (`DriftImplicit.lean`, round 17).** §5.6 only names the remedies; the
   Lean results are the elementary facts behind them, with additive noise, moments of order 2 and 4,
   and the integrating factor for a linear drift only (not the Heston treatment).
@@ -473,8 +478,9 @@ Lean statement or to the reason it is not formalised. The deviations of the new 
   grid points, with explicit but loose constants (for `m = 2` at the paper's parameters a factor of
   about `2·10⁶` (EM) and `1.5·10⁹` (Milstein) above the exact ratio), so the digital exponents
   improve on `GBMDigital.lean` only asymptotically.  Every exponent below the paper's `½` and `1` is
-  reached; the endpoints, the `log h` of Table 5.2 and the kurtosis upper bounds are not.  The
-  payoff factors `10e^{−rT}` and `25e^{−rT}` are omitted.
+  reached; the endpoints, the `log h` of Table 5.2 and the kurtosis upper bounds are not (round 26:
+  the `log h` rate with Euler–Maruyama, `GBMDigitalEndpoint.lean`, below).  The payoff factors
+  `10e^{−rT}` and `25e^{−rT}` are omitted.
 * **Weak order one for GBM (`GBMWeakOrder.lean`, round 21).** Polynomial payoffs and payoffs with
   four bounded derivatives (one more than the expansion needs, to bound its remainder); the call
   and digital payoffs of §5.1 are not smooth and are not covered.  For smooth payoffs the cost
@@ -646,7 +652,8 @@ Lean statement or to the reason it is not formalised. The deviations of the new 
   almost sure derivatives, square integrability, unbiasedness, (2.4) and the telescoping sum are
   proved; the variance rate of its corrections (the paper gives none and defers to Burgos 2014),
   Theorem 1 for it and the convergence of the finest-level delta `d/ds₀ P(Ŝ^f_N > K)` to the true
-  digital delta are not.
+  digital delta are not (round 26: the variance rate, every `q < ½`, `GBMDigitalDeltaVariance.lean`,
+  below).
 * **Read-back follow-up (round 24).** The round-23 read-back noted that
   `variance_ssaCorrection_exact_le` did not state that its sampling law `ssaInputLaw` is a
   probability measure (it is, by the first conjunct of `ssa_mlmc_unbiased`, so the bound was not
@@ -735,6 +742,48 @@ Lean statement or to the reason it is not formalised. The deviations of the new 
   `tendstoInDistribution_fwdIter` and the theorems of `MarkovLimitLaw.lean`; the paper states
   neither the completeness and separability nor the moment condition, and without the moment
   condition its weak convergence claim is false (`hc_cannot_be_dropped`, above).
+* **The Euler–Maruyama digital endpoint (`GBMDigitalEndpoint.lean`, round 26).** GBM only, with
+  `σ ≠ 0` (it cannot be dropped from a bound uniform in `K`, see `gbm_em_digital_rate`) and `T > 0`;
+  `S₀` and `K` are arbitrary. Table 5.2's analysis rate `O(h^{1/2} log h)` is proved in the slightly
+  stronger form `C (h log(1/h))^{1/2}`, and `(h log(1/h))^{1/2} ≤ h^{1/2} log(1/h)` for `h < e⁻¹`:
+  `gbm_em_digital_endpoint` states it on every level as `C (h_{ℓ+1}(ℓ + 1))^{1/2}`, using
+  `(ℓ + 1) log 2 = log(T/h_{ℓ+1})`, and `gbm_em_digital_endpoint_log` with the paper's `log(1/h)`
+  for the levels with `h_{ℓ+1} < e⁻¹`, with a constant that also depends on `|log T|`. The constants
+  are explicit and loose: `C ≈ 71` at the paper's `r = 0.05`, `σ = 0.2`, `T = 1`, so the bound on
+  `P(ΔP_ℓ ≠ 0)` is below `1` only from level `16` on, while a Monte Carlo estimate puts
+  `P(ΔP_ℓ ≠ 0)` near `0.04 h_{ℓ+1}^{1/2}` on the finer levels (numerical, not part of the proof).
+  The factor `10e^{−rT}` is omitted. The proof uses the product form of both GBM paths
+  (Gaussian-type tails of the log error, by Chernoff's bound), not Avikainen's argument, which
+  covers general scalar SDEs. Not proved: the observed `O(h^{1/2})` without the logarithm, the
+  kurtosis upper bound `O(h^{−1/2})` (only the lower bound, the reciprocal of the mismatch bound, is
+  proved), general SDEs and the Milstein column.
+* **The exact halving of the method-1 MSE (`LUTHalving.lean`, round 26).** The paper's "MSE divided
+  by 2 each time `d` increases by 1" is read off Figure 1 (`d = 8, …, 16`) and attributed to its
+  reference [12]; what is proved is the limit `MSE(d + 1)/MSE(d) → ½` for `f = Φ⁻¹`, through
+  `MSE(d) ~ κ 2^{−d}/d` with `κ = (∑_{j≥0} V_j)/log 2 ≈ 1.5586`. At finite `d` the ratio is
+  numerically below `½`, about `½ · d/(d + 1)` (`0.4514, 0.4695, 0.4728` at `d = 9, 15, 17`), and
+  `d 2^d MSE(d)` approaches `κ` slowly and not monotonically; no rate of convergence is proved. `κ`
+  is given as a series, not in closed form; the heuristic `13/(12 log 2) ≈ 1.5629` of the earlier
+  `LUTAsymptotics.lean` docstring is `0.28 %` too high. `method1MSE` sums the cell errors over all
+  `2^d` cells of `[0, 1]`; by the odd symmetry of `Φ⁻¹` this is exactly the paper's MSE
+  `E[(Z − Z̃)²]` (§4), twice the sum of (14) over the `2^{d−1}` table cells, and it reproduces the
+  method-1 values of Figure 1 to 4–5 digits (numerically). `normCDFInv` and `log` take junk values
+  only at `0` and outside `(0, 1)`, null sets inside the integrals. The halving for method 2 (H3-31,
+  which the paper calls "intuitively true") is not treated.
+* **The variance of the digital-delta corrections (`GBMDigitalDeltaVariance.lean`, round 26).** The
+  paper states no rate: it defers to Burgos (2014), which is not in `docs/` and was not consulted,
+  so the exponent `½` rests on the heuristic of the module docstring (a correction of size `O(1)` on
+  a window of probability `O(√h)` around the strike) and on a Monte Carlo check
+  (`V_ℓ ≈ 0.11 h_ℓ^{1/2}`, not part of the proof), not on Burgos's analysis. What is proved is an
+  upper bound `V_ℓ ≤ C h_ℓ^q` for every `q < ½`, not the endpoint `q = ½` (the loss comes from the
+  tails: the `O(h)` matching of the conditional means and standard deviations holds in every
+  `L^{2p}`, not on every path, as for the payoff's `q < 3/2`), and no lower bound; `C` depends on
+  `s₀`, `K`, `r`, `σ`, `T` and `q`. GBM and the delta only, with `s₀ ≠ 0`, `σ ≠ 0`, `T > 0`, the
+  hypotheses under which the formulas are the pathwise derivatives; `K = 0` is allowed (both
+  sensitivities then vanish). The factor `e^{−rT}` is omitted. The coarse delta inherits from
+  `gbmDigitalCondCoarse` the re-used increment `b ΔW_{N−2}` in place of the paper's `b√h_ℓ` (the
+  correction recorded for round 23). Theorem 1 for the digital delta is not proved: its weak rate
+  needs the convergence of the density of the discretised `S_T` at the strike.
 
 ### Corrections to the papers recorded elsewhere, collected
 
@@ -757,9 +806,9 @@ Lean statement or to the reason it is not formalised. The deviations of the new 
 | G15 | §3.3, p. 22 (l. 1032); §3.4, p. 24 (l. 1113–1114) | "`V_ℓ = V[Y_ℓ]`" | with `Y_ℓ` the level estimator of (2.2), (2.3) has `V[Y_ℓ] = V_ℓ/N_ℓ`; in §3.3–§3.4 `Y_ℓ` is one sample of `P_ℓ − P_{ℓ−1}`, so `V_ℓ` is the variance of one sample (§3.5, p. 27, l. 1200, makes the change of meaning explicit). Notation | — |
 | G15 | §5, p. 29 | `h_ℓ = h₀M^ℓ` | `h₀M^{−ℓ}` | `timestep_rate` |
 | G15 | §5.1, pp. 29–30 | Lipschitz payoffs "(such as European, Asian and lookback options)"; with `h_ℓ = 2^{−ℓ}h₀`, `α = 1` | for a lookback option monitored at the time steps the weak order is `½` (the discrete maximum is biased by about `0.5826 σ h^{1/2}` times the mean maximum); the complexity is unchanged, since `α ≥ ½ min(β, γ)` | `gbm_em_gridLookback_mean_converges` (`α = (1 − δ)/2`; the order `½` is argued in its docstring) |
-| G15 | §5.1, p. 33, Table 5.2 | `O(h^{1/2} log h)` | `O(h^{1/2} \|log h\|)` (`log h < 0`) | — |
+| G15 | §5.1, p. 33, Table 5.2 | `O(h^{1/2} log h)` | `O(h^{1/2} \|log h\|)` (`log h < 0`) | `gbm_em_digital_endpoint_log` (GBM, Euler–Maruyama; written with `log(1/h)`) |
 | G15 | §5.1, p. 33 (l. 1441) | `P_ℓ − P_{ℓ−1} = ±1` for the digital option | `±10e^{−rT}` for the payoff `10e^{−rT}H(S_T − K)` of p. 30, l. 1358 (the kurtosis is unchanged; `V_ℓ` and `E[(ΔP)⁴]` scale by `100e^{−2rT}` and `10⁴e^{−4rT}`) | `kurtosis_const_mul` (`SDEExtras.lean`, whose docstring notes the factor); the GBM digital theorems omit it |
-| G15 | §5.1, p. 33 (l. 1443–1444); §5.2, p. 35 (l. 1531), p. 36 (l. 1577) | "`E[(P_ℓ − P_{ℓ−1})⁴] = O(h^{1/2})` and so the kurtosis is `O(h^{−1/2})`"; likewise `O(h⁻¹)` and "approximately `O(h^{−1/2})`" | an upper bound on the fourth moment gives only a lower bound on the kurtosis: for `ΔP ∈ {0, ±1}`, `κ = 1/P(ΔP ≠ 0)`, so `κ = O(h^{−1/2})` needs `P(ΔP ≠ 0) = Θ(h^{1/2})`, a matching lower bound (for the conditional expectation, `V_ℓ = Θ(h^{3/2})`) | `kurtosis_of_ternary`; for GBM only lower bounds on the kurtosis are proved (`GBMDigital.lean`, `GBMStrongLp.lean`) |
+| G15 | §5.1, p. 33 (l. 1443–1444); §5.2, p. 35 (l. 1531), p. 36 (l. 1577) | "`E[(P_ℓ − P_{ℓ−1})⁴] = O(h^{1/2})` and so the kurtosis is `O(h^{−1/2})`"; likewise `O(h⁻¹)` and "approximately `O(h^{−1/2})`" | an upper bound on the fourth moment gives only a lower bound on the kurtosis: for `ΔP ∈ {0, ±1}`, `κ = 1/P(ΔP ≠ 0)`, so `κ = O(h^{−1/2})` needs `P(ΔP ≠ 0) = Θ(h^{1/2})`, a matching lower bound (for the conditional expectation, `V_ℓ = Θ(h^{3/2})`) | `kurtosis_of_ternary`; for GBM only lower bounds on the kurtosis are proved (`GBMDigital.lean`, `GBMStrongLp.lean`, `GBMDigitalEndpoint.lean`) |
 | G15 | §5.2, p. 36 | coarse numerator `b√h_ℓ`; `Φ(…/(b√h_ℓ))`; digital constant `25` | `b ΔW_{N−2}`; `\|b\|` in the denominator; `10` as on p. 30 | `digital_smoothing_coarse`, `integral_digital_final_step`, `gbmDigitalCondCoarse`, `gbmCondMeanCoarse` |
 | G15 | §5.2, p. 38 | "`O(h_ℓ)` difference on average" | `O(h_ℓ^{1/2})` | — |
 | G15 | §5.3, p. 39 | `b(Ŝ^c_n, c_n)` | `b(Ŝ^c_n, t_n)` | — |
@@ -796,7 +845,9 @@ Lean statement or to the reason it is not formalised. The deviations of the new 
 | HG25 | §6.2, p. 13 | "first round down the solution to `d*_{i,ℓ} = d_{i,ℓ}`" | `d*_{i,ℓ} = ⌊d_{i,ℓ}⌋` | `greedy_rounding_feasible` |
 | HG25 | §6.3, p. 14 | fixed-precision rounding error `O(h⁻¹2^{e−d})` | worst case; root mean square `Θ(h^{−1/2}2^{e−d})` under (22) | `integral_sq_perturbed_path_sub_bounds` |
 | HG25 | Fig. 7 caption, p. 14 | "Upper bounds `(1/12)E[x̄_i²]4^{e_i−d_i}` on the expected squared errors `E[x̄_i²δx_i²]`" | exact under the uniform model (22) with `δx_i` independent of `x̄_i`; without (22) not upper bounds: `δx = ±2^{e−d−1}` gives `E[x̄²δx²] = ¼E[x̄²]4^{e−d}`, three times the factor (the general bound is (21)) | `integral_sq_uniform_roundError`, `integral_sq_roundError_le` |
-| G15, HG25 | trivial typos | G15 §3.3, p. 23: `κ = E[X⁴]/E[X²])²`; §3.4, p. 26: `suml(1:4,L+1) = 0` (`suml` has two rows); §3.5, p. 26: "is gives"; §5.1, p. 30: "The cost ratio 5 − 12, illustrating"; §5.7, p. 46: `C_δ(x) = E[(g((x−P)/δ)]`; §7.3, p. 54: "same as for SDEs The computational cost"; §8, p. 56: "Numerical examples demonstrating impressive cost savings" (no main verb); §9.1, p. 58: "a independent agent"; §9.1, p. 58: "Anderson & Broadie's dual simulation method (Andersen and Broadie 2004)"; §10.2, p. 62: "(… Korn 2014). which exploits"; §11, p. 63: "a analytic"; HG25 §3.2, p. 6: "a least-squared minimisation"; HG25 §6.1, p. 12: "the the resulting function" | `κ = E[X⁴]/(E[X²])²`; `suml(1:2,L+1) = 0`; "is given"; "The cost ratio is 5–12"; `E[g((x−P)/δ)]`; "SDEs. The"; "Numerical examples demonstrate"; "an independent"; "Andersen & Broadie's"; "Korn 2014), which exploits"; "an analytic"; "least-squares"; "the resulting" | — |
+| G15 | §2.6, p. 19, l. 865–868 (the estimator replacing levels `ℓ` and `ℓ + 1`) | `(1/Ñ_{ℓ+1}) ∑_{n=1}^{Ñ_ℓ} (P_{ℓ+1} − P_{ℓ−1})` | upper limit `Ñ_{ℓ+1}`: the variance `Ṽ_{ℓ+1}/Ñ_{ℓ+1}` and the cost `Ñ_{ℓ+1} C̃_{ℓ+1}` stated next need `Ñ_{ℓ+1}` samples; read literally the estimator has mean `(Ñ_ℓ/Ñ_{ℓ+1}) E[P_{ℓ+1} − P_{ℓ−1}]` (spot-check 26) | row G2.6-12 uses the corrected form |
+| G15 | §5.1, p. 30, l. 1323 | "prove an `O(ε⁻²)` lower bound" | an `Ω(ε⁻²)` lower bound (notation; spot-check 26) | — |
+| G15, HG25 | trivial typos | G15 §3.3, p. 23: `κ = E[X⁴]/E[X²])²`; §3.4, p. 26: `suml(1:4,L+1) = 0` (`suml` has two rows); §3.5, p. 26: "is gives"; §5.1, p. 30: "The cost ratio 5 − 12, illustrating"; §5.7, p. 46: `C_δ(x) = E[(g((x−P)/δ)]`; §7.3, p. 54: "same as for SDEs The computational cost"; §8, p. 56: "Numerical examples demonstrating impressive cost savings" (no main verb); §9.1, p. 58: "a independent agent"; §9.1, p. 58: "Anderson & Broadie's dual simulation method (Andersen and Broadie 2004)"; §10.2, p. 62: "(… Korn 2014). which exploits"; §11, p. 63: "a analytic"; HG25 §3.2, p. 6: "a least-squared minimisation"; HG25 §6.1, p. 12: "the the resulting function"; G15 §3.3, p. 22, l. 1010: "This last two of these"; §3.5, p. 26, l. 1181: "This set of points are not constructed"; §5.1, p. 33, l. 1456: "The table also display"; §9.1, p. 57, l. 2477–2481: `E[P_ℓ] ≡ E_Z[f(M_ℓ⁻¹ ∑_m g(Z, W^{(m)}))]` | `κ = E[X⁴]/(E[X²])²`; `suml(1:2,L+1) = 0`; "is given"; "The cost ratio is 5–12"; `E[g((x−P)/δ)]`; "SDEs. The"; "Numerical examples demonstrate"; "an independent"; "Andersen & Broadie's"; "Korn 2014), which exploits"; "an analytic"; "least-squares"; "the resulting"; "The last two of these"; "is not constructed"; "displays"; `E_{Z,W}` (or `E`; with `E_Z` alone the expression is still random in the `W^{(m)}`, and `nestedP`/`nestedLaw` integrate over both) | — |
 
 "—" marks typos that no Lean statement depends on.
 

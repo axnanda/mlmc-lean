@@ -778,3 +778,28 @@ Findings and what was done:
 - **The constant `√2` of `hasType2_prod_sqrt_two` is sharp** by the auditor's example; optimality is
   not formalised (as documented).  `HasType2 (ℝ × ℝ) 1` is false, so the predicate is not
   degenerate.  No change needed.
+
+**Twenty-sixth round (2026-10-09).** Blind read-backs of the 16 theorems added in round 26:
+`gbm_digital_endpoint_delta.md` (R49: `GBMDigitalEndpoint` and `GBMDigitalDeltaVariance`; 3 + 2
+theorems) and `lut_halving.md` (R50: `LUTHalving`; 11).  All 16 read back as true; none is vacuous
+and none holds only because of a junk value.  The R49 auditor checked by finite differences (8
+digits, both signs of `s₀`) that the delta formula is the derivative of the smoothed payoff,
+confirmed by `rfl` that the packet statements are the repository's, and measured by Monte Carlo the
+mismatch probability (300 to 10 000 times below the explicit bound) and `E[Δ²] ≈ 0.1 h^{1/2}`.  The
+R50 auditor checked every statement with mpmath, including the slow, non-monotone convergence of
+`d 2^d MSE(d)` to `κ ≈ 1.5586` and that the series defining `κ` is genuinely summable.
+Findings and what was done:
+
+- **The explicit constants of the Euler–Maruyama endpoint are very loose**: the bound of
+  `gbm_em_exact_mismatch_le` is at least `1` for `n ≤ 1` and drops below `1` only from about `n = 13`
+  at the paper's parameters.  Documented in the module.  Kept.
+- **Some hypotheses are not needed**: `s₀ ≠ 0` in `gbm_em_exact_mismatch_le` (at `s₀ = 0` the
+  mismatch set is empty) and `s₀ ≠ 0`, `σ ≠ 0` in the digital-delta theorems (both deltas vanish by
+  the division convention).  `σ ≠ 0` is needed in `gbm_em_exact_mismatch_le`.  Kept.
+- **The conjuncts of `gbm_em_digital_endpoint` are equivalent** for a `{−1, 0, 1}`-valued
+  correction (variance, mismatch probability, fourth moment and the kurtosis bound all reduce to
+  the mismatch probability); they are kept to mirror `gbm_em_digital_rate`.  Kept.
+- **The constant of the digital-delta rate depends on `s₀` and `K`**, unlike that of the endpoint.
+  Documented.  Kept.
+- **The hypotheses `v < 1/2` and `t > 0` of the `Φ⁻¹` bounds are necessary** (the auditor gave
+  counterexamples through the junk values at `v = 1/2` and `t ≤ 0`).  No change needed.

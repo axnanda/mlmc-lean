@@ -59,13 +59,16 @@ and `2/ln 2`).
   cell `[0, 2^{−d}]`, by chaining the blocks `m ≥ d`, `O(2^{−d}/d)`);
 * `tendsto_log_method1MSE_div`: `log(MSE)/d → −log 2`, i.e. the MSE is divided by 2 per bit on
   average.
-The exact halving `MSE(d + 1)/MSE(d) → ½` is not proved: the order gives it only up to a bounded
-factor, and the exact limit needs `MSE(d) ~ κ 2^{−d}/d` with an exact constant `κ`, hence finer
-asymptotics of `Φ⁻¹` near `0` (`(Φ⁻¹)'(u) u √(2 log(1/u)) → 1` and the variance of the normal
-tail).  Numerically `d 2^d MSE = 1.533, 1.552, 1.557` for `d = 10, 16, 18` (heuristically
-`κ = 13/(12 ln 2) ≈ 1.563`), and `MSE(d + 1)/MSE(d) = 0.451, 0.470, 0.473` for `d = 9, 15, 17`,
-i.e. `½(1 − 1/d + …)`.  The halving for method 2 (which the paper calls only "intuitively true
-for method 2 after the optimisation stage") is not treated here; only method 1 is.
+The exact halving `MSE(d + 1)/MSE(d) → ½` does not follow from the order alone, which gives it
+only up to a bounded factor: it needs `MSE(d) ~ κ 2^{−d}/d` with an exact constant `κ`, hence
+finer asymptotics of `Φ⁻¹` near `0`.  For `Φ⁻¹` it is proved in `MlmcLean.LUTHalving`
+(`tendsto_method1MSE_succ_div_normCDFInv`), from `MSE(d) ~ κ 2^{−d}/d` with
+`κ = (∑_{j≥0} V_j)/ln 2 ≈ 1.5586`, `V_j` the variance of `log` on `[j, j + 1]`
+(`isEquivalent_method1MSE_normCDFInv`); the heuristic `13/(12 ln 2) ≈ 1.5629`, which replaces
+`∑_j V_j` by `1 + 1/12`, is `0.28 %` too high.  Numerically `d 2^d MSE = 1.533, 1.552, 1.557` for
+`d = 10, 16, 18`, and `MSE(d + 1)/MSE(d) = 0.451, 0.470, 0.473` for `d = 9, 15, 17`, i.e.
+`½(1 − 1/d + …)`.  The halving for method 2 (which the paper calls only "intuitively true for
+method 2 after the optimisation stage") is not treated here or there; only method 1 is.
 -/
 
 open MeasureTheory Finset Filter Topology
@@ -1693,7 +1696,8 @@ with `c = ½`, `K = 4`), then `K > 0` and for every `d ≥ 2`
 `(c/64) 2^{−d}/d ≤ MSE ≤ 6K 2^{−d}/d`.  This gives the halving per bit only up to a bounded
 factor: `MSE(d + 1)/MSE(d)` lies between `c/(768K)` and `192K/c` (times `d/(d + 1)`); the exact
 limit `½` would need `MSE(d) ~ κ 2^{−d}/d` with an exact `κ`, i.e. finer asymptotics of `Φ⁻¹`
-near `0` (numerically `MSE(d + 1)/MSE(d) = ½(1 − 1/d + …)`, `0.473` at `d = 17`). -/
+near `0` (numerically `MSE(d + 1)/MSE(d) = ½(1 − 1/d + …)`, `0.473` at `d = 17`).  For `Φ⁻¹` the
+limit `½` is `tendsto_method1MSE_succ_div_normCDFInv` (`MlmcLean.LUTHalving`). -/
 theorem method1MSE_order (hf : IntervalIntegrable f volume 0 1)
     (hf2 : IntervalIntegrable (fun u => f u ^ 2) volume 0 1) (hodd : ∀ u, f (1 - u) = -f u)
     {c K : ℝ} (hc : 0 < c)
@@ -1716,8 +1720,9 @@ theorem method1MSE_order (hf : IntervalIntegrable f volume 0 1)
 /-- **Method 1 halves the MSE per bit on average** (Haas–Giles 2025, §3.4, p. 7: method 1 has
 its "MSE divided by 2 each time `d` increases by 1").  Under the hypotheses of
 `method1MSE_order`, `log(MSE(d))/d → −log 2`, i.e. `MSE(d)^{1/d} → ½`: the geometric mean of the
-ratios `MSE(d + 1)/MSE(d)` tends to `½`.  (The exact limit of the ratio itself is not proved, see
-`method1MSE_order`.) -/
+ratios `MSE(d + 1)/MSE(d)` tends to `½`.  (The exact limit of the ratio itself does not follow
+from these hypotheses, see `method1MSE_order`; for `Φ⁻¹` it is
+`tendsto_method1MSE_succ_div_normCDFInv`, `MlmcLean.LUTHalving`.) -/
 theorem tendsto_log_method1MSE_div (hf : IntervalIntegrable f volume 0 1)
     (hf2 : IntervalIntegrable (fun u => f u ^ 2) volume 0 1) (hodd : ∀ u, f (1 - u) = -f u)
     {c K : ℝ} (hc : 0 < c)
