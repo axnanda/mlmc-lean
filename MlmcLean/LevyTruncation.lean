@@ -99,11 +99,13 @@ correction levels.
 **Not proved here.**  The alternative of approximating the effect of the small jumps by a
 Brownian diffusion term (l. 2039–2041, citing Dereich 2011, Dereich and Heidenreich 2011 and
 Marxen 2010; l. 2047–2048, "approximated by the same Brownian increment") is in
-`MlmcLean.LevyExtras`, with the same rates (Dereich's improved bias is not proved).  Not proved:
-path-dependent payoffs for truncated levels and the rates of Table 6.3 (p. 48; the Asian row with
-exactly simulated increments is in `MlmcLean.JumpProcesses` and `MlmcLean.LevyExtras`), the
-Lévy–Khintchine law of the limit `X`, two-sided or non-Lipschitz
-examples, and bounds on the realised (rather than expected) cost.
+`MlmcLean.LevyExtras`, with the same rates (Dereich's improved bias is not proved).  The
+Lévy–Khintchine law of the limit `X`, `E[e^{itX}] = exp (T ∫ (e^{itz} − 1 − itz 1_{|z|<1}) dν)`,
+is in `MlmcLean.LevyKhintchineLimit` (`levy_truncation_limit_charFun`, `levy_limit_charFun`; the
+law of the terminal value only, no process).  Not proved: path-dependent payoffs for truncated
+levels and the rates of Table 6.3 (p. 48; the Asian row with exactly simulated increments is in
+`MlmcLean.JumpProcesses` and `MlmcLean.LevyExtras`), two-sided or non-Lipschitz examples, and
+bounds on the realised (rather than expected) cost.
 -/
 
 open MeasureTheory ProbabilityTheory Finset Filter Topology
@@ -1086,7 +1088,8 @@ converges to zero").  Let `ν` be a Lévy measure (`∫ min(1, z²) dν < ∞`, 
 mass), `T ≥ 0`, and let the cutoffs `0 < δ_ℓ ≤ δ_0 ≤ 1` decrease to `0`.  All levels are built on
 one probability space from independent compound Poisson inputs for the bands `{|z| ≥ δ_0}` and
 `[δ_{k+1}, δ_k)` (`Λ_k • M_k = T • ν|_{band k}`).  Then there is a limit `X`, an `L²` limit (its
-Lévy–Khintchine law is not derived here), with `X − X^{δ_0} ∈ L²` and, for every level `ℓ`,
+Lévy–Khintchine law is not derived here; it is `levy_truncation_limit_charFun` in
+`MlmcLean.LevyKhintchineLimit`), with `X − X^{δ_0} ∈ L²` and, for every level `ℓ`,
 `E[(X − X^{δ_ℓ})²] = T ∫_{|z| < δ_ℓ} z² dν`, which tends to `0`.  For every `K`-Lipschitz payoff
 `Φ` the bias satisfies `|E[Φ(X^{δ_ℓ}) − Φ(X)]| ≤ K (T ∫_{|z| < δ_ℓ} z² dν)^{1/2} → 0`. -/
 theorem levy_truncation_limit {ν : Measure ℝ} (hν : Integrable (fun z => min 1 (z ^ 2)) ν)

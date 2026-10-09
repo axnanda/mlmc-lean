@@ -59,7 +59,12 @@ union-grid indices (`unionChain`).
 **Scope.**  All grids here are deterministic.  In the adaptive approach of §5.6 the timesteps
 `h_ℓ = 2^{−ℓ} H(Ŝ_n)` depend on the path, so the union grid is random and the sub-intervals seen by
 one path depend on the other path; identifying the law of each path then needs a conditional
-(martingale) argument given the past of the simulation, which is not formalised here.
+(martingale) argument given the past of the simulation, which is not given here.  For adaptive
+steps on a fixed base grid it is given elsewhere by discrete-time conditioning:
+`adaptiveCount_law_eq_fresh` (`MlmcLean.AdaptiveGrids`: the path built from Poisson counts over
+adaptive intervals has the law of the scheme driven by fresh Poisson variates) and, for
+tau-leaping with state-dependent propensities, (2.4) on union grids (`adaptUnion_2_4`,
+`MlmcLean.TauLeapingExtensions`).
 
 **§10.2** (last section, independent of the rest).  "This would not be the case if the increments on
 level `ℓ` were generated with `B_ℓ` bits of accuracy, then summed to give increments for level

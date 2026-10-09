@@ -55,9 +55,11 @@ or distributional one.  The pointwise theorems use only the `HasSum` (or summabi
 at the points involved: no orthonormality, no `∑ θ_n < ∞` and no eigen-relation; `HasSum` forces
 `R(x, x) ≥ 0`, so the `toNNReal` in the Gaussian laws never clips.
 
-**Not proved.**  Mercer's theorem itself; the identification of the joint law with
-`multivariateGaussian 0 (R(x_i, x_j))_{ij}` (joint Gaussianity and the covariance are proved
-separately); regularity of `x ↦ κ(x)` and the moments of `max_x κ` and `1/min_x κ` used in the
+**Not proved here.**  The identification of the joint law with
+`multivariateGaussian 0 (R(x_i, x_j))_{ij}` (here joint Gaussianity and the covariance are proved
+separately) is in `MlmcLean.LimitLawExtras` (`map_klLimit_eq_multivariateGaussian`, with the
+positive semidefinite covariance matrix `posSemidef_klCov`).  Not proved: Mercer's theorem
+itself; regularity of `x ↦ κ(x)` and the moments of `max_x κ` and `1/min_x κ` used in the
 analysis of the elliptic PDE (Charrier, Scheichl & Teckentrup, l. 2275–2279); the PDE itself.
 -/
 

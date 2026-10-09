@@ -28,7 +28,8 @@ using the Milstein approximation for the final timestep").  Geometric Brownian m
   mean square error `< ε²` (with a square-integrable error) at cost `O(ε^{−3−η})`
   (`α = β = q = 1/(2 + η)`, `γ = 1`); `gbm_mil_digital_theorem1`: `O(ε^{−2−η})`
   (`q = 1/(1 + η)`).  `theorem1_pairAvg_of_rate` is Theorem 1 with `α = β = q < γ = 1` for a
-  fine/coarse pair coupled by `pairAvg`.
+  fine/coarse pair coupled by `pairAvg`.  With Euler–Maruyama the loss `η` is removed in
+  `MlmcLean.GBMDigitalTheorem1Log`: cost `O(ε⁻³ |log ε|)` (`gbm_em_digital_theorem1_log`).
 * **The barrier option at `m` fixed monitoring dates** `t_k = kT/m` (`barrierPayoff`:
   `g(S_T) ∏_{k=1}^m 1_A(S_{t_k})` with `A = (−∞, B]`, up-and-out, or `A = (B, ∞)`, down-and-out,
   and `g` Lipschitz, e.g. the down-and-out call `g(x) = (x − K)⁺`).  `gbm_em_barrier_rate`,
@@ -52,9 +53,13 @@ using the Milstein approximation for the final timestep").  Geometric Brownian m
 **What is not proved.**  The paper's weak order `α = 1` of Euler–Maruyama for the digital option
 (a result of Bally–Talay type, not cited in the paper, out of scope here), hence its `O(ε^{−2.5})`:
 here `α` is the mismatch rate `q < ½`, which gives `O(ε^{−3−η})`.  The endpoints `q = ½`, `q = 1`
-are not proved, so the costs carry the loss `η > 0`; Table 5.2's analysis rate `O(h^{1/2} log h)`
-(Avikainen) for the Euler–Maruyama variance is proved in `MlmcLean.GBMDigitalEndpoint`
-(`gbm_em_digital_endpoint_log`) but not used here.  The barrier option of the paper is
+are not proved here, so the costs here carry the loss `η > 0`; Table 5.2's analysis rate
+`O(h^{1/2} log h)` (Avikainen) for the Euler–Maruyama variance is proved in
+`MlmcLean.GBMDigitalEndpoint` (`gbm_em_digital_endpoint_log`) but not used here.  With it, and
+the weak error `O((h log(1/h))^{1/2})` from the mismatch probability, Theorem 1 with logarithmic
+factors gives the Euler–Maruyama digital option the cost `O(ε⁻³ |log ε|)`
+(`gbm_em_digital_theorem1_log`, `MlmcLean.GBMDigitalTheorem1Log`); the Milstein digital option
+and the barrier options keep the loss `η`.  The barrier option of the paper is
 continuously monitored; its analysis (Giles, Higham and Mao 2009) and the Milstein rows
 `O(h^{3/2})` of Table 5.2 (Brownian-bridge estimators) are out of reach here; for the discretely
 monitored option with the natural estimators the rates are those of the digital option.  The
@@ -456,7 +461,9 @@ cited in the paper; a Malliavin-calculus argument that is out of scope here) tog
 `β = ½`.  Here `α` is only the mismatch rate `q < ½`, and `β = q < ½` (`gbm_em_digital_rate`; the
 endpoint `β = ½` is proved only up to a factor `(log(1/h))^{1/2}`, `gbm_em_digital_endpoint`, which
 is not used here), so Theorem 1 gives `ε^{−2−(1−q)/q}`, i.e. `ε^{−3−η}` with `η > 0` arbitrary but
-not `0`.  The constant `c₄` depends on `η`.
+not `0`.  The constant `c₄` depends on `η`.  `gbm_em_digital_theorem1_log`
+(`MlmcLean.GBMDigitalTheorem1Log`) removes the loss `η` for the same estimator: with `α` and `β`
+equal to `½` up to the factor `(log(1/h))^{1/2}` it gives the cost `O(ε⁻³ |log ε|)`.
 
 **`σ ≠ 0` is needed.**  For `σ = 0`, `s₀ = −1`, `r = T = 1`, the paths are deterministic,
 `Ŝ_ℓ = −(1 + 2^{−ℓ})^{2^ℓ} > −e = S_T`, so with `K = −e` the estimator is `H(Ŝ_L − K) = 1` for

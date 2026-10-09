@@ -52,9 +52,10 @@ substitute for the variance given in the paper.
 * `hasType2_of_isomorphic_embedding`: a space with a linear embedding `a‖x‖ ≤ ‖Tx‖ ≤ b‖x‖` into a
   Hilbert space has type 2 with `τ = b/a`; hence every finite-dimensional normed space has type 2
   (`exists_hasType2_of_finiteDimensional`), for instance `ℝ × ℝ` with the maximum norm
-  (`exists_hasType2_prod`; with `τ = √2`, `hasType2_prod_sqrt_two`, which is the best constant, not
-  formalised), where the 2-norm identity fails (`sq_norm_add_of_indepFun_fails_sup`).  So Theorem 1
-  holds for finitely many outputs measured in any norm, e.g. the maximum error over the outputs.
+  (`exists_hasType2_prod`; with `τ = √2`, `hasType2_prod_sqrt_two`, which is the best constant:
+  `isLeast_hasType2_prod`, `hasType2_prod_iff` in `MlmcLean.SpotCheck26Extras`), where the 2-norm
+  identity fails (`sq_norm_add_of_indepFun_fails_sup`).  So Theorem 1 holds for finitely many
+  outputs measured in any norm, e.g. the maximum error over the outputs.
 
 **Deviations from the paper.**  The paper gives no statement for other norms, only the pointer
 to Banach space theory; the statements here are one way to make it precise.  Type 2 is a
@@ -203,8 +204,9 @@ theorem exists_hasType2_prod : ∃ τ, HasType2.{u} (ℝ × ℝ) τ :=
 
 /-- **The sharp type-2 constant of `ℝ × ℝ` with the maximum norm is at most `√2`** (Giles 2015,
 §2.5, pp. 17–18, l. 776–787).  From `‖x‖_∞ ≤ ‖x‖₂ ≤ √2 ‖x‖_∞` and
-`hasType2_of_isomorphic_embedding`.  The constant cannot be lowered (not formalised): the
-random signs `±(1, 1)` and `±(1, −1)` give `E‖X₁ + X₂‖² = 4 = 2 (E‖X₁‖² + E‖X₂‖²)`. -/
+`hasType2_of_isomorphic_embedding`.  The constant cannot be lowered: the random signs `±(1, 1)`
+and `±(1, −1)` give `E‖X₁ + X₂‖² = 4 = 2 (E‖X₁‖² + E‖X₂‖²)` (proved in
+`MlmcLean.SpotCheck26Extras`: `not_hasType2_prod_of_lt_sqrt_two`, `isLeast_hasType2_prod`). -/
 theorem hasType2_prod_sqrt_two : HasType2.{u} (ℝ × ℝ) (Real.sqrt 2) := by
   let T : (ℝ × ℝ) →L[ℝ] EuclideanSpace ℝ (Fin 2) :=
     ((EuclideanSpace.equiv (Fin 2) ℝ).symm.toContinuousLinearMap).comp
